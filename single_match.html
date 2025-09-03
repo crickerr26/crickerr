@@ -223,7 +223,6 @@
         .scoring-grid button:nth-last-child(-n+4) {
             border-bottom: none;
         }
-
         .apple-card {
             background: linear-gradient(145deg, #ffffff, #e9eef2);
             border: 1px solid rgba(0, 0, 0, 0.05);
@@ -2280,23 +2279,28 @@
         // --- MODAL CONTROLS ---
         function openModal(modalId) {
             const modal = document.getElementById(modalId);
+            if (!modal) return;
             modal.classList.remove('hidden');
+            const modalContent = modal.querySelector('.modal-content');
+            if (modalContent) {
+                modalContent.style.transform = '';
+                modalContent.style.opacity = '';
+            }
             setTimeout(() => {
                 modal.classList.remove('bg-opacity-0');
-                modal.querySelector('.modal-content').classList.remove('scale-95', 'translate-y-full', 'scale-80', 'opacity-0');
+                if (modalContent) {
+                    modalContent.classList.remove('scale-95', 'translate-y-full', 'scale-80', 'opacity-0');
+                }
             }, 10);
         }
 
         function closeModal(modalId) {
             const modal = document.getElementById(modalId);
+            if (!modal) return;
             modal.classList.add('bg-opacity-0');
             const modalContent = modal.querySelector('.modal-content');
             if (modalContent) {
                 modalContent.classList.add('scale-95');
-                 if(modalId === 'innings-break-modal') {
-                         modalContent.style.transform = 'scale(0.8)';
-                         modalContent.style.opacity = '0';
-               }
             }
             setTimeout(() => {
                 modal.classList.add('hidden');
@@ -2561,9 +2565,10 @@
         }
 
         function showSummaryScreen() {
-            savePlayerStats(state.striker, state.battingTeam);
-            savePlayerStats(state.nonStriker, state.battingTeam);
-            savePlayerStats(state.bowler, state.bowlingTeam);
+            // Ensure all current player stats are saved to the main state objects before summarizing
+            if (state.striker) savePlayerStats(state.striker, state.battingTeam);
+            if (state.nonStriker) savePlayerStats(state.nonStriker, state.battingTeam);
+            if (state.bowler) savePlayerStats(state.bowler, state.bowlingTeam);
 
             const motmImageContainer = document.getElementById('motm-image-container');
 
@@ -2664,19 +2669,11 @@
             });
 
 
-            setTimeout(() => {
-                ui.appScreen.classList.remove('flex');
-                ui.appScreen.classList.add('hidden');
-                ui.summaryScreen.classList.remove('hidden');
-                ui.summaryScreen.classList.add('flex');
-            }, 500);
+            showScreen('summary-screen');
         }
         
         function backToScorecard() {
-            ui.summaryScreen.classList.remove('flex');
-            ui.summaryScreen.classList.add('hidden');
-            ui.appScreen.classList.remove('hidden');
-            ui.appScreen.classList.add('flex');
+            showScreen('app');
         }
 
         function toggleFullScreen() {
@@ -2951,7 +2948,9 @@
             screens.forEach(id => {
                 const screen = document.getElementById(id);
                 if (screen) {
-                    screen.classList.add('hidden');
+                    if (!screen.classList.contains('hidden')) {
+                        screen.classList.add('hidden');
+                    }
                 }
             });
 
@@ -2962,7 +2961,7 @@
         }
 
         function showSetupScreen() {
-            showScreen('setup-screen');
+            document.getElementById('choice-screen').classList.add('hidden');
             const splashScreen = document.getElementById('splash-screen');
             splashScreen.style.display = 'flex';
             splashScreen.style.opacity = '1';
@@ -2971,6 +2970,7 @@
                 splashScreen.style.opacity = '0';
                 setTimeout(() => {
                     splashScreen.style.display = 'none';
+                    showScreen('setup-screen');
                 }, 750);
             }, 1500);
         }
@@ -2979,7 +2979,6 @@
             if (!state.winner) return;
             calculateManOfTheMatch();
 
-            // Create a deep copy of the state to save as a summary
             const summaryState = JSON.parse(JSON.stringify(state));
             summaryState.id = state.id || `match_${Date.now()}`;
             delete summaryState.history;
@@ -3092,7 +3091,6 @@
                     const summaryData = JSON.parse(summaryToViewJSON);
                     Object.assign(state, summaryData);
                     showScreen('summary-screen');
-                    // Manually trigger the rendering of the summary screen content
                     showSummaryScreen();
                     return;
                 } catch (e) { console.error("Failed to parse summary data:", e); }
