@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cricker - Home</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link rel="apple-touch-icon" href="icon-512.png">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .menu-card { 
+            transition: transform 0.3s ease, box-shadow 0.3s ease; 
+        }
+        .menu-card:hover { 
+            transform: translateY(-8px); 
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1); 
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+    <div class="min-h-screen flex flex-col items-center justify-center p-4">
+        <header class="text-center mb-12">
+            <img src="my-logo.png" alt="Cricker Logo" class="w-24 h-24 mx-auto mb-4">
+            <h1 class="text-5xl font-black tracking-tight">CRiCKERR</h1>
+            <p class="text-gray-500 mt-2">your ultimate cricker scoring companion</p>
+        </header>
+
+        <main class="w-full max-w-5xl">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <a href="manage_teams.html" class="menu-card block bg-blue-500 text-white p-8 rounded-2xl shadow-lg text-center">
+                    <h2 class="text-2xl font-bold mb-2">Manage Teams</h2>
+                    <p class="text-blue-200 text-sm">Create, edit, and save your team rosters for quick match setups.</p>
+                </a>
+                <a href="single_match.html" class="menu-card block bg-green-500 text-white p-8 rounded-2xl shadow-lg text-center">
+                    <h2 class="text-2xl font-bold mb-2">Single Match</h2>
+                    <p class="text-green-200 text-sm">Jump right into scoring a new match with custom or saved teams.</p>
+                </a>
+                <a href="tournament.html" class="menu-card block bg-yellow-500 text-white p-8 rounded-2xl shadow-lg text-center">
+                    <h2 class="text-2xl font-bold mb-2">Tournament Mode</h2>
+                    <p class="text-yellow-200 text-sm">Organize brackets, track points, and score a full tournament.</p>
+                </a>
+        </main>
+
+        <footer class="mt-12 text-center text-gray-500 text-sm">
+            Created and developed by Inzamam Rishi
+        </footer>
+    </div>
+</body>
+</html>

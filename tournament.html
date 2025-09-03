@@ -1,0 +1,1925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Cricker - Tournament & Scoring</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        .setup-btn { background-color: #2563eb; background-image: linear-gradient(to right, #2563eb, #1d4ed8); transition: all 0.3s ease; }
+        .setup-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3), 0 4px 6px -2px rgba(37, 99, 235, 0.15); }
+        .setup-step { transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out; }
+        .setup-step.hidden { opacity: 0; transform: translateX(30px) scale(0.98); position: absolute; pointer-events: none; }
+        .setup-step.active { opacity: 1; transform: translateX(0) scale(1); }
+        .progress-bar-fill { background-image: linear-gradient(to right, #3b82f6, #60a5fa); transition: width 0.5s ease-in-out; }
+        .modal-overlay { transition: opacity 0.3s ease; }
+        .modal-content { transition: transform 0.3s ease, opacity 0.3s ease; }
+        .toss-3d-button { border-radius: 0.75rem; font-weight: 600; background-color: #f9fafb; border: 1px solid #d1d5db; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: all 0.15s ease-out; transform: translateY(0); }
+        .toss-3d-button:active { transform: translateY(2px); box-shadow: 0 2px 3px rgba(0,0,0,0.1); }
+        .toss-3d-button.selected { background-color: #2563eb; border-color: #1d4ed8; color: white; box-shadow: 0 2px 3px rgba(0,0,0,0.2); transform: translateY(2px); }
+        .event-text-animation { animation: event-animation 1.5s ease-in-out forwards; }
+        @keyframes event-animation { 0% { opacity: 0; transform: scale(0.8); } 20% { opacity: 1; transform: scale(1.1); } 80% { opacity: 1; transform: scale(1.1); } 100% { opacity: 0; transform: scale(0.8); } }
+        
+        #scorer-app { background-color: #f8fafc; }
+        .scoring-grid button { transition: transform 0.1s ease; border: 1px solid #e5e7eb; }
+        .scoring-grid button:active { transform: scale(0.95); }
+        .striker-dot { display: inline-block; width: 6px; height: 6px; background-color: #ef4444; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
+        #live-commentary-box { background-color: #eff6ff; border: 1px solid #dbeafe; }
+        #toggle-commentary-btn { color: #2563eb; }
+        #target-info-container { background-color: #bfdbfe; color: #1e40af; }
+        .fixture-card { background-color: #fff; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); overflow: hidden; transition: transform 0.2s ease-in-out; }
+        .fixture-card:hover { transform: translateY(-3px); }
+        .team-logo { width: 48px; height: 48px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 1.25rem; }
+        .team-logo.small { width: 32px; height: 32px; font-size: 1rem; }
+        .fixture-card-ipl { background: linear-gradient(135deg, #4b5563, #1f2937); color: #fff; }
+        .ipl-text-color { color: #eab308; }
+        
+        @keyframes fullScreenEnter {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        #full-screen-message-modal .modal-content {
+            animation: fullScreenEnter 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        
+        #no-ball-sub-modal .modal-content {
+            max-width: 90%;
+            width: 500px;
+        }
+        
+        .header-gradient {
+            background-image: linear-gradient(to right, #4c0519, #881337);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .players-button.completed {
+            background-color: #10b981; /* green-500 */
+            color: #fff;
+            font-weight: 600;
+        }
+        .players-button {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .required-field::after {
+            content: '*';
+            color: #ef4444; /* red-500 */
+            margin-left: 4px;
+        }
+
+        .form-label {
+            font-weight: 600;
+        }
+        .text-xs {
+            font-size: 0.75rem;
+        }
+
+        @keyframes inningsBreakEnter {
+            from { transform: scale(0.95) translateY(20px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        #innings-break-modal.active .modal-content {
+            animation: inningsBreakEnter 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        .apple-card {
+            background: linear-gradient(145deg, #ffffff, #e9eef2);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .apple-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.08);
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        @media (max-width: 768px) {
+            #scorer-app > .grid { display: flex; flex-direction: column; }
+            #scoring-controls-container { position: fixed; bottom: 0; left: 0; right: 0; background: #f8fafc; padding: 0.5rem; border-top: 1px solid #e2e8f0; border-radius: 0; }
+            #main-content-area { padding-bottom: 250px; }
+            .fixture-card-ipl { flex-direction: column; text-align: center; }
+            .fixture-card-ipl .team-info { justify-content: center; }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div id="tournament-choice-screen" class="min-h-screen w-full flex flex-col items-center justify-center p-4">
+        <div class="w-full max-w-4xl bg-white/50 backdrop-blur-sm border border-gray-200/80 shadow-xl rounded-2xl p-6 md:p-8 flex flex-col">
+            <header class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-800">Tournament Dashboard</h1>
+                <p class="text-gray-500 mt-1">Choose an option to get started</p>
+            </header>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div onclick="showSetupScreen()" class="apple-card cursor-pointer p-6 rounded-2xl flex flex-col justify-center items-center text-center">
+                    <div class="bg-gray-200 p-3 rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-800 mt-4">Create New Tournament</h2>
+                    <p class="text-gray-500 text-sm mt-1">Set up a new tournament from scratch.</p>
+                </div>
+                <a href="upcoming_tournaments.html" class="apple-card block p-6 rounded-2xl flex flex-col justify-center items-center text-center">
+                    <div class="bg-gray-200 p-3 rounded-full">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-800 mt-4">Upcoming Tournaments</h2>
+                    <p class="text-gray-500 text-sm mt-1">View or start tournaments scheduled for a future date.</p>
+                </a>
+                <a href="tournament_history.html" class="apple-card block p-6 rounded-2xl flex flex-col justify-center items-center text-center">
+                     <div class="bg-gray-200 p-3 rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-800 mt-4">Tournament History</h2>
+                    <p class="text-gray-500 text-sm mt-1">Review results and stats from completed tournaments.</p>
+                </a>
+            </div>
+            <div class="mt-8 text-center">
+                <a href="index.html" class="text-sm font-semibold text-gray-600 hover:text-gray-800">← Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-container" class="hidden">
+        <div id="event-animation-overlay" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 pointer-events-none hidden z-[80]">
+            <h1 id="event-animation-text" class="text-8xl font-black uppercase" style="text-shadow: 3px 3px 6px rgba(0,0,0,0.5);"></h1>
+        </div>
+
+        <div id="tournament-flow">
+            <div id="tournament-setup" class="min-h-screen flex items-center justify-center p-4">
+                <div class="w-full max-w-4xl bg-white shadow-xl rounded-2xl p-8 overflow-hidden">
+                     <div class="absolute top-4 left-4 hidden md:block">
+                        <button onclick="window.history.back()" class="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-800">&larr; Back</button>
+                    </div>
+                    <div id="progress-container" class="mb-8">
+                        <div class="w-full bg-gray-200 h-2 rounded-full"><div id="progress-bar" class="progress-bar-fill h-2 rounded-full" style="width: 25%;"></div></div>
+                        <div class="flex justify-between text-xs sm:text-sm text-gray-500 mt-2"><span>Details</span><span>Teams</span><span>Groups & Fixtures</span><span>Dashboard</span></div>
+                    </div>
+                    <div class="relative">
+                        <div id="setup-step-1" class="setup-step active">
+                            <header class="text-center mb-8"><h1 class="text-3xl font-bold text-gray-800">Tournament Setup</h1><p class="text-gray-500 mt-1">Enter the basic details for your tournament.</p></header>
+                            <div class="space-y-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div><label for="tournament-name" class="block text-sm font-bold text-gray-700 mb-1 required-field">Tournament Name</label><input type="text" id="tournament-name" placeholder="e.g., Summer Cup 2025" class="w-full p-3 border-gray-300 border rounded-md uppercase"></div>
+                                    <div class="relative">
+                                        <label for="start-date" class="block text-sm font-bold text-gray-700 mb-1 required-field">Start Date</label>
+                                        <div class="relative"><input type="date" id="start-date" class="w-full p-3 border-gray-300 border rounded-md"><span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">📅</span></div>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label for="tournament-overs" class="block text-sm font-bold text-gray-700 mb-1 required-field">Max Overs per Innings</label>
+                                        <select id="tournament-overs" class="w-full p-3 border-gray-300 border rounded-md"><option value="" disabled selected>Select Overs</option><script>for(let i = 1; i <= 20; i++) { document.write(`<option value="${i}">${i} Over${i > 1 ? 's' : ''}</option>`); }</script><option value="50">50 Overs</option></select>
+                                    </div>
+                                    <div>
+                                        <label for="balls-per-over" class="block text-sm font-bold text-gray-700 mb-1 required-field">Balls per Over</label>
+                                        <select id="balls-per-over" class="w-full p-3 border-gray-300 border rounded-md"><option value="" disabled selected>Select Balls</option><option value="6">6 Balls</option><option value="5">5 Balls</option><option value="7">7 Balls</option><option value="8">8 Balls</option></select>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label for="tournament-players" class="block text-sm font-bold text-gray-700 mb-1 required-field">Max Players per Side</label>
+                                        <select id="tournament-players" class="w-full p-3 border-gray-300 border rounded-md"><option value="" disabled selected>Select Players</option><option value="6">6 Players</option><option value="7">7 Players</option><option value="8">8 Players</option><option value="9">9 Players</option><option value="10">10 Players</option><option value="11" selected>11 Players</option></select>
+                                    </div>
+                                     <div>
+                                        <label for="matches-per-team" class="block text-sm font-bold text-gray-700 mb-1 required-field">Matches Per Team (in Group)</label>
+                                        <input type="number" id="matches-per-team" placeholder="e.g., 1" class="w-full p-3 border-gray-300 border rounded-md">
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label for="free-hit-enabled" class="block text-sm font-bold text-gray-700 mb-1">Free Hit Enabled?</label>
+                                        <select id="free-hit-enabled" class="w-full p-3 border-gray-300 border rounded-md" onchange="toggleFreeHitRules()"><option value="" disabled selected>Select Option</option><option value="no">No</option><option value="yes">Yes</option></select>
+                                    </div>
+                                    <div id="free-hit-rules-container" class="hidden">
+                                        <label for="free-hit-rules" class="block text-sm font-bold text-gray-700 mb-1">Free Hit on:</label>
+                                        <select id="free-hit-rules" class="w-full p-3 border-gray-300 border rounded-md"><option value="overstep_only">Overstepping No-ball Only</option><option value="all">All No-balls</option></select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label for="tournament-rules" class="block text-sm font-bold text-gray-700 mb-1">Rules and Regulations</label>
+                                    <textarea id="tournament-rules" rows="4" class="w-full p-3 border-gray-300 border rounded-md" placeholder="Type tournament rules and regulations here..."></textarea>
+                                </div>
+                            </div>
+                            <div class="mt-8 flex justify-end items-center"><button onclick="goToStep(2)" class="px-6 py-3 text-white font-bold rounded-lg setup-btn">Next: Add Teams</button></div>
+                        </div>
+                        <div id="setup-step-2" class="setup-step hidden">
+                             <div class="absolute top-4 left-4">
+                                <button onclick="goToStep(1)" class="font-semibold text-gray-600 hover:text-gray-800">&larr; Back</button>
+                            </div>
+                            <header class="text-center mb-8"><h1 class="text-3xl font-bold header-gradient">Enter Team Details</h1><p class="text-gray-500 mt-1">Enter the name and players for each team.</p></header>
+                            <div><label for="tournament-teams" class="block text-sm font-bold text-gray-700 mb-1 required-field">Number of Teams</label><input type="number" id="tournament-teams" placeholder="e.g., 8" class="w-full p-3 border-gray-300 border rounded-md mb-4"></div>
+                            <div id="team-entry-container" class="space-y-4 max-h-[50vh] overflow-y-auto pr-2"></div>
+                            <div class="mt-8 flex justify-between items-center"><button onclick="goToStep(1)" class="font-semibold text-gray-600 hover:text-gray-800">Back</button><button onclick="goToStep(3)" class="px-6 py-3 text-white font-bold rounded-lg setup-btn">Next: Groups & Fixtures</button></div>
+                        </div>
+                        <div id="setup-step-3" class="setup-step hidden">
+                            <div class="absolute top-4 left-4">
+                                <button onclick="goToStep(2)" class="font-semibold text-gray-600 hover:text-gray-800">&larr; Back</button>
+                            </div>
+                             <header class="text-center mb-8"><h1 class="text-3xl font-bold text-gray-800">Groups & Fixtures</h1><p class="text-gray-500 mt-1">Assign teams to groups and review the auto-generated matches.</p></p></header>
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="tournament-format" class="block text-sm font-bold text-gray-700 mb-1 required-field">Tournament Format</label>
+                                    <select id="tournament-format" onchange="showGroupAssignment()" class="w-full p-3 border-gray-300 border rounded-md">
+                                        <option value="" disabled selected>Select Format</option>
+                                        <option value="round-robin">Round Robin</option>
+                                        <option value="knockout">Knockout</option>
+                                        <option value="group_knockout">Group Stage & Knockout</option>
+                                    </select>
+                                </div>
+                                <div id="group-selection-container">
+                                    <label for="number-of-groups" class="block text-sm font-bold text-gray-700 mb-1 required-field">Number of Groups</label>
+                                    <select id="number-of-groups" onchange="showGroupAssignment()" class="w-full p-3 border-gray-300 border rounded-md">
+                                        <option value="" disabled selected>Select Groups</option>
+                                        <option value="1">1 Group</option>
+                                        <option value="2">2 Groups</option>
+                                        <option value="4">4 Groups</option>
+                                    </select>
+                                </div>
+                                <div id="knockout-teams-per-group-container" class="hidden">
+                                    <label for="knockout-teams-per-group" class="block text-sm font-bold text-gray-700 mb-1 required-field">Teams Advancing per Group</label>
+                                    <input type="number" id="knockout-teams-per-group" placeholder="e.g., 2" class="w-full p-3 border-gray-300 border rounded-md">
+                                </div>
+                             </div>
+                             <div id="points-rules-container" class="mt-6 p-4 bg-slate-50 rounded-lg">
+                                <h3 class="font-bold text-lg text-indigo-600 mb-2">Points Rules</h3>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                    <div><label class="block text-sm font-medium text-gray-700">Win</label><input type="number" id="points-win" value="2" class="w-full p-2 border-gray-300 border rounded-md"></div>
+                                    <div><label class="block text-sm font-medium text-gray-700">Loss</label><input type="number" id="points-loss" value="0" class="w-full p-2 border-gray-300 border rounded-md"></div>
+                                    <div><label class="block text-sm font-medium text-gray-700">Tie</label><input type="number" id="points-tie" value="1" class="w-full p-2 border-gray-300 border rounded-md"></div>
+                                    <div><label class="block text-sm font-medium text-gray-700">No Result</label><input type="number" id="points-no-result" value="1" class="w-full p-2 border-gray-300 border rounded-md"></div>
+                                </div>
+                            </div>
+                             <div id="group-assignment-container" class="mt-6 space-y-4 max-h-[40vh] overflow-y-auto pr-2"></div>
+                             <div class="mt-8 flex justify-between items-center"><button onclick="goToStep(2)" class="font-semibold text-gray-600 hover:text-gray-800">Back</button><button onclick="finalizeTeamsAndGoToDashboard()" class="px-6 py-3 text-white font-bold rounded-lg setup-btn">Confirm & Create Tournament</button></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="tournament-dashboard" class="hidden p-4 md:p-8">
+                <header class="mb-8 text-center"><h1 id="dashboard-title" class="text-4xl font-extrabold text-gray-800"></h1><p id="dashboard-subtitle" class="text-gray-500 mt-1"></p></header>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="bg-white p-6 rounded-xl shadow-md">
+                            <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold text-gray-700">Fixtures</h2></div>
+                            <div id="fixtures-list" class="space-y-3 max-h-96 overflow-y-auto"></div>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-md">
+                        <h2 class="text-2xl font-bold text-indigo-600 mb-4">Points Table</h2>
+                        <div id="points-table-container" class="space-y-6"></div>
+                    </div>
+                </div>
+                 <div class="text-center mt-8"><a href="index.html" class="px-6 py-3 bg-gray-600 text-white font-bold rounded-lg hover:bg-gray-700">Back to Home</a></div>
+            </div>
+        </div>
+
+        <div id="scorer-section" class="hidden">
+             <div class="fixed top-4 left-4 z-50">
+                <button onclick="showConfirm('Are you sure you want to quit the match?', () => returnToDashboard(false))" class="px-4 py-2 bg-gray-500 text-white rounded-lg">Back to Dashboard</button>
+            </div>
+            <div id="toss-screen" class="min-h-screen w-full flex flex-col items-center justify-center bg-slate-200 p-4">
+                <div class="w-full max-w-lg mx-auto text-slate-800">
+                    <header class="text-center mb-8"><h1 class="text-3xl font-bold">Toss Result</h1><p class="text-slate-600 mt-1">Select the toss winner and their choice</p></header>
+                    <div class="space-y-8">
+                        <div>
+                            <p class="text-center font-semibold mb-4">Who won the toss?</p>
+                            <div class="flex justify-center gap-6">
+                                <button id="toss-winner-team1" class="toss-3d-button flex flex-col items-center gap-3 w-32 p-4"><div id="toss-team1-logo-container" class="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold bg-cover bg-center text-white"></div><span id="toss-team1-name" class="truncate w-full"></span></button>
+                                <button id="toss-winner-team2" class="toss-3d-button flex flex-col items-center gap-3 w-32 p-4"><div id="toss-team2-logo-container" class="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold bg-cover bg-center text-white"></div><span id="toss-team2-name" class="truncate w-full"></span></button>
+                            </div>
+                        </div>
+                        <div id="toss-decision-container" class="hidden text-center">
+                            <p class="font-semibold mb-4">...and elected to:</p>
+                            <div class="flex justify-center gap-6">
+                                <button id="toss-choice-bat" class="toss-3d-button w-32 py-3">Bat First</button><button id="toss-choice-bowl" class="toss-3d-button w-32 py-3">Field First</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-12 flex justify-between items-center">
+                        <button onclick="returnToDashboard(false)" class="font-semibold text-gray-600 hover:text-gray-800">Back to Dashboard</button>
+                        <button id="start-match-btn" class="px-6 py-2 text-white font-bold rounded-lg setup-btn opacity-50 cursor-not-allowed" disabled>Start Scoring</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="scorer-app" class="h-screen w-full flex-col hidden">
+                <div id="match-header" class="text-center py-2 px-4 bg-white border-b"></div>
+                <div class="flex-grow w-full grid lg:grid-cols-3 gap-4 p-4">
+                    <div id="main-content-area" class="lg:col-span-2 space-y-3 flex flex-col">
+                        <div id="scoreboard" class="bg-white rounded-lg p-4 border shadow-sm">
+                            <div id="team-scores-container" class="space-y-2"></div>
+                            <div id="free-hit-indicator" class="hidden text-center p-2 mt-2 bg-red-100 text-red-800 font-bold rounded-lg">FREE HIT</div>
+                            <div class="grid grid-cols-2 gap-2 mt-4 text-xs font-semibold text-gray-600">
+                                <div class="p-2 bg-gray-100 rounded-md text-center">CRR: <span id="crr-display">0.00</span></div>
+                                <div class="p-2 bg-gray-100 rounded-md text-center">RRR: <span id="rrr-display">0.00</span></div>
+                            </div>
+                        </div>
+                        <div id="target-info-container" class="hidden bg-blue-100 text-blue-800 rounded-lg p-2 shadow-sm text-center font-semibold"></div>
+                        <div class="space-y-3 flex-grow flex flex-col">
+                            <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
+                                <table class="table-fixed w-full text-left text-sm"><thead><tr class="bg-slate-50"><th class="p-2 font-semibold text-slate-600 w-2/5">Batting</th><th class="text-center p-2 font-semibold text-slate-600">R</th><th class="text-center p-2 font-semibold text-slate-600">B</th><th class="text-center p-2 font-semibold text-slate-600">4s</th><th class="text-center p-2 font-semibold text-slate-600">6s</th><th class="text-right p-2 font-semibold text-slate-600">SR</th></tr></thead><tbody id="batting-table"></tbody></table>
+                            </div>
+                            <div class="bg-white rounded-lg shadow-sm border overflow-hidden flex-grow">
+                                <table class="table-fixed w-full text-left text-sm h-full"><thead><tr class="bg-slate-50"><th class="p-2 font-semibold text-slate-600 w-2/5">Bowling</th><th class="text-center p-2 font-semibold text-slate-600">O</th><th class="text-center p-2 font-semibold text-slate-600">M</th><th class="text-center p-2 font-semibold text-slate-600">R</th><th class="text-center p-2 font-semibold text-slate-600">W</th><th class="text-right p-2 font-semibold text-slate-600">Econ</th></tr></thead><tbody id="bowling-table"></tbody></table>
+                                <div id="over-progress-container" class="p-2 flex items-center justify-center gap-1.5"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="scoring-controls-container" class="lg:col-span-1 flex flex-col space-y-3">
+                        <div id="live-commentary-box" class="bg-blue-50 rounded-lg p-3 shadow-sm border">
+                            <div class="flex justify-between items-center cursor-pointer" id="toggle-commentary-btn">
+                                <p class="text-xs font-semibold text-blue-800 uppercase tracking-wider">LIVE COMMENTARY</p>
+                                <svg id="commentary-chevron" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
+                            <div id="live-commentary-content" class="hidden">
+                                 <p id="live-commentary" class="text-sm text-gray-800 font-medium mt-2 pt-2 border-t border-blue-200"></p>
+                            </div>
+                        </div>
+                        <footer id="scoring-controls" class="bg-white rounded-lg shadow-sm border relative flex-grow flex flex-col overflow-hidden">
+                            <div id="bowler-prompt-overlay" class="absolute inset-0 bg-slate-100 bg-opacity-90 flex items-center justify-center hidden rounded-lg cursor-pointer z-10"><p class="font-bold text-blue-800 text-lg animate-pulse">Choose Next Bowler</p></div>
+                            <div class="grid grid-cols-4 grid-rows-4 flex-grow scoring-grid">
+                                <button onclick="addRuns(0)" class="bg-yellow-300 hover:bg-yellow-400 flex flex-col items-center justify-center"><span class="font-bold text-xl text-yellow-900">0</span><span class="text-xs text-yellow-800">Dot</span></button>
+                                <button onclick="addRuns(1)" class="bg-sky-300 hover:bg-sky-400 flex flex-col items-center justify-center"><span class="font-bold text-xl text-sky-900">1</span><span class="text-xs text-sky-800">Single</span></button>
+                                <button onclick="addRuns(2)" class="bg-slate-200 hover:bg-slate-300 flex flex-col items-center justify-center"><span class="font-bold text-xl text-slate-800">2</span><span class="text-xs text-slate-600">Double</span></button>
+                                <button onclick="undo()" class="bg-orange-300 hover:bg-orange-400 flex flex-col items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg><span class="text-sm font-semibold mt-1">Undo</span></button>
+                                <button onclick="addRuns(3)" class="bg-slate-200 hover:bg-slate-300 flex flex-col items-center justify-center"><span class="font-bold text-xl text-slate-800">3</span><span class="text-xs text-slate-600">Triple</span></button>
+                                <button onclick="addRuns(4)" class="bg-blue-600 hover:bg-blue-700 flex flex-col items-center justify-center"><span class="font-bold text-xl text-white">4</span><span class="text-xs text-blue-100">Four</span></button>
+                                <button onclick="addRuns(6)" class="bg-green-500 hover:bg-green-600 flex flex-col items-center justify-center"><span class="font-bold text-xl text-white">6</span><span class="text-xs text-green-100">Six</span></button>
+                                <button onclick="openWicketModal()" class="bg-red-600 hover:bg-red-700 text-white font-bold text-lg">WICKET</button>
+                                <button onclick="openModal('wide-modal')" class="col-span-2 bg-slate-100 hover:bg-slate-200 font-semibold text-slate-700">Wide</button>
+                                <button onclick="openNoBallModal()" class="col-span-2 bg-slate-100 hover:bg-slate-200 font-semibold text-slate-700">NB</button>
+                                <button onclick="openModal('byes-modal')" class="col-span-2 bg-slate-100 hover:bg-slate-200 font-semibold text-slate-700">Byes</button>
+                                <button onclick="openModal('legbyes-modal')" class="col-span-2 bg-slate-100 hover:bg-slate-200 font-semibold text-slate-700">LB</button>
+                            </div>
+                        </footer>
+                    </div>
+                </div>
+                <header class="bg-slate-200 text-black p-1 flex justify-between items-center shadow-inner w-full">
+                    <button onclick="returnToDashboard(true)" class="text-sm font-semibold py-2 px-3 rounded-md text-red-600 hover:bg-red-100">End Match</button>
+                    <button id="lock-btn" onclick="toggleScoringLock()" class="p-2 rounded-md hover:bg-slate-300"></button>
+                </header>
+            </div>
+        </div>
+    </div>
+
+    <div id="alert-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-[60]"><div class="modal-content bg-white rounded-lg shadow-xl p-6 w-11/12 max-w-sm text-center"><p id="alert-message" class="mb-4"></p><button id="alert-ok-btn" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">OK</button></div></div>
+    <div id="confirm-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-[60]"><div class="modal-content bg-white rounded-lg shadow-xl p-6 w-11/12 max-w-sm text-center"><p id="confirm-message" class="mb-6"></p><div class="flex justify-center space-x-4"><button id="confirm-cancel-btn" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancel</button><button id="confirm-ok-btn" class="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Confirm</button></div></div></div>
+    <div id="add-players-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50"><div class="modal-content bg-white rounded-lg shadow-xl w-11/12 max-w-md"><div class="p-4 bg-slate-50 border-b rounded-t-lg"><h3 id="add-players-modal-title" class="text-xl font-bold">Add Players</h3></div><div id="player-input-container" class="p-6 space-y-2 max-h-80 overflow-y-auto"></div><div class="p-4 bg-slate-50 border-t rounded-b-lg flex justify-end space-x-3"><button onclick="closeModal('add-players-modal')" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancel</button><button id="save-players-btn" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Save</button></div></div></div>
+    <div id="create-match-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50"><div class="modal-content bg-white rounded-lg shadow-xl w-11/12 max-w-md"><div class="p-4 bg-slate-50 border-b rounded-t-lg"><h3 class="text-xl font-bold">Create a New Match</h3></div><div class="p-6 space-y-4"><div><label class="block text-sm font-medium text-gray-700">Team A</label><select id="team-a-select" class="w-full p-3 border-gray-300 border rounded-md mt-1"></select></div><div><label class="block text-sm font-medium text-gray-700">Team B</label><select id="team-b-select" class="w-full p-3 border-gray-300 border rounded-md mt-1"></select></div></div><div class="p-4 bg-slate-50 border-t rounded-b-lg flex justify-end space-x-3"><button onclick="closeModal('create-match-modal')" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancel</button><button id="confirm-create-match-btn" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Create</button></div></div></div>
+    <div id="player-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50"><div class="modal-content bg-white rounded-lg shadow-xl p-6 w-11/12 max-w-sm"><h3 id="modal-title" class="text-lg font-bold mb-4">Select Player</h3><select id="player-select" class="w-full p-2 border rounded-md mb-4"></select><div class="flex justify-end"><button id="player-save-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Select</button></div></div></div>
+    <div id="wicket-type-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50"><div class="modal-content bg-white rounded-lg shadow-xl p-6 w-11/12 max-w-sm"><h3 class="text-lg font-bold text-center mb-4 text-red-600">How Out?</h3><div class="grid grid-cols-2 gap-3"><button onclick="handleWicket('Catch')" class="p-3 bg-gray-100 rounded-lg hover:bg-gray-200">Catch</button><button onclick="handleWicket('Bowled')" class="p-3 bg-gray-100 rounded-lg hover:bg-gray-200">Bowled</button><button onclick="handleWicket('Stumped')" class="p-3 bg-gray-100 rounded-lg hover:bg-gray-200">Stumped</button><button onclick="handleWicket('Run Out')" class="p-3 bg-gray-100 rounded-lg hover:bg-gray-200">Run Out</button></div></div></div>
+    <div id="run-out-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50"><div class="modal-content bg-white rounded-lg shadow-xl p-6 w-11/12 max-w-sm"><h3 class="text-lg font-bold text-center mb-4">Who was Run Out?</h3><div id="run-out-options" class="grid grid-cols-1 gap-3"></div></div></div>
+    <div id="run-out-extra-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50"><div class="modal-content bg-white rounded-lg shadow-xl p-6 w-11/12 max-w-sm"><h3 class="text-lg font-bold text-center mb-4">Run Out!</h3><p class="text-sm text-gray-600 text-center mb-4">Who was out and how many runs were taken?</p><div class="flex flex-col gap-4"><div><label class="block text-sm font-medium text-gray-700">Player Out</label><select id="run-out-player-select" class="w-full p-2 border rounded-md"></select></div><div><label class="block text-sm font-medium text-gray-700">Runs taken</label><input type="number" id="run-out-runs-input" class="w-full p-2 border rounded-md" value="0" min="0"></div><button onclick="finalizeRunOutExtra()" class="w-full px-4 py-2 bg-red-600 text-white font-semibold rounded-md hover:bg-red-700">Confirm Run Out</button></div></div></div>
+    <div id="wide-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex justify-center items-end hidden z-50" onclick="closeModal('wide-modal')"><div class="modal-content bg-white rounded-t-2xl shadow-xl w-full max-w-md p-6" onclick="event.stopPropagation()"><div class="flex justify-end"><button onclick="closeModal('wide-modal')" class="text-gray-400 hover:text-gray-600">&times;</button></div><h3 class="text-lg font-bold text-center mb-6">Wide (+1 run) & Extras</h3><div class="grid grid-cols-4 gap-3"><button onclick="addExtra('wd', 0)" class="p-3 bg-gray-100 rounded-lg">WD</button><button onclick="addExtra('wd', 1)" class="p-3 bg-gray-100 rounded-lg">WD+1</button><button onclick="addExtra('wd', 2)" class="p-3 bg-gray-100 rounded-lg">WD+2</button><button onclick="addExtra('wd', 4)" class="p-3 bg-gray-100 rounded-lg">WD+4</button></div><div class="mt-4 text-center"><button onclick="openRunOutExtraModal('wd', 'Wide + Run Out')" class="px-4 py-2 bg-red-100 text-red-700 rounded-md font-semibold hover:bg-red-200">Run Out</button></div></div></div>
+    <div id="no-ball-sub-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50"><div class="modal-content bg-white rounded-t-2xl shadow-xl w-full max-w-md p-6" onclick="event.stopPropagation()"><div class="flex justify-end"><button onclick="closeModal('no-ball-sub-modal')" class="text-gray-400 hover:text-gray-600">&times;</button></div><h3 class="text-lg font-bold text-center mb-6">No Ball Type</h3><div class="space-y-4"><div class="grid grid-cols-2 gap-3"><button onclick="handleNoBall('overstep')" class="p-3 bg-gray-100 rounded-lg hover:bg-gray-200">Overstep</button><button onclick="handleNoBall('high_full_toss')" class="p-3 bg-gray-100 rounded-lg hover:bg-gray-200">High Full Toss</button></div><div id="noball-runs-container" class="space-y-2 hidden"><p class="text-sm font-semibold text-gray-700">Runs off the bat:</p><div class="grid grid-cols-4 gap-2"><button onclick="addExtra('nb', 0)" class="p-3 bg-gray-100 rounded-lg">0</button><button onclick="addExtra('nb', 1)" class="p-3 bg-gray-100 rounded-lg">1</button><button onclick="addExtra('nb', 2)" class="p-3 bg-gray-100 rounded-lg">2</button><button onclick="addExtra('nb', 3)" class="p-3 bg-gray-100 rounded-lg">3</button><button onclick="addExtra('nb', 4)" class="p-3 bg-gray-100 rounded-lg">4</button><button onclick="addExtra('nb', 5)" class="p-3 bg-gray-100 rounded-lg">5</button><button onclick="addExtra('nb', 6)" class="p-3 bg-gray-100 rounded-lg">6</button></div></div></div></div></div>
+    <div id="byes-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex justify-center items-end hidden z-50" onclick="closeModal('byes-modal')"><div class="modal-content bg-white rounded-t-2xl shadow-xl w-full max-w-md p-6" onclick="event.stopPropagation()"><div class="flex justify-end"><button onclick="closeModal('byes-modal')" class="text-gray-400 hover:text-gray-600">&times;</button></div><h3 class="text-lg font-bold text-center mb-6">Byes</h3><div class="grid grid-cols-4 gap-3"><button onclick="addExtra('b', 1)" class="p-3 bg-gray-100 rounded-lg">1 Bye</button><button onclick="addExtra('b', 2)" class="p-3 bg-gray-100 rounded-lg">2 Byes</button><button onclick="addExtra('b', 3)" class="p-3 bg-gray-100 rounded-lg">3 Byes</button><button onclick="addExtra('b', 4)" class="p-3 bg-gray-100 rounded-lg">4 Byes</button></div></div></div>
+    <div id="legbyes-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex justify-center items-end hidden z-50" onclick="closeModal('legbyes-modal')"><div class="modal-content bg-white rounded-t-2xl shadow-xl w-full max-w-md p-6" onclick="event.stopPropagation()"><div class="flex justify-end"><button onclick="closeModal('legbyes-modal')" class="text-gray-400 hover:text-gray-600">&times;</button></div><h3 class="text-lg font-bold text-center mb-6">Leg Byes</h3><div class="grid grid-cols-4 gap-3"><button onclick="addExtra('lb', 1)" class="p-3 bg-gray-100 rounded-lg">1 LB</button><button onclick="addExtra('lb', 2)" class="p-3 bg-gray-100 rounded-lg">2 LBs</button><button onclick="addExtra('lb', 3)" class="p-3 bg-gray-100 rounded-lg">3 LBs</button><button onclick="addExtra('lb', 4)" class="p-3 bg-gray-100 rounded-lg">4 LBs</button></div></div></div>
+    <div id="gemini-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-[70]"><div class="modal-content bg-white rounded-lg shadow-xl p-6 w-11/12 max-w-md"><h3 id="gemini-modal-title" class="text-xl font-bold mb-4">✨ AI Suggestions</h3><div id="gemini-modal-content"></div><div class="mt-6 text-right"><button onclick="closeModal('gemini-modal')" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Close</button></div></div></div>
+    
+    <div id="full-screen-message-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center hidden z-[70] p-4">
+        <div class="modal-content text-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden text-center p-8">
+            <h2 id="full-screen-message-title" class="text-4xl font-extrabold tracking-tight"></h2>
+            <p id="full-screen-message-details" class="mt-4 text-lg opacity-80"></p>
+            <button id="full-screen-message-btn" class="mt-8 w-full px-6 py-3 text-black font-bold rounded-lg text-lg"></button>
+        </div>
+    </div>
+
+    <div id="innings-break-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center hidden z-[70] p-4">
+        <div id="innings-break-content" class="modal-content bg-slate-800 text-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden transform transition-all duration-500 scale-95 opacity-0">
+            <div id="innings-break-header" class="p-6 text-center border-b border-slate-700">
+                <h2 class="text-3xl font-extrabold tracking-tight">END OF INNINGS</h2>
+            </div>
+            <div class="p-6 space-y-6">
+                <div id="innings-break-score-summary" class="text-center">
+                    </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="font-bold text-lg text-amber-400 mb-2">TOP BATTERS</h3>
+                        <div id="innings-break-top-batters" class="space-y-2 text-sm">
+                            </div>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg text-cyan-400 mb-2">TOP BOWLERS</h3>
+                        <div id="innings-break-top-bowlers" class="space-y-2 text-sm">
+                            </div>
+                    </div>
+                </div>
+                <div id="innings-break-target" class="text-center bg-slate-900 p-4 rounded-lg">
+                     </div>
+            </div>
+            <div class="p-6 bg-slate-900/50">
+                <button id="start-second-innings-btn" class="w-full px-6 py-4 text-white font-bold rounded-lg text-lg setup-btn">Start Second Innings</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- GLOBAL STATE & SETUP ---
+        let currentTournamentState = {};
+        let teamDataStore = {};
+        let liveMatchState = {};
+        let tossWinnerKey = null;
+        let tossDecision = 'bat';
+        let matchHistory = [];
+        let savedTeams = {};
+        let alertCallback = null;
+        let confirmCallback = null;
+        let pendingRunOutDetails = null;
+
+        const darkColors = [
+            '#0f172a', // slate-900
+            '#4c0519', // rose-950
+            '#4a044e', // fuchsia-950
+            '#2e1065', // violet-950
+            '#1e3a8a', // blue-900
+            '#14532d', // green-900
+            '#451a03', // amber-950
+            '#422006'  // orange-950
+        ];
+
+        // --- TEAM & DATA MANAGEMENT (Unchanged) ---
+        function loadSavedTeams() {
+            try {
+                const teamsJSON = localStorage.getItem('savedTeams');
+                if (teamsJSON) savedTeams = JSON.parse(teamsJSON);
+            } catch (e) { console.error("Could not load saved teams.", e); savedTeams = {}; }
+        }
+
+        function importTeam(dropdownElement) {
+            const teamName = dropdownElement.value;
+            const teamIndex = dropdownElement.dataset.teamIndex;
+            if (!teamName || !savedTeams[teamName]) return;
+            const teamData = savedTeams[teamName];
+            const teamRow = dropdownElement.closest('.grid');
+            teamRow.querySelector('.team-name-input').value = teamData.name;
+            teamRow.querySelector('.team-color-input').value = teamData.color;
+            teamDataStore[teamIndex].name = teamData.name;
+            teamDataStore[teamIndex].color = teamData.color;
+            teamDataStore[teamIndex].players = teamData.players.map(p => p.name).filter(n => n);
+            showAlert(`Imported ${teamData.name} and its ${teamDataStore[teamIndex].players.length} players!`);
+        }
+
+        // --- UI & MODALS (Unchanged) ---
+        function openModal(modalId) { document.getElementById(modalId)?.classList.remove('hidden'); }
+        function closeModal(modalId) { document.getElementById(modalId)?.classList.add('hidden'); }
+        function showAlert(message, onOk) {
+            document.getElementById('alert-message').textContent = message;
+            alertCallback = onOk;
+            openModal('alert-modal');
+        }
+        function showConfirm(message, onConfirm) {
+            document.getElementById('confirm-message').textContent = message;
+            confirmCallback = onConfirm;
+            openModal('confirm-modal');
+        }
+        function triggerEventAnimation(text, colorClass) {
+            const overlay = document.getElementById('event-animation-overlay');
+            const textEl = document.getElementById('event-animation-text');
+            textEl.textContent = text;
+            textEl.className = `text-8xl font-black uppercase ${colorClass}`;
+            overlay.classList.remove('hidden');
+            textEl.classList.add('event-text-animation');
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                textEl.classList.remove('event-text-animation');
+            }, 1500);
+        }
+
+        function showFullScreenMessage(title, details, buttonText, onButtonClick, backgroundColor, titleColor) {
+            const modal = document.getElementById('full-screen-message-modal');
+            const content = modal.querySelector('.modal-content');
+            const messageTitle = document.getElementById('full-screen-message-title');
+            const messageDetails = document.getElementById('full-screen-message-details');
+            const messageBtn = document.getElementById('full-screen-message-btn');
+
+            messageTitle.textContent = title;
+            messageDetails.textContent = details;
+            messageBtn.textContent = buttonText;
+            
+            content.style.backgroundColor = backgroundColor;
+            messageTitle.style.color = titleColor;
+            messageBtn.style.backgroundColor = titleColor;
+            messageBtn.style.color = 'white';
+
+            messageBtn.onclick = () => {
+                closeModal('full-screen-message-modal');
+                onButtonClick();
+            };
+
+            openModal('full-screen-message-modal');
+        }
+        
+        function showInningsBreakModal(battingTeam, bowlingTeam, target) {
+            // Set header gradient based on team colors
+            const header = document.getElementById('innings-break-header');
+            header.style.background = `linear-gradient(135deg, ${bowlingTeam.color}, ${battingTeam.color})`;
+            
+            // Populate score summary
+            const scoreSummaryEl = document.getElementById('innings-break-score-summary');
+            const overs = Math.floor(battingTeam.balls / liveMatchState.ballsPerOver);
+            const ballsThisOver = battingTeam.balls % liveMatchState.ballsPerOver;
+            scoreSummaryEl.innerHTML = `
+                <p class="text-xl font-semibold">${battingTeam.name}</p>
+                <p class="text-5xl font-bold my-1">${battingTeam.score} / ${battingTeam.wickets}</p>
+                <p class="text-slate-400">(${overs}.${ballsThisOver} Overs)</p>
+            `;
+
+            // Get player stats from the innings summary
+            const firstInningsSummary = liveMatchState.inningsSummary[0];
+            const battingStats = Object.values(firstInningsSummary.playerStats).filter(p => p.balls > 0 || p.isOut);
+            const bowlingStats = Object.values(firstInningsSummary.bowlingStats).filter(p => p.ballsBowled > 0);
+
+            // Sort and get top 3 batters
+            const topBatters = battingStats.sort((a, b) => b.runs - a.runs).slice(0, 3);
+            const topBattersEl = document.getElementById('innings-break-top-batters');
+            topBattersEl.innerHTML = topBatters.map(p => `
+                <div class="flex justify-between items-center bg-slate-700/50 p-2 rounded">
+                    <span class="font-medium">${p.name}</span>
+                    <span class="font-bold">${p.runs} <span class="text-xs font-normal text-slate-400">(${p.balls})</span></span>
+                </div>
+            `).join('');
+            if (topBatters.length === 0) topBattersEl.innerHTML = `<p class="text-slate-400">No batters faced a ball.</p>`;
+
+            // Sort and get top 3 bowlers
+            const topBowlers = bowlingStats.sort((a, b) => b.wickets - a.wickets || a.runsConceded - b.runsConceded).slice(0, 3);
+            const topBowlersEl = document.getElementById('innings-break-top-bowlers');
+            const ballsPerOver = liveMatchState.ballsPerOver;
+            topBowlersEl.innerHTML = topBowlers.map(p => {
+                 const overs = `${Math.floor(p.ballsBowled / ballsPerOver)}.${p.ballsBowled % ballsPerOver}`;
+                 return `
+                    <div class="flex justify-between items-center bg-slate-700/50 p-2 rounded">
+                        <span class="font-medium">${p.name}</span>
+                        <span class="font-bold">${p.wickets}/${p.runsConceded} <span class="text-xs font-normal text-slate-400">(${overs})</span></span>
+                    </div>
+                `}).join('');
+             if (topBowlers.length === 0) topBowlersEl.innerHTML = `<p class="text-slate-400">No bowlers bowled an over.</p>`;
+
+            // Populate target
+            const targetEl = document.getElementById('innings-break-target');
+            targetEl.innerHTML = `
+                <p class="text-slate-300 uppercase text-sm tracking-wider">Target for ${bowlingTeam.name}</p>
+                <p class="text-4xl font-extrabold text-white">${target}</p>
+            `;
+
+            // Set up button
+            const startBtn = document.getElementById('start-second-innings-btn');
+            startBtn.onclick = () => {
+                const modal = document.getElementById('innings-break-modal');
+                modal.querySelector('.modal-content').style.animation = 'none'; // Prevent re-animation on close
+                modal.classList.remove('active');
+                closeModal('innings-break-modal');
+                startSecondInnings();
+            };
+            
+            // Show modal with animation
+            const modal = document.getElementById('innings-break-modal');
+            openModal('innings-break-modal');
+            setTimeout(() => modal.classList.add('active'), 10); // Timeout to allow CSS to apply
+        }
+
+        // --- TOURNAMENT SETUP FLOW ---
+        function showSetupScreen() {
+            document.getElementById('tournament-choice-screen').classList.add('hidden');
+            document.getElementById('app-container').classList.remove('hidden');
+        }
+
+        function goToStep(step) {
+            const currentStep = document.querySelector('.setup-step.active');
+            const nextStep = document.getElementById(`setup-step-${step}`);
+            
+            // Validation for current step before proceeding
+            if (step > 1) {
+                const requiredFields = Array.from(currentStep.querySelectorAll('.required-field')).map(el => el.htmlFor);
+                for (const id of requiredFields) {
+                    const input = document.getElementById(id);
+                    if (!input.value) {
+                        showAlert('Please fill out all required fields.');
+                        return;
+                    }
+                }
+            }
+            if (step === 3) {
+                 if (Object.values(teamDataStore).length < 2 || Object.values(teamDataStore).some(team => !team.name)) {
+                     showAlert('Please enter names for all teams before proceeding.');
+                     return;
+                 }
+                 showGroupAssignment();
+            }
+
+            document.querySelectorAll('.setup-step').forEach(el => {
+                el.classList.remove('active');
+                el.classList.add('hidden');
+            });
+            nextStep.classList.remove('hidden');
+            nextStep.classList.add('active');
+            document.getElementById('progress-bar').style.width = `${step * 25}%`;
+        }
+        
+        function toggleFreeHitRules() {
+            const isEnabled = document.getElementById('free-hit-enabled').value === 'yes';
+            document.getElementById('free-hit-rules-container').classList.toggle('hidden', !isEnabled);
+        }
+
+        function generateTeamInputs() {
+            const numTeams = parseInt(document.getElementById('tournament-teams').value) || 0;
+            const container = document.getElementById('team-entry-container');
+            container.innerHTML = '';
+            teamDataStore = {};
+            if (numTeams <= 0) return;
+            let savedTeamOptions = '<option value="">Import Saved Team...</option>';
+            for (const teamName in savedTeams) {
+                savedTeamOptions += `<option value="${teamName}">${teamName}</option>`;
+            }
+            for (let i = 0; i < numTeams; i++) {
+                const randomDarkColor = darkColors[i % darkColors.length];
+                teamDataStore[i] = { id: `T${Date.now() + i}`, name: '', color: randomDarkColor, players: [] };
+                const teamRow = document.createElement('div');
+                teamRow.className = 'grid grid-cols-1 sm:grid-cols-7 gap-3 items-center p-2 border rounded-lg';
+                const isPlayersAdded = teamDataStore[i].players.length >= (parseInt(document.getElementById('tournament-players').value) - 1);
+                const playersButtonClass = isPlayersAdded ? 'players-button completed' : '';
+                const playersButtonText = isPlayersAdded ? 'Players Added' : 'Players';
+
+                teamRow.innerHTML = `
+                    <div class="sm:col-span-2"><select onchange="importTeam(this)" class="w-full p-2 border-gray-300 border rounded-md" data-team-index="${i}">${savedTeamOptions}</select></div>
+                    <div class="sm:col-span-2"><input type="text" placeholder="Team ${i + 1}" class="w-full p-2 border-gray-300 border rounded-md team-name-input" data-team-index="${i}"></div>
+                    <input type="color" value="${teamDataStore[i].color}" class="w-full h-10 border-gray-300 border rounded-md team-color-input" data-team-index="${i}">
+                    <button onclick="openAddPlayersModal(${i})" class="w-full p-2 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 sm:col-span-2 font-bold transition-all duration-200 hover:scale-105 ${playersButtonClass}">${playersButtonText}</button>
+                `;
+                container.appendChild(teamRow);
+            }
+            addTeamInputListeners();
+        }
+
+        function addTeamInputListeners() {
+            document.querySelectorAll('.team-name-input').forEach(input => input.onkeyup = (e) => { teamDataStore[e.target.dataset.teamIndex].name = e.target.value; });
+            document.querySelectorAll('.team-color-input').forEach(input => input.onchange = (e) => { teamDataStore[e.target.dataset.teamIndex].color = e.target.value; });
+        }
+        
+        function openAddPlayersModal(teamIndex) {
+            const playersPerSide = parseInt(document.getElementById('tournament-players').value);
+            if (!playersPerSide) { showAlert("Please select 'Max Players per Side' on the 'Details' tab first."); return; }
+            const teamData = teamDataStore[teamIndex];
+            document.getElementById('add-players-modal-title').textContent = `Add Players for ${teamData.name || `Team ${teamIndex + 1}`}`;
+            const container = document.getElementById('player-input-container');
+            container.innerHTML = Array.from({ length: playersPerSide + 1 }, (_, i) => `<input type="text" placeholder="Player ${i + 1}${i === playersPerSide ? ' (Impact)' : ''}" value="${teamData.players[i] || ''}" class="w-full p-2 border-gray-300 border rounded-md">`).join('');
+            document.getElementById('save-players-btn').onclick = () => savePlayers(teamIndex);
+            openModal('add-players-modal');
+        }
+
+        function savePlayers(teamIndex) {
+            const playerInputs = document.querySelectorAll('#player-input-container input');
+            const playersPerSide = parseInt(document.getElementById('tournament-players').value);
+            const playerList = Array.from(playerInputs).map(input => input.value.trim()).filter(p => p);
+            
+            if (playersPerSide === 6 && playerList.length < 5) {
+                showAlert("For a 6-a-side match, at least 5 players are required.");
+                return;
+            }
+
+            teamDataStore[teamIndex].players = playerList;
+            closeModal('add-players-modal');
+            
+            const teamRow = document.getElementById('team-entry-container').children[teamIndex];
+            const playerButton = teamRow.querySelector('.players-button');
+            if (playerList.length >= (playersPerSide - 1)) {
+                playerButton.classList.add('completed');
+                playerButton.textContent = 'Players Added';
+            } else {
+                 playerButton.classList.remove('completed');
+                 playerButton.textContent = 'Players';
+            }
+            
+            showAlert(`Player list saved for ${teamDataStore[teamIndex].name || `Team ${teamIndex + 1}`}.`);
+        }
+
+        function showGroupAssignment() {
+            const format = document.getElementById('tournament-format').value;
+            const teams = Object.values(teamDataStore);
+            const groupsContainer = document.getElementById('group-selection-container');
+            const assignContainer = document.getElementById('group-assignment-container');
+            const knockoutTeamsPerGroupContainer = document.getElementById('knockout-teams-per-group-container');
+            
+            if (format === 'round-robin') {
+                if (teams.length < 2) {
+                    showAlert('A round-robin tournament requires at least 2 teams.');
+                    return;
+                }
+                groupsContainer.style.display = 'block';
+                assignContainer.style.display = 'block';
+                knockoutTeamsPerGroupContainer.classList.add('hidden');
+                generateGroupUI();
+            } else if (format === 'knockout') {
+                 if (teams.length < 2 || teams.length % 2 !== 0) {
+                    showAlert('A knockout tournament requires an even number of at least 2 teams.');
+                    return;
+                }
+                groupsContainer.style.display = 'none';
+                assignContainer.style.display = 'none';
+                knockoutTeamsPerGroupContainer.classList.add('hidden');
+            } else if (format === 'group_knockout') {
+                 if (teams.length < 4) {
+                    showAlert('Group & Knockout tournament requires at least 4 teams.');
+                    return;
+                }
+                groupsContainer.style.display = 'block';
+                assignContainer.style.display = 'block';
+                knockoutTeamsPerGroupContainer.classList.remove('hidden');
+                generateGroupUI();
+            } else {
+                groupsContainer.style.display = 'none';
+                assignContainer.style.display = 'none';
+                knockoutTeamsPerGroupContainer.classList.add('hidden');
+            }
+        }
+        
+        function generateGroupUI() {
+            const numGroups = parseInt(document.getElementById('number-of-groups').value);
+            const teams = Object.values(teamDataStore);
+            const container = document.getElementById('group-assignment-container');
+            container.innerHTML = '';
+            
+            if (teams.length % numGroups !== 0) {
+                container.innerHTML = `<p class="text-red-500">Number of teams must be divisible by the number of groups.</p>`;
+                return;
+            }
+            const teamsPerGroup = teams.length / numGroups;
+
+            for (let i = 0; i < numGroups; i++) {
+                const groupName = `Group ${String.fromCharCode(65 + i)}`;
+                let groupHTML = `<div class="bg-slate-50 p-4 rounded-lg">
+                    <h3 class="font-bold text-lg text-indigo-600 mb-2">${groupName}</h3>
+                    <div class="space-y-2">`;
+                for (let j = 0; j < teamsPerGroup; j++) {
+                    groupHTML += `<div><select class="w-full p-2 border-gray-300 border rounded-md group-team-select" data-group-index="${i}"></select></div>`;
+                }
+                groupHTML += `</div></div>`;
+                container.innerHTML += groupHTML;
+            }
+            updateGroupSelectOptions();
+            document.querySelectorAll('.group-team-select').forEach(select => {
+                select.addEventListener('change', updateGroupSelectOptions);
+            });
+        }
+
+        function updateGroupSelectOptions() {
+            const teams = Object.values(teamDataStore);
+            const allSelects = document.querySelectorAll('.group-team-select');
+            const selectedTeamIds = Array.from(allSelects).map(s => s.value).filter(v => v);
+
+            allSelects.forEach(select => {
+                const currentValue = select.value;
+                let optionsHTML = '<option value="">-- Select Team --</option>';
+                teams.forEach(team => {
+                    const isSelectedElsewhere = selectedTeamIds.includes(team.id) && currentValue !== team.id;
+                    optionsHTML += `<option value="${team.id}" ${isSelectedElsewhere ? 'disabled' : ''}>${team.name}</option>`;
+                });
+                select.innerHTML = optionsHTML;
+                select.value = currentValue;
+            });
+        }
+        
+        function finalizeTeamsAndGoToDashboard() {
+            const format = document.getElementById('tournament-format').value;
+            const teams = Object.values(teamDataStore);
+            const teamsWithPlayers = teams.filter(t => t.players && t.players.length >= (parseInt(document.getElementById('tournament-players').value) - 1));
+            
+            if (teams.length !== teamsWithPlayers.length) {
+                 showAlert("Please ensure all teams have their players added before creating the tournament.");
+                 return;
+            }
+            
+            if (format === 'round-robin' || format === 'group_knockout') {
+                const allSelects = document.querySelectorAll('.group-team-select');
+                const selectedCount = Array.from(allSelects).filter(s => s.value).length;
+                if (selectedCount !== teams.length) {
+                    showAlert('Please assign all teams to a group.');
+                    return;
+                }
+                allSelects.forEach(select => {
+                    const team = teams.find(t => t.id === select.value);
+                    if (team) {
+                        team.group = `Group ${String.fromCharCode(65 + parseInt(select.dataset.groupIndex))}`;
+                    }
+                });
+            }
+
+            const pointsRules = {
+                win: parseInt(document.getElementById('points-win').value) || 0,
+                loss: parseInt(document.getElementById('points-loss').value) || 0,
+                tie: parseInt(document.getElementById('points-tie').value) || 0,
+                noResult: parseInt(document.getElementById('points-no-result').value) || 0
+            };
+
+            generateFixtures();
+            
+            if (!currentTournamentState.fixtures || currentTournamentState.fixtures.length === 0) {
+                showAlert("Could not generate fixtures. Please check your settings.");
+                return;
+            }
+            
+            const rulesText = document.getElementById('tournament-rules').value;
+
+            currentTournamentState = {
+                name: document.getElementById('tournament-name').value,
+                startDate: document.getElementById('start-date').value,
+                overs: parseInt(document.getElementById('tournament-overs').value),
+                ballsPerOver: parseInt(document.getElementById('balls-per-over').value) || 6,
+                playersPerSide: parseInt(document.getElementById('tournament-players').value),
+                freeHitEnabled: document.getElementById('free-hit-enabled').value === 'yes',
+                freeHitRules: document.getElementById('free-hit-rules').value,
+                rules: rulesText,
+                teams: teams.map(t => ({...t, played: 0, wins: 0, losses: 0, ties: 0, points: 0, nrr: 0})),
+                fixtures: currentTournamentState.fixtures,
+                pointsRules: pointsRules
+            };
+            document.getElementById('tournament-setup').classList.add('hidden');
+            document.getElementById('tournament-dashboard').classList.remove('hidden');
+            displayDashboard();
+        }
+
+        function generateFixtures() {
+            const format = document.getElementById('tournament-format').value;
+            const teams = Object.values(teamDataStore);
+            let fixtures = [];
+
+            if (format === 'knockout') {
+                const numTeams = teams.length;
+                if (numTeams % 2 !== 0) {
+                     showAlert("Knockout requires an even number of teams.");
+                     return;
+                }
+                const numMatches = numTeams / 2;
+                let shuffledTeams = [...teams].sort(() => 0.5 - Math.random());
+                for (let i = 0; i < numMatches; i++) {
+                    fixtures.push({
+                        matchId: `match_${i + 1}`,
+                        matchName: `Round 1 Match ${i + 1}`,
+                        team1Id: shuffledTeams[i].id,
+                        team2Id: shuffledTeams[i + numMatches].id,
+                        status: 'upcoming',
+                        result: '',
+                        summary: null
+                    });
+                }
+                 fixtures.push({
+                    matchId: `final`,
+                    matchName: `Final`,
+                    team1Id: `winner_match_1`,
+                    team2Id: `winner_match_2`,
+                    status: 'upcoming',
+                    result: '',
+                    summary: null
+                 });
+            } else if (format === 'group_knockout') {
+                const numGroups = parseInt(document.getElementById('number-of-groups').value);
+                const teamsAdvancing = parseInt(document.getElementById('knockout-teams-per-group').value);
+                const totalAdvancing = numGroups * teamsAdvancing;
+                if (totalAdvancing !== 2 && totalAdvancing !== 4 && totalAdvancing !== 8) {
+                    showAlert("Number of teams advancing must result in a valid knockout bracket (2, 4, or 8).");
+                    return;
+                }
+                const matchesPerTeam = parseInt(document.getElementById('matches-per-team').value);
+                
+                let groupMatchIdCounter = 1;
+                for (let i = 0; i < numGroups; i++) {
+                    const groupName = `Group ${String.fromCharCode(65 + i)}`;
+                    const groupTeams = teams.filter(t => t.group === groupName);
+                    
+                    if (groupTeams.length < 2) {
+                        showAlert(`Group ${groupName} must have at least 2 teams.`);
+                        return;
+                    }
+                    
+                    const groupFixtures = generateRoundRobinFixtures(groupTeams, matchesPerTeam);
+                    groupFixtures.forEach(f => f.matchName = `Group Stage Match ${groupMatchIdCounter++}`);
+                    fixtures = [...fixtures, ...groupFixtures];
+                }
+                 
+                if (totalAdvancing === 8) {
+                    for(let i=1; i<=4; i++) {
+                        fixtures.push({ matchId: `qf_${i}`, matchName: `Quarter-Final ${i}`, team1Id: `placeholder`, team2Id: `placeholder`, status: 'upcoming', result: '', summary: null});
+                    }
+                    fixtures.push({ matchId: 'sf_1', matchName: 'Semi-Final 1', team1Id: 'winner_qf_1', team2Id: 'winner_qf_2', status: 'upcoming', result: '', summary: null});
+                    fixtures.push({ matchId: 'sf_2', matchName: 'Semi-Final 2', team1Id: 'winner_qf_3', team2Id: 'winner_qf_4', status: 'upcoming', result: '', summary: null});
+                    fixtures.push({ matchId: 'final', matchName: 'Final', team1Id: 'winner_sf_1', team2Id: 'winner_sf_2', status: 'upcoming', result: '', summary: null});
+                } else if (totalAdvancing === 4) {
+                    fixtures.push({ matchId: 'sf_1', matchName: 'Semi-Final 1', team1Id: `placeholder`, team2Id: `placeholder`, status: 'upcoming', result: '', summary: null});
+                    fixtures.push({ matchId: 'sf_2', matchName: 'Semi-Final 2', team1Id: `placeholder`, team2Id: `placeholder`, status: 'upcoming', result: '', summary: null});
+                    fixtures.push({ matchId: 'final', matchName: 'Final', team1Id: 'winner_sf_1', team2Id: 'winner_sf_2', status: 'upcoming', result: '', summary: null});
+                } else if (totalAdvancing === 2) {
+                    fixtures.push({ matchId: 'final', matchName: 'Final', team1Id: `placeholder`, team2Id: `placeholder`, status: 'upcoming', result: '', summary: null});
+                }
+            } else { // Round Robin
+                const numGroups = parseInt(document.getElementById('number-of-groups').value);
+                const matchesPerTeam = parseInt(document.getElementById('matches-per-team').value);
+                if (teams.length < numGroups * 2) {
+                    showAlert("Not enough teams for the selected number of groups.");
+                    return;
+                }
+                for (let i = 0; i < numGroups; i++) {
+                    const groupName = `Group ${String.fromCharCode(65 + i)}`;
+                    const groupTeams = teams.filter(t => t.group === groupName);
+                    
+                    if (groupTeams.length < 2) {
+                        showAlert(`Group ${groupName} must have at least 2 teams.`);
+                        return;
+                    }
+                    
+                    const groupFixtures = generateRoundRobinFixtures(groupTeams, matchesPerTeam);
+                    fixtures = [...fixtures, ...groupFixtures];
+                }
+            }
+            currentTournamentState.fixtures = fixtures;
+        }
+
+        function generateRoundRobinFixtures(teams, matchesPerTeam) {
+            const fixtures = [];
+            for (let round = 0; round < matchesPerTeam; round++) {
+                for (let i = 0; i < teams.length; i++) {
+                    for (let j = i + 1; j < teams.length; j++) {
+                         fixtures.push({ matchId: `match_${Date.now() + round + i + j}`, matchName: 'Group Match', team1Id: teams[i].id, team2Id: teams[j].id, status: 'upcoming', result: '', summary: null });
+                    }
+                }
+            }
+            return fixtures;
+        }
+        
+        function displayDashboard() {
+            const data = currentTournamentState;
+            document.getElementById('dashboard-title').textContent = data.name;
+            document.getElementById('dashboard-subtitle').textContent = `Starting: ${new Date(data.startDate + 'T00:00:00').toLocaleDateString()}`;
+            renderFixtures();
+            renderPointsTable();
+        }
+
+        function renderFixtures() {
+            const container = document.getElementById('fixtures-list');
+            if (!currentTournamentState.fixtures || !currentTournamentState.fixtures.length) { 
+                container.innerHTML = `<p class="text-center text-gray-500 py-4">No matches created yet.</p>`; 
+                return; 
+            }
+            
+            container.innerHTML = currentTournamentState.fixtures.map((match) => {
+                const team1 = currentTournamentState.teams.find(t => t.id === match.team1Id);
+                const team2 = currentTournamentState.teams.find(t => t.id === match.team2Id);
+                
+                const team1Name = team1 ? team1.name : match.team1Id.replace(/_/g, ' ').toUpperCase();
+                const team2Name = team2 ? team2.name : match.team2Id.replace(/_/g, ' ').toUpperCase();
+                const team1Color = team1 ? team1.color : '#cbd5e1';
+                const team2Color = team2 ? team2.color : '#cbd5e1';
+                const team1Initial = team1 ? team1.name.charAt(0) : '?';
+                const team2Initial = team2 ? team2.name.charAt(0) : '?';
+                
+                let buttonHtml = '';
+                if (match.status === 'completed') {
+                    buttonHtml = `<button onclick="viewMatchSummary('${match.matchId}')" class="px-4 py-2 text-sm font-semibold rounded-md bg-blue-600 hover:bg-blue-700 text-white">View Summary</button>`;
+                } else if (match.status === 'in-progress') {
+                    buttonHtml = `<button onclick="startTournamentMatch('${match.matchId}', true)" class="px-4 py-2 text-sm font-semibold rounded-md bg-yellow-600 hover:bg-yellow-700 text-white">Continue</button>`;
+                } else if (match.status === 'upcoming' && team1 && team2) {
+                    buttonHtml = `<button onclick="startTournamentMatch('${match.matchId}')" class="px-4 py-2 text-sm font-semibold rounded-md bg-green-600 hover:bg-green-600 text-white">Start</button>`;
+                } else {
+                    buttonHtml = `<button disabled class="px-4 py-2 text-sm font-semibold rounded-md bg-gray-400 text-white cursor-not-allowed">Waiting</button>`;
+                }
+
+                return `
+                    <div class="fixture-card-ipl p-4 mb-4 flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <div class="text-center">
+                                <p class="text-sm font-bold text-gray-300">${match.matchName}</p>
+                                <p class="text-xs text-gray-500">${match.result || ''}</p>
+                            </div>
+                            <div class="flex items-center space-x-4 team-info">
+                                <div class="team-logo small border-2 border-white" style="background-color: ${team1Color};">${team1Initial}</div>
+                                <span class="font-bold text-md">${team1Name}</span>
+                                <span class="text-gray-400">vs</span>
+                                <span class="font-bold text-md">${team2Name}</span>
+                                <div class="team-logo small border-2 border-white" style="background-color: ${team2Color};">${team2Initial}</div>
+                            </div>
+                        </div>
+                        ${buttonHtml}
+                    </div>`;
+            }).join('');
+        }
+
+        function renderPointsTable() {
+            const container = document.getElementById('points-table-container');
+            container.innerHTML = '';
+            const sortedTeams = [...currentTournamentState.teams].sort((a,b) => b.points - a.points || b.nrr - a.nrr);
+            let tableHTML = `<table class="w-full text-left text-xs">
+                <thead><tr class="border-b"><th class="p-1 font-semibold text-slate-500">Team</th><th>P</th><th>W</th><th>L</th><th>Pts</th><th>NRR</th></tr></thead>
+                <tbody>${sortedTeams.map(team => `
+                    <tr class="border-b"><td class="p-1 font-semibold text-slate-700">${team.name}</td><td>${team.played}</td><td>${team.wins}</td><td>${team.losses}</td><td class="font-bold">${team.points}</td><td>${team.nrr.toFixed(2)}</td></tr>`).join('')}
+                </tbody>
+            </table>`;
+            container.innerHTML = tableHTML;
+        }
+        
+        function openCreateMatchModal() {
+            const teamASelect = document.getElementById('team-a-select');
+            const teamBSelect = document.getElementById('team-b-select');
+            let options = '<option value="">Select Team</option>';
+            currentTournamentState.teams.forEach(team => { options += `<option value="${team.id}">${team.name}</option>`; });
+            teamASelect.innerHTML = options;
+            teamBSelect.innerHTML = options;
+            openModal('create-match-modal');
+        }
+
+        function createMatch() {
+            const teamAId = document.getElementById('team-a-select').value;
+            const teamBId = document.getElementById('team-b-select').value;
+            if (!teamAId || !teamBId || teamAId === teamBId) { showAlert("Please select two different teams."); return; }
+            const newMatch = { matchId: `match_${Date.now()}`, team1Id: teamAId, team2Id: teamBId, status: 'upcoming', result: '' };
+            currentTournamentState.fixtures.push(newMatch);
+            renderFixtures();
+            closeModal('create-match-modal');
+        }
+        
+        function viewMatchSummary(matchId) {
+            const match = currentTournamentState.fixtures.find(m => m.matchId === matchId);
+            if (!match || match.status !== 'completed' || !match.summary) {
+                showAlert("Match summary is not available for this match.");
+                return;
+            }
+            
+            const summary = match.summary;
+            const summaryContent = document.getElementById('match-summary-content');
+            summaryContent.innerHTML = '';
+
+            const inning1Team = currentTournamentState.teams.find(t => t.id === summary.innings[0].teamId);
+            const inning2Team = currentTournamentState.teams.find(t => t.id === summary.innings[1].teamId);
+            
+            // Match result header
+            const resultHtml = `<div class="p-4 bg-gray-100 rounded-lg text-center font-bold text-lg mb-4">${match.result}</div>`;
+
+            // Innings 1 Summary
+            const inning1Html = `
+                <div class="bg-white p-4 rounded-lg shadow-sm">
+                    <h4 class="text-xl font-bold mb-2">${inning1Team.name} Innings</h4>
+                    <p class="text-lg font-semibold">${summary.innings[0].score}/${summary.innings[0].wickets} (${Math.floor(summary.innings[0].balls / currentTournamentState.ballsPerOver)}.${summary.innings[0].balls % currentTournamentState.ballsPerOver} ov)</p>
+                    <h5 class="font-bold mt-4">Batting</h5>
+                    ${renderSummaryTable(summary.innings[0].playerStats, 'batting')}
+                    <h5 class="font-bold mt-4">Bowling</h5>
+                    ${renderSummaryTable(summary.innings[1].playerStats, 'bowling')}
+                </div>
+            `;
+            
+            // Innings 2 Summary
+            const inning2Html = `
+                <div class="bg-white p-4 rounded-lg shadow-sm mt-4">
+                    <h4 class="text-xl font-bold mb-2">${inning2Team.name} Innings</h4>
+                    <p class="text-lg font-semibold">${summary.innings[1].score}/${summary.innings[1].wickets} (${Math.floor(summary.innings[1].balls / currentTournamentState.ballsPerOver)}.${summary.innings[1].balls % currentTournamentState.ballsPerOver} ov)</p>
+                    <h5 class="font-bold mt-4">Batting</h5>
+                    ${renderSummaryTable(summary.innings[1].playerStats, 'batting')}
+                    <h5 class="font-bold mt-4">Bowling</h5>
+                    ${renderSummaryTable(summary.innings[0].playerStats, 'bowling')}
+                </div>
+            `;
+            
+            summaryContent.innerHTML = resultHtml + inning1Html + inning2Html;
+            openModal('match-summary-modal');
+        }
+        
+        function renderSummaryTable(playerStats, type) {
+            const players = Object.values(playerStats);
+            let tableHtml = '';
+
+            if (type === 'batting') {
+                tableHtml = `<table class="min-w-full text-sm">
+                    <thead><tr><th>Player</th><th>R</th><th>B</th><th>4s</th><th>6s</th><th>SR</th></tr></thead>
+                    <tbody>
+                        ${players.filter(p => p.runs > 0 || p.isOut).map(p => `
+                        <tr>
+                            <td>${p.name} ${p.isOut ? `(out ${p.dismissalInfo.type})` : '(not out)'}</td>
+                            <td>${p.runs}</td><td>${p.balls}</td><td>${p.fours}</td><td>${p.sixes}</td><td>${(p.balls > 0 ? (p.runs/p.balls*100) : 0).toFixed(2)}</td>
+                        </tr>
+                        `).join('')}
+                    </tbody>
+                </table>`;
+            } else if (type === 'bowling') {
+                tableHtml = `<table class="min-w-full text-sm">
+                    <thead><tr><th>Player</th><th>O</th><th>M</th><th>R</th><th>W</th><th>Econ</th></tr></thead>
+                    <tbody>
+                        ${players.filter(p => p.ballsBowled > 0).map(p => `
+                        <tr>
+                            <td>${p.name}</td>
+                            <td>${Math.floor(p.ballsBowled / currentTournamentState.ballsPerOver)}.${p.ballsBowled % currentTournamentState.ballsPerOver}</td>
+                            <td>${p.maidens}</td><td>${p.runsConceded}</td><td>${p.wickets}</td><td>${(p.ballsBowled > 0 ? (p.runsConceded / (p.ballsBowled / currentTournamentState.ballsPerOver)) : 0).toFixed(2)}</td>
+                        </tr>
+                        `).join('')}
+                    </tbody>
+                </table>`;
+            }
+            return tableHtml;
+        }
+
+
+        // --- MATCH SCORING (MODIFIED LOGIC) ---
+        function startTournamentMatch(matchId, isContinuing = false) {
+            const match = currentTournamentState.fixtures.find(f => f.matchId === matchId);
+            if (!match) {
+                console.error("Match not found for ID:", matchId);
+                showAlert("Error: Could not find the match details.");
+                return;
+            }
+            
+            if (isContinuing) {
+                const savedState = localStorage.getItem(`liveMatchState_${matchId}`);
+                if (savedState) {
+                    liveMatchState = JSON.parse(savedState);
+                } else {
+                     showAlert("Could not find saved match state. Starting new match.");
+                     isContinuing = false;
+                }
+            }
+            
+            if (!isContinuing) {
+                const team1Data = currentTournamentState.teams.find(t => t.id === match.team1Id);
+                const team2Data = currentTournamentState.teams.find(t => t.id === match.team2Id);
+
+                if (!team1Data || !team2Data) {
+                    showAlert("Error: Could not find team data for this match.");
+                    return;
+                }
+                const minPlayers = parseInt(document.getElementById('tournament-players').value) - 1;
+                if (team1Data.players.length < minPlayers || team2Data.players.length < minPlayers) {
+                    showAlert(`Both teams must have at least ${minPlayers} players before starting a match. Please go back and add players.`);
+                    return;
+                }
+                const initPlayerStats = (player) => ({ name: player, runs: 0, balls: 0, fours: 0, sixes: 0, isOut: false, dismissalInfo: null, ballsBowled: 0, runsConceded: 0, wickets: 0, maidens: 0 });
+                liveMatchState = {
+                    matchId, innings: 1, target: 0,
+                    totalOvers: currentTournamentState.overs,
+                    ballsPerOver: currentTournamentState.ballsPerOver,
+                    playersPerSide: currentTournamentState.playersPerSide,
+                    freeHit: false,
+                    freeHitEnabled: currentTournamentState.freeHitEnabled,
+                    freeHitRules: currentTournamentState.freeHitRules,
+                    team1: { ...JSON.parse(JSON.stringify(team1Data)), score: 0, wickets: 0, balls: 0, playerStats: Object.fromEntries(team1Data.players.map(p => [p, initPlayerStats(p)])) },
+                    team2: { ...JSON.parse(JSON.stringify(team2Data)), score: 0, wickets: 0, balls: 0, playerStats: Object.fromEntries(team2Data.players.map(p => [p, initPlayerStats(p)])) },
+                    currentOverEvents: [], isScoringLocked: false, lastBowler: null, isLocked: false,
+                };
+                 currentTournamentState.fixtures.find(f => f.matchId === matchId).status = 'in-progress';
+            }
+            
+            document.getElementById('tournament-flow').classList.add('hidden');
+            document.getElementById('scorer-section').classList.remove('hidden');
+            document.getElementById('toss-screen').classList.remove('hidden');
+            document.getElementById('scorer-app').classList.add('hidden');
+
+            if (!isContinuing || liveMatchState.innings === 1 && !liveMatchState.striker) {
+                 setupTossScreen(liveMatchState.team1, liveMatchState.team2);
+            } else {
+                 document.getElementById('toss-screen').classList.add('hidden');
+                 document.getElementById('scorer-app').classList.remove('hidden');
+                 document.getElementById('scorer-app').classList.add('flex');
+                 updateUI();
+            }
+        }
+        
+        function saveAndExitMatch() {
+             if (liveMatchState.matchId) {
+                localStorage.setItem(`liveMatchState_${liveMatchState.matchId}`, JSON.stringify(liveMatchState));
+                showConfirm('Match progress has been saved. Do you want to return to the dashboard?', () => {
+                    closeModal('confirm-modal');
+                    returnToDashboard(false);
+                });
+            } else {
+                returnToDashboard(false);
+            }
+        }
+
+        function returnToDashboard(confirmFirst = false) {
+            if (confirmFirst && !liveMatchState.isLocked) {
+                showConfirm("Are you sure you want to quit the match?", () => {
+                    document.getElementById('scorer-section').classList.add('hidden');
+                    document.getElementById('tournament-flow').classList.remove('hidden');
+                    closeModal('confirm-modal');
+                    displayDashboard();
+                });
+            } else {
+                document.getElementById('scorer-section').classList.add('hidden');
+                document.getElementById('tournament-flow').classList.remove('hidden');
+                displayDashboard();
+            }
+        }
+        
+        function setupTossScreen(team1, team2) {
+            document.getElementById('toss-team1-name').textContent = team1.name;
+            document.getElementById('toss-team2-name').textContent = team2.name;
+            const t1Logo = document.getElementById('toss-team1-logo-container');
+            t1Logo.style.backgroundColor = team1.color;
+            t1Logo.innerHTML = `<span>${team1.name.charAt(0)}</span>`;
+            const t2Logo = document.getElementById('toss-team2-logo-container');
+            t2Logo.style.backgroundColor = team2.color;
+            t2Logo.innerHTML = `<span>${team2.name.charAt(0)}</span>`;
+        }
+        
+        function selectTossWinner(teamKey) {
+            tossWinnerKey = teamKey;
+            document.getElementById('toss-decision-container').classList.remove('hidden');
+            document.getElementById('start-match-btn').disabled = false;
+            document.getElementById('start-match-btn').classList.remove('opacity-50', 'cursor-not-allowed');
+            document.getElementById('toss-winner-team1').classList.toggle('selected', teamKey === 'team1');
+            document.getElementById('toss-winner-team2').classList.toggle('selected', teamKey === 'team2');
+        }
+
+        function selectTossChoice(choice) {
+            tossDecision = choice;
+            document.getElementById('toss-choice-bat').classList.toggle('selected', choice === 'bat');
+            document.getElementById('toss-choice-bowl').classList.toggle('selected', choice === 'bowl');
+        }
+
+        function startMatch() {
+            liveMatchState.battingTeam = tossDecision === 'bat' ? tossWinnerKey : (tossWinnerKey === 'team1' ? 'team2' : 'team1');
+            liveMatchState.bowlingTeam = liveMatchState.battingTeam === 'team1' ? 'team2' : 'team1';
+            document.getElementById('toss-screen').classList.add('hidden');
+            document.getElementById('scorer-app').classList.remove('hidden');
+            document.getElementById('scorer-app').classList.add('flex');
+            initializeScorer();
+        }
+
+        async function initializeScorer() {
+            liveMatchState.isScoringLocked = true;
+            updateUI();
+            const striker = await selectPlayer('striker'); liveMatchState.striker = striker;
+            const nonStriker = await selectPlayer('nonStriker'); liveMatchState.nonStriker = nonStriker;
+            const bowler = await selectPlayer('bowler'); liveMatchState.bowler = bowler;
+            liveMatchState.isScoringLocked = false;
+            updateUI();
+            addCommentary(`Welcome to the match between ${liveMatchState.team1.name} and ${liveMatchState.team2.name}.`, true);
+        }
+        
+        function addCommentary(text, isImportant = false) {
+            const commentaryBox = document.getElementById('live-commentary');
+            
+            if (isImportant) {
+                const welcomeModal = document.createElement('div');
+                welcomeModal.className = "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] p-4";
+                welcomeModal.innerHTML = `<div class="bg-white rounded-lg shadow-xl p-6 text-center w-full max-w-sm"><p class="text-xl font-bold text-gray-800">${text}</p><button class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md" onclick="this.parentElement.parentElement.remove()">OK</button></div>`;
+                document.body.appendChild(welcomeModal);
+            } else {
+                 const newEntry = document.createElement('p');
+                 newEntry.className = "text-xs text-gray-700 mt-1";
+                 newEntry.innerHTML = text;
+                 commentaryBox.prepend(newEntry);
+                 commentaryBox.scrollTop = 0;
+            }
+        }
+
+        function selectPlayer(role) {
+            return new Promise(resolve => {
+                document.getElementById('modal-title').textContent = `Select ${role.charAt(0).toUpperCase() + role.slice(1)}`;
+                const teamKey = (role === 'bowler' || role === 'fielder') ? liveMatchState.bowlingTeam : liveMatchState.battingTeam;
+                const select = document.getElementById('player-select');
+                const battingPlayers = liveMatchState[liveMatchState.battingTeam].players;
+                const bowlingPlayers = liveMatchState[liveMatchState.bowlingTeam].players;
+                let availablePlayers = [];
+
+                if (role === 'striker' || role === 'nonStriker') {
+                    availablePlayers = battingPlayers.filter(p => !liveMatchState[liveMatchState.battingTeam].playerStats[p].isOut);
+                } else if (role === 'bowler') {
+                    availablePlayers = bowlingPlayers;
+                }
+
+                select.innerHTML = availablePlayers.map(p => {
+                    const stats = liveMatchState[teamKey].playerStats[p];
+                    const isSelected = liveMatchState.striker?.name === p || liveMatchState.nonStriker?.name === p;
+                    const isLastBowler = role === 'bowler' && liveMatchState.lastBowler === p;
+                    const isDisabled = isSelected || isLastBowler;
+                    return `<option value="${p}" ${isDisabled ? 'disabled' : ''}>${p}</option>`;
+                }).join('');
+
+                document.getElementById('player-save-btn').onclick = () => {
+                    if(!select.value) { showAlert("Please select a player."); return; }
+                    const player = liveMatchState[teamKey].playerStats[select.value];
+                    closeModal('player-modal');
+                    resolve(player);
+                };
+                openModal('player-modal');
+            });
+        }
+        
+        function addRuns(runs) { 
+            const isFreeHit = liveMatchState.freeHit;
+            
+            if (isFreeHit) {
+                liveMatchState.freeHit = false;
+                document.getElementById('free-hit-indicator').classList.add('hidden');
+            }
+
+            processBall({ 
+                runsOnBat: runs, 
+                eventText: `${runs}`,
+                commentary: `${liveMatchState.striker.name} hits a ${runs === 4 ? 'boundary' : runs === 6 ? 'massive six' : 'single'}! The score moves to ${liveMatchState[liveMatchState.battingTeam].score + runs}.`,
+                isFreeHit: isFreeHit
+            });
+        }
+        
+        function openNoBallModal() {
+            openModal('no-ball-sub-modal');
+            document.getElementById('noball-runs-container').classList.add('hidden');
+        }
+
+        function handleNoBall(type) {
+            const isFreeHitEligible = (currentTournamentState.freeHitRules === 'all' || (currentTournamentState.freeHitRules === 'overstep_only' && type === 'overstep'));
+            if (currentTournamentState.freeHitEnabled && isFreeHitEligible) {
+                liveMatchState.freeHit = true;
+                document.getElementById('free-hit-indicator').classList.remove('hidden');
+            }
+            document.getElementById('noball-runs-container').classList.remove('hidden');
+            addCommentary(`No-ball! ${liveMatchState.bowler.name} bowls a ${type.replace('_', ' ')}. Free hit is coming up!`);
+        }
+        
+        function addExtra(type, runs) { 
+            const isLegal = type === 'b' || type === 'lb' || type === 'wd' || type === 'nb';
+            const extraRuns = (type === 'wd' || type === 'nb' ? 1 : 0) + runs;
+            const runsOnBat = type === 'nb' ? runs : 0;
+            const eventText = type.toUpperCase() + (runs > 0 ? `+${runs}` : '');
+            let commentaryText = '';
+            
+            if (type === 'wd') {
+                commentaryText = `Wide ball! Adds ${extraRuns} run${extraRuns > 1 ? 's' : ''}.`;
+            } else if (type === 'nb') {
+                commentaryText = `No-ball! ${liveMatchState.bowler.name} oversteps. Free hit is coming up!`;
+            } else if (type === 'b') {
+                commentaryText = `Byes! The ball runs away for ${runs} extra run${runs > 1 ? 's' : ''}.`;
+            } else if (type === 'lb') {
+                commentaryText = `Leg-byes! They scamper for ${runs} extra run${runs > 1 ? 's' : ''}.`;
+            }
+
+            processBall({ runsOnBat, extraRuns, isLegal, eventText, commentary: commentaryText }); 
+            closeModal(`${type}-modal`); 
+        }
+
+        function openWicketModal() { openModal('wicket-type-modal'); }
+
+        // NEW: Open modal for run out on extras
+        function openRunOutExtraModal(type, title) {
+            closeModal(`${type}-modal`);
+            document.getElementById('run-out-extra-modal').querySelector('h3').textContent = title;
+            const playerSelect = document.getElementById('run-out-player-select');
+            playerSelect.innerHTML = `<option value="${liveMatchState.striker.name}">${liveMatchState.striker.name} (Striker)</option><option value="${liveMatchState.nonStriker.name}">${liveMatchState.nonStriker.name} (Non-striker)</option>`;
+            document.getElementById('run-out-runs-input').value = 0;
+            pendingRunOutDetails = { type, dismissedPlayer: null, runsTaken: 0, isLegal: false, eventText: 'RUN OUT' };
+            openModal('run-out-extra-modal');
+        }
+
+        // NEW: Finalize run out from extra modes
+        async function finalizeRunOutExtra() {
+            const dismissedPlayerName = document.getElementById('run-out-player-select').value;
+            const runsTaken = parseInt(document.getElementById('run-out-runs-input').value) || 0;
+            const extraType = pendingRunOutDetails.type;
+
+            closeModal('run-out-extra-modal');
+
+            const extraRuns = (extraType === 'wd' || extraType === 'nb' ? 1 : 0) + runsTaken;
+            const runsOnBat = extraType === 'nb' ? runsTaken : 0;
+            const eventText = extraType.toUpperCase() + ' ' + (runsTaken > 0 ? `+${runsTaken}` : '') + ' & RO';
+            
+            const battingTeam = liveMatchState[liveMatchState.battingTeam];
+            const dismissedPlayer = battingTeam.playerStats[dismissedPlayerName];
+            
+            // Check for free hit - no wicket falls on a free hit
+            if (liveMatchState.freeHit) {
+                addCommentary('Wicket on a free hit! The batsman survives.');
+                if (type === 'Run Out') {
+                    const runsTaken = 0; 
+                    battingTeam.score += runsTaken;
+                    if (liveMatchState.bowler) liveMatchState.bowler.runsConceded += runsTaken;
+                }
+                liveMatchState.freeHit = false;
+                document.getElementById('free-hit-indicator').classList.add('hidden');
+                processBall({ runsOnBat, extraRuns, isLegal: false, dismissal: null, eventText: 'Free Hit + RO', commentary: `A run-out attempt on a free hit! ${dismissedPlayerName} is safe.` });
+                return;
+            }
+
+            dismissedPlayer.isOut = true;
+            dismissedPlayer.dismissalInfo = { type: 'Run Out', bowler: liveMatchState.bowler.name };
+            
+            processBall({ dismissal: true, commentary: commentaryText });
+
+            if (battingTeam.wickets < liveMatchState.playersPerSide -1) {
+                 const nextBatter = await selectPlayer('batter');
+                 if(liveMatchState.striker.name === dismissedPlayerName){
+                    liveMatchState.striker = nextBatter;
+                 } else {
+                    liveMatchState.nonStriker = nextBatter;
+                 }
+                 updateUI();
+            }
+        }
+
+        function processBall(delivery) {
+            if (liveMatchState.isLocked || liveMatchState.isScoringLocked) return;
+            matchHistory.push(JSON.parse(JSON.stringify(liveMatchState)));
+            
+            const { runsOnBat = 0, extraRuns = 0, isLegal = true, dismissal = null, eventText = '', commentary = '', isFreeHit = false } = delivery;
+            const battingTeam = liveMatchState[liveMatchState.battingTeam];
+            const bowlingTeam = liveMatchState[liveMatchState.bowlingTeam];
+
+            let wicketFell = false;
+            if (dismissal && !isFreeHit) {
+                battingTeam.wickets++;
+                if (delivery.dismissalInfo && delivery.dismissalInfo.type !== 'Run Out') {
+                    liveMatchState.bowler.wickets++;
+                }
+                wicketFell = true;
+            }
+            
+            battingTeam.score += runsOnBat + extraRuns;
+            if (liveMatchState.bowler) liveMatchState.bowler.runsConceded += runsOnBat + extraRuns;
+            
+            if (isLegal) {
+                battingTeam.balls++;
+                if(liveMatchState.bowler) liveMatchState.bowler.ballsBowled++;
+                if (!dismissal && liveMatchState.striker) {
+                    liveMatchState.striker.balls++;
+                }
+                liveMatchState.currentOverEvents.push({ event: eventText, isLegal: true, dismissal: wicketFell });
+            } else {
+                liveMatchState.currentOverEvents.push({ event: eventText, isLegal: false, dismissal: wicketFell });
+            }
+
+            if (liveMatchState.striker && !wicketFell) {
+                liveMatchState.striker.runs += runsOnBat;
+                if (runsOnBat === 4) liveMatchState.striker.fours++;
+                if (runsOnBat === 6) liveMatchState.striker.sixes++;
+            }
+
+            if (!wicketFell && (runsOnBat + extraRuns) % 2 !== 0) {
+                [liveMatchState.striker, liveMatchState.nonStriker] = [liveMatchState.nonStriker, liveMatchState.striker];
+            }
+            
+            if (runsOnBat === 4) triggerEventAnimation('FOUR!', 'text-blue-500');
+            if (runsOnBat === 6) triggerEventAnimation('SIX!', 'text-purple-500');
+            if (wicketFell) triggerEventAnimation('OUT!', 'text-red-500');
+            if (isFreeHit) triggerEventAnimation('FREE HIT!', 'text-green-500');
+
+            if (commentary) addCommentary(commentary);
+            
+            updateUI();
+            
+            const maxBalls = liveMatchState.totalOvers * liveMatchState.ballsPerOver;
+            const maxWickets = liveMatchState.playersPerSide - 1;
+
+            if (liveMatchState.innings === 1) {
+                if (isLegal && (battingTeam.balls >= maxBalls || battingTeam.wickets >= maxWickets)) {
+                    endFirstInnings();
+                    return;
+                }
+            } else if (liveMatchState.innings === 2) {
+                if (battingTeam.score >= liveMatchState.target || (isLegal && (battingTeam.balls >= maxBalls || battingTeam.wickets >= maxWickets))) {
+                    endMatch();
+                    return;
+                }
+            }
+
+            if (isLegal && battingTeam.balls % liveMatchState.ballsPerOver === 0 && battingTeam.balls > 0) {
+                 handleOverEnd();
+            }
+        }
+
+        async function handleWicket(type) {
+            closeModal('wicket-type-modal');
+            const battingTeam = liveMatchState[liveMatchState.battingTeam];
+            let dismissedPlayer = liveMatchState.striker;
+            let commentaryText = '';
+
+            if (type === 'Run Out') {
+                openModal('run-out-modal');
+                const runOutOptions = document.getElementById('run-out-options');
+                runOutOptions.innerHTML = `<button class="p-3 bg-gray-100 rounded-lg hover:bg-gray-200" onclick="finalizeWicket('Run Out', '${liveMatchState.striker.name}')">${liveMatchState.striker.name}</button>
+                                           <button class="p-3 bg-gray-100 rounded-lg hover:bg-gray-200" onclick="finalizeWicket('Run Out', '${liveMatchState.nonStriker.name}')">${liveMatchState.nonStriker.name}</button>`;
+                return; 
+            } else {
+                 if (type === 'Bowled') commentaryText = `Bowled him! A beautiful delivery from ${liveMatchState.bowler.name} that rattled the stumps.`;
+                 if (type === 'Catch') commentaryText = `${liveMatchState.striker.name} is caught out! A sharp catch from a fielder.`;
+                 if (type === 'Stumped') commentaryText = `Stumped! The keeper was quick to dislodge the bails.`;
+                finalizeWicket(type, dismissedPlayer.name, commentaryText);
+            }
+        }
+
+        async function finalizeWicket(type, dismissedPlayerName, commentaryText = '') {
+            closeModal('run-out-modal');
+            const battingTeamKey = liveMatchState.battingTeam;
+            const battingTeam = liveMatchState[battingTeamKey];
+            const dismissedPlayer = battingTeam.playerStats[dismissedPlayerName];
+            
+            if (liveMatchState.freeHit) {
+                addCommentary('Wicket on a free hit! The batsman survives.');
+                if (type === 'Run Out') {
+                    const runsTaken = 0; 
+                    battingTeam.score += runsTaken;
+                    if (liveMatchState.bowler) liveMatchState.bowler.runsConceded += runsTaken;
+                }
+                liveMatchState.freeHit = false;
+                document.getElementById('free-hit-indicator').classList.add('hidden');
+                processBall({ runsOnBat: 0, extraRuns: 0, isLegal: true, dismissal: null, eventText: 'Free Hit + RO', commentary: `A run-out attempt on a free hit! ${dismissedPlayerName} is safe.` });
+                return;
+            }
+
+            dismissedPlayer.isOut = true;
+            dismissedPlayer.dismissalInfo = { type, bowler: liveMatchState.bowler.name };
+            
+            processBall({ dismissal: true, commentary: commentaryText });
+
+            if (battingTeam.wickets < liveMatchState.playersPerSide -1) {
+                 const nextBatter = await selectPlayer('batter');
+                 if(liveMatchState.striker.name === dismissedPlayerName){
+                    liveMatchState.striker = nextBatter;
+                 } else {
+                    liveMatchState.nonStriker = nextBatter;
+                 }
+                 updateUI();
+            }
+        }
+
+        function handleOverEnd() { 
+            [liveMatchState.striker, liveMatchState.nonStriker] = [liveMatchState.nonStriker, liveMatchState.striker];
+            liveMatchState.lastBowler = liveMatchState.bowler.name;
+            liveMatchState.currentOverEvents = [];
+            liveMatchState.isScoringLocked = true;
+            document.getElementById('bowler-prompt-overlay').classList.remove('hidden');
+            addCommentary(`End of the over. The score is ${liveMatchState[liveMatchState.battingTeam].score}/${liveMatchState[liveMatchState.battingTeam].wickets}.`);
+        }
+
+        function endFirstInnings() {
+            liveMatchState.isLocked = true;
+            updateUI();
+            const battingTeam = liveMatchState[liveMatchState.battingTeam];
+            const bowlingTeam = liveMatchState[liveMatchState.bowlingTeam];
+            const target = battingTeam.score + 1;
+            
+            liveMatchState.inningsSummary = liveMatchState.inningsSummary || [];
+            liveMatchState.inningsSummary.push({
+                teamId: battingTeam.id,
+                score: battingTeam.score,
+                wickets: battingTeam.wickets,
+                balls: battingTeam.balls,
+                playerStats: JSON.parse(JSON.stringify(battingTeam.playerStats)),
+                bowlingStats: JSON.parse(JSON.stringify(bowlingTeam.playerStats))
+            });
+
+            showInningsBreakModal(battingTeam, bowlingTeam, target);
+        }
+
+        async function startSecondInnings() {
+            const firstInningsTeamKey = liveMatchState.battingTeam;
+            const secondInningsTeamKey = liveMatchState.bowlingTeam;
+
+            liveMatchState.innings = 2;
+            liveMatchState.target = liveMatchState[firstInningsTeamKey].score + 1;
+            liveMatchState.battingTeam = secondInningsTeamKey;
+            liveMatchState.bowlingTeam = firstInningsTeamKey;
+
+            liveMatchState.currentOverEvents = [];
+            liveMatchState.lastBowler = null;
+            matchHistory = []; 
+            liveMatchState.striker = null;
+            liveMatchState.nonStriker = null;
+            liveMatchState.bowler = null;
+            
+            liveMatchState.isLocked = false;
+            liveMatchState.isScoringLocked = true;
+            updateUI();
+
+            const striker = await selectPlayer('striker'); liveMatchState.striker = striker;
+            const nonStriker = await selectPlayer('nonStriker'); liveMatchState.nonStriker = nonStriker;
+            const bowler = await selectPlayer('bowler'); liveMatchState.bowler = bowler;
+            
+            addCommentary(`The second innings is underway. ${liveMatchState[liveMatchState.battingTeam].name} needs ${liveMatchState.target} runs to win.`, true);
+
+            liveMatchState.isScoringLocked = false;
+            updateUI();
+        }
+
+        function endMatch() {
+            liveMatchState.isLocked = true;
+            updateUI();
+            const battingTeam = liveMatchState[liveMatchState.battingTeam];
+            const bowlingTeam = liveMatchState[liveMatchState.bowlingTeam];
+            let resultMessage = '';
+            let winningTeam = null;
+            let matchStatus = '';
+
+            if (battingTeam.score >= liveMatchState.target) {
+                const wicketsRemaining = liveMatchState.playersPerSide - 1 - battingTeam.wickets;
+                resultMessage = `${battingTeam.name} won by ${wicketsRemaining} wicket(s).`;
+                winningTeam = battingTeam;
+                matchStatus = 'win';
+            } else if (battingTeam.score < bowlingTeam.score) {
+                const runsMargin = bowlingTeam.score - battingTeam.score;
+                resultMessage = `${bowlingTeam.name} won by ${runsMargin} run(s).`;
+                winningTeam = bowlingTeam;
+                matchStatus = 'win';
+            } else {
+                resultMessage = "The match is a tie!";
+                matchStatus = 'tie';
+            }
+            
+            const matchIndex = currentTournamentState.fixtures.findIndex(m => m.matchId === liveMatchState.matchId);
+            if (matchIndex !== -1) {
+                currentTournamentState.fixtures[matchIndex].status = 'completed';
+                currentTournamentState.fixtures[matchIndex].result = resultMessage;
+                currentTournamentState.fixtures[matchIndex].winnerId = winningTeam ? winningTeam.id : null;
+                
+                liveMatchState.inningsSummary = liveMatchState.inningsSummary || [];
+                liveMatchState.inningsSummary.push({
+                    teamId: battingTeam.id,
+                    score: battingTeam.score,
+                    wickets: battingTeam.wickets,
+                    balls: battingTeam.balls,
+                    playerStats: battingTeam.playerStats,
+                    bowlingStats: bowlingTeam.playerStats
+                });
+                currentTournamentState.fixtures[matchIndex].summary = liveMatchState.inningsSummary;
+                
+                updatePointsTable(matchStatus, winningTeam);
+                updateKnockoutBracket(liveMatchState.matchId, winningTeam);
+            }
+            
+            const backgroundColor = winningTeam ? winningTeam.color : '#6b7280';
+            const titleColor = winningTeam ? '#ffffff' : '#fef08a';
+
+            showFullScreenMessage(resultMessage, 'Final Score', 'Return to Dashboard', () => returnToDashboard(false), backgroundColor, titleColor);
+        }
+        
+        function updatePointsTable(matchStatus, winningTeam) {
+            const team1 = currentTournamentState.teams.find(t => t.id === liveMatchState.team1.id);
+            const team2 = currentTournamentState.teams.find(t => t.id === liveMatchState.team2.id);
+            
+            team1.played++;
+            team2.played++;
+
+            if (matchStatus === 'win') {
+                const winningTeamObj = winningTeam.id === team1.id ? team1 : team2;
+                const losingTeamObj = winningTeam.id === team1.id ? team2 : team1;
+
+                winningTeamObj.wins++;
+                winningTeamObj.points += currentTournamentState.pointsRules.win;
+                losingTeamObj.losses++;
+                losingTeamObj.points += currentTournamentState.pointsRules.loss;
+            } else if (matchStatus === 'tie') {
+                team1.ties++;
+                team2.ties++;
+                team1.points += currentTournamentState.pointsRules.tie;
+                team2.points += currentTournamentState.pointsRules.tie;
+            }
+            
+            renderPointsTable();
+        }
+        
+        function updateKnockoutBracket(matchId, winner) {
+            const winnerPlaceholderId = `winner_${matchId}`;
+            const winnerTeamId = winner ? winner.id : `tie_${matchId}`;
+            
+            const nextMatchIndex = currentTournamentState.fixtures.findIndex(f => f.team1Id === winnerPlaceholderId || f.team2Id === winnerPlaceholderId);
+            
+            if(nextMatchIndex !== -1) {
+                const nextMatch = currentTournamentState.fixtures[nextMatchIndex];
+                if (nextMatch.team1Id === winnerPlaceholderId) {
+                    nextMatch.team1Id = winnerTeamId;
+                } else if (nextMatch.team2Id === winnerPlaceholderId) {
+                    nextMatch.team2Id = winnerTeamId;
+                }
+            } else {
+                 // Logic to update knockout matches from group stage
+                currentTournamentState.fixtures.forEach(fixture => {
+                    if (fixture.matchName.startsWith('Group')) {
+                        const groupName = fixture.matchName.split(' ')[1];
+                        const teamsAdvancing = parseInt(document.getElementById('knockout-teams-per-group').value);
+                        const sortedTeams = currentTournamentState.teams.filter(t => t.group === groupName).sort((a, b) => b.points - a.points || b.nrr - a.nrr);
+                        for (let i = 0; i < teamsAdvancing; i++) {
+                            const advancingTeam = sortedTeams[i];
+                            const advancingPlaceholder = `winner_group_${groupName.replace('Group ', '').toLowerCase()}_${i + 1}`;
+                            const knockoutMatchIndex = currentTournamentState.fixtures.findIndex(f => f.team1Id === advancingPlaceholder || f.team2Id === advancingPlaceholder);
+                            if(knockoutMatchIndex !== -1) {
+                                if(currentTournamentState.fixtures[knockoutMatchIndex].team1Id === advancingPlaceholder) {
+                                    currentTournamentState.fixtures[knockoutMatchIndex].team1Id = advancingTeam.id;
+                                } else {
+                                    currentTournamentState.fixtures[knockoutMatchIndex].team2Id = advancingTeam.id;
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            renderFixtures();
+        }
+
+        function undo() { 
+            if (liveMatchState.isLocked) return; 
+            if (matchHistory.length > 0) { 
+                liveMatchState = matchHistory.pop(); 
+                updateUI(); 
+            } 
+        }
+
+        function toggleScoringLock() {
+            liveMatchState.isLocked = !liveMatchState.isLocked;
+            const lockBtn = document.getElementById('lock-btn');
+            const scoringGrid = document.querySelector('.scoring-grid');
+            if (liveMatchState.isLocked) {
+                lockBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>`;
+                scoringGrid.querySelectorAll('button').forEach(btn => btn.disabled = true);
+                scoringGrid.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                lockBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" /></svg>`;
+                scoringGrid.querySelectorAll('button').forEach(btn => btn.disabled = false);
+                scoringGrid.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function updateUI() {
+            updateHeader();
+            updateScoreboard();
+            updateBattingTable();
+            updateBowlingTable();
+            updateOverProgress();
+            updateTargetInfo();
+            updateRates();
+            const lockBtn = document.getElementById('lock-btn');
+            const scoringGrid = document.querySelector('.scoring-grid');
+            const isCurrentlyLocked = liveMatchState.isLocked || liveMatchState.isScoringLocked;
+            const freeHitIndicator = document.getElementById('free-hit-indicator');
+
+            if (liveMatchState.freeHit) {
+                freeHitIndicator.classList.remove('hidden');
+            } else {
+                freeHitIndicator.classList.add('hidden');
+            }
+
+            if (isCurrentlyLocked) {
+                lockBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>`;
+                scoringGrid.querySelectorAll('button').forEach(btn => btn.disabled = true);
+                scoringGrid.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                 lockBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" /></svg>`;
+                scoringGrid.querySelectorAll('button').forEach(btn => btn.disabled = false);
+                scoringGrid.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+        
+        function updateRates() {
+            const battingTeam = liveMatchState[liveMatchState.battingTeam];
+            const ballsPlayed = battingTeam.balls;
+            
+            if (ballsPlayed > 0) {
+                const oversPlayed = ballsPlayed / liveMatchState.ballsPerOver;
+                const crr = battingTeam.score / oversPlayed;
+                document.getElementById('crr-display').textContent = crr.toFixed(2);
+            } else {
+                document.getElementById('crr-display').textContent = '0.00';
+            }
+
+            if (liveMatchState.innings === 2) {
+                const runsNeeded = liveMatchState.target - battingTeam.score;
+                const ballsRemaining = (liveMatchState.totalOvers * liveMatchState.ballsPerOver) - ballsPlayed;
+                if (ballsRemaining > 0) {
+                    const rrr = (runsNeeded / ballsRemaining) * liveMatchState.ballsPerOver;
+                    document.getElementById('rrr-display').textContent = rrr.toFixed(2);
+                } else {
+                    document.getElementById('rrr-display').textContent = '0.00';
+                }
+            } else {
+                 document.getElementById('rrr-display').textContent = '0.00';
+            }
+        }
+
+        function updateHeader() {
+            const team1 = liveMatchState.team1, team2 = liveMatchState.team2;
+            const header = document.getElementById('match-header');
+            header.innerHTML = `
+                <h1 class="font-bold text-lg">${team1.name.toUpperCase()} vs ${team2.name.toUpperCase()}</h1>
+                <p class="text-xs text-gray-500">${currentTournamentState.name} | ${liveMatchState.totalOvers} Overs, ${liveMatchState.playersPerSide}-a-side</p>
+            `;
+        }
+        function updateScoreboard() {
+            const battingTeam = liveMatchState[liveMatchState.battingTeam];
+            const bowlingTeam = liveMatchState[liveMatchState.bowlingTeam];
+            if(!battingTeam) return;
+
+            const container = document.getElementById('team-scores-container');
+            const overs = Math.floor(battingTeam.balls / liveMatchState.ballsPerOver);
+            const ballsThisOver = battingTeam.balls % liveMatchState.ballsPerOver;
+            
+            const battingHTML = `<div class="flex items-center justify-between"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white" style="background-color: ${battingTeam.color};">${battingTeam.name.charAt(0)}</div><span class="font-semibold text-lg text-gray-800">${battingTeam.name}</span></div><div class="text-right"><p class="text-2xl font-extrabold text-gray-900">${battingTeam.score}/${battingTeam.wickets}</p><p class="text-sm text-gray-500">(${overs}.${ballsThisOver} / ${liveMatchState.totalOvers} ov)</p></div></div>`;
+            
+            let bowlingHTML = '';
+            if (bowlingTeam) {
+                const bowlingTeamOvers = Math.floor(bowlingTeam.balls / liveMatchState.ballsPerOver);
+                const bowlingTeamBalls = bowlingTeam.balls % liveMatchState.ballsPerOver;
+                const bowlingTeamScoreDisplay = (liveMatchState.innings > 1) ? `<p class="text-lg font-bold text-gray-700">${bowlingTeam.score}/${bowlingTeam.wickets}</p><p class="text-xs text-gray-500">(${bowlingTeamOvers}.${bowlingTeamBalls} ov)</p>` : `<p class="text-sm font-medium text-gray-500">Yet to bat</p>`;
+                bowlingHTML = `<div class="flex items-center justify-between opacity-70"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white" style="background-color: ${bowlingTeam.color};">${bowlingTeam.name.charAt(0)}</div><span class="font-semibold text-lg text-gray-800">${bowlingTeam.name}</span></div><div class="text-right">${bowlingTeamScoreDisplay}</div></div>`;
+            }
+            container.innerHTML = battingHTML + bowlingHTML;
+        }
+        function updateBattingTable() {
+            const table = document.getElementById('batting-table');
+            let html = '';
+            const s = liveMatchState.striker, ns = liveMatchState.nonStriker;
+            if(s) html += `<tr><td class="p-2 font-semibold text-gray-800"><span class="striker-dot"></span>${s.name}</td><td class="text-center font-bold">${s.runs}</td><td class="text-center text-gray-600">${s.balls}</td><td class="text-center text-gray-600">${s.fours}</td><td class="text-center text-gray-600">${s.sixes}</td><td class="text-right text-gray-600">${(s.balls > 0 ? (s.runs/s.balls*100):0).toFixed(2)}</td></tr>`;
+            if(ns) html += `<tr><td class="p-2 font-semibold text-gray-800">${ns.name}</td><td class="text-center font-bold">${ns.runs}</td><td class="text-center text-gray-600">${ns.balls}</td><td class="text-center text-gray-600">${ns.fours}</td><td class="text-center text-gray-600">${ns.sixes}</td><td class="text-right text-gray-600">${(ns.balls > 0 ? (s.runs/s.balls*100):0).toFixed(2)}</td></tr>`;
+            table.innerHTML = html;
+        }
+        function updateBowlingTable() {
+            const table = document.getElementById('bowling-table');
+            const b = liveMatchState.bowler;
+            if(!b) { table.innerHTML = ''; return; }
+            const ballsPerOver = liveMatchState.ballsPerOver;
+            const overs = `${Math.floor(b.ballsBowled / ballsPerOver)}.${b.ballsBowled % ballsPerOver}`;
+            const econ = b.ballsBowled > 0 ? (b.runsConceded / (b.ballsBowled / ballsPerOver)).toFixed(2) : '0.00';
+            table.innerHTML = `<tr><td class="p-2 font-semibold text-gray-800">${b.name}</td><td class="text-center text-gray-600">${overs}</td><td class="text-center text-gray-600">${b.maidens}</td><td class="text-center text-gray-600">${b.runsConceded}</td><td class="text-center font-bold">${b.wickets}</td><td class="text-right text-gray-600">${econ}</td></tr>`;
+        }
+
+        function updateOverProgress() {
+            const container = document.getElementById('over-progress-container');
+            if(!liveMatchState.currentOverEvents) { container.innerHTML = ''; return; }
+            container.innerHTML = liveMatchState.currentOverEvents.map(ball => {
+                let classes = 'w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold ';
+                const event = ball.event.toLowerCase();
+                if(ball.dismissal) classes += 'bg-red-500 text-white';
+                else if (event.includes('4') || event.includes('6')) classes += 'bg-blue-500 text-white';
+                else if (event.includes('wd') || event.includes('nb')) classes += 'bg-yellow-400 text-black';
+                else classes += 'bg-gray-200 text-gray-800';
+                return `<span class="${classes}">${ball.event}</span>`;
+            }).join('');
+        }
+        
+        function updateTargetInfo() {
+            const container = document.getElementById('target-info-container');
+            if (liveMatchState.innings === 2) {
+                container.classList.remove('hidden');
+                const battingTeam = liveMatchState[liveMatchState.battingTeam];
+                const runsNeeded = liveMatchState.target - battingTeam.score;
+                const ballsRemaining = (liveMatchState.totalOvers * liveMatchState.ballsPerOver) - battingTeam.balls;
+                container.textContent = `Target: ${liveMatchState.target}. Need ${runsNeeded} runs in ${ballsRemaining} balls.`;
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+        
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const startDateInput = document.getElementById('start-date');
+            if(startDateInput) startDateInput.value = '';
+            
+            loadSavedTeams();
+
+            const alertOkBtn = document.getElementById('alert-ok-btn');
+            if(alertOkBtn) alertOkBtn.onclick = () => { if(alertCallback) { alertCallback(); alertCallback = null; } closeModal('alert-modal'); };
+            
+            const confirmCancelBtn = document.getElementById('confirm-cancel-btn');
+            if(confirmCancelBtn) confirmCancelBtn.onclick = () => { confirmCallback = null; closeModal('confirm-modal');};
+            
+            const confirmOkBtn = document.getElementById('confirm-ok-btn');
+            if(confirmOkBtn) confirmOkBtn.onclick = () => { if(confirmCallback) confirmCallback(); confirmCallback = null; closeModal('confirm-modal'); };
+
+            const tournamentTeamsInput = document.getElementById('tournament-teams');
+            if(tournamentTeamsInput) tournamentTeamsInput.addEventListener('input', generateTeamInputs);
+
+            const createMatchBtn = document.getElementById('create-match-btn');
+            if(createMatchBtn) createMatchBtn.onclick = openCreateMatchModal;
+
+            const confirmCreateMatchBtn = document.getElementById('confirm-create-match-btn');
+            if(confirmCreateMatchBtn) confirmCreateMatchBtn.onclick = createMatch;
+
+            const tossWinner1 = document.getElementById('toss-winner-team1');
+            if(tossWinner1) tossWinner1.onclick = () => selectTossWinner('team1');
+
+            const tossWinner2 = document.getElementById('toss-winner-team2');
+            if(tossWinner2) tossWinner2.onclick = () => selectTossWinner('team2');
+
+            const tossChoiceBat = document.getElementById('toss-choice-bat');
+            if(tossChoiceBat) tossChoiceBat.onclick = () => selectTossChoice('bat');
+            
+            const tossChoiceBowl = document.getElementById('toss-choice-bowl');
+            if(tossChoiceBowl) tossChoiceBowl.onclick = () => selectTossChoice('bowl');
+
+            const startMatchBtn = document.getElementById('start-match-btn');
+            if(startMatchBtn) startMatchBtn.onclick = startMatch;
+
+            const bowlerPrompt = document.getElementById('bowler-prompt-overlay');
+            if(bowlerPrompt) bowlerPrompt.onclick = async () => {
+                bowlerPrompt.classList.add('hidden');
+                liveMatchState.bowler = await selectPlayer('bowler');
+                liveMatchState.isScoringLocked = false; 
+                updateUI(); 
+            };
+        });
+    </script>
+</body>
+</html>
