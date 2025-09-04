@@ -15,73 +15,80 @@
         <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl mx-auto flex flex-col">
             <div class="flex justify-between items-center p-4 border-b">
                 <h3 class="text-2xl font-bold text-gray-800">Match History</h3>
-                <a href="index.html" class="text-sm font-semibold py-2 px-3 rounded-md text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-colors">Back to Home</a>
+                <a href="single_match.html" class="text-sm font-semibold py-2 px-3 rounded-md text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-colors">Back to Dashboard</a>
             </div>
             <div id="match-history-list" class="p-4 space-y-4 overflow-y-auto" style="max-height: 80vh;">
-                <!-- Completed matches will be rendered here -->
-            </div>
+                </div>
         </div>
     </div>
-
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             renderMatchHistory();
         });
 
         function getCompletedMatches() {
-            try {
-                const matchesJSON = localStorage.getItem('completedMatches');
-                return matchesJSON ? JSON.parse(matchesJSON) : [];
-            } catch (e) {
-                console.error("Failed to load completed matches:", e);
-                return [];
-            }
+            const matchesJSON = localStorage.getItem('completedMatches');
+            return matchesJSON ? JSON.parse(matchesJSON) : [];
         }
 
         function renderMatchHistory() {
-            const container = document.getElementById('match-history-list');
             const matches = getCompletedMatches();
+            const container = document.getElementById('match-history-list');
             container.innerHTML = '';
 
             if (matches.length === 0) {
                 container.innerHTML = '<p class="text-center text-gray-500 py-12">No completed matches found in your history.</p>';
                 return;
             }
-            
-            matches.sort((a, b) => new Date(b.matchDate) - new Date(a.matchDate));
+
+            // Sort matches by date, newest first
+            matches.sort((a, b) => (b.id.split('_')[1] || 0) - (a.id.split('_')[1] || 0));
 
             matches.forEach(match => {
-                const card = document.createElement('div');
-                card.className = 'flex flex-col md:flex-row items-center justify-between p-4 bg-gray-50 rounded-lg border';
+                const matchCard = document.createElement('div');
+                matchCard.className = 'flex flex-col md:flex-row items-center justify-between p-4 bg-gray-50 rounded-lg border';
 
-                const formattedDate = new Date(match.matchDate + 'T00:00:00').toLocaleDateString('en-US', {
-                    year: 'numeric', month: 'long', day: 'numeric'
-                });
+                const date = new Date(match.matchDate + 'T00:00:00');
+                const formattedDate = match.matchDate ? date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Date N/A';
 
-                card.innerHTML = `
-                    <div class="flex items-center gap-4 mb-4 md:mb-0 text-center md:text-left">
+                const resultText = match.winMargin ? `${match.winner} ${match.winMargin}` : match.winner;
+
+                matchCard.innerHTML = `
+                    <div class="flex items-center gap-4 mb-4 md:mb-0">
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-white text-lg" style="background-color: ${match.team1.color || '#3b82f6'};">${match.team1.name.charAt(0)}</div>
                         <div>
-                            <p class="font-bold text-gray-800">${match.team1.name} vs ${match.team2.name}</p>
-                            <p class="text-sm text-green-600 font-semibold">${match.winner} ${match.winMargin}</p>
-                            <p class="text-xs text-gray-500 mt-1">${formattedDate} at ${match.venue}</p>
+                            <span class="font-bold text-gray-800">${match.team1.name} vs ${match.team2.name}</span>
+                            <p class="text-xs text-gray-500 mt-1">${match.venue} | ${formattedDate}</p>
+                            <p class="text-sm font-semibold text-blue-700 mt-1">${resultText}</p>
                         </div>
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-white text-lg" style="background-color: ${match.team2.color || '#64748b'};">${match.team2.name.charAt(0)}</div>
                     </div>
-                    <div class="flex items-center gap-2 flex-shrink-0">
-                        <button onclick="viewSummary('${match.id}')" class="text-sm font-semibold py-2 px-4 rounded-md text-white bg-blue-500 hover:bg-blue-600 transition-colors">View Summary</button>
+                    <div class="flex items-center gap-2">
+                        <button onclick="viewSummary('${match.id}')" class="text-sm font-semibold py-2 px-4 rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors">View Summary</button>
+                        <button onclick="deleteMatch('${match.id}')" class="text-sm font-semibold py-2 px-4 rounded-md text-white bg-red-600 hover:bg-red-700 transition-colors">Delete</button>
                     </div>
                 `;
-                container.appendChild(card);
+                container.appendChild(matchCard);
             });
         }
 
         function viewSummary(matchId) {
             const matches = getCompletedMatches();
-            const summaryToView = matches.find(m => m.id === matchId);
-            if (summaryToView) {
-                localStorage.setItem('summaryToView', JSON.stringify(summaryToView));
+            const matchToView = matches.find(m => m.id === matchId);
+            if (matchToView) {
+                localStorage.setItem('summaryToView', JSON.stringify(matchToView));
                 window.location.href = 'single_match.html';
             } else {
-                alert('Error: Could not find match summary data.');
+                alert('Error: Match summary not found.');
+            }
+        }
+
+        function deleteMatch(matchId) {
+            if (confirm('Are you sure you want to delete this match from your history?')) {
+                let matches = getCompletedMatches();
+                const updatedMatches = matches.filter(m => m.id !== matchId);
+                localStorage.setItem('completedMatches', JSON.stringify(updatedMatches));
+                renderMatchHistory();
             }
         }
     </script>

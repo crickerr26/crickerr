@@ -90,6 +90,7 @@
             wicketKeeperSelect: document.getElementById('editor-wicket-keeper-select')
         };
         let savedTeams = {};
+        let focusedPlayerOriginalName = ''; // To track the name being edited
 
         function loadSavedTeams() {
             const teams = localStorage.getItem('savedTeams');
@@ -146,9 +147,17 @@
             });
         }
 
-        function updateRoleDropdowns(captainName = '', wicketKeeperName = '') {
-            const previouslySelectedCaptain = ui.captainSelect.value;
-            const previouslySelectedWicketKeeper = ui.wicketKeeperSelect.value;
+        function updateRoleDropdowns(originalName, updatedName) {
+            let currentCaptain = ui.captainSelect.value;
+            let currentWicketKeeper = ui.wicketKeeperSelect.value;
+
+            // If the name being edited was the selected captain/WK, update the selection to the new name
+            if (originalName && updatedName && currentCaptain === originalName) {
+                currentCaptain = updatedName;
+            }
+            if (originalName && updatedName && currentWicketKeeper === originalName) {
+                currentWicketKeeper = updatedName;
+            }
 
             ui.captainSelect.innerHTML = '<option value="">Select Captain...</option>';
             ui.wicketKeeperSelect.innerHTML = '<option value="">Select Wicket Keeper...</option>';
@@ -164,8 +173,9 @@
                 ui.wicketKeeperSelect.appendChild(option.cloneNode(true));
             });
 
-            ui.captainSelect.value = captainName || previouslySelectedCaptain;
-            ui.wicketKeeperSelect.value = wicketKeeperName || previouslySelectedWicketKeeper;
+            // Restore the (potentially updated) selections
+            ui.captainSelect.value = currentCaptain;
+            ui.wicketKeeperSelect.value = currentWicketKeeper;
             highlightPlayerRoles();
         }
 
@@ -193,9 +203,15 @@
                 if(player.image) nameInput.dataset.imageSrc = player.image;
                 nameInput.className = 'w-full p-2 border-gray-300 border rounded-md';
                 
+                nameInput.onfocus = function() {
+                    focusedPlayerOriginalName = this.value.trim();
+                };
+                
                 nameInput.oninput = function() { 
-                    this.value = this.value.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
-                    updateRoleDropdowns();
+                    const newName = this.value.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+                    this.value = newName;
+                    updateRoleDropdowns(focusedPlayerOriginalName, newName.trim());
+                    focusedPlayerOriginalName = newName.trim(); // Update for subsequent keystrokes in the same field
                 };
                 
                 fileInput.onchange = () => { if (fileInput.files && fileInput.files[0]) { const reader = new FileReader(); reader.onload = (e) => { imagePreview.src = e.target.result; nameInput.dataset.imageSrc = e.target.result; }; reader.readAsDataURL(fileInput.files[0]); } };
@@ -206,7 +222,11 @@
                 playerRow.appendChild(nameInput);
                 ui.editorPlayerInputs.appendChild(playerRow);
             }
-            updateRoleDropdowns(captainName, wicketKeeperName);
+            // Initial population of dropdowns when editing a team
+            updateRoleDropdowns(); // First, populate with all names
+            ui.captainSelect.value = captainName; // Then, set the correct captain
+            ui.wicketKeeperSelect.value = wicketKeeperName; // And wicket keeper
+            highlightPlayerRoles();
         }
 
         function saveTeamFromEditor() {

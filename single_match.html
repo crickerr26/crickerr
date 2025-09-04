@@ -3076,6 +3076,10 @@
             state.team2.logo = matchData.team2.logo;
             state.team2.players = matchData.team2.players;
 
+            // FIX: Generate the hidden player input DOM elements so they exist when startMatch is called
+            generatePlayerInputs('team1');
+            generatePlayerInputs('team2');
+
             // Jump to Toss screen
             goToStep(4);
         }
