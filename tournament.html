@@ -33,14 +33,43 @@
         .fixture-card:hover { transform: translateY(-3px); }
         .team-logo { width: 48px; height: 48px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 1.25rem; }
         .team-logo.small { width: 32px; height: 32px; font-size: 1rem; }
+        .team-logo-large {
+            width: 96px;
+            height: 96px;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 3rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+        }
         .fixture-card-ipl { background: linear-gradient(135deg, #4b5563, #1f2937); color: #fff; }
+        .team-logo-compact {
+            width: 40px;
+            height: 40px;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 1.25rem;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+            flex-shrink: 0;
+        }
+        .fixture-highlight-knockout {
+            border: 2px solid #FFD700; /* Gold color */
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
         .ipl-text-color { color: #eab308; }
         
         @keyframes fullScreenEnter {
             from { transform: scale(0.8); opacity: 0; }
             to { transform: scale(1); opacity: 1; }
         }
-        #full-screen-message-modal .modal-content {
+        #full-screen-message-modal .modal-content-container {
             animation: fullScreenEnter 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
         }
         
@@ -95,6 +124,13 @@
             transform: translateY(-5px);
             box-shadow: 0 12px 24px rgba(0,0,0,0.08);
             border-color: rgba(0, 0, 0, 0.08);
+        }
+        
+        .summary-card {
+            background: rgba(255, 255, 255, 0.1);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         @media (max-width: 768px) {
@@ -390,13 +426,23 @@
     <div id="byes-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex justify-center items-end hidden z-50" onclick="closeModal('byes-modal')"><div class="modal-content bg-white rounded-t-2xl shadow-xl w-full max-w-md p-6" onclick="event.stopPropagation()"><div class="flex justify-end"><button onclick="closeModal('byes-modal')" class="text-gray-400 hover:text-gray-600">&times;</button></div><h3 class="text-lg font-bold text-center mb-6">Byes</h3><div class="grid grid-cols-4 gap-3"><button onclick="addExtra('b', 1)" class="p-3 bg-gray-100 rounded-lg">1 Bye</button><button onclick="addExtra('b', 2)" class="p-3 bg-gray-100 rounded-lg">2 Byes</button><button onclick="addExtra('b', 3)" class="p-3 bg-gray-100 rounded-lg">3 Byes</button><button onclick="addExtra('b', 4)" class="p-3 bg-gray-100 rounded-lg">4 Byes</button></div></div></div>
     <div id="legbyes-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex justify-center items-end hidden z-50" onclick="closeModal('legbyes-modal')"><div class="modal-content bg-white rounded-t-2xl shadow-xl w-full max-w-md p-6" onclick="event.stopPropagation()"><div class="flex justify-end"><button onclick="closeModal('legbyes-modal')" class="text-gray-400 hover:text-gray-600">&times;</button></div><h3 class="text-lg font-bold text-center mb-6">Leg Byes</h3><div class="grid grid-cols-4 gap-3"><button onclick="addExtra('lb', 1)" class="p-3 bg-gray-100 rounded-lg">1 LB</button><button onclick="addExtra('lb', 2)" class="p-3 bg-gray-100 rounded-lg">2 LBs</button><button onclick="addExtra('lb', 3)" class="p-3 bg-gray-100 rounded-lg">3 LBs</button><button onclick="addExtra('lb', 4)" class="p-3 bg-gray-100 rounded-lg">4 LBs</button></div></div></div>
     <div id="gemini-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-[70]"><div class="modal-content bg-white rounded-lg shadow-xl p-6 w-11/12 max-w-md"><h3 id="gemini-modal-title" class="text-xl font-bold mb-4">✨ AI Suggestions</h3><div id="gemini-modal-content"></div><div class="mt-6 text-right"><button onclick="closeModal('gemini-modal')" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Close</button></div></div></div>
-    
-    <div id="full-screen-message-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center hidden z-[70] p-4">
-        <div class="modal-content text-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden text-center p-8">
-            <h2 id="full-screen-message-title" class="text-4xl font-extrabold tracking-tight"></h2>
-            <p id="full-screen-message-details" class="mt-4 text-lg opacity-80"></p>
-            <button id="full-screen-message-btn" class="mt-8 w-full px-6 py-3 text-black font-bold rounded-lg text-lg"></button>
+    <div id="squad-selection-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50">
+        <div class="modal-content bg-white rounded-lg shadow-xl w-11/12 max-w-lg">
+            <div class="p-4 bg-slate-50 border-b rounded-t-lg flex justify-between items-center">
+                <h3 id="squad-selection-modal-title" class="text-xl font-bold">Select Squad</h3>
+                <p id="squad-selection-counter" class="text-sm font-semibold text-gray-600 bg-gray-200 px-3 py-1 rounded-full"></p>
+            </div>
+            <div id="squad-player-list-container" class="p-6 grid grid-cols-2 md:grid-cols-3 gap-4 max-h-80 overflow-y-auto">
+                </div>
+            <div class="p-4 bg-slate-50 border-t rounded-b-lg flex justify-end space-x-3">
+                <button id="squad-selection-cancel-btn" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancel</button>
+                <button id="squad-selection-confirm-btn" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>Confirm</button>
+            </div>
         </div>
+    </div>
+    <div id="full-screen-message-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center hidden z-[70] p-4">
+        <div id="full-screen-message-content" class="modal-content-container w-full max-w-2xl">
+            </div>
     </div>
 
     <div id="innings-break-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center hidden z-[70] p-4">
@@ -597,29 +643,70 @@
                 .replace(/{runs}/g, runs);
         }
 
-        // --- TEAM & DATA MANAGEMENT (Unchanged) ---
+        // --- TEAM & DATA MANAGEMENT ---
         function loadSavedTeams() {
             try {
                 const teamsJSON = localStorage.getItem('savedTeams');
-                if (teamsJSON) savedTeams = JSON.parse(teamsJSON);
-            } catch (e) { console.error("Could not load saved teams.", e); savedTeams = {}; }
+                if (teamsJSON) {
+                    let parsedData = JSON.parse(teamsJSON);
+                    // Check if data from localStorage is an array and convert it to an object keyed by team name.
+                    if (Array.isArray(parsedData)) {
+                        savedTeams = parsedData.reduce((acc, team) => {
+                            // Ensure team object and team name exist to prevent errors
+                            if (team && team.name) {
+                                acc[team.name] = team;
+                            }
+                            return acc;
+                        }, {});
+                    } else {
+                        // Assume it's already the correct object format
+                        savedTeams = parsedData;
+                    }
+                } else {
+                    savedTeams = {};
+                }
+            } catch (e) { 
+                console.error("Could not load saved teams.", e); 
+                savedTeams = {}; 
+            }
         }
 
         function importTeam(dropdownElement) {
             const teamName = dropdownElement.value;
             const teamIndex = dropdownElement.dataset.teamIndex;
             if (!teamName || !savedTeams[teamName]) return;
+
             const teamData = savedTeams[teamName];
             const teamRow = dropdownElement.closest('.grid');
+
+            // Populate name and color immediately
             teamRow.querySelector('.team-name-input').value = teamData.name;
             teamRow.querySelector('.team-color-input').value = teamData.color;
             teamDataStore[teamIndex].name = teamData.name;
             teamDataStore[teamIndex].color = teamData.color;
-            teamDataStore[teamIndex].players = teamData.players.map(p => p.name).filter(n => n);
-            showAlert(`Imported ${teamData.name} and its ${teamDataStore[teamIndex].players.length} players!`);
+            teamDataStore[teamIndex].logoUrl = teamData.logoUrl;
+            updateTeamLogoPreview(teamIndex);
+
+            // Check if squad selection is needed
+            const playersPerSide = parseInt(document.getElementById('tournament-players').value);
+            if (!playersPerSide) {
+                showAlert("Please select 'Max Players per Side' on the 'Details' tab first.");
+                dropdownElement.value = '';
+                return;
+            }
+            const requiredPlayers = playersPerSide + 1; // 1 impact player
+            const savedPlayers = teamData.players.map(p => p.name).filter(n => n);
+
+            if (savedPlayers.length > requiredPlayers) {
+                openSquadSelectionModal(teamData, teamIndex, requiredPlayers, dropdownElement);
+            } else {
+                teamDataStore[teamIndex].players = savedPlayers;
+                showAlert(`Imported ${teamData.name} and its ${savedPlayers.length} players!`);
+                updatePlayerButtonStatus(teamIndex);
+            }
         }
 
-        // --- UI & MODALS (Unchanged) ---
+        // --- UI & MODALS ---
         function openModal(modalId) { document.getElementById(modalId)?.classList.remove('hidden'); }
         function closeModal(modalId) { document.getElementById(modalId)?.classList.add('hidden'); }
         function showAlert(message, onOk) {
@@ -643,30 +730,6 @@
                 overlay.classList.add('hidden');
                 textEl.classList.remove('event-text-animation');
             }, 1500);
-        }
-
-        function showFullScreenMessage(title, details, buttonText, onButtonClick, backgroundColor, titleColor) {
-            const modal = document.getElementById('full-screen-message-modal');
-            const content = modal.querySelector('.modal-content');
-            const messageTitle = document.getElementById('full-screen-message-title');
-            const messageDetails = document.getElementById('full-screen-message-details');
-            const messageBtn = document.getElementById('full-screen-message-btn');
-
-            messageTitle.textContent = title;
-            messageDetails.textContent = details;
-            messageBtn.textContent = buttonText;
-            
-            content.style.backgroundColor = backgroundColor;
-            messageTitle.style.color = titleColor;
-            messageBtn.style.backgroundColor = titleColor;
-            messageBtn.style.color = 'white';
-
-            messageBtn.onclick = () => {
-                closeModal('full-screen-message-modal');
-                onButtonClick();
-            };
-
-            openModal('full-screen-message-modal');
         }
         
         function showInningsBreakModal(battingTeam, bowlingTeam, target) {
@@ -738,6 +801,59 @@
             setTimeout(() => modal.classList.add('active'), 10); // Timeout to allow CSS to apply
         }
 
+        function openSquadSelectionModal(teamData, teamIndex, requiredPlayers, dropdownElement) {
+            const modal = document.getElementById('squad-selection-modal');
+            const titleEl = document.getElementById('squad-selection-modal-title');
+            const counterEl = document.getElementById('squad-selection-counter');
+            const playerListContainer = document.getElementById('squad-player-list-container');
+            const confirmBtn = document.getElementById('squad-selection-confirm-btn');
+            const cancelBtn = document.getElementById('squad-selection-cancel-btn');
+
+            const fullRoster = teamData.players.map(p => p.name).filter(n => n);
+            titleEl.textContent = `Select Squad for ${teamData.name}`;
+            playerListContainer.innerHTML = fullRoster.map(playerName => `
+                <label class="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 cursor-pointer">
+                    <input type="checkbox" value="${playerName}" class="form-checkbox h-5 w-5 text-blue-600 squad-player-checkbox">
+                    <span class="text-gray-700">${playerName}</span>
+                </label>
+            `).join('');
+
+            function updateSelectionState() {
+                const selectedCount = playerListContainer.querySelectorAll('.squad-player-checkbox:checked').length;
+                counterEl.textContent = `${selectedCount} / ${requiredPlayers} selected`;
+                confirmBtn.disabled = selectedCount !== requiredPlayers;
+            }
+
+            updateSelectionState();
+
+            playerListContainer.querySelectorAll('.squad-player-checkbox').forEach(cb => {
+                cb.addEventListener('change', updateSelectionState);
+            });
+
+            confirmBtn.onclick = () => {
+                const selectedPlayers = Array.from(playerListContainer.querySelectorAll('.squad-player-checkbox:checked')).map(cb => cb.value);
+                teamDataStore[teamIndex].players = selectedPlayers;
+                showAlert(`Selected a squad of ${selectedPlayers.length} for ${teamData.name}.`);
+                updatePlayerButtonStatus(teamIndex);
+                closeModal('squad-selection-modal');
+            };
+
+            cancelBtn.onclick = () => {
+                const teamRow = dropdownElement.closest('.grid');
+                dropdownElement.value = '';
+                teamRow.querySelector('.team-name-input').value = '';
+                teamDataStore[teamIndex].name = '';
+                teamDataStore[teamIndex].color = darkColors[teamIndex % darkColors.length]; // Reset color
+                teamDataStore[teamIndex].logoUrl = null;
+                teamDataStore[teamIndex].players = [];
+                updatePlayerButtonStatus(teamIndex);
+                updateTeamLogoPreview(teamIndex);
+                closeModal('squad-selection-modal');
+            };
+
+            openModal('squad-selection-modal');
+        }
+
         // --- TOURNAMENT SETUP FLOW ---
         function showSetupScreen() {
             document.getElementById('tournament-choice-screen').classList.add('hidden');
@@ -795,27 +911,91 @@
                 const randomDarkColor = darkColors[i % darkColors.length];
                 teamDataStore[i] = { id: `T${Date.now() + i}`, name: '', color: randomDarkColor, players: [] };
                 const teamRow = document.createElement('div');
-                teamRow.className = 'grid grid-cols-1 sm:grid-cols-7 gap-3 items-center p-2 border rounded-lg';
+                teamRow.className = 'grid grid-cols-1 sm:grid-cols-8 gap-3 items-center p-2 border rounded-lg';
                 const isPlayersAdded = teamDataStore[i].players.length >= (parseInt(document.getElementById('tournament-players').value) - 1);
                 const playersButtonClass = isPlayersAdded ? 'players-button completed' : '';
                 const playersButtonText = isPlayersAdded ? 'Players Added' : 'Players';
 
                 teamRow.innerHTML = `
                     <div class="sm:col-span-2"><select onchange="importTeam(this)" class="w-full p-2 border-gray-300 border rounded-md" data-team-index="${i}">${savedTeamOptions}</select></div>
+                    <div class="flex justify-center items-center team-logo-preview-container cursor-pointer" onclick="triggerLogoUpload(${i})" title="Click to upload a logo" data-team-index="${i}">
+                        <div class="team-logo-compact" style="background-color: ${randomDarkColor};">?</div>
+                    </div>
+                    <input type="file" id="logo-uploader-${i}" class="hidden" accept="image/*" onchange="handleLogoFileSelect(event, ${i})">
                     <div class="sm:col-span-2"><input type="text" placeholder="Team ${i + 1}" class="w-full p-2 border-gray-300 border rounded-md team-name-input" data-team-index="${i}"></div>
                     <input type="color" value="${teamDataStore[i].color}" class="w-full h-10 border-gray-300 border rounded-md team-color-input" data-team-index="${i}">
-                    <button onclick="openAddPlayersModal(${i})" class="w-full p-2 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 sm:col-span-2 font-bold transition-all duration-200 hover:scale-105 ${playersButtonClass}">${playersButtonText}</button>
+                    <button onclick="openAddPlayersModal(${i})" class="w-full p-2 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 sm:col-span-2 font-bold transition-all duration-200 hover:scale-105 players-button ${playersButtonClass}">${playersButtonText}</button>
                 `;
                 container.appendChild(teamRow);
             }
             addTeamInputListeners();
         }
 
+        function triggerLogoUpload(teamIndex) {
+            document.getElementById(`logo-uploader-${teamIndex}`).click();
+        }
+
+        function handleLogoFileSelect(event, teamIndex) {
+            const file = event.target.files[0];
+            if (!file) { return; }
+            if (!file.type.startsWith('image/')){
+                showAlert('Please select a valid image file.');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onloadend = function() {
+                const dataUrl = reader.result;
+                teamDataStore[teamIndex].logoUrl = dataUrl;
+                updateTeamLogoPreview(teamIndex);
+            }
+            reader.readAsDataURL(file);
+        }
+
+        function updateTeamLogoPreview(teamIndex) {
+            const teamData = teamDataStore[teamIndex];
+            const logoPreviewContainer = document.querySelector(`.team-logo-preview-container[data-team-index='${teamIndex}']`);
+            if (logoPreviewContainer) {
+                // If a logo URL is provided, use it. Otherwise, fall back to initials.
+                if (teamData.logoUrl) {
+                    logoPreviewContainer.innerHTML = `<img src="${teamData.logoUrl}" alt="Team Logo" class="team-logo-compact object-cover rounded-full">`;
+                } else {
+                    const teamName = teamData.name || '';
+                    const teamColor = teamData.color || '#cbd5e1';
+                    logoPreviewContainer.innerHTML = `<div class="team-logo-compact" style="background-color: ${teamColor};">${teamName ? teamName.charAt(0).toUpperCase() : '?'}</div>`;
+                }
+            }
+        }
+
         function addTeamInputListeners() {
-            document.querySelectorAll('.team-name-input').forEach(input => input.onkeyup = (e) => { teamDataStore[e.target.dataset.teamIndex].name = e.target.value; });
-            document.querySelectorAll('.team-color-input').forEach(input => input.onchange = (e) => { teamDataStore[e.target.dataset.teamIndex].color = e.target.value; });
+            document.querySelectorAll('.team-name-input').forEach(input => input.onkeyup = (e) => {
+                const teamIndex = e.target.dataset.teamIndex;
+                teamDataStore[teamIndex].name = e.target.value;
+                updateTeamLogoPreview(teamIndex);
+            });
+            document.querySelectorAll('.team-color-input').forEach(input => input.onchange = (e) => {
+                const teamIndex = e.target.dataset.teamIndex;
+                teamDataStore[teamIndex].color = e.target.value;
+                updateTeamLogoPreview(teamIndex);
+            });
         }
         
+        function updatePlayerButtonStatus(teamIndex) {
+            const playersPerSide = parseInt(document.getElementById('tournament-players').value);
+            const requiredSquadSize = playersPerSide + 1;
+            const playerList = teamDataStore[teamIndex].players || [];
+            const teamRows = document.getElementById('team-entry-container').children;
+            if (teamRows[teamIndex]) {
+                const playerButton = teamRows[teamIndex].querySelector('.players-button');
+                if (playerList.length >= requiredSquadSize) {
+                    playerButton.classList.add('completed');
+                    playerButton.textContent = 'Players Added';
+                } else {
+                    playerButton.classList.remove('completed');
+                    playerButton.textContent = 'Players';
+                }
+            }
+        }
+
         function openAddPlayersModal(teamIndex) {
             const playersPerSide = parseInt(document.getElementById('tournament-players').value);
             if (!playersPerSide) { showAlert("Please select 'Max Players per Side' on the 'Details' tab first."); return; }
@@ -829,27 +1009,11 @@
 
         function savePlayers(teamIndex) {
             const playerInputs = document.querySelectorAll('#player-input-container input');
-            const playersPerSide = parseInt(document.getElementById('tournament-players').value);
             const playerList = Array.from(playerInputs).map(input => input.value.trim()).filter(p => p);
             
-            if (playersPerSide === 6 && playerList.length < 5) {
-                showAlert("For a 6-a-side match, at least 5 players are required.");
-                return;
-            }
-
             teamDataStore[teamIndex].players = playerList;
             closeModal('add-players-modal');
-            
-            const teamRow = document.getElementById('team-entry-container').children[teamIndex];
-            const playerButton = teamRow.querySelector('.players-button');
-            if (playerList.length >= (playersPerSide - 1)) {
-                playerButton.classList.add('completed');
-                playerButton.textContent = 'Players Added';
-            } else {
-                 playerButton.classList.remove('completed');
-                 playerButton.textContent = 'Players';
-            }
-            
+            updatePlayerButtonStatus(teamIndex);
             showAlert(`Player list saved for ${teamDataStore[teamIndex].name || `Team ${teamIndex + 1}`}.`);
         }
 
@@ -868,8 +1032,8 @@
                 assignContainer.style.display = 'block';
                 generateGroupUI();
             } else if (format === 'knockout') {
-                 if (teams.length < 2 || teams.length % 2 !== 0) {
-                    showAlert('A knockout tournament requires an even number of at least 2 teams.');
+                 if (teams.length < 2) {
+                    showAlert('A knockout tournament requires at least 2 teams.');
                 }
                 groupsContainer.style.display = 'none';
                 assignContainer.style.display = 'none';
@@ -991,115 +1155,179 @@
             displayDashboard();
         }
 
+        function generateFairRoundRobinFixtures(teams, isGroupStage = false) {
+            const fixtures = [];
+            let localTeams = [...teams];
+
+            if (localTeams.length % 2 !== 0) {
+                localTeams.push({ id: 'bye', name: 'Bye' });
+            }
+
+            const numTeams = localTeams.length;
+            const numRounds = numTeams - 1;
+            const halfSize = numTeams / 2;
+            const matchNamePrefix = isGroupStage ? 'Group Stage - ' : '';
+
+            for (let round = 0; round < numRounds; round++) {
+                for (let i = 0; i < halfSize; i++) {
+                    const team1 = localTeams[i];
+                    const team2 = localTeams[numTeams - 1 - i];
+
+                    if (team1.id !== 'bye' && team2.id !== 'bye') {
+                        fixtures.push({
+                            matchId: `match_${Date.now()}_r${round+1}_${team1.id}_vs_${team2.id}`,
+                            matchName: `${matchNamePrefix}Round ${round + 1}`,
+                            team1Id: (i === 0 && round % 2 !== 0) ? team2.id : team1.id, // Alternate home for the fixed team
+                            team2Id: (i === 0 && round % 2 !== 0) ? team1.id : team2.id,
+                            status: 'upcoming',
+                            result: '',
+                            summary: null
+                        });
+                    }
+                }
+                const lastTeam = localTeams.pop();
+                localTeams.splice(1, 0, lastTeam);
+            }
+            return fixtures;
+        }
+
+        function getKnockoutRoundName(numTeams) {
+            if (numTeams === 2) return 'Final';
+            if (numTeams === 4) return 'Semi-Final';
+            if (numTeams === 8) return 'Quarter-Final';
+            return `Round of ${numTeams}`;
+        }
+
+        function generateKnockoutBracket(teams) {
+            let bracketFixtures = [];
+            let currentRoundTeams = [...teams];
+            let roundNum = 1;
+            while (currentRoundTeams.length > 1) {
+                const roundName = getKnockoutRoundName(currentRoundTeams.length);
+                let nextRoundPlaceholders = [];
+                
+                for (let i = 0; i < currentRoundTeams.length; i += 2) {
+                    const team1 = currentRoundTeams[i];
+                    const team2 = currentRoundTeams[i + 1];
+                    const matchId = `ko_placeholder_r${roundNum}_m${(i/2)+1}`;
+                    
+                    bracketFixtures.push({
+                        matchId: matchId,
+                        matchName: roundName,
+                        team1Id: team1.id,
+                        team2Id: team2.id,
+                        status: 'upcoming', result: '', summary: null
+                    });
+                    nextRoundPlaceholders.push({id: `winner_${matchId}`, name: `Winner of ${matchId}`});
+                }
+                currentRoundTeams = nextRoundPlaceholders;
+                roundNum++;
+            }
+            return bracketFixtures;
+        }
+        
         function generateFixtures() {
             const format = document.getElementById('tournament-format').value;
             const teams = Object.values(teamDataStore);
             let fixtures = [];
+            let knockoutFixtures = [];
 
-            if (['double_round_robin', 'playoffs', 'super_stage'].includes(format)) {
-                showAlert('Fixture generation for this format is not yet implemented. Please set up matches manually from the dashboard.');
-                currentTournamentState.fixtures = [];
-                return;
+            switch (format) {
+                case 'round-robin': {
+                    fixtures = generateFairRoundRobinFixtures(teams, false);
+                    knockoutFixtures.push({ matchId: 'sf_1', matchName: 'Semi-Final 1', team1Id: 'placeholder_rank_1', team2Id: 'placeholder_rank_4', status: 'upcoming', result: '', summary: null });
+                    knockoutFixtures.push({ matchId: 'sf_2', matchName: 'Semi-Final 2', team1Id: 'placeholder_rank_2', team2Id: 'placeholder_rank_3', status: 'upcoming', result: '', summary: null });
+                    knockoutFixtures.push({ matchId: 'final', matchName: 'Final', team1Id: 'winner_sf_1', team2Id: 'winner_sf_2', status: 'upcoming', result: '', summary: null });
+                    break;
+                }
+                case 'knockout': {
+                    if (teams.length < 2) {
+                        showAlert("Knockout format requires at least 2 teams.");
+                        currentTournamentState.fixtures = [];
+                        return;
+                    }
+                    let shuffledTeams = [...teams].sort(() => 0.5 - Math.random());
+                    fixtures = generateKnockoutBracket(shuffledTeams);
+                    break;
+                }
+                case 'group_knockout': {
+                    const numGroups = parseInt(document.getElementById('number-of-groups').value) || 1;
+                    const teamsAdvancing = parseInt(document.getElementById('knockout-teams-per-group').value) || 2;
+                    
+                    for (let i = 0; i < numGroups; i++) {
+                        const groupName = `Group ${String.fromCharCode(65 + i)}`;
+                        const groupTeams = teams.filter(t => t.group === groupName);
+                        if (groupTeams.length > 1) {
+                            fixtures.push(...generateFairRoundRobinFixtures(groupTeams, true));
+                        }
+                    }
+
+                    const totalAdvancing = numGroups * teamsAdvancing;
+                    if (totalAdvancing >= 2) {
+                        let knockoutPlaceholders = [];
+                        for(let i=0; i<numGroups; i++) {
+                            for(let j=1; j<=teamsAdvancing; j++) {
+                                knockoutPlaceholders.push({id: `placeholder_G${String.fromCharCode(65 + i)}_Rank${j}`, name: `Group ${String.fromCharCode(65 + i)} #${j}`});
+                            }
+                        }
+                        knockoutFixtures = generateKnockoutBracket(knockoutPlaceholders);
+                    }
+                    break;
+                }
+                default: {
+                     // Fallback to old logic for unhandled formats
+                    fixtures = generateFixtures_legacy();
+                }
             }
 
-            if (format === 'knockout') {
-                const numTeams = teams.length;
-                if (numTeams % 2 !== 0) {
-                     showAlert("Knockout requires an even number of teams.");
-                     return;
+            currentTournamentState.fixtures = [...fixtures, ...knockoutFixtures];
+        }
+
+        function generateFixtures_legacy() {
+            // This is the old logic preserved for formats not yet updated.
+            const format = document.getElementById('tournament-format').value;
+            const teams = Object.values(teamDataStore);
+            let fixtures = [];
+
+            if (format === 'double_round_robin') {
+                const firstLeg = generateFairRoundRobinFixtures(teams);
+                const secondLeg = generateFairRoundRobinFixtures(teams.reverse());
+                fixtures = [...firstLeg, ...secondLeg];
+            } else if (format === 'playoffs') {
+                 if (teams.length < 4) {
+                    showAlert("Playoff format requires at least 4 teams.");
+                    return [];
                 }
-                const numMatches = numTeams / 2;
-                let shuffledTeams = [...teams].sort(() => 0.5 - Math.random());
-                for (let i = 0; i < numMatches; i++) {
-                    fixtures.push({
-                        matchId: `match_${i + 1}`,
-                        matchName: `Round 1 Match ${i + 1}`,
-                        team1Id: shuffledTeams[i].id,
-                        team2Id: shuffledTeams[i + numMatches].id,
-                        status: 'upcoming',
-                        result: '',
-                        summary: null
-                    });
-                }
-                 fixtures.push({
-                    matchId: `final`,
-                    matchName: `Final`,
-                    team1Id: `winner_match_1`,
-                    team2Id: `winner_match_2`,
-                    status: 'upcoming',
-                    result: '',
-                    summary: null
-                 });
-            } else if (format === 'group_knockout') {
+                fixtures = generateFairRoundRobinFixtures(teams, true);
+                fixtures.push({ matchId: 'qualifier_1', matchName: 'Qualifier 1', team1Id: 'placeholder_rank_1', team2Id: 'placeholder_rank_2', status: 'upcoming', result: '', summary: null});
+                fixtures.push({ matchId: 'eliminator', matchName: 'Eliminator', team1Id: 'placeholder_rank_3', team2Id: 'placeholder_rank_4', status: 'upcoming', result: '', summary: null});
+                fixtures.push({ matchId: 'qualifier_2', matchName: 'Qualifier 2', team1Id: 'placeholder_loser_q1', team2Id: 'placeholder_winner_e', status: 'upcoming', result: '', summary: null});
+                fixtures.push({ matchId: 'final', matchName: 'Final', team1Id: 'placeholder_winner_q1', team2Id: 'placeholder_winner_q2', status: 'upcoming', result: '', summary: null});
+            } else if (format === 'super_stage') {
                 const numGroups = parseInt(document.getElementById('number-of-groups').value);
                 const teamsAdvancing = parseInt(document.getElementById('knockout-teams-per-group').value);
                 const totalAdvancing = numGroups * teamsAdvancing;
-                if (totalAdvancing !== 2 && totalAdvancing !== 4 && totalAdvancing !== 8) {
-                    showAlert("Number of teams advancing must result in a valid knockout bracket (2, 4, or 8).");
-                    return;
-                }
-                const matchesPerTeam = parseInt(document.getElementById('matches-per-team').value);
-                
-                let groupMatchIdCounter = 1;
-                for (let i = 0; i < numGroups; i++) {
-                    const groupName = `Group ${String.fromCharCode(65 + i)}`;
-                    const groupTeams = teams.filter(t => t.group === groupName);
-                    
-                    if (groupTeams.length < 2) {
-                        showAlert(`Group ${groupName} must have at least 2 teams.`);
-                        return;
-                    }
-                    
-                    const groupFixtures = generateRoundRobinFixtures(groupTeams, matchesPerTeam);
-                    groupFixtures.forEach(f => f.matchName = `Group Stage Match ${groupMatchIdCounter++}`);
-                    fixtures = [...fixtures, ...groupFixtures];
-                }
-                 
-                if (totalAdvancing === 8) {
-                    for(let i=1; i<=4; i++) {
-                        fixtures.push({ matchId: `qf_${i}`, matchName: `Quarter-Final ${i}`, team1Id: `placeholder`, team2Id: `placeholder`, status: 'upcoming', result: '', summary: null});
-                    }
-                    fixtures.push({ matchId: 'sf_1', matchName: 'Semi-Final 1', team1Id: 'winner_qf_1', team2Id: 'winner_qf_2', status: 'upcoming', result: '', summary: null});
-                    fixtures.push({ matchId: 'sf_2', matchName: 'Semi-Final 2', team1Id: 'winner_qf_3', team2Id: 'winner_qf_4', status: 'upcoming', result: '', summary: null});
-                    fixtures.push({ matchId: 'final', matchName: 'Final', team1Id: 'winner_sf_1', team2Id: 'winner_sf_2', status: 'upcoming', result: '', summary: null});
-                } else if (totalAdvancing === 4) {
-                    fixtures.push({ matchId: 'sf_1', matchName: 'Semi-Final 1', team1Id: `placeholder`, team2Id: `placeholder`, status: 'upcoming', result: '', summary: null});
-                    fixtures.push({ matchId: 'sf_2', matchName: 'Semi-Final 2', team1Id: `placeholder`, team2Id: `placeholder`, status: 'upcoming', result: '', summary: null});
-                    fixtures.push({ matchId: 'final', matchName: 'Final', team1Id: 'winner_sf_1', team2Id: 'winner_sf_2', status: 'upcoming', result: '', summary: null});
-                } else if (totalAdvancing === 2) {
-                    fixtures.push({ matchId: 'final', matchName: 'Final', team1Id: `placeholder`, team2Id: `placeholder`, status: 'upcoming', result: '', summary: null});
-                }
-            } else { // Round Robin
-                const numGroups = parseInt(document.getElementById('number-of-groups').value);
-                const matchesPerTeam = parseInt(document.getElementById('matches-per-team').value);
-                if (teams.length < numGroups * 2) {
-                    showAlert("Not enough teams for the selected number of groups.");
-                    return;
-                }
-                for (let i = 0; i < numGroups; i++) {
-                    const groupName = `Group ${String.fromCharCode(65 + i)}`;
-                    const groupTeams = teams.filter(t => t.group === groupName);
-                    
-                    if (groupTeams.length < 2) {
-                        showAlert(`Group ${groupName} must have at least 2 teams.`);
-                        return;
-                    }
-                    
-                    const groupFixtures = generateRoundRobinFixtures(groupTeams, matchesPerTeam);
-                    fixtures = [...fixtures, ...groupFixtures];
-                }
-            }
-            currentTournamentState.fixtures = fixtures;
-        }
 
-        function generateRoundRobinFixtures(teams, matchesPerTeam) {
-            const fixtures = [];
-            for (let round = 0; round < matchesPerTeam; round++) {
-                for (let i = 0; i < teams.length; i++) {
-                    for (let j = i + 1; j < teams.length; j++) {
-                         fixtures.push({ matchId: `match_${Date.now() + round + i + j}`, matchName: 'Group Match', team1Id: teams[i].id, team2Id: teams[j].id, status: 'upcoming', result: '', summary: null });
+                 if (totalAdvancing !== 6 && totalAdvancing !== 8) {
+                    showAlert("Super Stage format requires 6 or 8 advancing teams.");
+                    return [];
+                }
+                for (let i = 0; i < numGroups; i++) {
+                    const groupName = `Group ${String.fromCharCode(65 + i)}`;
+                    const groupTeams = teams.filter(t => t.group === groupName);
+                    fixtures.push(...generateFairRoundRobinFixtures(groupTeams, true));
+                }
+
+                let superStagePlaceholders = [];
+                for (let i = 0; i < numGroups; i++) {
+                    for (let j = 1; j <= teamsAdvancing; j++) {
+                        superStagePlaceholders.push({ id: `placeholder_g${i}_rank_${j}`, name: `${String.fromCharCode(65 + i)}${j}` });
                     }
                 }
+                const superStageFixtures = generateFairRoundRobinFixtures(superStagePlaceholders);
+                superStageFixtures.forEach(f => f.matchName = `Super ${totalAdvancing} Stage`);
+                fixtures.push(...superStageFixtures);
+                fixtures.push({ matchId: 'final', matchName: 'Final', team1Id: 'placeholder_ss_rank_1', team2Id: 'placeholder_ss_rank_2', status: 'upcoming', result: '', summary: null});
             }
             return fixtures;
         }
@@ -1129,34 +1357,54 @@
                 const team2Color = team2 ? team2.color : '#cbd5e1';
                 const team1Initial = team1 ? team1.name.charAt(0) : '?';
                 const team2Initial = team2 ? team2.name.charAt(0) : '?';
-                
+                const matchStatusText = match.status.charAt(0).toUpperCase() + match.status.slice(1);
+
+                const team1LogoHtml = team1 && team1.logoUrl
+                    ? `<img src="${team1.logoUrl}" alt="${team1Name}" class="team-logo-compact object-cover rounded-full">`
+                    : `<div class="team-logo-compact" style="background-color: ${team1Color};">${team1Initial}</div>`;
+
+                const team2LogoHtml = team2 && team2.logoUrl
+                    ? `<img src="${team2.logoUrl}" alt="${team2Name}" class="team-logo-compact object-cover rounded-full">`
+                    : `<div class="team-logo-compact" style="background-color: ${team2Color};">${team2Initial}</div>`;
+
+                const knockoutKeywords = ['Final', 'Semi-Final', 'Qualifier', 'Eliminator', 'Quarter-Final'];
+                let highlightClass = '';
+                if (knockoutKeywords.some(keyword => match.matchName.includes(keyword))) {
+                    highlightClass = 'fixture-highlight-knockout';
+                }
+
                 let buttonHtml = '';
                 if (match.status === 'completed') {
-                    buttonHtml = `<button onclick="viewMatchSummary('${match.matchId}')" class="px-4 py-2 text-sm font-semibold rounded-md bg-blue-600 hover:bg-blue-700 text-white">View Summary</button>`;
+                    buttonHtml = `<button onclick="viewMatchSummary('${match.matchId}')" class="px-4 py-1 text-xs font-semibold rounded-md bg-white/20 hover:bg-white/30 backdrop-blur-sm transition-all">View Summary</button>`;
                 } else if (match.status === 'in-progress') {
-                    buttonHtml = `<button onclick="startTournamentMatch('${match.matchId}', true)" class="px-4 py-2 text-sm font-semibold rounded-md bg-yellow-600 hover:bg-yellow-700 text-white">Continue</button>`;
+                    buttonHtml = `<button onclick="startTournamentMatch('${match.matchId}', true)" class="px-4 py-1 text-xs font-semibold rounded-md bg-yellow-500/80 hover:bg-yellow-500/100 backdrop-blur-sm transition-all">Continue</button>`;
                 } else if (match.status === 'upcoming' && team1 && team2) {
-                    buttonHtml = `<button onclick="startTournamentMatch('${match.matchId}')" class="px-4 py-2 text-sm font-semibold rounded-md bg-green-600 hover:bg-green-600 text-white">Start</button>`;
+                    buttonHtml = `<button onclick="startTournamentMatch('${match.matchId}')" class="px-4 py-1 text-xs font-semibold rounded-md bg-white/90 hover:bg-white/100 text-black backdrop-blur-sm transition-all">Start</button>`;
                 } else {
-                    buttonHtml = `<button disabled class="px-4 py-2 text-sm font-semibold rounded-md bg-gray-400 text-white cursor-not-allowed">Waiting</button>`;
+                    buttonHtml = `<button disabled class="px-4 py-1 text-xs font-semibold rounded-md bg-black/20 text-white/50 cursor-not-allowed">Waiting...</button>`;
                 }
 
                 return `
-                    <div class="fixture-card-ipl p-4 mb-4 flex items-center justify-between">
-                        <div class="flex items-center space-x-4">
-                            <div class="text-center">
-                                <p class="text-sm font-bold text-gray-300">${match.matchName}</p>
-                                <p class="text-xs text-gray-500">${match.result || ''}</p>
+                    <div class="p-3 rounded-lg shadow-lg mb-3 text-white ${highlightClass}" style="background: linear-gradient(110deg, ${team1Color} 0%, ${team2Color} 100%); text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
+                        <div class="flex justify-between items-center text-xs mb-2">
+                            <span class="font-bold bg-black/20 px-2 py-1 rounded">${match.matchName}</span>
+                            <span class="text-xs opacity-80 font-semibold">${matchStatusText}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2 w-2/5">
+                                ${team1LogoHtml}
+                                <span class="font-bold text-base truncate">${team1Name}</span>
                             </div>
-                            <div class="flex items-center space-x-4 team-info">
-                                <div class="team-logo small border-2 border-white" style="background-color: ${team1Color};">${team1Initial}</div>
-                                <span class="font-bold text-md">${team1Name}</span>
-                                <span class="text-gray-400">vs</span>
-                                <span class="font-bold text-md">${team2Name}</span>
-                                <div class="team-logo small border-2 border-white" style="background-color: ${team2Color};">${team2Initial}</div>
+                            <span class="text-sm font-bold opacity-70">VS</span>
+                            <div class="flex items-center gap-2 justify-end w-2/5">
+                                <span class="font-bold text-base truncate text-right">${team2Name}</span>
+                                ${team2LogoHtml}
                             </div>
                         </div>
-                        ${buttonHtml}
+                        <div class="flex justify-between items-center mt-2 pt-2 border-t border-white/20">
+                            <p class="text-xs font-medium opacity-90 truncate">${match.result || ''}</p>
+                            ${buttonHtml}
+                        </div>
                     </div>`;
             }).join('');
         }
@@ -1367,11 +1615,21 @@
             document.getElementById('toss-team1-name').textContent = team1.name;
             document.getElementById('toss-team2-name').textContent = team2.name;
             const t1Logo = document.getElementById('toss-team1-logo-container');
-            t1Logo.style.backgroundColor = team1.color;
-            t1Logo.innerHTML = `<span>${team1.name.charAt(0)}</span>`;
+            if (team1.logoUrl) {
+                t1Logo.innerHTML = `<img src="${team1.logoUrl}" alt="${team1.name}" class="w-full h-full rounded-full object-cover">`;
+                t1Logo.style.backgroundColor = 'transparent';
+            } else {
+                t1Logo.style.backgroundColor = team1.color;
+                t1Logo.innerHTML = `<span>${team1.name.charAt(0)}</span>`;
+            }
             const t2Logo = document.getElementById('toss-team2-logo-container');
-            t2Logo.style.backgroundColor = team2.color;
-            t2Logo.innerHTML = `<span>${team2.name.charAt(0)}</span>`;
+            if (team2.logoUrl) {
+                t2Logo.innerHTML = `<img src="${team2.logoUrl}" alt="${team2.name}" class="w-full h-full rounded-full object-cover">`;
+                t2Logo.style.backgroundColor = 'transparent';
+            } else {
+                t2Logo.style.backgroundColor = team2.color;
+                t2Logo.innerHTML = `<span>${team2.name.charAt(0)}</span>`;
+            }
         }
         
         function selectTossWinner(teamKey) {
@@ -1749,50 +2007,223 @@
             const bowlingTeam = liveMatchState[liveMatchState.bowlingTeam];
             let resultMessage = '';
             let winningTeam = null;
+            let losingTeam = null;
             let matchStatus = '';
 
             if (battingTeam.score >= liveMatchState.target) {
                 const wicketsRemaining = liveMatchState.playersPerSide - 1 - battingTeam.wickets;
                 resultMessage = `${battingTeam.name} won by ${wicketsRemaining} wicket(s).`;
                 winningTeam = battingTeam;
+                losingTeam = bowlingTeam;
                 matchStatus = 'win';
             } else if (battingTeam.score < bowlingTeam.score) {
                 const runsMargin = bowlingTeam.score - battingTeam.score;
                 resultMessage = `${bowlingTeam.name} won by ${runsMargin} run(s).`;
                 winningTeam = bowlingTeam;
+                losingTeam = battingTeam;
                 matchStatus = 'win';
             } else {
                 resultMessage = "The match is a tie!";
                 matchStatus = 'tie';
             }
             
+            liveMatchState.inningsSummary = liveMatchState.inningsSummary || [];
+            liveMatchState.inningsSummary.push({
+                teamId: battingTeam.id,
+                score: battingTeam.score,
+                wickets: battingTeam.wickets,
+                balls: battingTeam.balls,
+                playerStats: battingTeam.playerStats,
+                bowlingStats: bowlingTeam.playerStats
+            });
+
             const matchIndex = currentTournamentState.fixtures.findIndex(m => m.matchId === liveMatchState.matchId);
             if (matchIndex !== -1) {
                 currentTournamentState.fixtures[matchIndex].status = 'completed';
                 currentTournamentState.fixtures[matchIndex].result = resultMessage;
                 currentTournamentState.fixtures[matchIndex].winnerId = winningTeam ? winningTeam.id : null;
-                
-                liveMatchState.inningsSummary = liveMatchState.inningsSummary || [];
-                liveMatchState.inningsSummary.push({
-                    teamId: battingTeam.id,
-                    score: battingTeam.score,
-                    wickets: battingTeam.wickets,
-                    balls: battingTeam.balls,
-                    playerStats: battingTeam.playerStats,
-                    bowlingStats: bowlingTeam.playerStats
-                });
                 currentTournamentState.fixtures[matchIndex].summary = liveMatchState.inningsSummary;
                 
                 updatePointsTable(matchStatus, winningTeam);
                 updateKnockoutBracket(liveMatchState.matchId, winningTeam);
             }
             
-            const backgroundColor = winningTeam ? winningTeam.color : '#6b7280';
-            const titleColor = winningTeam ? '#ffffff' : '#fef08a';
+            const inning1Summary = liveMatchState.inningsSummary[0];
+            const inning2Summary = liveMatchState.inningsSummary[1];
 
-            showFullScreenMessage(resultMessage, 'Final Score', 'Return to Dashboard', () => returnToDashboard(false), backgroundColor, titleColor);
+            const inning1Team = liveMatchState.team1.id === inning1Summary.teamId ? liveMatchState.team1 : liveMatchState.team2;
+            const inning2Team = liveMatchState.team1.id === inning2Summary.teamId ? liveMatchState.team1 : liveMatchState.team2;
+
+            const topPerformers = getTopPerformers(liveMatchState.inningsSummary);
+            const motm = suggestManOfTheMatch(liveMatchState, winningTeam.id);
+
+            showEndMatchSummaryModal(winningTeam, losingTeam, inning1Team, inning2Team, inning1Summary, inning2Summary, topPerformers, motm, resultMessage);
         }
         
+        function getTopPerformers(inningsSummary) {
+            let allBattingStats = [];
+            let allBowlingStats = [];
+
+            inningsSummary.forEach(inning => {
+                allBattingStats.push(...Object.values(inning.playerStats).filter(p => p.balls > 0 || p.isOut));
+                allBowlingStats.push(...Object.values(inning.bowlingStats).filter(p => p.ballsBowled > 0));
+            });
+            
+            const topBatters = allBattingStats.sort((a, b) => b.runs - a.runs).slice(0, 3);
+            const topBowlers = allBowlingStats.sort((a,b) => b.wickets - a.wickets || a.runsConceded - b.runsConceded).slice(0, 3);
+
+            return { topBatters, topBowlers };
+        }
+
+        function suggestManOfTheMatch(matchState, winningTeamId) {
+            const players = new Map();
+            const { inningsSummary, team1, team2 } = matchState;
+
+            const addPlayer = (player, team) => {
+                if (!players.has(player.name)) {
+                    players.set(player.name, { ...player, team, motm_points: 0 });
+                }
+            };
+
+            [team1, team2].forEach(team => {
+                Object.values(team.playerStats).forEach(p => addPlayer(p, team));
+            });
+
+            inningsSummary.forEach(inning => {
+                const battingTeam = inning.teamId === team1.id ? team1 : team2;
+                const bowlingTeam = inning.teamId === team1.id ? team2 : team1;
+
+                Object.values(inning.playerStats).forEach(p_stat => {
+                    const p = players.get(p_stat.name);
+                    if (!p) return;
+                    p.motm_points += p_stat.runs;
+                    if (p_stat.runs >= 50) p.motm_points += 25;
+                    if (p_stat.runs >= 100) p.motm_points += 50;
+                    if (p_stat.balls > 10 && (p_stat.runs / p_stat.balls) > 1.5) p.motm_points += 15;
+                    p.team = battingTeam;
+                });
+                
+                Object.values(inning.bowlingStats).forEach(p_stat => {
+                    const p = players.get(p_stat.name);
+                    if (!p) return;
+                    p.motm_points += p_stat.wickets * 25;
+                    if (p_stat.wickets >= 3) p.motm_points += 25;
+                    if (p_stat.wickets >= 5) p.motm_points += 50;
+                    const overs = p_stat.ballsBowled / liveMatchState.ballsPerOver;
+                    if (overs >= 2) {
+                        const econ = p_stat.runsConceded / overs;
+                        if (econ < 4) p.motm_points += 20;
+                        if (econ < 6) p.motm_points += 10;
+                    }
+                    p.team = bowlingTeam;
+                });
+            });
+
+            let bestPlayer = null;
+            let maxPoints = -1;
+
+            players.forEach(p => {
+                if (p.team.id === winningTeamId) {
+                    p.motm_points *= 1.2; // Bonus for being on the winning team
+                }
+                if (p.motm_points > maxPoints) {
+                    maxPoints = p.motm_points;
+                    bestPlayer = p;
+                }
+            });
+
+            return bestPlayer;
+        }
+
+        function showEndMatchSummaryModal(winningTeam, losingTeam, inning1Team, inning2Team, inning1Summary, inning2Summary, topPerformers, motm, resultMessage) {
+            const modal = document.getElementById('full-screen-message-modal');
+            const contentContainer = document.getElementById('full-screen-message-content');
+
+            const topBattersHTML = topPerformers.topBatters.map(p => `
+                <div class="flex justify-between items-center text-sm py-1">
+                    <span class="font-medium">${p.name}</span>
+                    <span class="font-bold">${p.runs}<span class="text-xs opacity-70"> (${p.balls})</span></span>
+                </div>`).join('');
+            
+            const topBowlersHTML = topPerformers.topBowlers.map(p => `
+                 <div class="flex justify-between items-center text-sm py-1">
+                    <span class="font-medium">${p.name}</span>
+                    <span class="font-bold">${p.wickets}/${p.runsConceded}</span>
+                </div>`).join('');
+            
+            const motmPerformance = motm.wickets > 0 ? `${motm.wickets}/${motm.runsConceded}` : `${motm.runs} (${motm.balls})`;
+
+            const winningTeamLogoHtml = winningTeam.logoUrl
+                ? `<img src="${winningTeam.logoUrl}" alt="${winningTeam.name}" class="team-logo-large mx-auto mb-2 rounded-full object-cover" style="border: 2px solid rgba(255,255,255,0.7);">`
+                : `<div class="team-logo-large mx-auto mb-2" style="background-color: ${winningTeam.color}; border: 2px solid rgba(255,255,255,0.7);">${winningTeam.name.charAt(0)}</div>`;
+
+            const inning1TeamLogoHtml = inning1Team.logoUrl
+                ? `<img src="${inning1Team.logoUrl}" alt="${inning1Team.name}" class="team-logo small inline-block mr-2 rounded-full object-cover" style="vertical-align: middle;">`
+                : `<div class="team-logo small inline-block mr-2" style="background-color: ${inning1Team.color}; vertical-align: middle;">${inning1Team.name.charAt(0)}</div>`;
+            
+            const inning2TeamLogoHtml = inning2Team.logoUrl
+                ? `<img src="${inning2Team.logoUrl}" alt="${inning2Team.name}" class="team-logo small inline-block ml-2 rounded-full object-cover" style="vertical-align: middle;">`
+                : `<div class="team-logo small inline-block ml-2" style="background-color: ${inning2Team.color}; vertical-align: middle;">${inning2Team.name.charAt(0)}</div>`;
+
+            contentContainer.innerHTML = `
+                <div class="rounded-2xl text-white p-6" style="background: linear-gradient(135deg, ${winningTeam.color}, ${losingTeam.color})">
+                    <div class="text-center">
+                         ${winningTeamLogoHtml}
+                        <h2 class="text-3xl font-extrabold tracking-tight">${resultMessage}</h2>
+                        <p class="text-sm opacity-80">Final Result</p>
+                    </div>
+
+                    <div class="summary-card rounded-xl p-4 my-6">
+                         <div class="flex justify-between items-center">
+                            <div class="w-2/5 text-left">
+                                <p class="font-bold">${inning1Team.name}</p>
+                            </div>
+                            <div class="w-1/5 text-center font-bold text-lg">${inning1Summary.score}/${inning1Summary.wickets} <span class="text-sm font-normal opacity-70">(${Math.floor(inning1Summary.balls/6)}.${inning1Summary.balls%6})</span></div>
+                            <div class="w-2/5 text-right">
+                               <p class="font-bold">${inning2Team.name}</p>
+                            </div>
+                         </div>
+                         <div class="flex justify-between items-center mt-1">
+                            <div class="w-2/5 text-left">
+                                ${inning1TeamLogoHtml}
+                            </div>
+                             <div class="w-1/5 text-center font-bold text-lg"><span class="text-sm font-normal opacity-70">vs</span></div>
+                            <div class="w-2/5 text-right">
+                                ${inning2TeamLogoHtml}
+                            </div>
+                         </div>
+                         <div class="flex justify-between items-center mt-1">
+                            <div class="w-2/5 text-left"></div>
+                             <div class="w-1/5 text-center font-bold text-lg">${inning2Summary.score}/${inning2Summary.wickets} <span class="text-sm font-normal opacity-70">(${Math.floor(inning2Summary.balls/6)}.${inning2Summary.balls%6})</span></div>
+                             <div class="w-2/5 text-right"></div>
+                         </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="summary-card rounded-xl p-4">
+                            <h3 class="font-bold text-yellow-300 mb-2">TOP BATTERS</h3>
+                            <div class="space-y-1">${topBattersHTML}</div>
+                        </div>
+                        <div class="summary-card rounded-xl p-4">
+                            <h3 class="font-bold text-cyan-300 mb-2">TOP BOWLERS</h3>
+                            <div class="space-y-1">${topBowlersHTML}</div>
+                        </div>
+                    </div>
+
+                    <div class="summary-card rounded-xl p-4 mt-4 text-center">
+                        <h3 class="font-bold text-base text-yellow-300">⭐ MAN OF THE MATCH (SUGGESTION)</h3>
+                        <p class="font-extrabold text-2xl mt-1">${motm.name}</p>
+                        <p class="text-lg font-bold">${motmPerformance}</p>
+                    </div>
+
+                    <button onclick="closeModal('full-screen-message-modal'); returnToDashboard(false);" class="mt-6 w-full px-6 py-3 bg-white/90 text-black font-bold rounded-lg text-lg hover:bg-white transition-all">
+                        Return to Dashboard
+                    </button>
+                </div>
+            `;
+            openModal('full-screen-message-modal');
+        }
+
         function updatePointsTable(matchStatus, winningTeam) {
             const team1 = currentTournamentState.teams.find(t => t.id === liveMatchState.team1.id);
             const team2 = currentTournamentState.teams.find(t => t.id === liveMatchState.team2.id);
@@ -1951,14 +2382,23 @@
             const overs = Math.floor(battingTeam.balls / liveMatchState.ballsPerOver);
             const ballsThisOver = battingTeam.balls % liveMatchState.ballsPerOver;
             
-            const battingHTML = `<div class="flex items-center justify-between"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white" style="background-color: ${battingTeam.color};">${battingTeam.name.charAt(0)}</div><span class="font-semibold text-lg text-gray-800">${battingTeam.name}</span></div><div class="text-right"><p class="text-2xl font-extrabold text-gray-900">${battingTeam.score}/${battingTeam.wickets}</p><p class="text-sm text-gray-500">(${overs}.${ballsThisOver} / ${liveMatchState.totalOvers} ov)</p></div></div>`;
+            const battingLogoHtml = battingTeam.logoUrl
+                ? `<img src="${battingTeam.logoUrl}" alt="${battingTeam.name}" class="w-8 h-8 rounded-full object-cover">`
+                : `<div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white" style="background-color: ${battingTeam.color};">${battingTeam.name.charAt(0)}</div>`;
+
+            const battingHTML = `<div class="flex items-center justify-between"><div class="flex items-center gap-3">${battingLogoHtml}<span class="font-semibold text-lg text-gray-800">${battingTeam.name}</span></div><div class="text-right"><p class="text-2xl font-extrabold text-gray-900">${battingTeam.score}/${battingTeam.wickets}</p><p class="text-sm text-gray-500">(${overs}.${ballsThisOver} / ${liveMatchState.totalOvers} ov)</p></div></div>`;
             
             let bowlingHTML = '';
             if (bowlingTeam) {
                 const bowlingTeamOvers = Math.floor(bowlingTeam.balls / liveMatchState.ballsPerOver);
                 const bowlingTeamBalls = bowlingTeam.balls % liveMatchState.ballsPerOver;
                 const bowlingTeamScoreDisplay = (liveMatchState.innings > 1) ? `<p class="text-lg font-bold text-gray-700">${bowlingTeam.score}/${bowlingTeam.wickets}</p><p class="text-xs text-gray-500">(${bowlingTeamOvers}.${bowlingTeamBalls} ov)</p>` : `<p class="text-sm font-medium text-gray-500">Yet to bat</p>`;
-                bowlingHTML = `<div class="flex items-center justify-between opacity-70"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white" style="background-color: ${bowlingTeam.color};">${bowlingTeam.name.charAt(0)}</div><span class="font-semibold text-lg text-gray-800">${bowlingTeam.name}</span></div><div class="text-right">${bowlingTeamScoreDisplay}</div></div>`;
+                
+                const bowlingLogoHtml = bowlingTeam.logoUrl
+                    ? `<img src="${bowlingTeam.logoUrl}" alt="${bowlingTeam.name}" class="w-8 h-8 rounded-full object-cover">`
+                    : `<div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white" style="background-color: ${bowlingTeam.color};">${bowlingTeam.name.charAt(0)}</div>`;
+                
+                bowlingHTML = `<div class="flex items-center justify-between opacity-70"><div class="flex items-center gap-3">${bowlingLogoHtml}<span class="font-semibold text-lg text-gray-800">${bowlingTeam.name}</span></div><div class="text-right">${bowlingTeamScoreDisplay}</div></div>`;
             }
             container.innerHTML = battingHTML + bowlingHTML;
         }
