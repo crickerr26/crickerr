@@ -570,16 +570,16 @@
         Wicket
     </button>
     
-    <button onclick="openModal('wide-modal')" class="flex items-center justify-center bg-slate-50 text-slate-700 font-bold text-xl transition-transform active:scale-95">
+    <button onclick="openModal('wide-modal')" class="flex items-center justify-center bg-slate-50 text-slate-700 font-semibold text-lg transition-transform active:scale-95">
         Wide
     </button>
-    <button onclick="openModal('noball-modal')" class="flex items-center justify-center bg-slate-50 text-slate-700 font-bold text-xl transition-transform active:scale-95">
+    <button onclick="openModal('noball-modal')" class="flex items-center justify-center bg-slate-50 text-slate-700 font-semibold text-lg transition-transform active:scale-95">
         NB
     </button>
-    <button onclick="openModal('byes-modal')" class="flex items-center justify-center bg-slate-50 text-slate-700 font-bold text-xl transition-transform active:scale-95">
+    <button onclick="openModal('byes-modal')" class="flex items-center justify-center bg-slate-50 text-slate-700 font-semibold text-lg transition-transform active:scale-95">
         Byes
     </button>
-    <button onclick="openModal('legbyes-modal')" class="flex items-center justify-center bg-slate-50 text-slate-700 font-bold text-xl transition-transform active:scale-95">
+    <button onclick="openModal('legbyes-modal')" class="flex items-center justify-center bg-slate-50 text-slate-700 font-semibold text-lg transition-transform active:scale-95">
         LB
     </button>
 </div>
@@ -1115,6 +1115,17 @@
             const g = parseInt(hex.slice(3, 5), 16);
             const b = parseInt(hex.slice(5, 7), 16);
             return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        function formatPlayerName(fullName) {
+            if (!fullName || typeof fullName !== 'string') return '';
+            const parts = fullName.trim().split(/\s+/);
+            if (parts.length > 1) {
+                const firstName = parts.slice(0, -1).join(' ');
+                const lastName = parts[parts.length - 1];
+                return `${firstName} ${lastName.charAt(0)}.`;
+            }
+            return fullName;
         }
 
         // --- SETUP LOGIC ---
@@ -2157,7 +2168,7 @@
                     <td class="p-2 font-semibold text-gray-800 flex items-center justify-between text-base">
                         <div class="flex items-center">
                             <img src="${batsman.image || fallbackImg}" class="w-8 h-8 rounded-full object-cover mr-3 bg-gray-200">
-                            <span>${batsman.name} ${isStriker ? '<span class="text-red-500 ml-1 text-xs">*</span>' : ''}</span>
+                            <span>${formatPlayerName(batsman.name)} ${isStriker ? '<span class="text-red-500 ml-1 text-xs">*</span>' : ''}</span>
                         </div>
                         <div class="flex items-center space-x-2">
                              <button onclick="swapBatsmen()" class="text-gray-400 hover:text-blue-600">
@@ -2206,7 +2217,7 @@
                     <tr class="border-t align-middle">
                         <td class="p-2 font-semibold text-gray-800 flex items-center text-base">
                             <img src="${bowler.image || fallbackImg}" class="w-8 h-8 rounded-full object-cover mr-3 bg-gray-200">
-                            <span class="flex-grow">${bowler.name}</span>
+                            <span class="flex-grow">${formatPlayerName(bowler.name)}</span>
                             <button onclick="editPlayer('bowler')" class="ml-2 text-gray-400 hover:text-gray-700">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z" /></svg>
                             </button>
