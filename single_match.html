@@ -476,12 +476,12 @@
 
 
     <div id="app" class="h-screen w-full flex flex-col hidden">
-        <div id="match-header" class="relative text-center py-1 px-4 bg-gray-100">
+        <div id="match-header" class="relative text-center px-4 bg-gray-100">
         </div>
         <div class="flex-grow w-full p-4 grid lg:grid-cols-3 gap-2 overflow-hidden min-h-0">
     
             <div class="lg:col-span-2 flex flex-col space-y-2">
-                <div id="scoreboard" class="bg-white rounded-lg p-2 shadow-md">
+                <div id="scoreboard" class="bg-white rounded-lg p-1 shadow-md">
                     <div id="team-scores-container" class="space-y-0">
                     </div>
                 </div>
@@ -2085,7 +2085,7 @@
                 }
 
                 return `
-                    <div class="flex items-center justify-between py-1.5 ${!isBatting ? 'opacity-60' : ''}">
+                    <div class="flex items-center justify-between py-1 ${!isBatting ? 'opacity-60' : ''}">
                         <div class="flex items-center gap-2">
                             <div class="w-7 h-7 rounded-full flex items-center justify-center font-semibold text-white text-xs" style="background-color: ${team.color};">
                                 ${team.name.charAt(0).toUpperCase()}
