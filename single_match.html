@@ -59,7 +59,7 @@
                 overflow-y: hidden; /* We will control scrolling inside specific elements instead */
             }
              .lg\\:col-span-2 {
-                /* CORRECTED: Removed flex-grow: 1; to stop this section from expanding vertically */
+                flex-grow: 1; /* This section now grows to fill available space */
                 min-height: 0;
                 display: flex;
                 flex-direction: column;
@@ -73,22 +73,26 @@
                 flex-shrink: 0;
                 display: flex; 
                 flex-direction: column; 
-                flex-grow: 1; /* This will now correctly take up all remaining vertical space */
                 min-height: 0;
             }
             #scoring-controls {
-                flex-grow: 1; 
                 display: flex;
                 flex-direction: column; 
             }
             .scoring-grid {
-                flex-grow: 1; 
-                grid-template-rows: repeat(3, 1fr); 
+                 /* No longer need to force height */
             }
             .scoring-grid button {
-                padding-top: 12px;
-                padding-bottom: 12px;
-                font-size: 1rem; 
+                padding-top: 8px;
+                padding-bottom: 8px;
+                font-size: 0.875rem; 
+            }
+            .scoring-grid button > .text-xl {
+                font-size: 1.125rem;
+            }
+             .scoring-grid button > .text-xs {
+                font-size: 0.7rem;
+                margin-top: 1px;
             }
             #scoreboard {
                 padding: 4px;
