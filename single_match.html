@@ -330,7 +330,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="space-y-2">
                                 <label for="venue" class="block font-medium text-gray-700">Venue 🏟️</label>
-                                <input type="text" id="venue" placeholder="e.g., National Stadium" class="w-full p-2 border-gray-300 border rounded-md focus:ring-blue-500 focus:border-blue-500 transition">
+                                <input type="text" id="venue" placeholder="e.g., National Stadium" class="w-full p-2 border-gray-300 border rounded-md focus:ring-blue-500 focus:border-blue-500 transition" style="text-transform: uppercase;">
                             </div>
                             <div class="space-y-2">
                                 <label for="match-date-input" class="block font-medium text-gray-700">Date</label>
@@ -360,18 +360,19 @@
                                 <label for="players-per-side" class="block font-medium text-gray-700">Players per Side</label>
                                 <select id="players-per-side" class="w-full p-2 border-gray-300 border rounded-md focus:ring-blue-500 focus:border-blue-500 transition">
                                     <option value="" disabled selected>Select Players per Side</option>
-                                    <option value="6">6-a-side</option>
-                                    <option value="7">7-a-side</option>
-                                    <option value="8">8-a-side</option>
-                                    <option value="9">9-a-side</option>
-                                    <option value="10">10-a-side</option>
-                                    <option value="11">11-a-side</option>
+                                    <option value="5">5A Side</option>
+                                    <option value="6">6A Side</option>
+                                    <option value="7">7A Side</option>
+                                    <option value="8">8A Side</option>
+                                    <option value="9">9A Side</option>
+                                    <option value="10">10A Side</option>
+                                    <option value="11">11A Side</option>
                                 </select>
                             </div>
                         </div>
                         <div class="border-t pt-4 space-y-4">
                              <div class="space-y-2">
-                                <label for="team1-select" class="block font-medium text-gray-700">Or Select a Saved Team</label>
+                                <label for="team1-select" class="block font-medium text-gray-700 font-bold">Load Saved team</label>
                                 <select id="team1-select" class="w-full p-2 border-gray-300 border rounded-md focus:ring-blue-500 focus:border-blue-500 transition">
                                     <option value="">Search saved teams...</option>
                                 </select>
@@ -379,7 +380,7 @@
                              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div class="space-y-2 md:col-span-2">
                                     <label for="team1-name-input" class="block font-medium text-gray-700">Home Team Name</label>
-                                    <input type="text" id="team1-name-input" placeholder="Enter Home Team Name" value="" class="w-full p-2 border-gray-300 border rounded-md focus:ring-blue-500 focus:border-blue-500 transition">
+                                    <input type="text" id="team1-name-input" placeholder="Enter Home Team Name" value="" class="w-full p-2 border-gray-300 border rounded-md focus:ring-blue-500 focus:border-blue-500 transition" style="text-transform: uppercase;" oninput="document.querySelector('label[for=\'team1-logo-input\']').textContent = this.value.trim() ? this.value.trim().toUpperCase() + ' Logo' : 'Home Team Logo'">
                                 </div>
                                 <div class="space-y-2">
                                     <label for="team1-color-input" class="block font-medium text-gray-700">Team Color</label>
@@ -393,7 +394,7 @@
                         </div>
                          <div class="border-t pt-4 space-y-4">
                             <div class="space-y-2">
-                                <label for="team2-select" class="block font-medium text-gray-700">Or Select a Saved Team</label>
+                                <label for="team2-select" class="block font-medium text-gray-700 font-bold">Load Saved team</label>
                                 <select id="team2-select" class="w-full p-2 border-gray-300 border rounded-md focus:ring-blue-500 focus:border-blue-500 transition">
                                     <option value="">Search saved teams...</option>
                                 </select>
@@ -401,7 +402,7 @@
                              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div class="space-y-2 md:col-span-2">
                                     <label for="team2-name-input" class="block font-medium text-gray-700">Away Team Name</label>
-                                    <input type="text" id="team2-name-input" placeholder="Enter Away Team Name" value="" class="w-full p-2 border-gray-300 border rounded-md focus:ring-blue-500 focus:border-blue-500 transition">
+                                    <input type="text" id="team2-name-input" placeholder="Enter Away Team Name" value="" class="w-full p-2 border-gray-300 border rounded-md focus:ring-blue-500 focus:border-blue-500 transition" style="text-transform: uppercase;" oninput="document.querySelector('label[for=\'team2-logo-input\']').textContent = this.value.trim() ? this.value.trim().toUpperCase() + ' Logo' : 'Away Team Logo'">
                                 </div>
                                 <div class="space-y-2">
                                     <label for="team2-color-input" class="block font-medium text-gray-700">Team Color</label>
@@ -424,13 +425,13 @@
                         <header class="text-center mb-8">
                             <img id="team1-roster-logo" src="" alt="Team 1 Logo" class="w-20 h-20 mx-auto mb-4 rounded-full object-cover hidden shadow-md">
                             <h1 id="team1-roster-title" class="text-3xl font-bold"></h1>
-                            <p class="text-gray-500 mt-1">Enter player names & upload images</p>
+                            <p class="text-gray-500 mt-1">Enter player names & upload player images</p>
                         </header>
                         <div id="team1-player-inputs" class="space-y-3 pr-2 overflow-y-auto" style="max-height: 50vh;">
                         </div>
                         <div class="mt-8 flex justify-between items-center">
                             <button onclick="goToStep(1)" class="back-btn font-semibold">Back</button>
-                            <button onclick="goToStep(3)" class="px-6 py-2 text-white font-bold rounded-lg setup-btn">Next</button>
+                            <button onclick="saveTeam1AndProceed()" class="px-6 py-2 text-white font-bold rounded-lg setup-btn">Next</button>
                         </div>
                     </div>
                 </div>
@@ -440,7 +441,7 @@
                         <header class="text-center mb-8">
                             <img id="team2-roster-logo" src="" alt="Team 2 Logo" class="w-20 h-20 mx-auto mb-4 rounded-full object-cover hidden shadow-md">
                             <h1 id="team2-roster-title" class="text-3xl font-bold"></h1>
-                            <p class="text-gray-500 mt-1">Enter player names & upload images</p>
+                            <p class="text-gray-500 mt-1">Enter player names & upload player images</p>
                         </header>
                         <div id="team2-player-inputs" class="space-y-3 pr-2 overflow-y-auto" style="max-height: 50vh;">
                         </div>
@@ -1160,49 +1161,55 @@
         }
 
         function createPlayerInputRow(container, name, image, index) {
-            const playerRow = document.createElement('div');
-            playerRow.className = 'flex items-center gap-3 player-input-row';
+    const playerRow = document.createElement('div');
+    playerRow.className = 'flex items-center gap-3 player-input-row';
 
-            const imageContainer = document.createElement('div');
-            imageContainer.className = 'w-10 h-10 flex-shrink-0';
-            const imagePreview = document.createElement('img');
-            imagePreview.src = image || `data:image/svg+xml;base64,${btoa('<svg class="w-10 h-10 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>')}`;
-            imagePreview.alt = `Player ${index} Image`;
-            imagePreview.className = 'w-10 h-10 rounded-full object-cover bg-gray-200 cursor-pointer hover:opacity-80 transition';
+    const numberLabel = document.createElement('span');
+    numberLabel.className = 'font-semibold text-gray-500 w-6 text-center';
+    numberLabel.textContent = String(index).padStart(2, '0');
 
-            const fileInput = document.createElement('input');
-            fileInput.type = 'file';
-            fileInput.className = 'hidden';
-            fileInput.accept = 'image/*';
+    const imageContainer = document.createElement('div');
+    imageContainer.className = 'w-10 h-10 flex-shrink-0';
+    const imagePreview = document.createElement('img');
+    imagePreview.src = image || `data:image/svg+xml;base64,${btoa('<svg class="w-10 h-10 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>')}`;
+    imagePreview.alt = `Player ${index} Image`;
+    imagePreview.className = 'w-10 h-10 rounded-full object-cover bg-gray-200 cursor-pointer hover:opacity-80 transition';
 
-            const nameInput = document.createElement('input');
-            nameInput.type = 'text';
-            nameInput.placeholder = `Player ${index}`;
-            nameInput.value = name;
-            nameInput.className = 'w-full p-2 border-gray-300 border rounded-md focus:ring-blue-500 focus:border-blue-500 transition';
-            if (image) {
-                nameInput.dataset.imageSrc = image;
-            }
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.className = 'hidden';
+    fileInput.accept = 'image/*';
 
-            fileInput.onchange = () => {
-                if (fileInput.files && fileInput.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        imagePreview.src = e.target.result;
-                        nameInput.dataset.imageSrc = e.target.result;
-                    };
-                    reader.readAsDataURL(fileInput.files[0]);
-                }
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.placeholder = `Player Name`;
+    nameInput.value = name;
+    nameInput.className = 'w-full p-2 border-gray-300 border rounded-md focus:ring-blue-500 focus:border-blue-500 transition'
+    nameInput.style.textTransform = 'uppercase';
+    if (image) {
+        nameInput.dataset.imageSrc = image;
+    }
+
+    fileInput.onchange = () => {
+        if (fileInput.files && fileInput.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagePreview.src = e.target.result;
+                nameInput.dataset.imageSrc = e.target.result;
             };
-
-            imagePreview.onclick = () => fileInput.click();
-
-            imageContainer.appendChild(imagePreview);
-            imageContainer.appendChild(fileInput);
-            playerRow.appendChild(imageContainer);
-            playerRow.appendChild(nameInput);
-            container.appendChild(playerRow);
+            reader.readAsDataURL(fileInput.files[0]);
         }
+    };
+
+    imagePreview.onclick = () => fileInput.click();
+
+    playerRow.appendChild(numberLabel);
+    imageContainer.appendChild(imagePreview);
+    imageContainer.appendChild(fileInput);
+    playerRow.appendChild(imageContainer);
+    playerRow.appendChild(nameInput);
+    container.appendChild(playerRow);
+}
         
         function selectTossWinner(teamKey) {
             tossWinnerKey = teamKey;
@@ -1270,7 +1277,7 @@
                 } else {
                     ui.team1RosterLogo.classList.add('hidden');
                 }
-                ui.team1RosterTitle.textContent = ui.team1NameInput.value || 'HOME TEAM';
+                ui.team1RosterTitle.textContent = (ui.team1NameInput.value || 'HOME TEAM').toUpperCase();
                 generatePlayerInputs('team1');
                 ui.progressBar.style.width = '50%';
             }
@@ -1282,7 +1289,7 @@
                 } else {
                     ui.team2RosterLogo.classList.add('hidden');
                 }
-                ui.team2RosterTitle.textContent = ui.team2NameInput.value || 'AWAY TEAM';
+                ui.team2RosterTitle.textContent = (ui.team2NameInput.value || 'AWAY TEAM').toUpperCase();
                 generatePlayerInputs('team2');
                 ui.progressBar.style.width = '75%';
             }
@@ -1381,7 +1388,7 @@
 
                 playerRows.forEach((row, i) => {
                     const nameInput = row.querySelector('input[type="text"]');
-                    const playerName = nameInput.value.trim() || `Player ${i + 1}`;
+                    const playerName = (nameInput.value.trim() || `Player ${i + 1}`).toUpperCase();
                     const imageSrc = nameInput.dataset.imageSrc || '';
 
                     players.push(playerName);
@@ -1436,6 +1443,13 @@
             window.addEventListener('beforeunload', beforeUnloadHandler);
 
             initialize();
+        }
+
+        function saveTeam1AndProceed() {
+            const team1Name = (document.getElementById('team1-name-input').value || 'HOME TEAM').toUpperCase();
+            showAlert(`${team1Name} players are saved.`, () => {
+                goToStep(3);
+            });
         }
 
         function showIntroCommentary() {
@@ -2880,7 +2894,7 @@
                     playerDiv.className = 'flex items-center bg-gray-50 p-2 rounded-md hover:bg-gray-100';
                     playerDiv.innerHTML = `
                         <input type="checkbox" id="player-${player.name.replace(/\s+/g, '-')}" value="${player.name}" class="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-3 cursor-pointer">
-                        <img src="${player.image || `data:image/svg+xml;base64,${btoa('<svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>')}`}" class="w-8 h-8 rounded-full object-cover mr-3 bg-gray-200">
+                        <img src="${player.image || `data:image/svg+xml;base64,${btoa('<svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>')}`}" class="w-8 h-8 rounded-full object-cover mr-3 bg-gray-20
                         <label for="player-${player.name.replace(/\s+/g, '-')}" class="font-medium text-gray-800 flex-grow cursor-pointer">${player.name}</label>
                     `;
                     squadListContainer.appendChild(playerDiv);
