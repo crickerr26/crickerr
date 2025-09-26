@@ -1027,6 +1027,10 @@
             winMargin: '',
             toss: {},
             pendingExtra: null, // Used for multi-step extra events like run outs
+            setup: { // NEW: To hold temporary player data during setup
+                team1Players: [],
+                team2Players: []
+            },
         };
 
         let alertCallback = null;
@@ -1139,77 +1143,97 @@
         }
 
         // --- SETUP LOGIC ---
+        function saveCurrentPlayerRoster(teamKey) {
+            const container = (teamKey === 'team1') ? ui.team1PlayerInputs : ui.team2PlayerInputs;
+            const playerRows = container.querySelectorAll('.player-input-row');
+            const playersData = [];
+
+            playerRows.forEach(row => {
+                const nameInput = row.querySelector('input[type="text"]');
+                const playerName = nameInput.value.trim().toUpperCase();
+                const imageSrc = nameInput.dataset.imageSrc || '';
+                playersData.push({ name: playerName, image: imageSrc });
+            });
+            
+            const setupKey = teamKey === 'team1' ? 'team1Players' : 'team2Players';
+            state.setup[setupKey] = playersData;
+        }
+
         function generatePlayerInputs(teamKey) {
             const container = (teamKey === 'team1') ? ui.team1PlayerInputs : ui.team2PlayerInputs;
             container.innerHTML = ''; // Clear existing inputs
 
-            const playersToGenerate = state[teamKey].players && state[teamKey].players.length > 0 ? state[teamKey].players : [];
+            const setupKey = teamKey === 'team1' ? 'team1Players' : 'team2Players';
+            const playersToGenerate = state.setup[setupKey] && state.setup[setupKey].length > 0 ? state.setup[setupKey] 
+                : (state[teamKey].players && state[teamKey].players.length > 0 ? state[teamKey].players : []);
 
             if (playersToGenerate.length > 0) {
-                // Handle both string arrays and object arrays for players
                 playersToGenerate.forEach((player, index) => {
-                    const playerName = typeof player === 'object' ? player.name : player;
-                    const playerImage = typeof player === 'object' ? player.image : '';
-                    createPlayerInputRow(container, playerName, playerImage, index + 1);
+                    const playerName = typeof player === 'object' ? (player.name || '') : player;
+                    const playerImage = typeof player === 'object' ? (player.image || '') : '';
+                    createPlayerInputRow(container, playerName, playerImage, index + 1, teamKey);
                 });
             } else {
                 const numPlayers = parseInt(ui.playersPerSideInput.value) || 11;
                 for (let i = 1; i <= numPlayers; i++) {
-                    createPlayerInputRow(container, '', '', i);
+                    createPlayerInputRow(container, '', '', i, teamKey);
                 }
             }
         }
 
-        function createPlayerInputRow(container, name, image, index) {
-    const playerRow = document.createElement('div');
-    playerRow.className = 'flex items-center gap-3 player-input-row';
+        function createPlayerInputRow(container, name, image, index, teamKey) {
+            const playerRow = document.createElement('div');
+            playerRow.className = 'flex items-center gap-3 player-input-row';
 
-    const numberLabel = document.createElement('span');
-    numberLabel.className = 'font-semibold text-gray-500 w-6 text-center';
-    numberLabel.textContent = String(index).padStart(2, '0');
+            const numberLabel = document.createElement('span');
+            numberLabel.className = 'font-semibold text-gray-500 w-6 text-center';
+            numberLabel.textContent = String(index).padStart(2, '0');
 
-    const imageContainer = document.createElement('div');
-    imageContainer.className = 'w-10 h-10 flex-shrink-0';
-    const imagePreview = document.createElement('img');
-    imagePreview.src = image || `data:image/svg+xml;base64,${btoa('<svg class="w-10 h-10 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>')}`;
-    imagePreview.alt = `Player ${index} Image`;
-    imagePreview.className = 'w-10 h-10 rounded-full object-cover bg-gray-200 cursor-pointer hover:opacity-80 transition';
+            const imageContainer = document.createElement('div');
+            imageContainer.className = 'w-10 h-10 flex-shrink-0';
+            const imagePreview = document.createElement('img');
+            imagePreview.src = image || `data:image/svg+xml;base64,${btoa('<svg class="w-10 h-10 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>')}`;
+            imagePreview.alt = `Player ${index} Image`;
+            imagePreview.className = 'w-10 h-10 rounded-full object-cover bg-gray-200 cursor-pointer hover:opacity-80 transition';
 
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.className = 'hidden';
-    fileInput.accept = 'image/*';
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.className = 'hidden';
+            fileInput.accept = 'image/*';
 
-    const nameInput = document.createElement('input');
-    nameInput.type = 'text';
-    nameInput.placeholder = `Player Name`;
-    nameInput.value = name;
-    nameInput.className = 'w-full p-2 border-gray-300 border rounded-md focus:ring-blue-500 focus:border-blue-500 transition'
-    nameInput.style.textTransform = 'uppercase';
-    if (image) {
-        nameInput.dataset.imageSrc = image;
-    }
+            const nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.placeholder = `Player Name`;
+            nameInput.value = name;
+            nameInput.className = 'w-full p-2 border-gray-300 border rounded-md focus:ring-blue-500 focus:border-blue-500 transition'
+            nameInput.style.textTransform = 'uppercase';
+            if (image) {
+                nameInput.dataset.imageSrc = image;
+            }
+            
+            nameInput.addEventListener('input', () => saveCurrentPlayerRoster(teamKey));
 
-    fileInput.onchange = () => {
-        if (fileInput.files && fileInput.files[0]) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                imagePreview.src = e.target.result;
-                nameInput.dataset.imageSrc = e.target.result;
+            fileInput.onchange = () => {
+                if (fileInput.files && fileInput.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        imagePreview.src = e.target.result;
+                        nameInput.dataset.imageSrc = e.target.result;
+                        saveCurrentPlayerRoster(teamKey);
+                    };
+                    reader.readAsDataURL(fileInput.files[0]);
+                }
             };
-            reader.readAsDataURL(fileInput.files[0]);
+
+            imagePreview.onclick = () => fileInput.click();
+
+            playerRow.appendChild(numberLabel);
+            imageContainer.appendChild(imagePreview);
+            imageContainer.appendChild(fileInput);
+            playerRow.appendChild(imageContainer);
+            playerRow.appendChild(nameInput);
+            container.appendChild(playerRow);
         }
-    };
-
-    imagePreview.onclick = () => fileInput.click();
-
-    playerRow.appendChild(numberLabel);
-    imageContainer.appendChild(imagePreview);
-    imageContainer.appendChild(fileInput);
-    playerRow.appendChild(imageContainer);
-    playerRow.appendChild(nameInput);
-    container.appendChild(playerRow);
-}
         
         function selectTossWinner(teamKey) {
             tossWinnerKey = teamKey;
