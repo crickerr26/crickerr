@@ -115,13 +115,17 @@
                 padding: 4px;
             }
             
-            /* --- NEW: Increase table font size on mobile --- */
+            /* --- NEW: Compact table layout on mobile --- */
             #batting-table th, #batting-table td, #bowling-table th, #bowling-table td {
-                padding: 8px 4px; /* Increased vertical padding */
-                font-size: 0.875rem; /* Increased font size (from 0.75rem) */
+                padding: 6px 2px; /* Reduced padding for a tighter layout */
+                font-size: 0.8rem; /* Smaller font size for stats */
             }
-            #batting-table th.p-2, #bowling-table th.p-2 {
-                font-size: 0.8rem; /* Make header text a bit bigger */
+            #batting-table td:first-child, #bowling-table td:first-child {
+                 font-size: 0.75rem; /* Make player names smaller to fit better */
+                 font-weight: 500;
+            }
+            #batting-table th.p-1, #bowling-table th.p-1 {
+                font-size: 0.7rem; /* Smaller header font */
             }
         }
 
@@ -677,12 +681,12 @@
                         <table class="table-fixed w-full text-left text-sm relative">
                             <thead class="bg-gray-100 border-b">
                                 <tr>
-                                    <th class="p-1 font-semibold text-xs w-2/5">Batting</th>
-                                    <th class="text-center p-1 font-semibold text-sm w-[10%]">R</th>
-                                    <th class="text-center p-1 font-semibold text-sm w-[10%]">B</th>
-                                    <th class="text-center p-1 font-semibold text-sm w-[10%]">4s</th>
-                                    <th class="text-center p-1 font-semibold text-sm w-[10%]">6s</th>
-                                    <th class="text-right p-1 font-semibold text-sm w-1/5">SR</th>
+                                    <th class="p-1 font-semibold text-xs w-1/2">Batting</th>
+                                    <th class="text-center p-1 font-semibold text-sm w-[9%]">R</th>
+                                    <th class="text-center p-1 font-semibold text-sm w-[9%]">B</th>
+                                    <th class="text-center p-1 font-semibold text-sm w-[9%]">4s</th>
+                                    <th class="text-center p-1 font-semibold text-sm w-[9%]">6s</th>
+                                    <th class="text-right p-1 font-semibold text-sm w-[14%]">SR</th>
                                 </tr>
                             </thead>
                             <tbody id="batting-table">
@@ -693,12 +697,12 @@
                         <table class="table-fixed w-full text-left text-sm">
                             <thead class="bg-gray-100 border-b">
                                 <tr>
-                                    <th class="p-1 font-semibold text-xs w-2/5">Bowling</th>
-                                    <th class="text-center p-1 font-semibold text-sm w-[10%]">O</th>
-                                    <th class="text-center p-1 font-semibold text-sm w-[10%]">M</th>
-                                    <th class="text-center p-1 font-semibold text-sm w-[10%]">R</th>
-                                    <th class="text-center p-1 font-semibold text-sm w-[10%]">W</th>
-                                    <th class="text-right p-1 font-semibold text-sm w-1/5">Econ</th>
+                                    <th class="p-1 font-semibold text-xs w-1/2">Bowling</th>
+                                    <th class="text-center p-1 font-semibold text-sm w-[9%]">O</th>
+                                    <th class="text-center p-1 font-semibold text-sm w-[9%]">M</th>
+                                    <th class="text-center p-1 font-semibold text-sm w-[9%]">R</th>
+                                    <th class="text-center p-1 font-semibold text-sm w-[9%]">W</th>
+                                    <th class="text-right p-1 font-semibold text-sm w-[14%]">Econ</th>
                                 </tr>
                             </thead>
                             <tbody id="bowling-table">
@@ -3282,8 +3286,7 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
 
             // --- POPULATE TEAM PANELS ---
             ['team1', 'team2'].forEach(teamKey => {
-                // (This part is identical to your previous version, handling names, scores, logos, players)
-                 const team = state[teamKey];
+                const team = state[teamKey];
                 const panel = document.getElementById(`edit-${teamKey}-panel`);
                 panel.classList.toggle('highlight', teamKey === battingTeamKey);
                 document.getElementById(`edit-${teamKey}-name`).value = team.name;
@@ -3306,11 +3309,17 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
                 };
                 const playersContainer = document.getElementById(`edit-${teamKey}-players`);
                 playersContainer.innerHTML = '';
-                const playersToEdit = team.players.length > 0 ? team.players : Array(state.playersPerSide + 2).fill({name:''});
+
+                // FIX: Ensure team.players is an array and handle both string and object types within it.
+                const teamPlayers = Array.isArray(team.players) ? team.players : [];
+                const playersToEdit = teamPlayers.length > 0 
+                    ? teamPlayers.map(p => (typeof p === 'string' ? { name: p } : p)) 
+                    : Array(state.playersPerSide + 2).fill({name:''});
+                
                 playersToEdit.forEach((player, index) => {
                     const input = document.createElement('input');
                     input.type = 'text';
-                    input.value = player.name;
+                    input.value = player.name || ''; // Ensure value is not undefined
                     input.placeholder = `Player ${index + 1}`;
                     input.className = 'w-full p-2 border rounded-md';
                     playersContainer.appendChild(input);
@@ -3440,6 +3449,12 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
             saveState(); // Creates a checkpoint for the main Undo button
 
             try {
+                // --- STORE ORIGINAL ACTIVE PLAYER NAMES ---
+                const oldStrikerName = state.striker ? state.striker.name : null;
+                const oldNonStrikerName = state.nonStriker ? state.nonStriker.name : null;
+                const oldBowlerName = state.bowler ? state.bowler.name : null;
+                let nameChangeMap = {}; // To track oldName -> newName
+
                 // --- UPDATE GENERAL MATCH STATE ---
                 state.totalOvers = parseInt(document.getElementById('edit-total-overs').value);
                 state.currentOver = [...editedOver];
@@ -3454,30 +3469,52 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
                     team.balls = parseInt(document.getElementById(`edit-${teamKey}-balls`).value);
                     
                     const logoPreview = document.getElementById(`edit-${teamKey}-logo-preview`);
-                    if (logoPreview.src && !logoPreview.src.includes('placeholder.png') && logoPreview.src.startsWith('data:image')) {
+                    if (logoPreview.src && !logoPreview.src.includes('data:image/gif') && logoPreview.src.startsWith('data:image')) {
                         team.logo = logoPreview.src;
                     }
 
                     const playerInputs = document.getElementById(`edit-${teamKey}-players`).querySelectorAll('input');
+                    const oldPlayerNames = [...team.players]; // Make a copy
                     const newPlayers = [];
                     const newPlayerStats = {};
-                    playerInputs.forEach(input => {
-                        const playerName = input.value.trim().toUpperCase();
-                        if (playerName) {
-                            const existingPlayer = Object.values(team.playerStats).find(p => p.name === playerName);
-                            newPlayers.push(playerName);
-                            newPlayerStats[playerName] = existingPlayer || { name: playerName, image: '', runs: 0, balls: 0, fours: 0, sixes: 0, isOut: false, dismissalInfo: null, ballsBowled: 0, runsConceded: 0, wickets: 0, maidens: 0, dots: 0, foursConceded: 0, sixesConceded: 0, consecutiveFours: 0, consecutiveSixes: 0 };
+
+                    playerInputs.forEach((input, index) => {
+                        const newName = input.value.trim().toUpperCase();
+                        const oldName = oldPlayerNames[index];
+                        
+                        if (newName) {
+                            newPlayers.push(newName);
+                            if (oldName && oldName !== newName) {
+                                nameChangeMap[oldName] = newName;
+                            }
+
+                            // Transfer stats from old name if it exists, otherwise create new
+                            if (oldName && team.playerStats[oldName]) {
+                                newPlayerStats[newName] = team.playerStats[oldName];
+                                newPlayerStats[newName].name = newName; // Update name inside the object
+                            } else {
+                                // If a player was newly added or the old name didn't exist, create a new record
+                                newPlayerStats[newName] = team.playerStats[newName] || { name: newName, image: '', runs: 0, balls: 0, fours: 0, sixes: 0, isOut: false, dismissalInfo: null, ballsBowled: 0, runsConceded: 0, wickets: 0, maidens: 0, dots: 0, foursConceded: 0, sixesConceded: 0, consecutiveFours: 0, consecutiveSixes: 0 };
+                            }
                         }
                     });
                     team.players = newPlayers;
                     team.playerStats = newPlayerStats;
                 });
                 
-                // Full recalculation of stats is complex; this ensures scoreboard is correct.
-                // You would need to iterate through the full inningsHistory to rebuild player stats.
-
+                // --- RE-SYNC ACTIVE PLAYER OBJECTS IF RENAMED ---
+                if (oldStrikerName && nameChangeMap[oldStrikerName]) {
+                    state.striker = state[state.battingTeam].playerStats[nameChangeMap[oldStrikerName]];
+                }
+                if (oldNonStrikerName && nameChangeMap[oldNonStrikerName]) {
+                    state.nonStriker = state[state.battingTeam].playerStats[nameChangeMap[oldNonStrikerName]];
+                }
+                if (oldBowlerName && nameChangeMap[oldBowlerName]) {
+                    state.bowler = state[state.bowlingTeam].playerStats[nameChangeMap[oldBowlerName]];
+                }
+                
                 closeModal('edit-match-modal');
-                updateUI();
+                updateUI(); // This will now re-render with updated names and logos
                 showAlert('Match state updated successfully!');
 
             } catch (error) {
