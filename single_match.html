@@ -87,11 +87,103 @@
                 padding-bottom: 8px;
                 font-size: 0.875rem; 
             }
-            .scoring-grid button:nth-last-child(-n+4) {
-                padding-top: 6px;
-                padding-bottom: 6px;
-                font-size: 0.8rem;
-            }
+            /* NEW: Compact styles for the bottom row of scoring buttons on all screens */
+.scoring-grid button:nth-last-child(-n+4) {
+    font-size: 1rem;    /* Reduces font size from the default */
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    body { font-size: 14px; }
+    #setup-screen, #choice-screen { padding: 0; }
+    .setup-card, .choice-card { max-width: 100%; min-height: 100vh; border-radius: 0; box-shadow: none; border: none; }
+
+    /* --- Mobile Scoring Screen Layout --- */
+    #app {
+        overflow: hidden; /* Prevent the whole app from scrolling */
+    }
+    #app > .flex-grow {
+        padding: 8px; /* Reduce padding on mobile */
+        display: flex;
+        flex-direction: column;
+    }
+    #match-header h1 {
+        font-size: 1rem; /* Smaller headline */
+        font-weight: 700;
+    }
+    #match-header p {
+        font-size: 0.65rem; /* Smaller sub-headline */
+    }
+    .lg\\:col-span-2, .lg\\:col-span-1 {
+        overflow-y: hidden; /* We will control scrolling inside specific elements instead */
+    }
+     .lg\\:col-span-2 {
+        flex-grow: 1; /* This section now grows to fill available space */
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+    }
+    .lg\\:col-span-2 > .space-y-2 {
+        flex-grow: 1;
+        overflow-y: auto;
+        min-height: 0;
+    }
+    .lg\\:col-span-1 {
+        flex-shrink: 0;
+        display: flex; 
+        flex-direction: column; 
+        min-height: 0;
+    }
+    #scoring-controls {
+        display: flex;
+        flex-direction: column; 
+    }
+    .scoring-grid {
+         /* No longer need to force height */
+    }
+    .scoring-grid button {
+        padding-top: 8px;
+        padding-bottom: 8px;
+        font-size: 0.875rem; 
+    }
+    .scoring-grid button:nth-last-child(-n+4) {
+        padding-top: 4px; /* Reduced padding */
+        padding-bottom: 4px; /* Reduced padding */
+        font-size: 0.8rem; /* Stays the same, already small */
+        min-height: 44px; /* Ensures it's easy to tap */
+    }
+    .scoring-grid button > .text-xl {
+        font-size: 1.125rem;
+    }
+     .scoring-grid button > .text-xs {
+        font-size: 0.7rem;
+        margin-top: 1px;
+    }
+    #live-commentary-box {
+        padding: 0.35rem 0.5rem;
+    }
+    #live-commentary-box p {
+        font-size: 0.65rem;
+        line-height: 1rem;
+    }
+    #live-commentary-content {
+        margin-top: 0.25rem;
+        padding-top: 0.25rem;
+    }
+    #scoreboard {
+        padding: 4px;
+    }
+
+    /* --- NEW: Increase table font size on mobile --- */
+    #batting-table th, #batting-table td, #bowling-table th, #bowling-table td {
+        padding: 8px 4px; /* Increased vertical padding */
+        font-size: 0.875rem; /* Increased font size (from 0.75rem) */
+    }
+    #batting-table th.p-2, #bowling-table th.p-2 {
+        font-size: 0.8rem; /* Make header text a bit bigger */
+    }
+}
             .scoring-grid button > .text-xl {
                 font-size: 1.125rem;
             }
@@ -226,11 +318,11 @@
             flex-direction: column;
         }
         .scoring-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            grid-template-rows: repeat(3, 1fr);
-            flex-grow: 1;
-        }
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: 1fr 1fr 0.7fr; /* Makes the 3rd row shorter */
+    flex-grow: 1;
+}
         .scoring-grid button {
             border-bottom: 1px solid #e0e0e0;
             border-right: 1px solid #e0e0e0;
@@ -1027,10 +1119,6 @@
             winMargin: '',
             toss: {},
             pendingExtra: null, // Used for multi-step extra events like run outs
-            setup: { // NEW: To hold temporary player data during setup
-                team1Players: [],
-                team2Players: []
-            },
         };
 
         let alertCallback = null;
@@ -1143,97 +1231,82 @@
         }
 
         // --- SETUP LOGIC ---
-        function saveCurrentPlayerRoster(teamKey) {
-            const container = (teamKey === 'team1') ? ui.team1PlayerInputs : ui.team2PlayerInputs;
-            const playerRows = container.querySelectorAll('.player-input-row');
-            const playersData = [];
-
-            playerRows.forEach(row => {
-                const nameInput = row.querySelector('input[type="text"]');
-                const playerName = nameInput.value.trim().toUpperCase();
-                const imageSrc = nameInput.dataset.imageSrc || '';
-                playersData.push({ name: playerName, image: imageSrc });
-            });
-            
-            const setupKey = teamKey === 'team1' ? 'team1Players' : 'team2Players';
-            state.setup[setupKey] = playersData;
-        }
-
         function generatePlayerInputs(teamKey) {
-            const container = (teamKey === 'team1') ? ui.team1PlayerInputs : ui.team2PlayerInputs;
-            container.innerHTML = ''; // Clear existing inputs
+    const container = (teamKey === 'team1') ? ui.team1PlayerInputs : ui.team2PlayerInputs;
+    container.innerHTML = ''; // Clear existing inputs
 
-            const setupKey = teamKey === 'team1' ? 'team1Players' : 'team2Players';
-            const playersToGenerate = state.setup[setupKey] && state.setup[setupKey].length > 0 ? state.setup[setupKey] 
-                : (state[teamKey].players && state[teamKey].players.length > 0 ? state[teamKey].players : []);
+    const numPlayers = parseInt(ui.playersPerSideInput.value) || 11;
+    const totalFields = numPlayers + 2; // Always add 2 reserve fields
 
-            if (playersToGenerate.length > 0) {
-                playersToGenerate.forEach((player, index) => {
-                    const playerName = typeof player === 'object' ? (player.name || '') : player;
-                    const playerImage = typeof player === 'object' ? (player.image || '') : '';
-                    createPlayerInputRow(container, playerName, playerImage, index + 1, teamKey);
-                });
-            } else {
-                const numPlayers = parseInt(ui.playersPerSideInput.value) || 11;
-                for (let i = 1; i <= numPlayers; i++) {
-                    createPlayerInputRow(container, '', '', i, teamKey);
-                }
-            }
+    const savedPlayers = state[teamKey].players && state[teamKey].players.length > 0 ? state[teamKey].players : [];
+
+    for (let i = 1; i <= totalFields; i++) {
+        const savedPlayer = savedPlayers[i - 1];
+        // Use optional chaining '?' to avoid errors if savedPlayer is undefined
+        const playerName = savedPlayer?.name || '';
+        const playerImage = savedPlayer?.image || '';
+
+        let placeholder = 'Player Name';
+        if (i === numPlayers + 1) {
+            placeholder = 'Reserve Player 1';
+        } else if (i === numPlayers + 2) {
+            placeholder = 'Reserve Player 2';
         }
 
-        function createPlayerInputRow(container, name, image, index, teamKey) {
-            const playerRow = document.createElement('div');
-            playerRow.className = 'flex items-center gap-3 player-input-row';
+        createPlayerInputRow(container, playerName, playerImage, i, placeholder);
+    }
+}
 
-            const numberLabel = document.createElement('span');
-            numberLabel.className = 'font-semibold text-gray-500 w-6 text-center';
-            numberLabel.textContent = String(index).padStart(2, '0');
+        function createPlayerInputRow(container, name, image, index, placeholder = `Player Name`) {
+    const playerRow = document.createElement('div');
+    playerRow.className = 'flex items-center gap-3 player-input-row';
 
-            const imageContainer = document.createElement('div');
-            imageContainer.className = 'w-10 h-10 flex-shrink-0';
-            const imagePreview = document.createElement('img');
-            imagePreview.src = image || `data:image/svg+xml;base64,${btoa('<svg class="w-10 h-10 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>')}`;
-            imagePreview.alt = `Player ${index} Image`;
-            imagePreview.className = 'w-10 h-10 rounded-full object-cover bg-gray-200 cursor-pointer hover:opacity-80 transition';
+    const numberLabel = document.createElement('span');
+    numberLabel.className = 'font-semibold text-gray-500 w-6 text-center';
+    numberLabel.textContent = String(index).padStart(2, '0');
 
-            const fileInput = document.createElement('input');
-            fileInput.type = 'file';
-            fileInput.className = 'hidden';
-            fileInput.accept = 'image/*';
+    const imageContainer = document.createElement('div');
+    imageContainer.className = 'w-10 h-10 flex-shrink-0';
+    const imagePreview = document.createElement('img');
+    imagePreview.src = image || `data:image/svg+xml;base64,${btoa('<svg class="w-10 h-10 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>')}`;
+    imagePreview.alt = `Player ${index} Image`;
+    imagePreview.className = 'w-10 h-10 rounded-full object-cover bg-gray-200 cursor-pointer hover:opacity-80 transition';
 
-            const nameInput = document.createElement('input');
-            nameInput.type = 'text';
-            nameInput.placeholder = `Player Name`;
-            nameInput.value = name;
-            nameInput.className = 'w-full p-2 border-gray-300 border rounded-md focus:ring-blue-500 focus:border-blue-500 transition'
-            nameInput.style.textTransform = 'uppercase';
-            if (image) {
-                nameInput.dataset.imageSrc = image;
-            }
-            
-            nameInput.addEventListener('input', () => saveCurrentPlayerRoster(teamKey));
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.className = 'hidden';
+    fileInput.accept = 'image/*';
 
-            fileInput.onchange = () => {
-                if (fileInput.files && fileInput.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        imagePreview.src = e.target.result;
-                        nameInput.dataset.imageSrc = e.target.result;
-                        saveCurrentPlayerRoster(teamKey);
-                    };
-                    reader.readAsDataURL(fileInput.files[0]);
-                }
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.placeholder = placeholder;
+    nameInput.value = name;
+    nameInput.className = 'w-full p-2 border-gray-300 border rounded-md focus:ring-blue-500 focus:border-blue-500 transition'
+    nameInput.style.textTransform = 'uppercase';
+    if (image) {
+        nameInput.dataset.imageSrc = image;
+    }
+
+    fileInput.onchange = () => {
+        if (fileInput.files && fileInput.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagePreview.src = e.target.result;
+                nameInput.dataset.imageSrc = e.target.result;
             };
-
-            imagePreview.onclick = () => fileInput.click();
-
-            playerRow.appendChild(numberLabel);
-            imageContainer.appendChild(imagePreview);
-            imageContainer.appendChild(fileInput);
-            playerRow.appendChild(imageContainer);
-            playerRow.appendChild(nameInput);
-            container.appendChild(playerRow);
+            reader.readAsDataURL(fileInput.files[0]);
         }
+    };
+
+    imagePreview.onclick = () => fileInput.click();
+
+    playerRow.appendChild(numberLabel);
+    imageContainer.appendChild(imagePreview);
+    imageContainer.appendChild(fileInput);
+    playerRow.appendChild(imageContainer);
+    playerRow.appendChild(nameInput);
+    container.appendChild(playerRow);
+}
         
         function selectTossWinner(teamKey) {
             tossWinnerKey = teamKey;
@@ -2900,12 +2973,13 @@
         }
 
         function openSquadSelectionModal(teamData, playersPerSide) {
-            const squadListContainer = document.getElementById('squad-player-list');
-            const titleEl = document.getElementById('squad-selection-title');
-            const counterEl = document.getElementById('squad-selection-counter');
-            const confirmBtn = document.getElementById('squad-confirm-btn');
+    const squadListContainer = document.getElementById('squad-player-list');
+    const titleEl = document.getElementById('squad-selection-title');
+    const counterEl = document.getElementById('squad-selection-counter');
+    const confirmBtn = document.getElementById('squad-confirm-btn');
 
-            const requiredPlayers = playersPerSide + 1;
+    const requiredPlayers = playersPerSide + 2; // Always players on field + 2 reserves
+
 
             titleEl.textContent = `Select Squad for ${teamData.name}`;
             squadListContainer.innerHTML = '';
