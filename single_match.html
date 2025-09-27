@@ -1102,59 +1102,81 @@
         // --- ALL JAVASCRIPT IS IDENTICAL AND REMAINS UNCHANGED ---
         // ... (script content from your original file) ...
         // --- STATE MANAGEMENT ---
-        const state = {
+const state = {
     id: null,
     innings: 1,
-            target: 0,
-            totalOvers: 20,
-            playersPerSide: 11,
-            venue: '',
-            matchDate: '',
-            team1: {
-                name: "HOME TEAM",
-                score: 0,
-                wickets: 0,
-                overs: 0,
-                balls: 0,
-                players: [],
-                playerStats: {}, // Will be populated with player objects
-                color: '#3b82f6',
-                logo: ''
-            },
-            team2: {
-                name: "AWAY TEAM",
-                score: 0,
-                wickets: 0,
-                overs: 0,
-                balls: 0,
-                players: [],
-                playerStats: {}, // Will be populated with player objects
-                color: '#64748b',
-                logo: ''
-            },
-            battingTeam: 'team1',
-            bowlingTeam: 'team2',
-            striker: null,
-            nonStriker: null,
-            bowler: null,
-            lastBowler: null,
-            currentOver: [],
-            history: [],
-            isScoringLocked: false,
-            manOfTheMatch: null,
-            winner: null,
-            winMargin: '',
-            toss: {},
-            pendingExtra: null, // Used for multi-step extra events like run outs
-            result: null, //
-        };
+    target: 0,
+    totalOvers: 20,
+    playersPerSide: 11,
+    venue: '',
+    matchDate: '',
+    team1: {
+        name: "HOME TEAM",
+        score: 0,
+        wickets: 0,
+        overs: 0,
+        balls: 0,
+        players: [],
+        playerStats: {},
+        inningsHistory: [],
+        extras: { b: 0, lb: 0, wd: 0, nb: 0, total: 0 }
+    },
+    team2: {
+        name: "AWAY TEAM",
+        score: 0,
+        wickets: 0,
+        overs: 0,
+        balls: 0,
+        players: [],
+        playerStats: {},
+        inningsHistory: [],
+        extras: { b: 0, lb: 0, wd: 0, nb: 0, total: 0 }
+    },
+    battingTeam: 'team1',
+    bowlingTeam: 'team2',
+    striker: null,
+    nonStriker: null,
+    bowler: null,
+    lastBowler: null,
+    currentOver: [],
+    history: [],
+    isScoringLocked: false,
+    manOfTheMatch: null,
+    winner: null,
+    winMargin: '',
+    toss: {},
+    pendingExtra: null,
+    result: null
+};
 
-        let alertCallback = null;
-        let downloadAction = null;
-        let tossWinnerKey = null;
-        let tossDecision = 'bat';
-        let savedTeamsData = []; // NEW: To hold loaded team data
-        let currentTeamSelectionKey = null; 
+let alertCallback = null;
+let downloadAction = null;
+let tossWinnerKey = null;
+let tossDecision = 'bat';
+let savedTeamsData = [];
+let currentTeamSelectionKey = null;
+
+// --- AUTOSAVE AND REFRESH-SAFE LOGIC ---
+function debounce(func, delay) {
+    let timeout;
+    return function(...args) {
+        const context = this;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), delay);
+    };
+}
+
+const saveStateToLocal = () => {
+    try {
+        // We don't need to save the undo history, it can be cleared on refresh.
+        const stateToSave = { ...state, history: [] };
+        localStorage.setItem('matchState_v1', JSON.stringify(stateToSave));
+    } catch (e) {
+        console.error("Failed to save state to localStorage:", e);
+    }
+};
+
+const debouncedSave = debounce(saveStateToLocal, 200);
 
         // --- DOM ELEMENTS ---
         const ui = {
@@ -2306,18 +2328,19 @@ function parseBallEvent(event) {
         }
 
         function saveState() {
-            const stateToSave = { ...state };
-            delete stateToSave.history; 
+    const stateToSave = { ...state };
+    delete stateToSave.history;
 
-            try {
-                state.history.push(JSON.stringify(stateToSave));
-                if (state.history.length > 20) {
-                    state.history.shift();
-                }
-            } catch (e) {
-                console.error("Could not save state to history:", e);
-            }
+    try {
+        state.history.push(JSON.stringify(stateToSave));
+        if (state.history.length > 20) {
+            state.history.shift();
         }
+        debouncedSave(); // Trigger autosave on every change
+    } catch (e) {
+        console.error("Could not save state to history:", e);
+    }
+}
 
         // --- UI UPDATES ---
         function updateUI() {
@@ -2743,7 +2766,6 @@ function endMatch() {
 
     state.result = { ...resultDraft }; // Finalize the result
 
-    // Set top-level state variables for compatibility with other functions
     state.winner = state.result.winner || (state.result.type === 'tie' ? 'Match Tied' : 'No Result');
     state.winMargin = (generateResultSummaryLine(state.result)).replace(`${state.winner} `, '');
 
@@ -2754,8 +2776,11 @@ function endMatch() {
     updateLiveCommentary(`<b>MATCH ENDED:</b> ${summaryLine}`);
 
     saveCompletedMatchSummary();
+    localStorage.removeItem('matchState_v1'); // Clear autosaved state
+    window.removeEventListener('beforeunload', beforeUnloadHandler); // Remove refresh warning
+
     closeModal('end-match-modal');
-    updateUI(); // To update the status ribbon etc.
+    updateUI(); 
     showSummaryScreen();
 }
 
@@ -2763,10 +2788,11 @@ function endMatch() {
 document.getElementById('end-match-confirm-btn').onclick = endMatch;
         
         function confirmStartNewMatch() {
-            showConfirm('Are you sure you want to start a new match? All current progress will be lost.', () => {
-                window.location.reload();
-            });
-        }
+    showConfirm('Are you sure you want to start a new match? All current progress will be lost.', () => {
+        localStorage.removeItem('matchState_v1'); // Clear autosaved state before reloading
+        window.location.reload();
+    });
+}
 
         // --- WIN MODAL & SUMMARY CONTROLS ---
         function launchConfetti() {
@@ -3560,135 +3586,106 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
         }
 
         // --- INITIALIZATION ---
-        document.addEventListener('DOMContentLoaded', () => {
-            const summaryToViewJSON = localStorage.getItem('summaryToView');
-            if (summaryToViewJSON) {
-                localStorage.removeItem('summaryToView');
-                try {
-                    const summaryData = JSON.parse(summaryToViewJSON);
-                    Object.assign(state, summaryData);
-                    showScreen('summary-screen');
-                    showSummaryScreen();
-                    return;
-                } catch (e) { console.error("Failed to parse summary data:", e); }
+document.addEventListener('DOMContentLoaded', () => {
+
+    function initializeCommonEventListeners() {
+        ui.matchDateInput.value = new Date().toISOString().split('T')[0];
+        ui.tossWinnerTeam1.onclick = () => selectTossWinner('team1');
+        ui.tossWinnerTeam2.onclick = () => selectTossWinner('team2');
+        ui.tossChoiceBat.onclick = () => selectTossChoice('bat');
+        ui.tossChoiceBowl.onclick = () => selectTossChoice('bowl');
+        ui.team1LogoInput.onchange = (e) => handleLogoUpload(e.target.files[0], 'team1');
+        ui.team2LogoInput.onchange = (e) => handleLogoUpload(e.target.files[0], 'team2');
+        loadSavedTeams();
+        ui.team1Select.onchange = (e) => handleTeamSelection(e, 'team1');
+        ui.team2Select.onchange = (e) => handleTeamSelection(e, 'team2');
+        const selects = document.querySelectorAll('#total-overs, #players-per-side');
+        selects.forEach(select => {
+            function applyPlaceholderStyle() {
+                if (select.value === "") select.classList.add('placeholder');
+                else select.classList.remove('placeholder');
             }
-            
-            const matchToStartJSON = localStorage.getItem('matchToStart');
-            if (matchToStartJSON) {
-                localStorage.removeItem('matchToStart');
-                try {
-                    const matchData = JSON.parse(matchToStartJSON);
-                    showScreen('setup-screen');
-                    populateSetupWithData(matchData);
-                    return; 
-                } catch (e) { console.error("Failed to parse match data:", e); }
-            }
-            
-            showScreen('choice-screen');
-            
-            ui.matchDateInput.value = new Date().toISOString().split('T')[0];
-            
-            ui.tossWinnerTeam1.onclick = () => selectTossWinner('team1');
-            ui.tossWinnerTeam2.onclick = () => selectTossWinner('team2');
-            ui.tossChoiceBat.onclick = () => selectTossChoice('bat');
-            ui.tossChoiceBowl.onclick = () => selectTossChoice('bowl');
-            
-            ui.team1LogoInput.onchange = (e) => handleLogoUpload(e.target.files[0], 'team1');
-            ui.team2LogoInput.onchange = (e) => handleLogoUpload(e.target.files[0], 'team2');
-
-            loadSavedTeams();
-            ui.team1Select.onchange = (e) => handleTeamSelection(e, 'team1');
-            ui.team2Select.onchange = (e) => handleTeamSelection(e, 'team2');
-
-            const selects = document.querySelectorAll('#total-overs, #players-per-side');
-            selects.forEach(select => {
-                function applyPlaceholderStyle() {
-                    if (select.value === "") {
-                        select.classList.add('placeholder');
-                    } else {
-                        select.classList.remove('placeholder');
-                    }
-                }
-                applyPlaceholderStyle();
-                select.addEventListener('change', applyPlaceholderStyle);
-            });
-            
-            ui.alertOkBtn.onclick = () => {
-                closeModal('alert-modal');
-                if (typeof alertCallback === 'function') {
-                    alertCallback();
-                    alertCallback = null;
-                }
-            };
-
-            ui.confirmCancelBtn.onclick = () => {
-                closeModal('confirm-modal');
-                confirmCallback = null;
-            };
-            ui.confirmOkBtn.onclick = () => {
-                if (typeof confirmCallback === 'function') {
-                    confirmCallback();
-                }
-                closeModal('confirm-modal');
-                confirmCallback = null;
-            };
-            
-            ui.bowlerPromptOverlay.onclick = () => {
-                ui.playerModalCancelBtnX.classList.add('hidden');
-                ui.playerModalCancelBtnText.classList.add('hidden');
-                swapBatsmen();
-                state.currentOver = [];
-                updateUI();
-                ui.bowlerPromptOverlay.classList.add('hidden');
-                selectPlayer('bowler', () => {
-                    ui.playerModalCancelBtnX.classList.remove('hidden');
-                    ui.playerModalCancelBtnText.classList.remove('hidden');
-                    state.isScoringLocked = false;
-                    updateUI();
-                });
-            };
-            
-            ui.confirmDownloadBtn.onclick = () => {
-                if(downloadAction) downloadAction();
-            };
-
-            const tossPage = document.getElementById('setup-step-4');
-            tossPage.addEventListener('click', function(e) {
-                if (e.target.closest('button')) return;
-
-                const ripple = document.createElement('span');
-                const rect = tossPage.getBoundingClientRect();
-                
-                ripple.style.width = ripple.style.height = `100px`;
-                ripple.style.left = `${e.clientX - rect.left - 50}px`;
-                ripple.style.top = `${e.clientY - rect.top - 50}px`;
-                ripple.classList.add('ripple');
-                
-                const oldRipple = tossPage.querySelector('.ripple');
-                if (oldRipple) {
-                    oldRipple.remove();
-                }
-                
-                tossPage.appendChild(ripple);
-
-                ripple.addEventListener('animationend', () => {
-                    ripple.remove();
-                });
-            });
-
-            // --- NEW: Commentary Toggle Logic ---
-            const toggleBtn = document.getElementById('toggle-commentary-btn');
-            const commentaryContent = document.getElementById('live-commentary-content');
-            const commentaryChevron = document.getElementById('commentary-chevron');
-
-            if (toggleBtn) {
-                toggleBtn.addEventListener('click', () => {
-                    commentaryContent.classList.toggle('hidden');
-                    commentaryChevron.classList.toggle('rotate-180');
-                });
-            }
-            // --- END: Commentary Toggle Logic ---
+            applyPlaceholderStyle();
+            select.addEventListener('change', applyPlaceholderStyle);
         });
+        ui.alertOkBtn.onclick = () => {
+            closeModal('alert-modal');
+            if (typeof alertCallback === 'function') { alertCallback(); alertCallback = null; }
+        };
+        ui.confirmCancelBtn.onclick = () => { closeModal('confirm-modal'); confirmCallback = null; };
+        ui.confirmOkBtn.onclick = () => {
+            if (typeof confirmCallback === 'function') { confirmCallback(); }
+            closeModal('confirm-modal');
+            confirmCallback = null;
+        };
+        ui.bowlerPromptOverlay.onclick = () => {
+            ui.playerModalCancelBtnX.classList.add('hidden');
+            ui.playerModalCancelBtnText.classList.add('hidden');
+            swapBatsmen();
+            state.currentOver = [];
+            updateUI();
+            ui.bowlerPromptOverlay.classList.add('hidden');
+            selectPlayer('bowler', () => {
+                ui.playerModalCancelBtnX.classList.remove('hidden');
+                ui.playerModalCancelBtnText.classList.remove('hidden');
+                state.isScoringLocked = false;
+                updateUI();
+            });
+        };
+        ui.confirmDownloadBtn.onclick = () => { if (downloadAction) downloadAction(); };
+        const toggleBtn = document.getElementById('toggle-commentary-btn');
+        const commentaryContent = document.getElementById('live-commentary-content');
+        const commentaryChevron = document.getElementById('commentary-chevron');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', () => {
+                commentaryContent.classList.toggle('hidden');
+                commentaryChevron.classList.toggle('rotate-180');
+            });
+        }
+    }
+
+    // --- APP STARTUP LOGIC ---
+    const savedStateJSON = localStorage.getItem('matchState_v1');
+    if (savedStateJSON) {
+        try {
+            const savedState = JSON.parse(savedStateJSON);
+            Object.assign(state, savedState);
+
+            // Attach refresh warnings immediately
+            window.addEventListener('beforeunload', beforeUnloadHandler);
+
+            if (state.result) { // If match was finished, show summary
+                showScreen('summary-screen');
+                showSummaryScreen();
+            } else { // Otherwise, resume scoring
+                ui.setupScreen.classList.add('hidden');
+                ui.appScreen.classList.add('flex');
+                ui.appScreen.classList.remove('hidden');
+                updateUI();
+            }
+        } catch (e) {
+            console.error("Failed to load saved state, starting fresh.", e);
+            localStorage.removeItem('matchState_v1');
+            showScreen('choice-screen');
+        }
+    } else {
+         // Standard startup if no saved state
+        const summaryToViewJSON = localStorage.getItem('summaryToView');
+        if (summaryToViewJSON) {
+            localStorage.removeItem('summaryToView');
+            try {
+                const summaryData = JSON.parse(summaryToViewJSON);
+                Object.assign(state, summaryData);
+                showScreen('summary-screen');
+                showSummaryScreen();
+            } catch (e) { console.error("Failed to parse summary data:", e); }
+        } else {
+            showScreen('choice-screen');
+        }
+    }
+
+    initializeCommonEventListeners();
+});
 
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Enter' && !ui.setupScreen.classList.contains('hidden')) {
