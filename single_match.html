@@ -1279,51 +1279,50 @@ const debouncedSave = debounce(saveStateToLocal, 200);
             const b = parseInt(hex.slice(5, 7), 16);
             return `rgba(${r}, ${g}, ${b}, ${alpha})`;
         }
-
         function formatPlayerName(fullName) {
-    if (!fullName || typeof fullName !== 'string') {
-        return '';
-    }
-    const nameParts = fullName.trim().split(' ').filter(part => part.length > 0);
+            if (!fullName || typeof fullName !== 'string') {
+                return '';
+            }
+            const nameParts = fullName.trim().split(' ').filter(part => part.length > 0);
 
-    if (nameParts.length > 1) {
-        const lastName = nameParts.pop();
-        const lastInitial = lastName.charAt(0);
-        const firstNames = nameParts.join(' ');
-        return `${firstNames} ${lastInitial}.`;
-    }
-    return fullName;
-}
+            if (nameParts.length > 1) {
+                const lastName = nameParts.pop();
+                const lastInitial = lastName.charAt(0);
+                const firstNames = nameParts.join(' ');
+                return `${firstNames} ${lastInitial}.`;
+            }
+            return fullName;
+        }
 
-function parseBallEvent(event) {
-    if (!event) return 0;
-    const e = event.trim().toUpperCase();
-    if (e === '.' || e === 'W') return 0;
+        function parseBallEvent(event) {
+            if (!event) return 0;
+            const e = event.trim().toUpperCase();
+            if (e === '.' || e === 'W') return 0;
 
-    // Simple number runs (0, 1, 2, 3, 4, 6)
-    const simpleRuns = parseInt(e);
-    if (!isNaN(simpleRuns) && simpleRuns >= 0 && simpleRuns <= 6) {
-        return simpleRuns;
-    }
+            // Simple number runs (0, 1, 2, 3, 4, 6)
+            const simpleRuns = parseInt(e);
+            if (!isNaN(simpleRuns) && simpleRuns >= 0 && simpleRuns <= 6) {
+                return simpleRuns;
+            }
 
-    // Extras
-    if (e.startsWith('WD')) {
-        const runs = parseInt(e.substring(2)) || 0;
-        return 1 + runs;
-    }
-    if (e.startsWith('NB')) {
-        const runs = parseInt(e.substring(2)) || 0;
-        return 1 + runs;
-    }
-    if (e.startsWith('B')) {
-        return parseInt(e.substring(1)) || 0;
-    }
-    if (e.startsWith('LB')) {
-        return parseInt(e.substring(2)) || 0;
-    }
+            // Extras
+            if (e.startsWith('WD')) {
+                const runs = parseInt(e.substring(2)) || 0;
+                return 1 + runs;
+            }
+            if (e.startsWith('NB')) {
+                const runs = parseInt(e.substring(2)) || 0;
+                return 1 + runs;
+            }
+            if (e.startsWith('B')) {
+                return parseInt(e.substring(1)) || 0;
+            }
+            if (e.startsWith('LB')) {
+                return parseInt(e.substring(2)) || 0;
+            }
 
-    return 0; // Return 0 for any unrecognised format
-}
+            return 0; // Return 0 for any unrecognised format
+        }
 
         // --- SETUP LOGIC ---
         function savePlayerInputsToState(teamKey) {
@@ -3442,12 +3441,15 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
         }
         
         // --- NEW/MODIFIED: CORE APP FLOW & DATA HANDLING ---
-        function showScreen(screenIdToShow) {
+     function showScreen(screenIdToShow) {
+            // Save the current screen ID to local storage so we can return to it on refresh
+            localStorage.setItem('lastVisitedPath', screenIdToShow);
+
             const screens = ['choice-screen', 'setup-screen', 'app', 'summary-screen'];
             screens.forEach(id => {
                 const screen = document.getElementById(id);
                 if (screen) {
-                    if (!screen.classList.contains('hidden')) {
+                    if (id !== screenIdToShow && !screen.classList.contains('hidden')) {
                         screen.classList.add('hidden');
                     }
                 }
@@ -3455,7 +3457,9 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
 
             const screenToShow = document.getElementById(screenIdToShow);
             if (screenToShow) {
-                screenToShow.classList.remove('hidden');
+                if (screenToShow.classList.contains('hidden')) {
+                    screenToShow.classList.remove('hidden');
+                }
             }
         }
 
@@ -3654,18 +3658,27 @@ document.addEventListener('DOMContentLoaded', () => {
             // Attach refresh warnings immediately
             window.addEventListener('beforeunload', beforeUnloadHandler);
 
-            if (state.result) { // If match was finished, show summary
+            if (state.result) { // If match was finished, always show summary
                 showScreen('summary-screen');
                 showSummaryScreen();
-            } else { // Otherwise, resume scoring
-                ui.setupScreen.classList.add('hidden');
-                ui.appScreen.classList.add('flex');
-                ui.appScreen.classList.remove('hidden');
-                updateUI();
+            } else { // Otherwise, resume scoring from the last visited page
+                const lastPath = localStorage.getItem('lastVisitedPath');
+                
+                // Only restore if the path is valid for a match in progress
+                if (lastPath && ['app', 'summary-screen'].includes(lastPath)) {
+                    showScreen(lastPath);
+                    if (lastPath === 'summary-screen') {
+                        showSummaryScreen(); // Repopulate summary screen if that's where we were
+                    }
+                } else {
+                    showScreen('app'); // Default to the main scoring screen
+                }
+                updateUI(); // Refresh UI with loaded state
             }
         } catch (e) {
             console.error("Failed to load saved state, starting fresh.", e);
             localStorage.removeItem('matchState_v1');
+            localStorage.removeItem('lastVisitedPath');
             showScreen('choice-screen');
         }
     } else {
