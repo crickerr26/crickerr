@@ -223,6 +223,11 @@
         @keyframes pop-in { to { opacity: 1; transform: scale(1); } }
         @keyframes slide-up { to { opacity: 1; transform: translateY(0); } }
 
+        /* FIX: Set team name color to white in scorelines */
+        #win-modal [id^="wm-scoreline-"] span:first-child {
+            color: white;
+        }
+
         /* --- FINAL LAYOUT FIX --- */
         #scoring-controls {
             display: flex;
@@ -816,7 +821,10 @@
                 <button onclick="showSummaryScreen()" class="text-sm font-semibold py-2 px-3 rounded-md hover:bg-gray-300 active:bg-blue-600 active:text-white transition-colors">Summary</button>
                 <button onclick="openEndMatchModal()" class="text-sm font-semibold py-2 px-3 rounded-md hover:bg-gray-300 active:bg-blue-600 active:text-white transition-colors">End Match</button>
             </div>
-            <button onclick="confirmStartNewMatch()" class="text-sm font-semibold py-2 px-3 rounded-md text-green-600 hover:bg-gray-300 active:bg-green-600 active:text-white transition-colors">Start New Match</button>
+            <div id="footer-actions">
+                <button id="rematch-btn" onclick="startRematch()" class="text-sm font-semibold py-2 px-3 rounded-md text-blue-600 hover:bg-gray-300 active:bg-blue-600 active:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>Rematch</button>
+                <button onclick="confirmStartNewMatch()" class="text-sm font-semibold py-2 px-3 rounded-md text-green-600 hover:bg-gray-300 active:bg-green-600 active:text-white transition-colors">Start New Match</button>
+            </div>
         </header>
     </div>
 
@@ -1143,34 +1151,91 @@
 </div>
 
     <div id="win-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center hidden z-50 p-4">
-        <div class="win-modal-content modal-content bg-gray-900 rounded-2xl shadow-xl w-full max-w-md text-center transform scale-100 relative overflow-hidden border-4 border-yellow-400">
-            <div id="confetti-container" class="absolute inset-0"></div>
-            <div class="relative p-8">
-                <img id="win-modal-logo" src="" class="w-32 h-32 mx-auto rounded-full object-cover border-4 border-white shadow-lg mb-4 animate-pop-in" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2NiZDVkNQoiPjxwYXRoIGQ9Ik0xMiAyQzYuNDggMiAyIDYuNDggMiAxMnM0LjQ4IDEwIDEwIDEwIDEwLTQuNDggMTAtMTBTMTcuNTIgMiAxMiAyeptMCAzYzEuNjYgMCAzIDEuMzQgMyAzcy0xLjM0IDMtMyAzLTMtMS4zNC0zLTMgMS4zNC0zIDMtM3ptMCAxNGMtMi42NyAwLTggMS4zNC04IDR2MmgxNnYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz48L3N2Zz4='">
-                <h2 id="win-modal-winner" class="text-4xl font-black uppercase text-white animate-slide-up" style="--delay: 0.2s;"></h2>
-                <p class="text-yellow-400 text-5xl font-black uppercase tracking-wider animate-slide-up" style="--delay: 0.4s;">WINS!</p>
-                <p id="win-modal-margin" class="text-xl mt-2 text-gray-300 animate-slide-up" style="--delay: 0.6s;"></p>
-                <button id="win-modal-ok-btn" class="mt-8 px-8 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-transform hover:scale-105 animate-slide-up" style="--delay: 0.8s;">View Summary</button>
+        <div class="win-modal-content modal-content bg-gray-900 rounded-2xl shadow-xl w-full max-w-lg text-center transform scale-100 relative overflow-hidden border-2 border-yellow-400/50">
+            <div id="confetti-container" class="absolute inset-0 pointer-events-none"></div>
+            <div class="relative p-6 space-y-4">
+                <button onclick="closeModal('win-modal')" class="absolute top-0 right-0 mt-4 mr-4 text-gray-500 hover:text-white transition-colors z-10">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+
+                <div class="flex flex-col items-center animate-pop-in">
+                    <img id="wm-winner-logo" src="" class="w-24 h-24 mx-auto rounded-full object-cover border-4 border-white shadow-lg">
+                    <h2 id="wm-winner-name" class="text-3xl font-black uppercase text-white mt-3"></h2>
+                    <p id="wm-win-margin" class="text-lg text-yellow-400 font-bold"></p>
+                </div>
+
+                <div class="p-3 bg-black/20 rounded-lg text-sm space-y-2 text-left">
+                    <p id="wm-scoreline-1" class="flex justify-between items-center font-mono"></p>
+                    <p id="wm-scoreline-2" class="flex justify-between items-center font-mono"></p>
+                </div>
+
+                <div id="wm-mom-section" class="flex items-center gap-3 p-2 bg-yellow-400/10 rounded-lg text-left">
+                    <img id="wm-mom-avatar" src="" class="w-12 h-12 rounded-full object-cover border-2 border-yellow-400/50 flex-shrink-0" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2NiZDVkNQoiPjxwYXRoIGQ9Ik0xMiAyQzYuNDggMiAyIDYuNDggMiAxMnM0LjQ4IDEwIDEwIDEwIDEwLTQuNDggMTAtMTBTMTcuNTIgMiAxMiAyeptMCAzYzEuNjYgMCAzIDEuMzQgMyAzcy0xLjM0IDMtMyAzLTMtMS4zNC0zLTMgMS4zNC0zIDMtM3ptMCAxNGMtMi4zMyAwLTguMTMgMS4xNy04LjEzIDMuNUM0IDIzLjUyIDcuNTggMjQgMTIgMjRzOC0uNDggOC0xLjVDMjAuMTMgMTkuMTcgMTQuMzMgMTggMTIgMTh6Ii8+PC9zdmc+'">
+                    <div>
+                        <p class="text-xs text-yellow-300 font-bold tracking-wider">PLAYER OF THE MATCH</p>
+                        <p id="wm-mom-name" class="font-bold text-white leading-tight"></p>
+                        <p id="wm-mom-performance" class="text-xs text-gray-300 leading-tight"></p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 text-xs text-left">
+                    <div>
+                        <h4 class="font-bold text-gray-400 mb-1">TOP BATTERS</h4>
+                        <div id="wm-top-batters" class="space-y-1 text-gray-200"></div>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-gray-400 mb-1">TOP BOWLERS</h4>
+                        <div id="wm-top-bowlers" class="space-y-1 text-gray-200"></div>
+                    </div>
+                </div>
+
+                <p id="wm-meta-line" class="text-center text-xs text-gray-500 border-t border-gray-700 pt-3"></p>
+                
+                <button id="win-modal-ok-btn" class="w-full mt-2 px-8 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-transform hover:scale-105">View Full Summary</button>
             </div>
         </div>
     </div>
     
     <div id="innings-break-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-75 flex flex-col justify-center items-center hidden z-[60] p-4">
-        <div class="modal-content bg-gray-800 text-white rounded-2xl shadow-xl p-6 sm:p-8 w-11/12 max-w-lg text-center transform scale-95 relative overflow-hidden border-4 border-blue-500">
+        <div class="modal-content bg-gray-800 text-white rounded-2xl shadow-xl p-6 sm:p-8 w-11/12 max-w-2xl text-center transform scale-95 relative overflow-hidden border-4 border-blue-500">
             <h2 class="text-3xl sm:text-4xl font-black uppercase mb-4 tracking-wider" id="innings-break-title">INNINGS BREAK</h2>
             
-            <div class="flex justify-around items-center my-6 p-4 bg-black bg-opacity-20 rounded-lg">
-                <div>
-                    <img id="innings-break-batting-logo" src="" class="w-20 h-20 sm:w-24 sm:h-24 mx-auto rounded-full object-cover border-4 border-gray-500" onerror="this.style.display='none'">
-...
-                    <p id="innings-break-batting-name" class="font-bold text-md sm:text-lg mt-2"></p>
-                    <p id="innings-break-batting-score" class="text-2xl sm:text-3xl font-bold"></p>
+            <div id="innings-summary-content" class="text-left space-y-4 my-6 text-sm">
+                <div class="bg-gray-900 bg-opacity-50 p-3 rounded-lg border border-gray-700">
+                    <div class="flex justify-between items-center">
+                        <span id="ib-batting-team-name" class="text-xl font-bold"></span>
+                        <div class="text-right">
+                            <span id="ib-batting-team-score" class="text-3xl font-black"></span>
+                            <span id="ib-batting-team-overs" class="text-gray-400 ml-1"></span>
+                        </div>
+                    </div>
+                    <div id="ib-run-rate" class="text-sm text-gray-300 mt-1"></div>
                 </div>
-                <div class="text-xl sm:text-2xl font-bold text-gray-400">vs</div>
-                <div>
-                    <img id="innings-break-bowling-logo" src="" class="w-20 h-20 sm:w-24 sm:h-24 mx-auto rounded-full object-cover border-4 border-gray-500" onerror="this.style.display='none'">
-                    <p id="innings-break-bowling-name" class="font-bold text-md sm:text-lg mt-2"></p>
-                    <p class="text-2xl sm:text-3xl font-bold text-gray-700">. . .</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-semibold mb-2 text-gray-400 tracking-wider">TOP BATTERS</h4>
+                        <ul id="ib-top-batters" class="space-y-1 bg-gray-900 bg-opacity-50 p-2 rounded-md"></ul>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-2 text-gray-400 tracking-wider">TOP BOWLERS</h4>
+                        <ul id="ib-top-bowlers" class="space-y-1 bg-gray-900 bg-opacity-50 p-2 rounded-md"></ul>
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-700 pt-3">
+                    <h4 class="font-semibold mb-1 text-gray-400 tracking-wider text-xs">FALL OF WICKETS</h4>
+                    <p id="ib-fow" class="text-xs leading-relaxed text-gray-300"></p>
+                </div>
+                <div class="grid grid-cols-2 gap-4 text-sm border-t border-gray-700 pt-3">
+                    <div>
+                        <h4 class="font-semibold mb-1 text-gray-400 tracking-wider text-xs">EXTRAS</h4>
+                        <p id="ib-extras" class="font-semibold"></p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-1 text-gray-400 tracking-wider text-xs">SUMMARY</h4>
+                        <p id="ib-boundaries" class="font-semibold"></p>
+                    </div>
                 </div>
             </div>
             
@@ -1272,10 +1337,12 @@
     <h2 class="text-5xl font-black text-white tracking-widest" style="text-shadow: 0 0 15px rgba(59, 130, 246, 0.8);">FREE HIT</h2>
 </div> 
 <script>
+        const EXPERIMENT_ENABLE__FOOTER_REMATCH = true;
         // --- ALL JAVASCRIPT IS IDENTICAL AND REMAINS UNCHANGED ---
         // ... (script content from your original file) ...
         // --- STATE MANAGEMENT ---
 const state = {
+
     id: null,
     innings: 1,
     target: 0,
@@ -2554,12 +2621,54 @@ const debouncedSave = debounce(saveStateToLocal, 200);
 }
 
         // --- UI UPDATES ---
+        // --- UI UPDATES ---
         function updateUI() {
-            updateMatchHeader(); // Add this line
+            updateMatchHeader();
             updateScoreboard();
             updateTargetInfo();
             updateBattingTable();
             updateBowlingTable();
+            updateFooterButtons(); // Add this line
+        }
+
+        function updateFooterButtons() {
+            if (EXPERIMENT_ENABLE__FOOTER_REMATCH) {
+                const rematchBtn = document.getElementById('rematch-btn');
+                if (rematchBtn) {
+                    // Enable the rematch button only when a winner is decided
+                    rematchBtn.disabled = !state.winner;
+                }
+            }
+        }
+
+        function startRematch() {
+            if (!EXPERIMENT_ENABLE__FOOTER_REMATCH || !state.winner) return;
+
+            showConfirm('Start a rematch with the same teams and settings? The current scorecard will be cleared.', () => {
+                closeAllModals();
+
+                // 1. Collect the current match settings and teams
+                const matchData = {
+                    id: null, // This will be a new match
+                    totalOvers: state.totalOvers,
+                    playersPerSide: state.playersPerSide,
+                    venue: state.venue,
+                    matchDate: new Date().toISOString().split('T')[0], // Reset to today's date
+                    team1: state.team1,
+                    team2: state.team2
+                };
+
+                // 2. Clear current match state from storage
+                localStorage.removeItem('matchState_v1');
+                
+                // 3. Hide the app/summary screens and show the setup screen
+                ui.appScreen.classList.add('hidden');
+                ui.summaryScreen.classList.add('hidden');
+                ui.setupScreen.classList.remove('hidden');
+
+                // 4. Use existing function to populate the setup screen and jump to the toss
+                populateSetupWithData(matchData);
+            });
         }
 
         function updateScoreboard() {
@@ -3052,40 +3161,84 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
         }
 
         function openWinModal(winnerName, margin) {
-            const winModalWinnerEl = document.getElementById('win-modal-winner');
-            const winModalMarginEl = document.getElementById('win-modal-margin');
-
-            winModalWinnerEl.textContent = winnerName;
-            winModalMarginEl.textContent = margin;
-
-            let winnerTeamKey = null;
-            if (state.team1.name === winnerName) {
-                winnerTeamKey = 'team1';
-            } else if (state.team2.name === winnerName) {
-                winnerTeamKey = 'team2';
+            if (winnerName === 'Match Tied') {
+                // Simplified display for a tie
+                document.getElementById('wm-winner-name').textContent = "MATCH TIED";
+                document.getElementById('wm-win-margin').textContent = '';
+                document.getElementById('wm-winner-logo').style.display = 'none';
+            } else {
+                const winnerTeamKey = state.result.winnerSide;
+                const winnerTeamData = state[winnerTeamKey];
+                document.getElementById('wm-winner-logo').style.display = 'block';
+                document.getElementById('wm-winner-logo').src = winnerTeamData.logo || '';
+                document.getElementById('wm-winner-name').textContent = `${winnerTeamData.name} WINS`;
+                document.getElementById('wm-win-margin').textContent = `by ${state.result.margin} ${state.result.marginType}`;
             }
 
-            const winModalLogo = document.getElementById('win-modal-logo');
-            if (winnerTeamKey) {
-                const winnerTeam = state[winnerTeamKey];
-                winModalLogo.src = winnerTeam.logo || `https://placehold.co/128x128/${winnerTeam.color.substring(1)}/FFFFFF?text=${winnerTeam.name.charAt(0)}`;
-                winModalLogo.style.display = 'block';
-                document.querySelector('#win-modal .text-yellow-400').style.display = 'block';
-            } else { // Handle a tie
-                winModalLogo.style.display = 'none'; // No logo for a tie
-                winModalWinnerEl.textContent = "It's a Tie!";
-                document.querySelector('#win-modal .text-yellow-400').style.display = 'none';
+            // --- Scorelines ---
+            const teams = [state.team1, state.team2];
+            teams.forEach((team, index) => {
+                const ballsFaced = team.overs * 6 + team.balls;
+                const rr = ballsFaced > 0 ? (team.score / (ballsFaced / 6)).toFixed(2) : '0.00';
+                document.getElementById(`wm-scoreline-${index + 1}`).innerHTML = `
+                    <span class="flex items-center gap-2">
+                        <img src="${team.logo || ''}" class="w-5 h-5 rounded-full object-cover">
+                        ${team.name}
+                    </span>
+                    <span>
+                        <b class="text-white text-base">${team.score}/${team.wickets}</b> 
+                        <span class="text-gray-400">(${team.overs}.${team.balls})</span> 
+                        <span class="text-gray-400 ml-2">RR ${rr}</span>
+                    </span>`;
+            });
+
+            // --- Man of the Match ---
+            const mom = state.manOfTheMatch;
+            if (mom) {
+                document.getElementById('wm-mom-section').style.display = 'flex';
+                document.getElementById('wm-mom-avatar').src = mom.image || '';
+                document.getElementById('wm-mom-name').textContent = mom.name;
+                document.getElementById('wm-mom-performance').textContent = mom.performance;
+            } else {
+                document.getElementById('wm-mom-section').style.display = 'none';
             }
+
+            // --- Top Performers ---
+            const allPlayers = [...Object.values(state.team1.playerStats), ...Object.values(state.team2.playerStats)];
+            
+            const topBatters = allPlayers.filter(p => p.runs > 0).sort((a,b) => b.runs - a.runs).slice(0, 2);
+            document.getElementById('wm-top-batters').innerHTML = topBatters.map(p => `
+                <div>
+                    <p class="font-semibold">${p.name}</p>
+                    <p class="text-gray-400">${p.runs} (${p.balls}), SR ${p.balls > 0 ? (p.runs/p.balls*100).toFixed(2) : '0.00'}</p>
+                </div>`).join('');
+
+            const topBowlers = allPlayers.filter(p => p.ballsBowled > 0).sort((a, b) => b.wickets - a.wickets || a.runsConceded - b.runsConceded).slice(0, 2);
+            document.getElementById('wm-top-bowlers').innerHTML = topBowlers.map(p => `
+                <div>
+                    <p class="font-semibold">${p.name}</p>
+                    <p class="text-gray-400">${Math.floor(p.ballsBowled/6)}.${p.ballsBowled%6}-${p.maidens}-${p.runsConceded}-${p.wickets}, ECO ${p.ballsBowled > 0 ? (p.runsConceded/(p.ballsBowled/6)).toFixed(2) : '0.00'}</p>
+                </div>`).join('');
+
+            // --- Meta Line ---
+            const dateStr = new Date(state.matchDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+            document.getElementById('wm-meta-line').textContent = `${toTitleCase(state.venue)} • ${dateStr} • ${state.totalOvers} Overs`;
+            
+            // --- Final Setup ---
+            const okBtn = document.getElementById('win-modal-ok-btn');
+            okBtn.onclick = () => {
+                closeModal('win-modal');
+                showSummaryScreen();
+            };
             
             const modalContent = ui.winModal.querySelector('.modal-content');
             const newModalContent = modalContent.cloneNode(true);
             modalContent.parentNode.replaceChild(newModalContent, modalContent);
-
+            
             ui.winModal.classList.remove('hidden');
-            
-            document.getElementById('win-modal-ok-btn').onclick = () => showSummaryScreen();
-            
-            launchConfetti();
+            if (winnerName !== 'Match Tied') {
+                launchConfetti();
+            }
         }
 
         function formatDismissalText(dismissalInfo) {
@@ -3107,16 +3260,59 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
             const bowlingTeamData = state[state.bowlingTeam];
             const target = battingTeamData.score + 1;
 
-            document.getElementById('innings-break-batting-logo').src = battingTeamData.logo || `https://placehold.co/96x96/${battingTeamData.color.substring(1)}/FFFFFF?text=${battingTeamData.name.charAt(0)}`;
-            document.getElementById('innings-break-batting-name').textContent = battingTeamData.name;
-            document.getElementById('innings-break-batting-score').textContent = `${battingTeamData.score} / ${battingTeamData.wickets}`;
+            // --- 1. Calculate Innings Statistics ---
+            const ballsBowled = battingTeamData.overs * 6 + battingTeamData.balls;
+            const runRate = ballsBowled > 0 ? (battingTeamData.score / (ballsBowled / 6)).toFixed(2) : '0.00';
 
-            document.getElementById('innings-break-bowling-logo').src = bowlingTeamData.logo || `https://placehold.co/96x96/${bowlingTeamData.color.substring(1)}/FFFFFF?text=${bowlingTeamData.name.charAt(0)}`;
-            document.getElementById('innings-break-bowling-name').textContent = bowlingTeamData.name;
+            const topBatters = Object.values(battingTeamData.playerStats)
+                .filter(p => p.balls > 0 || p.isOut)
+                .sort((a, b) => b.runs - a.runs)
+                .slice(0, 3);
+            
+            const topBowlers = Object.values(bowlingTeamData.playerStats)
+                .filter(p => p.ballsBowled > 0)
+                .sort((a, b) => b.wickets - a.wickets || a.runsConceded - b.runsConceded)
+                .slice(0, 3);
 
+            const fow = battingTeamData.inningsHistory
+                .filter(ball => ball.dismissalInfo)
+                .map(ball => `${ball.dismissalInfo.scoreAtFall}-${battingTeamData.wickets - (battingTeamData.inningsHistory.filter(b => b.dismissalInfo && b.dismissalInfo.scoreAtFall <= ball.dismissalInfo.scoreAtFall).length - 1)} (${ball.dismissalInfo.overAtFall})`)
+                .join(', ');
+
+            let dots = 0, fours = 0, sixes = 0;
+            battingTeamData.inningsHistory.forEach(ball => {
+                if (ball.event === '0' || ball.event === '.' || (ball.event === 'W' && !ball.runs)) dots++;
+                if (ball.runs === 4) fours++;
+                if (ball.runs === 6) sixes++;
+            });
+
+            // --- 2. Populate Modal with Calculated Data ---
+            document.getElementById('ib-batting-team-name').textContent = battingTeamData.name;
+            document.getElementById('ib-batting-team-score').textContent = `${battingTeamData.score}/${battingTeamData.wickets}`;
+            document.getElementById('ib-batting-team-overs').textContent = `(${battingTeamData.overs}.${battingTeamData.balls} Ov)`;
+            document.getElementById('ib-run-rate').textContent = `Run Rate: ${runRate}`;
+
+            document.getElementById('ib-top-batters').innerHTML = topBatters.map(p => `
+                <li class="flex justify-between">
+                    <span>${formatPlayerName(p.name)}</span>
+                    <span class="font-bold">${p.runs} <span class="text-gray-400 font-normal">(${p.balls})</span></span>
+                </li>`).join('');
+
+            document.getElementById('ib-top-bowlers').innerHTML = topBowlers.map(p => `
+                <li class="flex justify-between">
+                    <span>${formatPlayerName(p.name)}</span>
+                    <span class="font-bold">${p.wickets}/${p.runsConceded}</span>
+                </li>`).join('');
+
+            document.getElementById('ib-fow').textContent = fow || 'No wickets lost.';
+            document.getElementById('ib-extras').textContent = `${battingTeamData.extras.total} (wd ${battingTeamData.extras.wd}, nb ${battingTeamData.extras.nb}, b ${battingTeamData.extras.b}, lb ${battingTeamData.extras.lb})`;
+            document.getElementById('ib-boundaries').textContent = `Dots: ${dots}, 4s: ${fours}, 6s: ${sixes}`;
+
+            // --- 3. Populate Target Box ---
             document.getElementById('innings-break-target-team').textContent = `${bowlingTeamData.name} need`;
             document.getElementById('innings-break-target-runs').textContent = target;
 
+            // --- 4. Set up the 'Start 2nd Innings' Button ---
             const startBtn = document.getElementById('start-second-innings-btn');
             const newStartBtn = startBtn.cloneNode(true);
             startBtn.parentNode.replaceChild(newStartBtn, startBtn);
@@ -3139,7 +3335,7 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
                 state.lastBowler = null;
                 state.currentOver = [];
                 
-                initialize(true); // This line is updated
+                initialize(true);
             };
 
             openModal('innings-break-modal');
@@ -3285,6 +3481,1061 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
             });
 
             return rankedPlayers.slice(0, 5);
+        }
+
+        function showSummaryScreen() {
+            if (state.striker) savePlayerStats(state.striker, state.battingTeam);
+            if (state.nonStriker) savePlayerStats(state.nonStriker, state.battingTeam);
+            if (state.bowler) savePlayerStats(state.bowler, state.bowlingTeam);
+            closeAllModals();
+
+            updateMatchHeader();
+            document.getElementById('summary-header-team1').innerHTML = `<img src="${state.team1.logo || ''}" class="summary-team-logo"><span class="summary-team-header hidden sm:inline">${state.team1.name}</span>`;
+            document.getElementById('summary-header-team2').innerHTML = `<span class="summary-team-header hidden sm:inline">${state.team2.name}</span><img src="${state.team2.logo || ''}" class="summary-team-logo">`;
+            document.getElementById('summary-status-ribbon').textContent = calculateCurrentStatus();
+            document.getElementById('summary-venue-date').textContent = `${toTitleCase(state.venue)} | ${new Date(state.matchDate + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`;
+
+            const scoreStripsContainer = document.getElementById('summary-score-strips');
+            const panel1 = document.getElementById('panel-innings1');
+            const panel2 = document.getElementById('panel-innings2');
+            const motmPanel = document.getElementById('summary-motm-panel');
+            scoreStripsContainer.innerHTML = '';
+            panel1.innerHTML = '';
+            panel2.innerHTML = '';
+            motmPanel.innerHTML = '';
+
+            const inningsOrder = [state.team1, state.team2];
+            if (state.innings === 1 && state.battingTeam === 'team2') inningsOrder.reverse();
+            if (state.innings === 2 && state.bowlingTeam === 'team2') inningsOrder.reverse();
+
+            inningsOrder.forEach((teamData, index) => {
+                const oversPlayed = `${teamData.overs}.${teamData.balls}`;
+                const ballsBowled = teamData.overs * 6 + teamData.balls;
+                const runRate = ballsBowled > 0 ? (teamData.score / (ballsBowled / 6)).toFixed(2) : '0.00';
+                let targetHTML = '';
+                if (index === 1 && state.target > 0) {
+                    targetHTML = `<div class="target">Target: ${state.target}</div>`;
+                }
+                scoreStripsContainer.innerHTML += `
+                    <div class="summary-score-strip">
+                        <img src="${teamData.logo || ''}" class="summary-team-logo mr-3">
+                        <span class="team-name">${teamData.name}</span>
+                        <span class="score ml-auto">${teamData.score}/${teamData.wickets}</span>
+                        <span class="overs">(${oversPlayed} Ov)</span>
+                        <span class="rr">RR: ${runRate}</span>
+                        ${targetHTML}
+                    </div>`;
+            });
+
+            panel1.innerHTML = buildInningsCardHTML(inningsOrder[0]);
+            panel2.innerHTML = (state.innings === 2 || state.winner) ? buildInningsCardHTML(inningsOrder[1]) : '<div class="summary-innings-card p-4 text-center text-gray-500">Yet to bat</div>';
+
+            const tab1 = document.getElementById('summary-tab-innings1');
+            const tab2 = document.getElementById('summary-tab-innings2');
+            tab1.textContent = `${inningsOrder[0].name} Innings`;
+            tab2.textContent = `${inningsOrder[1].name} Innings`;
+            const tabs = [tab1, tab2];
+            const panels = [panel1, panel2];
+            const switchTab = (tabToActivate) => {
+                tabs.forEach(tab => tab.setAttribute('aria-selected', (tab === tabToActivate).toString()));
+                panels.forEach(panel => panel.hidden = (panel.id !== tabToActivate.getAttribute('aria-controls')));
+            };
+            tab1.onclick = () => switchTab(tab1);
+            tab2.onclick = () => switchTab(tab2);
+            switchTab(tab1); 
+
+            if (state.winner && state.winner !== 'Match Tied') {
+                const rankedPlayers = calculateManOfTheMatch();
+                if (state.manOfTheMatch) {
+                    motmPanel.innerHTML = renderFinalMoMCard(state.manOfTheMatch);
+                } else if (rankedPlayers && rankedPlayers.length > 0) {
+                    motmPanel.innerHTML = renderSuggestedMoMCard(rankedPlayers);
+                }
+            }
+            
+            showScreen('summary-screen');
+        }
+
+        function backToScorecard() {
+            closeModal('win-modal');
+            if (state.winner) {
+                showScreen('app');
+            } else {
+                showScreen('app');
+            }
+        }
+
+        function renderSuggestedMoMCard(rankedPlayers) {
+            const topPlayer = rankedPlayers[0];
+            return `
+                <div class="mom-suggestion-card mt-4">
+                    <h3 class="font-semibold text-gray-700 mb-3">Suggested Man of the Match</h3>
+                    <div class="mom-player-header">
+                        <img src="${topPlayer.image || ''}" class="mom-player-image" onerror="this.src='data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='">
+                        <div>
+                            <p class="mom-player-name">${topPlayer.name}</p>
+                            <p class="mom-player-team">${topPlayer.teamName}</p>
+                        </div>
+                    </div>
+                    <p class="mom-player-performance">${topPlayer.performance}</p>
+                    <div class="mom-suggestion-actions">
+                        <button onclick="confirmSuggestedMoM()" class="px-4 py-2 bg-green-600 text-white font-semibold rounded-md flex-grow">Confirm</button>
+                        <button onclick="openMoMChoiceModal()" class="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-md">Choose Another</button>
+                    </div>
+                </div>`;
+        }
+
+        function confirmSuggestedMoM() {
+            const rankedPlayers = calculateManOfTheMatch();
+            if (rankedPlayers.length > 0) {
+                state.manOfTheMatch = rankedPlayers[0];
+                saveCompletedMatchSummary();
+                showSummaryScreen();
+            }
+        }
+
+        function renderFinalMoMCard(player) {
+            return `
+                 <div id="summary-motm-card" class="mt-4">
+                    <h3>Man of the Match</h3>
+                    <p class="motm-name">${player.name}</p>
+                    <p class="motm-team">${player.teamName}</p>
+                    <p class="motm-contribution">${player.performance}</p>
+                </div>`;
+        }
+
+        function showSummaryScreen() {
+            if (state.striker) savePlayerStats(state.striker, state.battingTeam);
+            if (state.nonStriker) savePlayerStats(state.nonStriker, state.battingTeam);
+            if (state.bowler) savePlayerStats(state.bowler, state.bowlingTeam);
+            closeAllModals();
+
+            updateMatchHeader();
+            document.getElementById('summary-header-team1').innerHTML = `<img src="${state.team1.logo || ''}" class="summary-team-logo"><span class="summary-team-header hidden sm:inline">${state.team1.name}</span>`;
+            document.getElementById('summary-header-team2').innerHTML = `<span class="summary-team-header hidden sm:inline">${state.team2.name}</span><img src="${state.team2.logo || ''}" class="summary-team-logo">`;
+            document.getElementById('summary-status-ribbon').textContent = calculateCurrentStatus();
+            document.getElementById('summary-venue-date').textContent = `${toTitleCase(state.venue)} | ${new Date(state.matchDate + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`;
+
+            const scoreStripsContainer = document.getElementById('summary-score-strips');
+            const panel1 = document.getElementById('panel-innings1');
+            const panel2 = document.getElementById('panel-innings2');
+            const motmPanel = document.getElementById('summary-motm-panel');
+            scoreStripsContainer.innerHTML = '';
+            panel1.innerHTML = '';
+            panel2.innerHTML = '';
+            motmPanel.innerHTML = '';
+
+            const inningsOrder = [state.team1, state.team2];
+            if (state.innings === 1 && state.battingTeam === 'team2') inningsOrder.reverse();
+            if (state.innings === 2 && state.bowlingTeam === 'team2') inningsOrder.reverse();
+
+            inningsOrder.forEach((teamData, index) => {
+                const oversPlayed = `${teamData.overs}.${teamData.balls}`;
+                const ballsBowled = teamData.overs * 6 + teamData.balls;
+                const runRate = ballsBowled > 0 ? (teamData.score / (ballsBowled / 6)).toFixed(2) : '0.00';
+                let targetHTML = '';
+                if (index === 1 && state.target > 0) {
+                    targetHTML = `<div class="target">Target: ${state.target}</div>`;
+                }
+                scoreStripsContainer.innerHTML += `
+                    <div class="summary-score-strip">
+                        <img src="${teamData.logo || ''}" class="summary-team-logo mr-3">
+                        <span class="team-name">${teamData.name}</span>
+                        <span class="score ml-auto">${teamData.score}/${teamData.wickets}</span>
+                        <span class="overs">(${oversPlayed} Ov)</span>
+                        <span class="rr">RR: ${runRate}</span>
+                        ${targetHTML}
+                    </div>`;
+            });
+
+            panel1.innerHTML = buildInningsCardHTML(inningsOrder[0]);
+            panel2.innerHTML = (state.innings === 2 || state.winner) ? buildInningsCardHTML(inningsOrder[1]) : '<div class="summary-innings-card p-4 text-center text-gray-500">Yet to bat</div>';
+
+            const tab1 = document.getElementById('summary-tab-innings1');
+            const tab2 = document.getElementById('summary-tab-innings2');
+            tab1.textContent = `${inningsOrder[0].name} Innings`;
+            tab2.textContent = `${inningsOrder[1].name} Innings`;
+            const tabs = [tab1, tab2];
+            const panels = [panel1, panel2];
+            const switchTab = (tabToActivate) => {
+                tabs.forEach(tab => tab.setAttribute('aria-selected', (tab === tabToActivate).toString()));
+                panels.forEach(panel => panel.hidden = (panel.id !== tabToActivate.getAttribute('aria-controls')));
+            };
+            tab1.onclick = () => switchTab(tab1);
+            tab2.onclick = () => switchTab(tab2);
+            switchTab(tab1); 
+
+            if (state.winner && state.winner !== 'Match Tied') {
+                const rankedPlayers = calculateManOfTheMatch();
+                if (state.manOfTheMatch) {
+                    motmPanel.innerHTML = renderFinalMoMCard(state.manOfTheMatch);
+                } else if (rankedPlayers && rankedPlayers.length > 0) {
+                    motmPanel.innerHTML = renderSuggestedMoMCard(rankedPlayers);
+                }
+            }
+            
+            showScreen('summary-screen');
+        }
+
+        function backToScorecard() {
+            closeModal('win-modal');
+            if (state.winner) {
+                showScreen('app');
+            } else {
+                showScreen('app');
+            }
+        }
+
+        function renderSuggestedMoMCard(rankedPlayers) {
+            const topPlayer = rankedPlayers[0];
+            return `
+                <div class="mom-suggestion-card mt-4">
+                    <h3 class="font-semibold text-gray-700 mb-3">Suggested Man of the Match</h3>
+                    <div class="mom-player-header">
+                        <img src="${topPlayer.image || ''}" class="mom-player-image" onerror="this.src='data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='">
+                        <div>
+                            <p class="mom-player-name">${topPlayer.name}</p>
+                            <p class="mom-player-team">${topPlayer.teamName}</p>
+                        </div>
+                    </div>
+                    <p class="mom-player-performance">${topPlayer.performance}</p>
+                    <div class="mom-suggestion-actions">
+                        <button onclick="confirmSuggestedMoM()" class="px-4 py-2 bg-green-600 text-white font-semibold rounded-md flex-grow">Confirm</button>
+                        <button onclick="openMoMChoiceModal()" class="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-md">Choose Another</button>
+                    </div>
+                </div>`;
+        }
+
+        function confirmSuggestedMoM() {
+            const rankedPlayers = calculateManOfTheMatch();
+            if (rankedPlayers.length > 0) {
+                state.manOfTheMatch = rankedPlayers[0];
+                saveCompletedMatchSummary();
+                showSummaryScreen();
+            }
+        }
+
+        function renderFinalMoMCard(player) {
+            return `
+                 <div id="summary-motm-card" class="mt-4">
+                    <h3>Man of the Match</h3>
+                    <p class="motm-name">${player.name}</p>
+                    <p class="motm-team">${player.teamName}</p>
+                    <p class="motm-contribution">${player.performance}</p>
+                </div>`;
+        }
+
+        function calculateCurrentStatus() {
+            if (state.result && state.result.status) {
+                return generateResultSummaryLine(state.result);
+            }
+            
+            if (state.innings === 1) {
+                return `1st Innings in progress...`;
+            }
+            
+            if (state.innings === 2) {
+                const battingTeam = state[state.battingTeam];
+                const runsNeeded = state.target - battingTeam.score;
+                if (runsNeeded > 0) {
+                    const totalBalls = state.totalOvers * 6;
+                    const ballsBowled = battingTeam.overs * 6 + battingTeam.balls;
+                    const ballsRemaining = totalBalls - ballsBowled;
+                    return `${state[state.battingTeam].name} need ${runsNeeded} run${runsNeeded !== 1 ? 's' : ''} to win from ${ballsRemaining} ball${ballsRemaining !== 1 ? 's' : ''}.`;
+                }
+            }
+            
+            return 'Match in progress...';
+        }
+
+        function buildInningsCardHTML(teamData) {
+            const battingTeamKey = teamData.name === state.team1.name ? 'team1' : 'team2';
+            const bowlingTeamKey = teamData.name === state.team1.name ? 'team2' : 'team1';
+            
+            let battingHTML = `
+                <div class="summary-table-container">
+                    <table class="summary-table">
+                        <thead>
+                            <tr><th>BATSMEN</th><th></th><th class="text-right">R</th><th class="text-right">B</th><th class="text-right">4s</th><th class="text-right">6s</th><th class="text-right">SR</th></tr>
+                        </thead>
+                        <tbody>`;
+
+            const batsmen = Object.values(state[battingTeamKey].playerStats).filter(p => p.balls > 0 || p.isOut);
+            batsmen.forEach(p => {
+                const sr = p.balls > 0 ? ((p.runs / p.balls) * 100).toFixed(2) : '0.00';
+                battingHTML += `
+                    <tr>
+                        <td class="font-bold">${p.name}</td>
+                        <td class="text-gray-500">${formatDismissalText(p.dismissalInfo)}</td>
+                        <td class="text-right font-bold">${p.runs}</td>
+                        <td class="text-right">${p.balls}</td>
+                        <td class="text-right">${p.fours}</td>
+                        <td class="text-right">${p.sixes}</td>
+                        <td class="text-right">${sr}</td>
+                    </tr>`;
+            });
+
+            const extras = state[battingTeamKey].extras;
+            const extrasString = `(B ${extras.b}, LB ${extras.lb}, WD ${extras.wd}, NB ${extras.nb})`;
+            battingHTML += `
+                    <tr class="summary-extras-row">
+                        <td colspan="2">Extras</td>
+                        <td colspan="5" class="text-right">${extras.total} ${extrasString}</td>
+                    </tr>
+                    <tr class="summary-total-row">
+                        <td colspan="2">Total</td>
+                        <td colspan="5" class="text-right">${state[battingTeamKey].score}/${state[battingTeamKey].wickets} (${state[battingTeamKey].overs}.${state[battingTeamKey].balls} Overs)</td>
+                    </tr>
+                </tbody></table></div>`;
+            
+            const didNotBat = state[battingTeamKey].players.filter(pName => !batsmen.some(b => b.name === pName));
+            let dnbHTML = '';
+            if (didNotBat.length > 0) {
+                dnbHTML = `<div class="summary-dnb-section mt-4 px-2 sm:px-0"><h4 class="font-semibold text-sm">Did not bat:</h4><p class="text-gray-600 text-sm">${didNotBat.join(', ')}</p></div>`;
+            }
+
+            const fow = state[battingTeamKey].inningsHistory
+                .filter(ball => ball.dismissalInfo)
+                .map(ball => {
+                    const batsmanOut = Object.values(state[battingTeamKey].playerStats).find(p => p.dismissalInfo === ball.dismissalInfo);
+                    return {
+                        score: ball.dismissalInfo.scoreAtFall,
+                        over: ball.dismissalInfo.overAtFall,
+                        player: batsmanOut ? batsmanOut.name : 'Unknown'
+                    };
+                })
+                .sort((a, b) => a.score - b.score);
+                
+            let fowHTML = '';
+            if (fow.length > 0) {
+                fowHTML = `<div class="summary-fow-section mt-4 px-2 sm:px-0">
+                    <h4 class="font-semibold text-sm mb-1">Fall of Wickets</h4>
+                    <p class="summary-fow-list">${fow.map((w, i) => `<span>${i+1}-${w.score} (${w.player}, ${w.over})</span>`).join('')}</p>
+                </div>`;
+            }
+
+            let bowlingHTML = `<div class="summary-table-container mt-6"><table class="summary-table">
+                <thead><tr><th>BOWLING</th><th class="text-right">O</th><th class="text-right">M</th><th class="text-right">R</th><th class="text-right">W</th><th class="text-right">ECON</th></tr></thead>
+                <tbody>`;
+
+            const bowlers = Object.values(state[bowlingTeamKey].playerStats).filter(p => p.ballsBowled > 0);
+            bowlers.forEach(p => {
+                const overs = `${Math.floor(p.ballsBowled / 6)}.${p.ballsBowled % 6}`;
+                const econ = p.ballsBowled > 0 ? (p.runsConceded / (p.ballsBowled / 6)).toFixed(2) : '0.00';
+                bowlingHTML += `
+                    <tr>
+                        <td class="font-bold">${p.name}</td>
+                        <td class="text-right">${overs}</td>
+                        <td class="text-right">${p.maidens}</td>
+                        <td class="text-right">${p.runsConceded}</td>
+                        <td class="text-right font-bold">${p.wickets}</td>
+                        <td class="text-right">${econ}</td>
+                    </tr>`;
+            });
+            bowlingHTML += `</tbody></table></div>`;
+
+            return `<div class="summary-innings-card"><h3>${teamData.name} Innings</h3>${battingHTML}${dnbHTML}${fowHTML}${bowlingHTML}</div>`;
+        }
+
+        function showSummaryScreen() {
+            if (state.striker) savePlayerStats(state.striker, state.battingTeam);
+            if (state.nonStriker) savePlayerStats(state.nonStriker, state.battingTeam);
+            if (state.bowler) savePlayerStats(state.bowler, state.bowlingTeam);
+            closeAllModals();
+
+            updateMatchHeader();
+            document.getElementById('summary-header-team1').innerHTML = `<img src="${state.team1.logo || ''}" class="summary-team-logo"><span class="summary-team-header hidden sm:inline">${state.team1.name}</span>`;
+            document.getElementById('summary-header-team2').innerHTML = `<span class="summary-team-header hidden sm:inline">${state.team2.name}</span><img src="${state.team2.logo || ''}" class="summary-team-logo">`;
+            document.getElementById('summary-status-ribbon').textContent = calculateCurrentStatus();
+            document.getElementById('summary-venue-date').textContent = `${toTitleCase(state.venue)} | ${new Date(state.matchDate + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`;
+
+            const scoreStripsContainer = document.getElementById('summary-score-strips');
+            const panel1 = document.getElementById('panel-innings1');
+            const panel2 = document.getElementById('panel-innings2');
+            const motmPanel = document.getElementById('summary-motm-panel');
+            scoreStripsContainer.innerHTML = '';
+            panel1.innerHTML = '';
+            panel2.innerHTML = '';
+            motmPanel.innerHTML = '';
+
+            const inningsOrder = [state.team1, state.team2];
+            if (state.innings === 1 && state.battingTeam === 'team2') inningsOrder.reverse();
+            if (state.innings === 2 && state.bowlingTeam === 'team2') inningsOrder.reverse();
+
+            inningsOrder.forEach((teamData, index) => {
+                const oversPlayed = `${teamData.overs}.${teamData.balls}`;
+                const ballsBowled = teamData.overs * 6 + teamData.balls;
+                const runRate = ballsBowled > 0 ? (teamData.score / (ballsBowled / 6)).toFixed(2) : '0.00';
+                let targetHTML = '';
+                if (index === 1 && state.target > 0) {
+                    targetHTML = `<div class="target">Target: ${state.target}</div>`;
+                }
+                scoreStripsContainer.innerHTML += `
+                    <div class="summary-score-strip">
+                        <img src="${teamData.logo || ''}" class="summary-team-logo mr-3">
+                        <span class="team-name">${teamData.name}</span>
+                        <span class="score ml-auto">${teamData.score}/${teamData.wickets}</span>
+                        <span class="overs">(${oversPlayed} Ov)</span>
+                        <span class="rr">RR: ${runRate}</span>
+                        ${targetHTML}
+                    </div>`;
+            });
+
+            panel1.innerHTML = buildInningsCardHTML(inningsOrder[0]);
+            panel2.innerHTML = (state.innings === 2 || state.winner) ? buildInningsCardHTML(inningsOrder[1]) : '<div class="summary-innings-card p-4 text-center text-gray-500">Yet to bat</div>';
+
+            const tab1 = document.getElementById('summary-tab-innings1');
+            const tab2 = document.getElementById('summary-tab-innings2');
+            tab1.textContent = `${inningsOrder[0].name} Innings`;
+            tab2.textContent = `${inningsOrder[1].name} Innings`;
+            const tabs = [tab1, tab2];
+            const panels = [panel1, panel2];
+            const switchTab = (tabToActivate) => {
+                tabs.forEach(tab => tab.setAttribute('aria-selected', (tab === tabToActivate).toString()));
+                panels.forEach(panel => panel.hidden = (panel.id !== tabToActivate.getAttribute('aria-controls')));
+            };
+            tab1.onclick = () => switchTab(tab1);
+            tab2.onclick = () => switchTab(tab2);
+            switchTab(tab1); 
+
+            if (state.winner && state.winner !== 'Match Tied') {
+                const rankedPlayers = calculateManOfTheMatch();
+                if (state.manOfTheMatch) {
+                    motmPanel.innerHTML = renderFinalMoMCard(state.manOfTheMatch);
+                } else if (rankedPlayers && rankedPlayers.length > 0) {
+                    motmPanel.innerHTML = renderSuggestedMoMCard(rankedPlayers);
+                }
+            }
+            
+            showScreen('summary-screen');
+        }
+
+        function backToScorecard() {
+            closeModal('win-modal');
+            if (state.winner) {
+                showScreen('app');
+            } else {
+                showScreen('app');
+            }
+        }
+
+        function renderSuggestedMoMCard(rankedPlayers) {
+            const topPlayer = rankedPlayers[0];
+            return `
+                <div class="mom-suggestion-card mt-4">
+                    <h3 class="font-semibold text-gray-700 mb-3">Suggested Man of the Match</h3>
+                    <div class="mom-player-header">
+                        <img src="${topPlayer.image || ''}" class="mom-player-image" onerror="this.src='data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='">
+                        <div>
+                            <p class="mom-player-name">${topPlayer.name}</p>
+                            <p class="mom-player-team">${topPlayer.teamName}</p>
+                        </div>
+                    </div>
+                    <p class="mom-player-performance">${topPlayer.performance}</p>
+                    <div class="mom-suggestion-actions">
+                        <button onclick="confirmSuggestedMoM()" class="px-4 py-2 bg-green-600 text-white font-semibold rounded-md flex-grow">Confirm</button>
+                        <button onclick="openMoMChoiceModal()" class="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-md">Choose Another</button>
+                    </div>
+                </div>`;
+        }
+
+        function confirmSuggestedMoM() {
+            const rankedPlayers = calculateManOfTheMatch();
+            if (rankedPlayers.length > 0) {
+                state.manOfTheMatch = rankedPlayers[0];
+                saveCompletedMatchSummary();
+                showSummaryScreen();
+            }
+        }
+
+        function renderFinalMoMCard(player) {
+            return `
+                 <div id="summary-motm-card" class="mt-4">
+                    <h3>Man of the Match</h3>
+                    <p class="motm-name">${player.name}</p>
+                    <p class="motm-team">${player.teamName}</p>
+                    <p class="motm-contribution">${player.performance}</p>
+                </div>`;
+        }
+
+        function calculateCurrentStatus() {
+            if (state.result && state.result.status) {
+                return generateResultSummaryLine(state.result);
+            }
+            
+            if (state.innings === 1) {
+                return `1st Innings in progress...`;
+            }
+            
+            if (state.innings === 2) {
+                const battingTeam = state[state.battingTeam];
+                const runsNeeded = state.target - battingTeam.score;
+                if (runsNeeded > 0) {
+                    const totalBalls = state.totalOvers * 6;
+                    const ballsBowled = battingTeam.overs * 6 + battingTeam.balls;
+                    const ballsRemaining = totalBalls - ballsBowled;
+                    return `${state[state.battingTeam].name} need ${runsNeeded} run${runsNeeded !== 1 ? 's' : ''} to win from ${ballsRemaining} ball${ballsRemaining !== 1 ? 's' : ''}.`;
+                }
+            }
+            
+            return 'Match in progress...';
+        }
+
+        function buildInningsCardHTML(teamData) {
+            const battingTeamKey = teamData.name === state.team1.name ? 'team1' : 'team2';
+            const bowlingTeamKey = teamData.name === state.team1.name ? 'team2' : 'team1';
+            
+            let battingHTML = `
+                <div class="summary-table-container">
+                    <table class="summary-table">
+                        <thead>
+                            <tr><th>BATSMEN</th><th></th><th class="text-right">R</th><th class="text-right">B</th><th class="text-right">4s</th><th class="text-right">6s</th><th class="text-right">SR</th></tr>
+                        </thead>
+                        <tbody>`;
+
+            const batsmen = Object.values(state[battingTeamKey].playerStats).filter(p => p.balls > 0 || p.isOut);
+            batsmen.forEach(p => {
+                const sr = p.balls > 0 ? ((p.runs / p.balls) * 100).toFixed(2) : '0.00';
+                battingHTML += `
+                    <tr>
+                        <td class="font-bold">${p.name}</td>
+                        <td class="text-gray-500">${formatDismissalText(p.dismissalInfo)}</td>
+                        <td class="text-right font-bold">${p.runs}</td>
+                        <td class="text-right">${p.balls}</td>
+                        <td class="text-right">${p.fours}</td>
+                        <td class="text-right">${p.sixes}</td>
+                        <td class="text-right">${sr}</td>
+                    </tr>`;
+            });
+
+            const extras = state[battingTeamKey].extras;
+            const extrasString = `(B ${extras.b}, LB ${extras.lb}, WD ${extras.wd}, NB ${extras.nb})`;
+            battingHTML += `
+                    <tr class="summary-extras-row">
+                        <td colspan="2">Extras</td>
+                        <td colspan="5" class="text-right">${extras.total} ${extrasString}</td>
+                    </tr>
+                    <tr class="summary-total-row">
+                        <td colspan="2">Total</td>
+                        <td colspan="5" class="text-right">${state[battingTeamKey].score}/${state[battingTeamKey].wickets} (${state[battingTeamKey].overs}.${state[battingTeamKey].balls} Overs)</td>
+                    </tr>
+                </tbody></table></div>`;
+            
+            const didNotBat = state[battingTeamKey].players.filter(pName => !batsmen.some(b => b.name === pName));
+            let dnbHTML = '';
+            if (didNotBat.length > 0) {
+                dnbHTML = `<div class="summary-dnb-section mt-4 px-2 sm:px-0"><h4 class="font-semibold text-sm">Did not bat:</h4><p class="text-gray-600 text-sm">${didNotBat.join(', ')}</p></div>`;
+            }
+
+            const fow = state[battingTeamKey].inningsHistory
+                .filter(ball => ball.dismissalInfo)
+                .map(ball => {
+                    const batsmanOut = Object.values(state[battingTeamKey].playerStats).find(p => p.dismissalInfo === ball.dismissalInfo);
+                    return {
+                        score: ball.dismissalInfo.scoreAtFall,
+                        over: ball.dismissalInfo.overAtFall,
+                        player: batsmanOut ? batsmanOut.name : 'Unknown'
+                    };
+                })
+                .sort((a, b) => a.score - b.score);
+                
+            let fowHTML = '';
+            if (fow.length > 0) {
+                fowHTML = `<div class="summary-fow-section mt-4 px-2 sm:px-0">
+                    <h4 class="font-semibold text-sm mb-1">Fall of Wickets</h4>
+                    <p class="summary-fow-list">${fow.map((w, i) => `<span>${i+1}-${w.score} (${w.player}, ${w.over})</span>`).join('')}</p>
+                </div>`;
+            }
+
+            let bowlingHTML = `<div class="summary-table-container mt-6"><table class="summary-table">
+                <thead><tr><th>BOWLING</th><th class="text-right">O</th><th class="text-right">M</th><th class="text-right">R</th><th class="text-right">W</th><th class="text-right">ECON</th></tr></thead>
+                <tbody>`;
+
+            const bowlers = Object.values(state[bowlingTeamKey].playerStats).filter(p => p.ballsBowled > 0);
+            bowlers.forEach(p => {
+                const overs = `${Math.floor(p.ballsBowled / 6)}.${p.ballsBowled % 6}`;
+                const econ = p.ballsBowled > 0 ? (p.runsConceded / (p.ballsBowled / 6)).toFixed(2) : '0.00';
+                bowlingHTML += `
+                    <tr>
+                        <td class="font-bold">${p.name}</td>
+                        <td class="text-right">${overs}</td>
+                        <td class="text-right">${p.maidens}</td>
+                        <td class="text-right">${p.runsConceded}</td>
+                        <td class="text-right font-bold">${p.wickets}</td>
+                        <td class="text-right">${econ}</td>
+                    </tr>`;
+            });
+            bowlingHTML += `</tbody></table></div>`;
+
+            return `<div class="summary-innings-card"><h3>${teamData.name} Innings</h3>${battingHTML}${dnbHTML}${fowHTML}${bowlingHTML}</div>`;
+        }
+
+        function showSummaryScreen() {
+            if (state.striker) savePlayerStats(state.striker, state.battingTeam);
+            if (state.nonStriker) savePlayerStats(state.nonStriker, state.battingTeam);
+            if (state.bowler) savePlayerStats(state.bowler, state.bowlingTeam);
+            closeAllModals();
+
+            updateMatchHeader();
+            document.getElementById('summary-header-team1').innerHTML = `<img src="${state.team1.logo || ''}" class="summary-team-logo"><span class="summary-team-header hidden sm:inline">${state.team1.name}</span>`;
+            document.getElementById('summary-header-team2').innerHTML = `<span class="summary-team-header hidden sm:inline">${state.team2.name}</span><img src="${state.team2.logo || ''}" class="summary-team-logo">`;
+            document.getElementById('summary-status-ribbon').textContent = calculateCurrentStatus();
+            document.getElementById('summary-venue-date').textContent = `${toTitleCase(state.venue)} | ${new Date(state.matchDate + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`;
+
+            const scoreStripsContainer = document.getElementById('summary-score-strips');
+            const panel1 = document.getElementById('panel-innings1');
+            const panel2 = document.getElementById('panel-innings2');
+            const motmPanel = document.getElementById('summary-motm-panel');
+            scoreStripsContainer.innerHTML = '';
+            panel1.innerHTML = '';
+            panel2.innerHTML = '';
+            motmPanel.innerHTML = '';
+
+            const inningsOrder = [state.team1, state.team2];
+            if (state.innings === 1 && state.battingTeam === 'team2') inningsOrder.reverse();
+            if (state.innings === 2 && state.bowlingTeam === 'team2') inningsOrder.reverse();
+
+            inningsOrder.forEach((teamData, index) => {
+                const oversPlayed = `${teamData.overs}.${teamData.balls}`;
+                const ballsBowled = teamData.overs * 6 + teamData.balls;
+                const runRate = ballsBowled > 0 ? (teamData.score / (ballsBowled / 6)).toFixed(2) : '0.00';
+                let targetHTML = '';
+                if (index === 1 && state.target > 0) {
+                    targetHTML = `<div class="target">Target: ${state.target}</div>`;
+                }
+                scoreStripsContainer.innerHTML += `
+                    <div class="summary-score-strip">
+                        <img src="${teamData.logo || ''}" class="summary-team-logo mr-3">
+                        <span class="team-name">${teamData.name}</span>
+                        <span class="score ml-auto">${teamData.score}/${teamData.wickets}</span>
+                        <span class="overs">(${oversPlayed} Ov)</span>
+                        <span class="rr">RR: ${runRate}</span>
+                        ${targetHTML}
+                    </div>`;
+            });
+
+            panel1.innerHTML = buildInningsCardHTML(inningsOrder[0]);
+            panel2.innerHTML = (state.innings === 2 || state.winner) ? buildInningsCardHTML(inningsOrder[1]) : '<div class="summary-innings-card p-4 text-center text-gray-500">Yet to bat</div>';
+
+            const tab1 = document.getElementById('summary-tab-innings1');
+            const tab2 = document.getElementById('summary-tab-innings2');
+            tab1.textContent = `${inningsOrder[0].name} Innings`;
+            tab2.textContent = `${inningsOrder[1].name} Innings`;
+            const tabs = [tab1, tab2];
+            const panels = [panel1, panel2];
+            const switchTab = (tabToActivate) => {
+                tabs.forEach(tab => tab.setAttribute('aria-selected', (tab === tabToActivate).toString()));
+                panels.forEach(panel => panel.hidden = (panel.id !== tabToActivate.getAttribute('aria-controls')));
+            };
+            tab1.onclick = () => switchTab(tab1);
+            tab2.onclick = () => switchTab(tab2);
+            switchTab(tab1); 
+
+            if (state.winner && state.winner !== 'Match Tied') {
+                const rankedPlayers = calculateManOfTheMatch();
+                if (state.manOfTheMatch) {
+                    motmPanel.innerHTML = renderFinalMoMCard(state.manOfTheMatch);
+                } else if (rankedPlayers && rankedPlayers.length > 0) {
+                    motmPanel.innerHTML = renderSuggestedMoMCard(rankedPlayers);
+                }
+            }
+            
+            showScreen('summary-screen');
+        }
+
+        function backToScorecard() {
+            closeModal('win-modal');
+            if (state.winner) {
+                showScreen('app');
+            } else {
+                showScreen('app');
+            }
+        }
+
+        function renderSuggestedMoMCard(rankedPlayers) {
+            const topPlayer = rankedPlayers[0];
+            return `
+                <div class="mom-suggestion-card mt-4">
+                    <h3 class="font-semibold text-gray-700 mb-3">Suggested Man of the Match</h3>
+                    <div class="mom-player-header">
+                        <img src="${topPlayer.image || ''}" class="mom-player-image" onerror="this.src='data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='">
+                        <div>
+                            <p class="mom-player-name">${topPlayer.name}</p>
+                            <p class="mom-player-team">${topPlayer.teamName}</p>
+                        </div>
+                    </div>
+                    <p class="mom-player-performance">${topPlayer.performance}</p>
+                    <div class="mom-suggestion-actions">
+                        <button onclick="confirmSuggestedMoM()" class="px-4 py-2 bg-green-600 text-white font-semibold rounded-md flex-grow">Confirm</button>
+                        <button onclick="openMoMChoiceModal()" class="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-md">Choose Another</button>
+                    </div>
+                </div>`;
+        }
+
+        function confirmSuggestedMoM() {
+            const rankedPlayers = calculateManOfTheMatch();
+            if (rankedPlayers.length > 0) {
+                state.manOfTheMatch = rankedPlayers[0];
+                saveCompletedMatchSummary();
+                showSummaryScreen();
+            }
+        }
+
+        function renderFinalMoMCard(player) {
+            return `
+                 <div id="summary-motm-card" class="mt-4">
+                    <h3>Man of the Match</h3>
+                    <p class="motm-name">${player.name}</p>
+                    <p class="motm-team">${player.teamName}</p>
+                    <p class="motm-contribution">${player.performance}</p>
+                </div>`;
+        }
+
+        function calculateCurrentStatus() {
+            if (state.result && state.result.status) {
+                return generateResultSummaryLine(state.result);
+            }
+            
+            if (state.innings === 1) {
+                return `1st Innings in progress...`;
+            }
+            
+            if (state.innings === 2) {
+                const battingTeam = state[state.battingTeam];
+                const runsNeeded = state.target - battingTeam.score;
+                if (runsNeeded > 0) {
+                    const totalBalls = state.totalOvers * 6;
+                    const ballsBowled = battingTeam.overs * 6 + battingTeam.balls;
+                    const ballsRemaining = totalBalls - ballsBowled;
+                    return `${state[state.battingTeam].name} need ${runsNeeded} run${runsNeeded !== 1 ? 's' : ''} to win from ${ballsRemaining} ball${ballsRemaining !== 1 ? 's' : ''}.`;
+                }
+            }
+            
+            return 'Match in progress...';
+        }
+
+        function buildInningsCardHTML(teamData) {
+            const battingTeamKey = teamData.name === state.team1.name ? 'team1' : 'team2';
+            const bowlingTeamKey = teamData.name === state.team1.name ? 'team2' : 'team1';
+            
+            let battingHTML = `
+                <div class="summary-table-container">
+                    <table class="summary-table">
+                        <thead>
+                            <tr><th>BATSMEN</th><th></th><th class="text-right">R</th><th class="text-right">B</th><th class="text-right">4s</th><th class="text-right">6s</th><th class="text-right">SR</th></tr>
+                        </thead>
+                        <tbody>`;
+
+            const batsmen = Object.values(state[battingTeamKey].playerStats).filter(p => p.balls > 0 || p.isOut);
+            batsmen.forEach(p => {
+                const sr = p.balls > 0 ? ((p.runs / p.balls) * 100).toFixed(2) : '0.00';
+                battingHTML += `
+                    <tr>
+                        <td class="font-bold">${p.name}</td>
+                        <td class="text-gray-500">${formatDismissalText(p.dismissalInfo)}</td>
+                        <td class="text-right font-bold">${p.runs}</td>
+                        <td class="text-right">${p.balls}</td>
+                        <td class="text-right">${p.fours}</td>
+                        <td class="text-right">${p.sixes}</td>
+                        <td class="text-right">${sr}</td>
+                    </tr>`;
+            });
+
+            const extras = state[battingTeamKey].extras;
+            const extrasString = `(B ${extras.b}, LB ${extras.lb}, WD ${extras.wd}, NB ${extras.nb})`;
+            battingHTML += `
+                    <tr class="summary-extras-row">
+                        <td colspan="2">Extras</td>
+                        <td colspan="5" class="text-right">${extras.total} ${extrasString}</td>
+                    </tr>
+                    <tr class="summary-total-row">
+                        <td colspan="2">Total</td>
+                        <td colspan="5" class="text-right">${state[battingTeamKey].score}/${state[battingTeamKey].wickets} (${state[battingTeamKey].overs}.${state[battingTeamKey].balls} Overs)</td>
+                    </tr>
+                </tbody></table></div>`;
+            
+            const didNotBat = state[battingTeamKey].players.filter(pName => !batsmen.some(b => b.name === pName));
+            let dnbHTML = '';
+            if (didNotBat.length > 0) {
+                dnbHTML = `<div class="summary-dnb-section mt-4 px-2 sm:px-0"><h4 class="font-semibold text-sm">Did not bat:</h4><p class="text-gray-600 text-sm">${didNotBat.join(', ')}</p></div>`;
+            }
+
+            const fow = state[battingTeamKey].inningsHistory
+                .filter(ball => ball.dismissalInfo)
+                .map(ball => {
+                    const batsmanOut = Object.values(state[battingTeamKey].playerStats).find(p => p.dismissalInfo === ball.dismissalInfo);
+                    return {
+                        score: ball.dismissalInfo.scoreAtFall,
+                        over: ball.dismissalInfo.overAtFall,
+                        player: batsmanOut ? batsmanOut.name : 'Unknown'
+                    };
+                })
+                .sort((a, b) => a.score - b.score);
+                
+            let fowHTML = '';
+            if (fow.length > 0) {
+                fowHTML = `<div class="summary-fow-section mt-4 px-2 sm:px-0">
+                    <h4 class="font-semibold text-sm mb-1">Fall of Wickets</h4>
+                    <p class="summary-fow-list">${fow.map((w, i) => `<span>${i+1}-${w.score} (${w.player}, ${w.over})</span>`).join('')}</p>
+                </div>`;
+            }
+
+            let bowlingHTML = `<div class="summary-table-container mt-6"><table class="summary-table">
+                <thead><tr><th>BOWLING</th><th class="text-right">O</th><th class="text-right">M</th><th class="text-right">R</th><th class="text-right">W</th><th class="text-right">ECON</th></tr></thead>
+                <tbody>`;
+
+            const bowlers = Object.values(state[bowlingTeamKey].playerStats).filter(p => p.ballsBowled > 0);
+            bowlers.forEach(p => {
+                const overs = `${Math.floor(p.ballsBowled / 6)}.${p.ballsBowled % 6}`;
+                const econ = p.ballsBowled > 0 ? (p.runsConceded / (p.ballsBowled / 6)).toFixed(2) : '0.00';
+                bowlingHTML += `
+                    <tr>
+                        <td class="font-bold">${p.name}</td>
+                        <td class="text-right">${overs}</td>
+                        <td class="text-right">${p.maidens}</td>
+                        <td class="text-right">${p.runsConceded}</td>
+                        <td class="text-right font-bold">${p.wickets}</td>
+                        <td class="text-right">${econ}</td>
+                    </tr>`;
+            });
+            bowlingHTML += `</tbody></table></div>`;
+
+            return `<div class="summary-innings-card"><h3>${teamData.name} Innings</h3>${battingHTML}${dnbHTML}${fowHTML}${bowlingHTML}</div>`;
+        }
+
+        function showSummaryScreen() {
+            if (state.striker) savePlayerStats(state.striker, state.battingTeam);
+            if (state.nonStriker) savePlayerStats(state.nonStriker, state.battingTeam);
+            if (state.bowler) savePlayerStats(state.bowler, state.bowlingTeam);
+            closeAllModals();
+
+            updateMatchHeader();
+            document.getElementById('summary-header-team1').innerHTML = `<img src="${state.team1.logo || ''}" class="summary-team-logo"><span class="summary-team-header hidden sm:inline">${state.team1.name}</span>`;
+            document.getElementById('summary-header-team2').innerHTML = `<span class="summary-team-header hidden sm:inline">${state.team2.name}</span><img src="${state.team2.logo || ''}" class="summary-team-logo">`;
+            document.getElementById('summary-status-ribbon').textContent = calculateCurrentStatus();
+            document.getElementById('summary-venue-date').textContent = `${toTitleCase(state.venue)} | ${new Date(state.matchDate + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`;
+
+            const scoreStripsContainer = document.getElementById('summary-score-strips');
+            const panel1 = document.getElementById('panel-innings1');
+            const panel2 = document.getElementById('panel-innings2');
+            const motmPanel = document.getElementById('summary-motm-panel');
+            scoreStripsContainer.innerHTML = '';
+            panel1.innerHTML = '';
+            panel2.innerHTML = '';
+            motmPanel.innerHTML = '';
+
+            const inningsOrder = [state.team1, state.team2];
+            if (state.innings === 1 && state.battingTeam === 'team2') inningsOrder.reverse();
+            if (state.innings === 2 && state.bowlingTeam === 'team2') inningsOrder.reverse();
+
+            inningsOrder.forEach((teamData, index) => {
+                const oversPlayed = `${teamData.overs}.${teamData.balls}`;
+                const ballsBowled = teamData.overs * 6 + teamData.balls;
+                const runRate = ballsBowled > 0 ? (teamData.score / (ballsBowled / 6)).toFixed(2) : '0.00';
+                let targetHTML = '';
+                if (index === 1 && state.target > 0) {
+                    targetHTML = `<div class="target">Target: ${state.target}</div>`;
+                }
+                scoreStripsContainer.innerHTML += `
+                    <div class="summary-score-strip">
+                        <img src="${teamData.logo || ''}" class="summary-team-logo mr-3">
+                        <span class="team-name">${teamData.name}</span>
+                        <span class="score ml-auto">${teamData.score}/${teamData.wickets}</span>
+                        <span class="overs">(${oversPlayed} Ov)</span>
+                        <span class="rr">RR: ${runRate}</span>
+                        ${targetHTML}
+                    </div>`;
+            });
+
+            panel1.innerHTML = buildInningsCardHTML(inningsOrder[0]);
+            panel2.innerHTML = (state.innings === 2 || state.winner) ? buildInningsCardHTML(inningsOrder[1]) : '<div class="summary-innings-card p-4 text-center text-gray-500">Yet to bat</div>';
+
+            const tab1 = document.getElementById('summary-tab-innings1');
+            const tab2 = document.getElementById('summary-tab-innings2');
+            tab1.textContent = `${inningsOrder[0].name} Innings`;
+            tab2.textContent = `${inningsOrder[1].name} Innings`;
+            const tabs = [tab1, tab2];
+            const panels = [panel1, panel2];
+            const switchTab = (tabToActivate) => {
+                tabs.forEach(tab => tab.setAttribute('aria-selected', (tab === tabToActivate).toString()));
+                panels.forEach(panel => panel.hidden = (panel.id !== tabToActivate.getAttribute('aria-controls')));
+            };
+            tab1.onclick = () => switchTab(tab1);
+            tab2.onclick = () => switchTab(tab2);
+            switchTab(tab1); 
+
+            if (state.winner && state.winner !== 'Match Tied') {
+                const rankedPlayers = calculateManOfTheMatch();
+                if (state.manOfTheMatch) {
+                    motmPanel.innerHTML = renderFinalMoMCard(state.manOfTheMatch);
+                } else if (rankedPlayers && rankedPlayers.length > 0) {
+                    motmPanel.innerHTML = renderSuggestedMoMCard(rankedPlayers);
+                }
+            }
+            
+            showScreen('summary-screen');
+        }
+
+        function backToScorecard() {
+            closeModal('win-modal'); // Explicitly close the win modal
+            if (state.winner) {
+                // Now that the modal is closed, just show the app screen.
+                // The win state is already handled on the main screen.
+                showScreen('app');
+            } else {
+                showScreen('app');
+            }
+        }
+
+        function renderSuggestedMoMCard(rankedPlayers) {
+            const topPlayer = rankedPlayers[0];
+            return `
+                <div class="mom-suggestion-card mt-4">
+                    <h3 class="font-semibold text-gray-700 mb-3">Suggested Man of the Match</h3>
+                    <div class="mom-player-header">
+                        <img src="${topPlayer.image || ''}" class="mom-player-image" onerror="this.src='data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='">
+                        <div>
+                            <p class="mom-player-name">${topPlayer.name}</p>
+                            <p class="mom-player-team">${topPlayer.teamName}</p>
+                        </div>
+                    </div>
+                    <p class="mom-player-performance">${topPlayer.performance}</p>
+                    <div class="mom-suggestion-actions">
+                        <button onclick="confirmSuggestedMoM()" class="px-4 py-2 bg-green-600 text-white font-semibold rounded-md flex-grow">Confirm</button>
+                        <button onclick="openMoMChoiceModal()" class="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-md">Choose Another</button>
+                    </div>
+                </div>`;
+        }
+
+        function confirmSuggestedMoM() {
+            const rankedPlayers = calculateManOfTheMatch();
+            if (rankedPlayers.length > 0) {
+                state.manOfTheMatch = rankedPlayers[0];
+                saveCompletedMatchSummary();
+                showSummaryScreen(); // Re-render the summary screen with the final card
+            }
+        }
+
+        function renderFinalMoMCard(player) {
+            return `
+                 <div id="summary-motm-card" class="mt-4">
+                    <h3>Man of the Match</h3>
+                    <p class="motm-name">${player.name}</p>
+                    <p class="motm-team">${player.teamName}</p>
+                    <p class="motm-contribution">${player.performance}</p>
+                </div>`;
+        }
+
+        function calculateCurrentStatus() {
+            if (state.result && state.result.status) {
+                return generateResultSummaryLine(state.result);
+            }
+            
+            if (state.innings === 1) {
+                return `1st Innings in progress...`;
+            }
+            
+            if (state.innings === 2) {
+                const battingTeam = state[state.battingTeam];
+                const runsNeeded = state.target - battingTeam.score;
+                if (runsNeeded > 0) {
+                    const totalBalls = state.totalOvers * 6;
+                    const ballsBowled = battingTeam.overs * 6 + battingTeam.balls;
+                    const ballsRemaining = totalBalls - ballsBowled;
+                    return `${state[state.battingTeam].name} need ${runsNeeded} run${runsNeeded !== 1 ? 's' : ''} to win from ${ballsRemaining} ball${ballsRemaining !== 1 ? 's' : ''}.`;
+                }
+            }
+            
+            return 'Match in progress...';
+        }
+
+        function buildInningsCardHTML(teamData) {
+            const battingTeamKey = teamData.name === state.team1.name ? 'team1' : 'team2';
+            const bowlingTeamKey = teamData.name === state.team1.name ? 'team2' : 'team1';
+            
+            let battingHTML = `
+                <div class="summary-table-container">
+                    <table class="summary-table">
+                        <thead>
+                            <tr><th>BATSMEN</th><th></th><th class="text-right">R</th><th class="text-right">B</th><th class="text-right">4s</th><th class="text-right">6s</th><th class="text-right">SR</th></tr>
+                        </thead>
+                        <tbody>`;
+
+            const batsmen = Object.values(state[battingTeamKey].playerStats).filter(p => p.balls > 0 || p.isOut);
+            batsmen.forEach(p => {
+                const sr = p.balls > 0 ? ((p.runs / p.balls) * 100).toFixed(2) : '0.00';
+                battingHTML += `
+                    <tr>
+                        <td class="font-bold">${p.name}</td>
+                        <td class="text-gray-500">${formatDismissalText(p.dismissalInfo)}</td>
+                        <td class="text-right font-bold">${p.runs}</td>
+                        <td class="text-right">${p.balls}</td>
+                        <td class="text-right">${p.fours}</td>
+                        <td class="text-right">${p.sixes}</td>
+                        <td class="text-right">${sr}</td>
+                    </tr>`;
+            });
+
+            const extras = state[battingTeamKey].extras;
+            const extrasString = `(B ${extras.b}, LB ${extras.lb}, WD ${extras.wd}, NB ${extras.nb})`;
+            battingHTML += `
+                    <tr class="summary-extras-row">
+                        <td colspan="2">Extras</td>
+                        <td colspan="5" class="text-right">${extras.total} ${extrasString}</td>
+                    </tr>
+                    <tr class="summary-total-row">
+                        <td colspan="2">Total</td>
+                        <td colspan="5" class="text-right">${state[battingTeamKey].score}/${state[battingTeamKey].wickets} (${state[battingTeamKey].overs}.${state[battingTeamKey].balls} Overs)</td>
+                    </tr>
+                </tbody></table></div>`;
+            
+            const didNotBat = state[battingTeamKey].players.filter(pName => !batsmen.some(b => b.name === pName));
+            let dnbHTML = '';
+            if (didNotBat.length > 0) {
+                dnbHTML = `<div class="summary-dnb-section mt-4 px-2 sm:px-0"><h4 class="font-semibold text-sm">Did not bat:</h4><p class="text-gray-600 text-sm">${didNotBat.join(', ')}</p></div>`;
+            }
+
+            const fow = state[battingTeamKey].inningsHistory
+                .filter(ball => ball.dismissalInfo)
+                .map(ball => {
+                    const batsmanOut = Object.values(state[battingTeamKey].playerStats).find(p => p.dismissalInfo === ball.dismissalInfo);
+                    return {
+                        score: ball.dismissalInfo.scoreAtFall,
+                        over: ball.dismissalInfo.overAtFall,
+                        player: batsmanOut ? batsmanOut.name : 'Unknown'
+                    };
+                })
+                .sort((a, b) => a.score - b.score);
+                
+            let fowHTML = '';
+            if (fow.length > 0) {
+                fowHTML = `<div class="summary-fow-section mt-4 px-2 sm:px-0">
+                    <h4 class="font-semibold text-sm mb-1">Fall of Wickets</h4>
+                    <p class="summary-fow-list">${fow.map((w, i) => `<span>${i+1}-${w.score} (${w.player}, ${w.over})</span>`).join('')}</p>
+                </div>`;
+            }
+
+            let bowlingHTML = `<div class="summary-table-container mt-6"><table class="summary-table">
+                <thead><tr><th>BOWLING</th><th class="text-right">O</th><th class="text-right">M</th><th class="text-right">R</th><th class="text-right">W</th><th class="text-right">ECON</th></tr></thead>
+                <tbody>`;
+
+            const bowlers = Object.values(state[bowlingTeamKey].playerStats).filter(p => p.ballsBowled > 0);
+            bowlers.forEach(p => {
+                const overs = `${Math.floor(p.ballsBowled / 6)}.${p.ballsBowled % 6}`;
+                const econ = p.ballsBowled > 0 ? (p.runsConceded / (p.ballsBowled / 6)).toFixed(2) : '0.00';
+                bowlingHTML += `
+                    <tr>
+                        <td class="font-bold">${p.name}</td>
+                        <td class="text-right">${overs}</td>
+                        <td class="text-right">${p.maidens}</td>
+                        <td class="text-right">${p.runsConceded}</td>
+                        <td class="text-right font-bold">${p.wickets}</td>
+                        <td class="text-right">${econ}</td>
+                    </tr>`;
+            });
+            bowlingHTML += `</tbody></table></div>`;
+
+            return `<div class="summary-innings-card"><h3>${teamData.name} Innings</h3>${battingHTML}${dnbHTML}${fowHTML}${bowlingHTML}</div>`;
         }
 
         function calculateCurrentStatus() {
@@ -3478,8 +4729,11 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
         }
         
         function backToScorecard() {
+            closeModal('win-modal'); // Explicitly close the win modal
             if (state.winner) {
-                openWinModal(state.winner, state.winMargin);
+                // Now that the modal is closed, just show the app screen.
+                // The win state is already handled on the main screen.
+                showScreen('app');
             } else {
                 showScreen('app');
             }
@@ -4000,53 +5254,6 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
 
             recalculateAndRender();
             openModal('edit-match-modal');
-        }
-
-        function saveMatchEdits() {
-            // This function now serves as a final confirmation and sync.
-            // The live updates are handled by the oninput/onchange handlers.
-            // We still re-read from the form to catch any final, un-debounced changes.
-            try {
-                // General match state
-                state.venue = document.getElementById('edit-venue').value.toUpperCase();
-                state.totalOvers = parseInt(document.getElementById('edit-total-overs').value);
-                state.currentOver = [...editedOver];
-
-                ['team1', 'team2'].forEach(teamKey => {
-                    const team = state[teamKey];
-                    team.name = document.getElementById(`edit-${teamKey}-name`).value.toUpperCase();
-                    team.score = parseInt(document.getElementById(`edit-${teamKey}-score`).value);
-                    team.wickets = parseInt(document.getElementById(`edit-${teamKey}-wickets`).value);
-                    team.overs = parseInt(document.getElementById(`edit-${teamKey}-overs`).value);
-                    team.balls = parseInt(document.getElementById(`edit-${teamKey}-balls`).value);
-                });
-
-                // Final recalculation of striker position after over edits
-                if (editInitialStriker && editInitialNonStriker) {
-                    let currentStrikerName = editInitialStriker.name;
-                    let currentNonStrikerName = editInitialNonStriker.name;
-
-                    // Replay the edited over to find the final striker positions by name
-                    state.currentOver.forEach(ball => {
-                        if (shouldSwapForEvent(ball.event)) {
-                            [currentStrikerName, currentNonStrikerName] = [currentNonStrikerName, currentStrikerName];
-                        }
-                    });
-                    
-                    // Update the main state objects from the final names
-                    state.striker = state[state.battingTeam].playerStats[currentStrikerName] || null;
-                    state.nonStriker = state[state.battingTeam].playerStats[currentNonStrikerName] || null;
-                }
-                
-                // Perform one final, non-debounced save and close
-                saveStateToLocal(); 
-                closeModal('edit-match-modal');
-                updateUI();
-                showAlert('Match state updated successfully!');
-
-            } catch (error) {
-                showAlert(`Error saving changes: ${error.message}`);
-            }
         }
         
         function openOverEditPopover(chipElement, ballIndex) {
