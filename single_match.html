@@ -1342,9 +1342,8 @@
         // ... (script content from your original file) ...
         // --- STATE MANAGEMENT ---
 const state = {
-
-    id: null,
-    innings: 1,
+            id: null,
+            innings: 1,
     target: 0,
     totalOvers: 20,
     playersPerSide: 11,
@@ -1356,7 +1355,8 @@ const state = {
         wickets: 0,
         overs: 0,
         balls: 0,
-        players: [],
+        squad: [], // Full list of all players on the team
+        playing: [], // List of IDs of players selected for this match
         playerStats: {},
         inningsHistory: [],
         extras: { b: 0, lb: 0, wd: 0, nb: 0, total: 0 }
@@ -1367,7 +1367,8 @@ const state = {
         wickets: 0,
         overs: 0,
         balls: 0,
-        players: [],
+        squad: [], // Full list of all players on the team
+        playing: [], // List of IDs of players selected for this match
         playerStats: {},
         inningsHistory: [],
         extras: { b: 0, lb: 0, wd: 0, nb: 0, total: 0 }
@@ -1389,6 +1390,7 @@ const state = {
     result: null
 };
 
+let currentPlayerSelection = {}; // Add this line
 let alertCallback = null;
 let downloadAction = null;
 let tossWinnerKey = null;
@@ -1512,6 +1514,9 @@ const debouncedSave = debounce(saveStateToLocal, 200);
         }
 
         // --- HELPER FUNCTIONS ---
+        function generateUniqueId() {
+            return `player_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        }
         function toTitleCase(str) {
             if (!str) return '';
             return str.replace(
@@ -1568,57 +1573,64 @@ const debouncedSave = debounce(saveStateToLocal, 200);
         function savePlayerInputsToState(teamKey) {
             const playerInputsContainer = (teamKey === 'team1') ? ui.team1PlayerInputs : ui.team2PlayerInputs;
             const playerRows = playerInputsContainer.querySelectorAll('.player-input-row');
-            const players = [];
+            
+            state[teamKey].playing = []; // Reset the playing list before saving.
             
             playerRows.forEach(row => {
-                const nameInput = row.querySelector('input[type="text"]');
-                const playerName = nameInput.value; // Don't trim yet, keep spaces if user wants
-                const imageSrc = nameInput.dataset.imageSrc || '';
-                
-                // Store the object to preserve field order and image, even if name is empty
-                players.push({ name: playerName, image: imageSrc });
-            });
+                const playerId = row.dataset.playerId;
+                const player = state[teamKey].squad.find(p => p.id === playerId);
+                if (player) {
+                    const nameInput = row.querySelector('input[type="text"]');
+                    const imageSrc = nameInput.dataset.imageSrc || player.image || '';
+                    player.name = nameInput.value;
+                    player.image = imageSrc;
 
-            state[teamKey].players = players;
+                    const checkbox = row.querySelector('input[type="checkbox"]');
+                    if (checkbox && checkbox.checked) {
+                        state[teamKey].playing.push(playerId);
+                    }
+                }
+            });
         }
+        
         function generatePlayerInputs(teamKey) {
             const container = (teamKey === 'team1') ? ui.team1PlayerInputs : ui.team2PlayerInputs;
-            container.innerHTML = ''; // Clear existing inputs
+            container.innerHTML = '';
 
             const numPlayers = parseInt(ui.playersPerSideInput.value) || 11;
-            const totalFields = numPlayers + 2; // Always add 2 reserve fields
+            const totalFields = numPlayers + 2;
 
-            const savedPlayers = state[teamKey].players && state[teamKey].players.length > 0 ? state[teamKey].players : [];
-
-            for (let i = 1; i <= totalFields; i++) {
-                const savedPlayer = savedPlayers[i - 1];
-                // Use optional chaining '?' to avoid errors if savedPlayer is undefined
-                const playerName = savedPlayer?.name || '';
-                const playerImage = savedPlayer?.image || '';
-
-                let placeholder = 'Player Name';
-                if (i === numPlayers + 1) {
-                    placeholder = 'Reserve Player 1';
-                } else if (i === numPlayers + 2) {
-                    placeholder = 'Reserve Player 2';
-                }
-
-                createPlayerInputRow(container, playerName, playerImage, i, placeholder);
+            while (state[teamKey].squad.length < totalFields) {
+                state[teamKey].squad.push({ id: generateUniqueId(), name: '', image: '' });
             }
+            state[teamKey].squad.length = totalFields;
+
+            state[teamKey].squad.forEach((player, index) => {
+                let placeholder = 'Player Name';
+                if (index >= numPlayers) placeholder = `Reserve Player ${index - numPlayers + 1}`;
+                
+                // For a new match, auto-select the first N players. For a rematch, this will be empty.
+                const isSelected = state[teamKey].playing.length > 0 ? state[teamKey].playing.includes(player.id) : index < numPlayers;
+                
+                createPlayerInputRow(container, player, index + 1, placeholder, isSelected);
+            });
         }
 
-        function createPlayerInputRow(container, name, image, index, placeholder = `Player Name`) {
+        function createPlayerInputRow(container, player, index, placeholder, isSelected) {
             const playerRow = document.createElement('div');
             playerRow.className = 'flex items-center gap-3 player-input-row';
+            playerRow.dataset.playerId = player.id;
 
-            const numberLabel = document.createElement('span');
-            numberLabel.className = 'font-semibold text-gray-500 w-6 text-center';
-            numberLabel.textContent = String(index).padStart(2, '0');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = isSelected;
+            checkbox.className = 'h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer flex-shrink-0';
 
             const imageContainer = document.createElement('div');
             imageContainer.className = 'w-10 h-10 flex-shrink-0';
             const imagePreview = document.createElement('img');
-            imagePreview.src = image || `data:image/svg+xml;base64,${btoa('<svg class="w-10 h-10 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>')}`;
+            const defaultImage = `data:image/svg+xml;base64,${btoa('<svg class="w-10 h-10 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>')}`;
+            imagePreview.src = player.image || defaultImage;
             imagePreview.alt = `Player ${index} Image`;
             imagePreview.className = 'w-10 h-10 rounded-full object-cover bg-gray-200 cursor-pointer hover:opacity-80 transition';
 
@@ -1630,12 +1642,10 @@ const debouncedSave = debounce(saveStateToLocal, 200);
             const nameInput = document.createElement('input');
             nameInput.type = 'text';
             nameInput.placeholder = placeholder;
-            nameInput.value = name;
-            nameInput.className = 'w-full p-2 border-gray-300 border rounded-md focus:ring-blue-500 focus:border-blue-500 transition'
+            nameInput.value = player.name || ''; // Use player.name which is now normalized
+            nameInput.className = 'w-full p-2 border-gray-300 border rounded-md focus:ring-blue-500 focus:border-blue-500 transition';
             nameInput.style.textTransform = 'uppercase';
-            if (image) {
-                nameInput.dataset.imageSrc = image;
-            }
+            nameInput.dataset.imageSrc = player.image || '';
 
             fileInput.onchange = () => {
                 if (fileInput.files && fileInput.files[0]) {
@@ -1650,7 +1660,7 @@ const debouncedSave = debounce(saveStateToLocal, 200);
 
             imagePreview.onclick = () => fileInput.click();
 
-            playerRow.appendChild(numberLabel);
+            playerRow.appendChild(checkbox);
             imageContainer.appendChild(imagePreview);
             imageContainer.appendChild(fileInput);
             playerRow.appendChild(imageContainer);
@@ -1828,7 +1838,7 @@ const debouncedSave = debounce(saveStateToLocal, 200);
             return 'Are you sure you want to leave? All scoring data will be lost.';
         };
 
-        function startMatch() {
+       function startMatch() {
             state.totalOvers = parseInt(ui.totalOversInput.value);
             state.playersPerSide = parseInt(ui.playersPerSideInput.value);
             state.venue = ui.venueInput.value || 'The Local Ground';
@@ -1838,47 +1848,30 @@ const debouncedSave = debounce(saveStateToLocal, 200);
             state.team1.color = ui.team1ColorInput.value;
             state.team2.color = ui.team2ColorInput.value;
 
-            // This function now processes the already-saved player data
             const processTeamData = (teamKey) => {
                 const playerStats = {};
-                const playersWithNames = []; // Final list of players with non-empty names
+                const playingPlayerNames = [];
 
-                // Use the data saved in the state
-                state[teamKey].players.forEach((player, index) => {
-                    const playerName = player.name.trim().toUpperCase();
-                    
-                    // Only add players who have a name. This makes reserves optional.
-                    if (playerName) {
-                        playersWithNames.push(playerName);
+                // Build stats only for players in the 'playing' list
+                state[teamKey].playing.forEach(playerId => {
+                    const player = state[teamKey].squad.find(p => p.id === playerId);
+                    if (player && player.name) {
+                        const playerName = player.name.trim().toUpperCase();
+                        playingPlayerNames.push(playerName);
                         playerStats[playerName] = {
-                            playerId: `p_${teamKey}_${index}_${Date.now()}`, // Add a unique and stable ID
+                            playerId: player.id,
                             name: playerName,
                             image: player.image || '',
-                            runs: 0,
-                            balls: 0,
-                            fours: 0,
-                            sixes: 0,
-                            isOut: false,
-                            dismissalInfo: null,
-                            // Bowler stats
-                            ballsBowled: 0,
-                            runsConceded: 0,
-                            wickets: 0,
-                            maidens: 0,
-                            dots: 0,
-                            foursConceded: 0,
-                            sixesConceded: 0,
-                            // Other
-                            consecutiveFours: 0,
-                            consecutiveSixes: 0
+                            runs: 0, balls: 0, fours: 0, sixes: 0, isOut: false, dismissalInfo: null,
+                            ballsBowled: 0, runsConceded: 0, wickets: 0, maidens: 0, dots: 0,
+                            foursConceded: 0, sixesConceded: 0, consecutiveFours: 0, consecutiveSixes: 0
                         };
                     }
                 });
 
-                // Update the state with the final, cleaned-up player lists and stats
-                state[teamKey].players = playersWithNames;
+                state[teamKey].players = playingPlayerNames; // This is now the playing XI names
                 state[teamKey].playerStats = playerStats;
-                state[teamKey].inningsHistory = []; // Array to store ball-by-ball data
+                state[teamKey].inningsHistory = [];
                 state[teamKey].extras = { b: 0, lb: 0, wd: 0, nb: 0, total: 0 };
             };
 
@@ -1886,15 +1879,13 @@ const debouncedSave = debounce(saveStateToLocal, 200);
             processTeamData('team2');
 
             if (state.team1.players.length < 2 || state.team2.players.length < 1) {
-                showAlert('Please add at least 2 players to the batting team and 1 player to the bowling team.');
+                showAlert('Please select at least 2 players for the batting team and 1 for the bowling team.');
                 return;
             }
 
             const tossLoserKey = tossWinnerKey === 'team1' ? 'team2' : 'team1';
-
             state.toss.winner = state[tossWinnerKey].name;
             state.toss.decision = tossDecision;
-
 
             if (tossDecision === 'bat') {
                 state.battingTeam = tossWinnerKey;
@@ -1909,15 +1900,18 @@ const debouncedSave = debounce(saveStateToLocal, 200);
             ui.appScreen.classList.remove('hidden');
 
             window.addEventListener('beforeunload', beforeUnloadHandler);
-
             initialize();
         }
 
         function saveTeam1AndProceed() {
-            const team1Name = (document.getElementById('team1-name-input').value || 'HOME TEAM').toUpperCase();
-            showAlert(`${team1Name} players are saved.`, () => {
-                goToStep(3);
-            });
+            const playersSelected = ui.team1PlayerInputs.querySelectorAll('input[type="checkbox"]:checked').length;
+            const playersRequired = parseInt(ui.playersPerSideInput.value) || 11;
+            if (playersSelected !== playersRequired) {
+                showAlert(`Please select exactly ${playersRequired} players for the team.`);
+                return;
+            }
+            savePlayerInputsToState('team1');
+            goToStep(3);
         }
 
         function showIntroCommentary() {
@@ -2023,6 +2017,8 @@ const debouncedSave = debounce(saveStateToLocal, 200);
             ui.playerSelect.innerHTML = players.map(player => {
                 const playerName = typeof player === 'string' ? player : player.name;
                 const playerStats = state[teamKey].playerStats[playerName];
+                if (!playerStats) return ''; // Safeguard
+                
                 const isOut = playerStats.isOut;
                 const isStriker = state.striker && playerName === state.striker.name;
                 const isNonStriker = state.nonStriker && playerName === state.nonStriker.name;
@@ -2036,25 +2032,9 @@ const debouncedSave = debounce(saveStateToLocal, 200);
                 return `<option value="${playerName}" ${isDisabled ? 'disabled' : ''} class="${isDisabled ? 'text-gray-400' : ''}">${text}</option>`;
             }).join('');
             
+            // Set the context that the save button's event listener will use
+            currentPlayerSelection = { role, onCompleteCallback, teamKey };
             openModal('player-modal');
-
-            const newSaveBtn = ui.playerSaveBtn.cloneNode(true);
-            ui.playerSaveBtn.parentNode.replaceChild(newSaveBtn, ui.playerSaveBtn);
-            ui.playerSaveBtn = newSaveBtn;
-
-            ui.playerSaveBtn.onclick = () => {
-                const selectedPlayerName = ui.playerSelect.value;
-                if (selectedPlayerName) {
-                    state[role] = { ...state[teamKey].playerStats[selectedPlayerName]
-                    };
-                    closeModal('player-modal');
-                    updateUI();
-                    
-                    if (typeof onCompleteCallback === 'function') {
-                        setTimeout(onCompleteCallback, 350);
-                    }
-                }
-            };
         }
 
         function triggerEventAnimation(text, colorClass) {
@@ -2644,30 +2624,38 @@ const debouncedSave = debounce(saveStateToLocal, 200);
         function startRematch() {
             if (!EXPERIMENT_ENABLE__FOOTER_REMATCH || !state.winner) return;
 
-            showConfirm('Start a rematch with the same teams and settings? The current scorecard will be cleared.', () => {
+            showConfirm('Start a rematch? Teams and settings will be kept, but you will need to re-select the squads.', () => {
                 closeAllModals();
 
-                // 1. Collect the current match settings and teams
+                // 1. Deep copy team data, preserving the full squad but clearing the playing XI
+                const team1Data = JSON.parse(JSON.stringify(state.team1));
+                team1Data.playing = [];
+                const team2Data = JSON.parse(JSON.stringify(state.team2));
+                team2Data.playing = [];
+
                 const matchData = {
-                    id: null, // This will be a new match
+                    id: null,
                     totalOvers: state.totalOvers,
                     playersPerSide: state.playersPerSide,
                     venue: state.venue,
-                    matchDate: new Date().toISOString().split('T')[0], // Reset to today's date
-                    team1: state.team1,
-                    team2: state.team2
+                    matchDate: new Date().toISOString().split('T')[0],
+                    team1: team1Data,
+                    team2: team2Data
                 };
 
-                // 2. Clear current match state from storage
+                // 2. Clear previous match state from storage
                 localStorage.removeItem('matchState_v1');
                 
-                // 3. Hide the app/summary screens and show the setup screen
+                // 3. Hide current screens and show the setup screen
                 ui.appScreen.classList.add('hidden');
                 ui.summaryScreen.classList.add('hidden');
                 ui.setupScreen.classList.remove('hidden');
 
-                // 4. Use existing function to populate the setup screen and jump to the toss
+                // 4. Populate the setup screen with the preserved data
                 populateSetupWithData(matchData);
+
+                // 5. Navigate to squad selection, which will now be pre-populated
+                goToStep(2);
             });
         }
 
@@ -2764,10 +2752,34 @@ const debouncedSave = debounce(saveStateToLocal, 200);
             const batsman1HTML = state.striker ? createBatsmanRow(state.striker, true) : createEmptyBatsmanRow();
             const batsman2HTML = state.nonStriker ? createBatsmanRow(state.nonStriker, false) : createEmptyBatsmanRow();
 
-            ui.battingTable.innerHTML = batsman1HTML + batsman2HTML;
+            let fullTableHTML = batsman1HTML;
+
+            // Only add the swap button row if both batsmen are on the field
+            if (state.striker && state.nonStriker) {
+                const swapRowHTML = `
+                    <tr class="h-0">
+                        <td class="p-0 border-t relative">
+                            <button onclick="swapBatsmen()" title="Swap Batsmen" class="absolute right-0 transform -translate-x-1/2 -translate-y-1/2 z-10 w-7 h-7 flex items-center justify-center bg-white border-2 border-blue-500 rounded-full text-blue-600 hover:bg-blue-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+                                </svg>
+                            </button>
+                        </td>
+                        <td class="p-0 border-t"></td>
+                        <td class="p-0 border-t"></td>
+                        <td class="p-0 border-t"></td>
+                        <td class="p-0 border-t"></td>
+                        <td class="p-0 border-t"></td>
+                    </tr>
+                `;
+                fullTableHTML += swapRowHTML;
+            }
+
+            fullTableHTML += batsman2HTML;
+            ui.battingTable.innerHTML = fullTableHTML;
         }
 
-        function createBatsmanRow(batsman, isStriker) {
+       function createBatsmanRow(batsman, isStriker) {
             const sr = batsman.balls > 0 ? ((batsman.runs / batsman.balls) * 100).toFixed(2) : '0.00';
             const fallbackImg = `data:image/svg+xml;base64,${btoa('<svg class="w-full h-full text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>')}`;
             
@@ -2776,10 +2788,7 @@ const debouncedSave = debounce(saveStateToLocal, 200);
                     <td class="p-2 font-semibold text-gray-800 flex items-center justify-between text-sm">
                         <span class="truncate">${batsman.name} ${isStriker ? '<span class="text-red-500 ml-1 text-xs">*</span>' : ''}</span>
                         <div class="flex items-center space-x-2">
-                             <button onclick="swapBatsmen()" class="text-gray-400 hover:text-blue-600">
-                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 12l-3-3m3 3l3-3m7 3V4m0 12l3-3m-3 3l-3-3" /></svg>
-                            </button>
-                            <button onclick="editPlayer('${isStriker ? 'striker' : 'nonStriker'}')" class="text-gray-400 hover:text-gray-700">
+                            <button onclick="editPlayer('${isStriker ? 'striker' : 'nonStriker'}')" title="Edit Player" class="text-gray-400 hover:text-gray-700">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z" /></svg>
                             </button>
                         </div>
@@ -5093,28 +5102,145 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
             return !e.startsWith('WD') && !e.startsWith('NB');
         }
 
+        function createEditablePlayerRow(player, teamKey) {
+            const row = document.createElement('div');
+            row.className = 'player-edit-row';
+
+            const uploaderDiv = document.createElement('div');
+            uploaderDiv.className = 'player-avatar-uploader';
+            
+            const placeholderImg = `data:image/svg+xml;base64,${btoa('<svg class="w-full h-full text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>')}`;
+            const img = document.createElement('img');
+            img.src = player.image || placeholderImg;
+            
+            const label = document.createElement('label');
+            label.className = 'overlay';
+            label.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>`;
+            
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'image/*';
+            fileInput.onchange = (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const newImageUrl = event.target.result;
+                        img.src = newImageUrl;
+                        player.image = newImageUrl;
+                        if(state[teamKey].playerStats[player.name]) {
+                            state[teamKey].playerStats[player.name].image = newImageUrl;
+                        }
+                        updateUI();
+                        debouncedSave();
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            };
+            
+            uploaderDiv.appendChild(img);
+            uploaderDiv.appendChild(label);
+            uploaderDiv.appendChild(fileInput);
+            label.onclick = () => fileInput.click();
+
+            const nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.value = player.name || '';
+            nameInput.placeholder = 'New Player';
+            nameInput.className = 'w-full p-2 border rounded-md';
+            
+            nameInput.oninput = () => {
+                const oldName = player.name;
+                const newName = nameInput.value.trim().toUpperCase();
+
+                if (newName === oldName) return;
+
+                // Update name in the squad object immediately
+                player.name = newName;
+
+                // Update the playing XI list if the player was in it
+                const playingXI = state[teamKey].players;
+                const playerIndexInXI = playingXI.indexOf(oldName);
+                if (playerIndexInXI > -1) {
+                    playingXI[playerIndexInXI] = newName;
+                }
+
+                // Update the master playerStats object
+                if (oldName && state[teamKey].playerStats[oldName]) {
+                    // This is a RENAME of a player with existing stats
+                    const stats = state[teamKey].playerStats[oldName];
+                    delete state[teamKey].playerStats[oldName];
+                    stats.name = newName;
+                    state[teamKey].playerStats[newName] = stats;
+                } else if (newName) {
+                    // This is a NEW player being named
+                    state[teamKey].playerStats[newName] = state[teamKey].playerStats[newName] || {
+                        playerId: player.id, name: newName, image: player.image,
+                        runs: 0, balls: 0, fours: 0, sixes: 0, isOut: false, dismissalInfo: null,
+                        ballsBowled: 0, runsConceded: 0, wickets: 0, maidens: 0, dots: 0,
+                        foursConceded: 0, sixesConceded: 0, consecutiveFours: 0, consecutiveSixes: 0
+                    };
+                }
+
+                // If the old player is no longer in the squad (name cleared), remove their stats
+                if (!newName && oldName && state[teamKey].playerStats[oldName]) {
+                    delete state[teamKey].playerStats[oldName];
+                }
+
+                // Update active player objects if their name changed
+                if (state.striker && state.striker.playerId === player.id) state.striker.name = newName;
+                if (state.nonStriker && state.nonStriker.playerId === player.id) state.nonStriker.name = newName;
+                if (state.bowler && state.bowler.playerId === player.id) state.bowler.name = newName;
+
+                // Trigger a full UI re-render and persist the changes
+                updateUI();
+                debouncedSave();
+            };
+
+            row.appendChild(uploaderDiv);
+            row.appendChild(nameInput);
+            return row;
+        }
+
+        function renderEditablePlayerList(teamKey) {
+            const playersContainer = document.getElementById(`edit-${teamKey}-players`);
+            playersContainer.innerHTML = '';
+            
+            const team = state[teamKey];
+            const squad = team.squad || [];
+
+            squad.forEach(player => {
+                const row = createEditablePlayerRow(player, teamKey);
+                playersContainer.appendChild(row);
+            });
+            
+            const addPlayerBtn = document.createElement('button');
+            addPlayerBtn.textContent = '+ Add Player';
+            addPlayerBtn.className = 'mt-2 text-sm font-semibold text-blue-600 hover:text-blue-800';
+            
+            addPlayerBtn.onclick = () => {
+                const newPlayer = { id: generateUniqueId(), name: '', image: '' };
+                team.squad.push(newPlayer);
+                const newRow = createEditablePlayerRow(newPlayer, teamKey);
+                playersContainer.insertBefore(newRow, addPlayerBtn);
+            };
+            
+            playersContainer.appendChild(addPlayerBtn);
+        }
+
         function openEditModal() {
-            // --- INITIAL SETUP ---
             editInitialStriker = JSON.parse(JSON.stringify(state.striker));
             editInitialNonStriker = JSON.parse(JSON.stringify(state.nonStriker));
-            document.getElementById('edit-venue').value = state.venue; // Populate venue
+            document.getElementById('edit-venue').value = state.venue;
             document.getElementById('edit-total-overs').value = state.totalOvers;
-            editedOver = JSON.parse(JSON.stringify(state.currentOver)); // Deep copy
-            editHistory = []; // Reset in-editor undo history
+            editedOver = JSON.parse(JSON.stringify(state.currentOver));
             
             const battingTeamKey = state.battingTeam;
-            const battingTeamScoreInput = document.getElementById(`edit-${battingTeamKey}-score`);
-            const battingTeamOversInput = document.getElementById(`edit-${battingTeamKey}-overs`);
-            const battingTeamBallsInput = document.getElementById(`edit-${battingTeamKey}-balls`);
-            
             const initialOverRuns = state.currentOver.reduce((acc, ball) => acc + (ball.runs || 0), 0);
             scoreBeforeOver = state[battingTeamKey].score - initialOverRuns;
 
-            // --- POPULATE TEAM PANELS ---
             ['team1', 'team2'].forEach(teamKey => {
                 const team = state[teamKey];
-                const panel = document.getElementById(`edit-${teamKey}-panel`);
-                panel.classList.toggle('highlight', teamKey === battingTeamKey);
+                document.getElementById(`edit-${teamKey}-panel`).classList.toggle('highlight', teamKey === battingTeamKey);
                 document.getElementById(`edit-${teamKey}-name`).value = team.name;
                 document.getElementById(`edit-${teamKey}-score`).value = team.score;
                 document.getElementById(`edit-${teamKey}-wickets`).value = team.wickets;
@@ -5131,114 +5257,24 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
                     if (e.target.files[0]) {
                         const reader = new FileReader();
                         reader.onload = (event) => {
-                            const newLogoUrl = event.target.result;
-                            document.getElementById(`edit-${teamKey}-logo-preview`).src = newLogoUrl;
-                            state[teamKey].logo = newLogoUrl;
-                            updateUI();
+                            document.getElementById(`edit-${teamKey}-logo-preview`).src = event.target.result;
                         };
                         reader.readAsDataURL(e.target.files[0]);
                     }
                 };
 
-                const playersContainer = document.getElementById(`edit-${teamKey}-players`);
-                playersContainer.innerHTML = '';
-                
-                const teamPlayers = Array.isArray(team.players) ? team.players : [];
-                if (!Array.isArray(team.playerPhotos) || team.playerPhotos.length < teamPlayers.length) {
-                    team.playerPhotos = [...(team.playerPhotos || []), ...Array(teamPlayers.length - (team.playerPhotos || []).length).fill('')];
-                }
-
-                const playersToEdit = teamPlayers.length > 0 
-                    ? teamPlayers.map((p, i) => ({ 
-                        name: (typeof p === 'string' ? p : p.name),
-                        image: team.playerPhotos[i] || ''
-                      })) 
-                    : Array(state.playersPerSide + 2).fill({name:'', image:''});
-                
-                playersToEdit.forEach((player, index) => {
-                    const row = document.createElement('div');
-                    row.className = 'player-edit-row';
-
-                    const uploaderDiv = document.createElement('div');
-                    uploaderDiv.className = 'player-avatar-uploader';
-                    
-                    const placeholderImg = `data:image/svg+xml;base64,${btoa('<svg class="w-full h-full text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>')}`;
-                    const img = document.createElement('img');
-                    img.src = player.image || placeholderImg;
-                    
-                    const label = document.createElement('label');
-                    label.className = 'overlay';
-                    label.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>`;
-                    
-                    const fileInput = document.createElement('input');
-                    fileInput.type = 'file';
-                    fileInput.accept = 'image/*';
-                    fileInput.onchange = (e) => {
-                        if (e.target.files && e.target.files[0]) {
-                            const reader = new FileReader();
-                            reader.onload = (event) => {
-                                const newImageUrl = event.target.result;
-                                img.src = newImageUrl;
-                                state[teamKey].playerPhotos[index] = newImageUrl;
-                                const playerName = state[teamKey].players[index];
-                                if(playerName && state[teamKey].playerStats[playerName]) {
-                                    state[teamKey].playerStats[playerName].image = newImageUrl;
-                                }
-                                updateUI();
-                                saveState(); // FIX: Persist on photo change
-                            };
-                            reader.readAsDataURL(e.target.files[0]);
-                            e.target.value = '';
-                        }
-                    };
-                    
-                    uploaderDiv.appendChild(img);
-                    uploaderDiv.appendChild(label);
-                    uploaderDiv.appendChild(fileInput);
-                    label.onclick = () => fileInput.click();
-
-                    const nameInput = document.createElement('input');
-                    nameInput.type = 'text';
-                    nameInput.value = player.name || '';
-                    nameInput.placeholder = `Player ${index + 1}`;
-                    nameInput.className = 'w-full p-2 border rounded-md';
-                    
-                    // FIX: Add oninput handler for live name edits and persistence
-                    nameInput.oninput = () => {
-                        const oldName = state[teamKey].players[index];
-                        const newName = nameInput.value.trim().toUpperCase();
-                        if (!newName || oldName === newName) return;
-
-                        state[teamKey].players[index] = newName;
-                        if (state[teamKey].playerStats[oldName]) {
-                            const stats = state[teamKey].playerStats[oldName];
-                            delete state[teamKey].playerStats[oldName];
-                            stats.name = newName;
-                            state[teamKey].playerStats[newName] = stats;
-                        }
-
-                        if (state.striker && state.striker.name === oldName) state.striker = state[state.battingTeam].playerStats[newName];
-                        if (state.nonStriker && state.nonStriker.name === oldName) state.nonStriker = state[state.battingTeam].playerStats[newName];
-                        if (state.bowler && state.bowler.name === oldName) state.bowler = state[state.bowlingTeam].playerStats[newName];
-                        
-                        updateUI();
-                        saveState(); // Persist on name change
-                    };
-
-                    row.appendChild(uploaderDiv);
-                    row.appendChild(nameInput);
-                    playersContainer.appendChild(row);
-                });
+                renderEditablePlayerList(teamKey);
             });
-            // --- OVER EDITOR LOGIC ---
+
             const chipsContainer = document.getElementById('edit-over-chips-display');
-            
             const recalculateAndRender = () => {
+                const battingTeamScoreInput = document.getElementById(`edit-${battingTeamKey}-score`);
+                const battingTeamOversInput = document.getElementById(`edit-${battingTeamKey}-overs`);
+                const battingTeamBallsInput = document.getElementById(`edit-${battingTeamKey}-balls`);
                 let newOverRuns = editedOver.reduce((acc, ball) => acc + parseBallEvent(ball.event), 0);
                 battingTeamScoreInput.value = scoreBeforeOver + newOverRuns;
                 let legalBalls = editedOver.filter(ball => isLegalDelivery(ball.event)).length;
                 let baseOvers = state[state.battingTeam].overs;
-                if (state.currentOver.length > 0 && isLegalDelivery(state.currentOver[state.currentOver.length-1]?.event)) {}
                 
                 let totalBalls = (baseOvers * 6) + legalBalls;
                 battingTeamOversInput.value = Math.floor(totalBalls / 6);
@@ -5781,6 +5817,26 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
                     closeModal('confirm-modal');
                     confirmCallback = null;
                 };
+
+                // This is the single, stable handler for the player selection save button
+                ui.playerSaveBtn.onclick = () => {
+                    const { role, onCompleteCallback, teamKey } = currentPlayerSelection;
+                    if (!role || !teamKey) return;
+
+                    const selectedPlayerName = ui.playerSelect.value;
+                    if (selectedPlayerName && state[teamKey].playerStats[selectedPlayerName]) {
+                        state[role] = { ...state[teamKey].playerStats[selectedPlayerName] };
+                        
+                        closeModal('player-modal');
+                        updateUI();
+                        
+                        if (typeof onCompleteCallback === 'function') {
+                            setTimeout(onCompleteCallback, 350);
+                        }
+                    }
+                    currentPlayerSelection = {}; // Clear context after use
+                };
+
                 ui.bowlerPromptOverlay.onclick = () => {
                     ui.playerModalCancelBtnX.classList.add('hidden');
                     ui.playerModalCancelBtnText.classList.add('hidden');
