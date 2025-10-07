@@ -1465,20 +1465,18 @@
         const playerStats = state[teamKey].playerStats[player.id];
         if (!playerStats) return;
 
-        const option = document.createElement('option');
-        option.value = player.id;
-
-        let text = playerStats.name; // Use the fresh name from playerStats
-        let isDisabled = disabledIds.includes(player.id);
-
+        // FIX: If the filter is on and the player is out, skip them completely.
         if (isOutFilter && playerStats.isOut) {
-            text += ' (Out)';
-            isDisabled = true;
+            return; // Do not create an <option> for this player.
         }
 
-        option.textContent = text;
-        option.disabled = isDisabled;
-        if (isDisabled) {
+        const option = document.createElement('option');
+        option.value = player.id;
+        option.textContent = playerStats.name; // Use the fresh name from playerStats
+
+        // Disable only if they are an active batter/bowler, not because they are out.
+        if (disabledIds.includes(player.id)) {
+            option.disabled = true;
             option.classList.add('text-gray-400');
         }
 
@@ -2578,9 +2576,36 @@ function updateFreeHitIndicator() {
 }
 
         function openWicketModal() {
-            if (state.isScoringLocked) return;
-            openModal('wicket-type-modal');
-        }
+    if (state.isScoringLocked) return;
+
+    const wicketModal = document.getElementById('wicket-type-modal');
+    const buttons = wicketModal.querySelectorAll('button');
+
+    if (state.isFreeHit) {
+        // On a free hit, only Run Out is a valid dismissal
+        buttons.forEach(button => {
+            const wicketType = button.getAttribute('onclick').match(/'([^']+)'/)[1];
+            if (wicketType !== 'Run Out') {
+                button.disabled = true;
+                button.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-50');
+                button.classList.remove('bg-gray-100');
+            } else {
+                button.disabled = false;
+                button.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-50');
+                button.classList.add('bg-gray-100');
+            }
+        });
+    } else {
+        // On a normal delivery, ensure all buttons are enabled
+        buttons.forEach(button => {
+            button.disabled = false;
+            button.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-50');
+            button.classList.add('bg-gray-100');
+        });
+    }
+
+    openModal('wicket-type-modal');
+}
 
         function initiateExtraRunOut(extraType) {
             // Determine the correct modal to close based on the extra type
@@ -2611,81 +2636,92 @@ function updateFreeHitIndicator() {
         }
 
         function handleAttemptedRuns(runs) {
-            if (state.pendingExtra) {
-                state.pendingExtra.runs = runs;
-                closeModal('runs-attempted-modal');
-                
-                ui.runOutOptions.innerHTML = `
-                    <button onclick="finalizeExtraRunOut('${state.striker.name}')" class="p-3 bg-gray-100 rounded-lg">${formatPlayerName(state.striker.name)}</button>
-                    <button onclick="finalizeExtraRunOut('${state.nonStriker.name}')" class="p-3 bg-gray-100 rounded-lg">${formatPlayerName(state.nonStriker.name)}</button>
-                `;
-                openModal('run-out-modal');
-            }
-        }
+    if (state.pendingExtra) {
+        state.pendingExtra.runs = runs;
+        closeModal('runs-attempted-modal');
 
-        async function finalizeExtraRunOut(playerName) {
-            if (!state.pendingExtra) return;
-            saveState();
+        ui.runOutOptions.innerHTML = `
+            <button onclick="finalizeExtraRunOut('${state.striker.playerId}')" class="p-3 bg-gray-100 rounded-lg">${formatPlayerName(state.striker.name)}</button>
+            <button onclick="finalizeExtraRunOut('${state.nonStriker.playerId}')" class="p-3 bg-gray-100 rounded-lg">${formatPlayerName(state.nonStriker.name)}</button>
+        `;
+        openModal('run-out-modal');
+    }
+}
 
-            const { type, runs } = state.pendingExtra;
-            const isLegalDelivery = (type === 'b' || type === 'lb');
-            const baseExtraRuns = isLegalDelivery ? 0 : 1;
-            const totalRuns = baseExtraRuns + runs;
+        async function finalizeExtraRunOut(playerOutId) {
+    if (!state.pendingExtra) return;
+    saveState();
 
-            const battingTeamKey = state.battingTeam;
-            const battingTeam = state[battingTeamKey];
-            battingTeam.score += totalRuns;
-            battingTeam.wickets++;
-            if (state.bowler) state.bowler.runsConceded += totalRuns;
+    const { type, runs } = state.pendingExtra;
+    const isLegalDelivery = (type === 'b' || type === 'lb');
+    const baseExtraRuns = isLegalDelivery ? 0 : 1;
+    const totalRuns = baseExtraRuns + runs;
 
-            const playerOutObject = (state.striker && state.striker.name === playerName) ? state.striker : state.nonStriker;
-            playerOutObject.isOut = true;
-            playerOutObject.dismissalInfo = { type: 'Run Out', via: type.toUpperCase(), bowler: null, fielder: null };
-            
-            const ballEvent = `${type.toUpperCase()}+${runs}+W`;
-            
-            if (isLegalDelivery) {
-                playerOutObject.balls++;
-                processBall(totalRuns, ballEvent);
-            } else {
-                state.currentOver.push({ event: ballEvent, runs: totalRuns });
-            }
+    const battingTeamKey = state.battingTeam;
+    const battingTeam = state[battingTeamKey];
+    battingTeam.score += totalRuns;
+    battingTeam.wickets++;
+    if (state.bowler) state.bowler.runsConceded += totalRuns;
 
-            savePlayerStats(playerOutObject, battingTeamKey);
-            state.pendingExtra = null;
-            closeAllModals();
+    const playerOutObject = (state.striker && state.striker.playerId === playerOutId) ? state.striker : state.nonStriker;
+    playerOutObject.isOut = true;
+    const dismissalInfo = { 
+        type: 'Run Out', 
+        via: type.toUpperCase(), 
+        bowler: null, 
+        fielder: null,
+        scoreAtFall: battingTeam.score,
+        overAtFall: `${battingTeam.overs}.${battingTeam.balls}`
+    };
+    playerOutObject.dismissalInfo = dismissalInfo;
 
-            generateRealCommentary('wicket', { wicketType: 'Run Out', playerOut: playerName });
-            
-            if (state.striker && state.striker.name === playerName) state.striker = null;
-            if (state.nonStriker && state.nonStriker.name === playerName) state.nonStriker = null;
+    const ballEvent = `${type.toUpperCase()}+${runs}+W`;
 
-            updateUI();
-            await triggerEventAnimation('OUT', 'text-red-700');
-            await showPlayerOutSummary(playerOutObject);
-            
-            if (checkInningsEnd()) return;
-            
-            const roleToFill = !state.striker ? 'striker' : 'nonStriker';
-            selectPlayer(roleToFill);
-        }
+    if (isLegalDelivery) {
+        playerOutObject.balls++;
+        processBall(totalRuns, ballEvent, type, dismissalInfo);
+    } else {
+        state.currentOver.push({ event: ballEvent, runs: totalRuns });
+        // Manually add to innings history as processBall is not called for illegal deliveries
+        const ballData = { event: ballEvent, runs: totalRuns, batterId: playerOutObject.playerId, bowlerId: state.bowler.playerId, extraType: type, dismissalInfo };
+        battingTeam.inningsHistory.push(ballData);
+    }
+
+    savePlayerStats(playerOutObject, battingTeamKey);
+    state.pendingExtra = null;
+    closeAllModals();
+
+    generateRealCommentary('wicket', { wicketType: 'Run Out', playerOut: playerOutObject.name });
+
+    if (state.striker && state.striker.playerId === playerOutId) state.striker = null;
+    if (state.nonStriker && state.nonStriker.playerId === playerOutId) state.nonStriker = null;
+
+    updateUI();
+    await triggerEventAnimation('OUT', 'text-red-700');
+    await showPlayerOutSummary(playerOutObject);
+
+    if (checkInningsEnd()) return;
+
+    const roleToFill = !state.striker ? 'striker' : 'nonStriker';
+    selectPlayer(roleToFill);
+}
 
         function handleWicket(type) {
-            closeModal('wicket-type-modal');
-            if (type === 'Catch') {
-                selectFielderForCatch();
-            } else if (type === 'Run Out') {
-                ui.runOutOptions.innerHTML = `
-                    <button onclick="processWicket('Run Out', '${state.striker.name}')" class="p-3 bg-gray-100 rounded-lg">${formatPlayerName(state.striker.name)}</button>
-                    <button onclick="processWicket('Run Out', '${state.nonStriker.name}')" class="p-3 bg-gray-100 rounded-lg">${formatPlayerName(state.nonStriker.name)}</button>
-                `;
-                openModal('run-out-modal');
-            } else {
-                processWicket(type, state.striker.name);
-            }
-        }
+    closeModal('wicket-type-modal');
+    if (type === 'Catch') {
+        selectFielderForCatch();
+    } else if (type === 'Run Out') {
+        ui.runOutOptions.innerHTML = `
+            <button onclick="processWicket('Run Out', '${state.striker.playerId}')" class="p-3 bg-gray-100 rounded-lg">${formatPlayerName(state.striker.name)}</button>
+            <button onclick="processWicket('Run Out', '${state.nonStriker.playerId}')" class="p-3 bg-gray-100 rounded-lg">${formatPlayerName(state.nonStriker.name)}</button>
+        `;
+        openModal('run-out-modal');
+    } else {
+        processWicket(type, state.striker.playerId);
+    }
+}
         
-        async function processWicket(type, playerOutId, fielderName = null, fielderId = null) {
+   async function processWicket(type, playerOutId, fielderName = null, fielderId = null) {
     if (state.isFreeHit && type !== 'Run Out') {
         showAlert("Batsman cannot be out on a Free Hit (except for Run Out). No wicket recorded. Please score any runs taken.");
         closeAllModals();
@@ -2698,7 +2734,16 @@ function updateFreeHitIndicator() {
 
     const battingTeamKey = state.battingTeam;
     const battingTeam = state[battingTeamKey];
-    playerOutObject = (state.striker && state.striker.playerId === playerOutId) ? state.striker : state.nonStriker;
+
+    // Correctly identify the player object using the passed playerOutId
+    if (state.striker && state.striker.playerId === playerOutId) {
+        playerOutObject = state.striker;
+    } else if (state.nonStriker && state.nonStriker.playerId === playerOutId) {
+        playerOutObject = state.nonStriker;
+    } else {
+        console.error("Could not find player to dismiss with ID:", playerOutId);
+        return; // Exit if the player to be dismissed can't be found
+    }
 
     playerOutObject.consecutiveFours = 0;
     playerOutObject.consecutiveSixes = 0;
@@ -2709,7 +2754,9 @@ function updateFreeHitIndicator() {
         state.bowler.wickets++;
     }
 
+    // A wicket ball is always a legal delivery for the batter in terms of balls faced.
     playerOutObject.balls++;
+
     playerOutObject.isOut = true;
 
     const dismissalInfo = { 
@@ -2726,14 +2773,14 @@ function updateFreeHitIndicator() {
     // Save the dismissed player's stats immediately.
     savePlayerStats(playerOutObject, battingTeamKey); 
 
-    generateRealCommentary('wicket', { wicketType: type, bowler: state.bowler, striker: playerOutObject, fielder: fielderName, playerOut: playerName });
+    generateRealCommentary('wicket', { wicketType: type, bowler: state.bowler, striker: playerOutObject, fielder: fielderName, playerOut: playerOutObject.name });
 
     // Pass the dismissal info into the ball processing function
-    // so it can be saved to the permanent inningsHistory.
     processBall(0, 'W', null, dismissalInfo);
 
-    if (state.striker && state.striker.name === playerName) state.striker = null;
-    if (state.nonStriker && state.nonStriker.name === playerName) state.nonStriker = null;
+    // Correctly nullify the active batter role using the correct ID
+    if (state.striker && state.striker.playerId === playerOutId) state.striker = null;
+    if (state.nonStriker && state.nonStriker.playerId === playerOutId) state.nonStriker = null;
 
     updateUI();
     await triggerEventAnimation('OUT', 'text-red-700');
