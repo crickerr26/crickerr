@@ -26,10 +26,9 @@
 
   /* ... all the rest of your styles ... */
   
-  .scoring-grid button:nth-last-child(-n+4) {
+ .scoring-grid button:nth-last-child(-n+4) {
     border-bottom: none;
   }
-</head>
 
         /* Full-screen layout and font size for setup pages on mobile */
         @media (max-width: 768px) {
@@ -177,13 +176,11 @@
         }
 
         /* Toss Screen Styles */
-        #setup-step-4.toss-active { background: linear-gradient(135deg, #e2e8f0, #ffffff, #d1d5db); position: relative; overflow: hidden; height: 100vh; width: 100vw; display: flex; flex-direction: column; justify-content: center; }
         .toss-3d-button { border-radius: 0.75rem; color: #1f2937; font-weight: 600; background-color: #f9fafb; border: 1px solid #d1d5db; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: all 0.15s ease-out; transform: translateY(0); }
-        .toss-3d-button:active { transform: translateY(2px); box-shadow: 0 2px 3px rgba(0,0,0,0.1); }
-        .toss-3d-button.selected { background-color: #2563eb; border-color: #1d4ed8; color: white; box-shadow: 0 2px 3px rgba(0,0,0,0.2); transform: translateY(2px); outline: none; }
-        .ripple { position: absolute; border-radius: 50%; background-color: rgba(156, 163, 175, 0.4); transform: scale(0); animation: ripple-effect 0.7s ease-out; pointer-events: none; }
-        @keyframes ripple-effect { to { transform: scale(4); opacity: 0; } }
-        .player-setup-fullscreen { height: 100vh; width: 100vw; display: flex; flex-direction: column; justify-content: center; }
+.toss-3d-button:active { transform: translateY(2px); box-shadow: 0 2px 3px rgba(0,0,0,0.1); }
+.toss-3d-button.selected { background-color: #2563eb; border-color: #1d4ed8; color: white; box-shadow: 0 2px 3px rgba(0,0,0,0.2); transform: translateY(2px); outline: none; }
+.ripple { position: absolute; border-radius: 50%; background-color: rgba(156, 163, 175, 0.4); transform: scale(0); animation: ripple-effect 0.7s ease-out; pointer-events: none; }
+@keyframes ripple-effect { to { transform: scale(4); opacity: 0; } }
 
         /* Event Animation Styles */
         .event-text-animation { animation: event-animation 1.5s ease-in-out forwards; }
@@ -334,6 +331,83 @@
             box-shadow: 0 0 0 2px #2563eb;
             background-color: #eff6ff;
         }
+        
+        /* --- NEW: Apple Watery/Glassmorphism Theme for Edit Modal --- */
+        .glass-modal-content {
+            background-color: rgba(243, 244, 246, 0.8); /* gray-100/80 */
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .glass-section {
+            background-color: rgba(255, 255, 255, 0.6); /* white/60 */
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .glass-input, .glass-select {
+            background-color: rgba(229, 231, 235, 0.5); /* gray-200/50 */
+            border: 1px solid rgba(209, 213, 219, 0.5); /* gray-300/50 */
+            color: #1f2937;
+            border-radius: 0.5rem;
+            padding: 0.6rem 0.75rem;
+            transition: all 0.2s ease-in-out;
+        }
+        .glass-input:focus, .glass-select:focus {
+            outline: none;
+            border-color: rgba(59, 130, 246, 0.7); /* blue-500/70 */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+
+        .glass-button-primary {
+            background-color: rgba(37, 99, 235, 0.9); /* blue-600/90 */
+            color: white;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            padding: 0.65rem 1.25rem;
+            transition: all 0.2s ease-in-out;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+        }
+        .glass-button-primary:hover {
+            background-color: rgba(29, 78, 216, 1); /* blue-700 */
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+
+        .glass-button-secondary {
+            background-color: rgba(255, 255, 255, 0.7);
+            color: #374151;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            padding: 0.65rem 1.25rem;
+            transition: all 0.2s ease-in-out;
+            border: 1px solid rgba(209, 213, 219, 0.7);
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+        }
+        .glass-button-secondary:hover {
+            background-color: rgba(249, 250, 251, 1); /* gray-50 */
+            border-color: rgba(156, 163, 175, 1);
+        }
+
+        .edit-tab { /* Modified from original .edit-tab */
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+            color: #4b5563;
+            border-radius: 0.5rem;
+            border: 2px solid transparent;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .edit-tab.active {
+            color: #1e3a8a;
+            background-color: rgba(219, 234, 254, 0.7); /* blue-100/70 */
+            border-color: rgba(96, 165, 250, 0.5); /* blue-400/50 */
+        }
+        
         .player-list-editor { max-height: 200px; overflow-y: auto; padding-right: 0.5rem; }
         .player-list-editor .player-edit-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; }
         .player-list-editor .player-avatar-uploader { position: relative; flex-shrink: 0; width: 40px; height: 40px; }
@@ -463,6 +537,8 @@
     </style>
 </head>
 <body class="bg-gray-100 antialiased">
+
+    <div id="history-actions" class="fixed top-2 right-2 z-[999] flex flex-col sm:flex-row gap-2"></div>
 
     <div id="splash-screen" style="display: none;">
         <img src="my-logo.png" alt="App Logo" id="splash-logo">
@@ -628,37 +704,37 @@
                     </div>
                 </div>
 
-                <div id="setup-step-2" class="setup-step hidden player-setup-fullscreen">
-                    <div class="w-full max-w-lg mx-auto px-6">
-                        <header class="text-center mb-8">
-                            <img id="team1-roster-logo" src="" alt="Team 1 Logo" class="w-20 h-20 mx-auto mb-4 rounded-full object-cover hidden shadow-md" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2NiZDVkNQoiPjxwYXRoIGQ9Ik0xMiAyQzYuNDggMiAyIDYuNDggMiAxMnM0LjQ4IDEwIDEwIDEwIDEwLTQuNDggMTAtMTBTMTcuNTIgMiAxMiAyeptMCAzYzEuNjYgMCAzIDEuMzQgMyAzcy0xLjM0IDMtMyAzLTMtMS4zNC0zLTMgMS4zNC0zIDMtM3ptMCAxNGMtMi42NyAwLTggMS4zNC04IDR2MmgxNnYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz48L3N2Zz4='">
-                            <h1 id="team1-roster-title" class="text-3xl font-bold"></h1>
-                            <p class="text-gray-500 mt-1">Enter player names & upload player images</p>
-                        </header>
-                        <div id="team1-player-inputs" class="space-y-3 pr-2 overflow-y-auto" style="max-height: 50vh;">
-                        </div>
-                        <div class="mt-8 flex justify-between items-center">
-                            <button onclick="goToStep(1)" class="back-btn font-semibold">Back</button>
-                            <button onclick="saveTeam1AndProceed()" class="px-6 py-2 text-white font-bold rounded-lg setup-btn">Next</button>
-                        </div>
-                    </div>
-                </div>
+                <div id="setup-step-2" class="setup-step hidden">
+    <div class="w-full max-w-lg mx-auto px-6">
+        <header class="text-center mb-8">
+            <img id="team1-roster-logo" src="" alt="Team 1 Logo" class="w-20 h-20 mx-auto mb-4 rounded-full object-cover hidden shadow-md" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2NiZDVkNQoiPjxwYXRoIGQ9Ik0xMiAyQzYuNDggMiAyIDYuNDggMiAxMnM0LjQ4IDEwIDEwIDEwIDEwLTQuNDggMTAtMTBTMTcuNTIgMiAxMiAyeptMCAzYzEuNjYgMCAzIDEuMzQgMyAzcy0xLjM0IDMtMyAzLTMtMS4zNC0zLTMgMS4zNC0zIDMtM3ptMCAxNGMtMi4zMyAwLTguMTMgMS4xNy04LjEzIDMuNUM0IDIzLjUyIDcuNTggMjQgMTIgMjRzOC0uNDggOC0xLjVDMjAuMTMgMTkuMTcgMTQuMzMgMTggMTIgMTh6Ii8+PC9zdmc='">
+            <h1 id="team1-roster-title" class="text-3xl font-bold"></h1>
+            <p class="text-gray-500 mt-1">Enter player names & upload player images</p>
+        </header>
+        <div id="team1-player-inputs" class="space-y-3 pr-2 overflow-y-auto" style="max-height: 50vh;">
+        </div>
+        <div class="mt-8 flex justify-between items-center">
+            <button onclick="goToStep(1)" class="back-btn font-semibold">Back</button>
+            <button onclick="saveTeam1AndProceed()" class="px-6 py-2 text-white font-bold rounded-lg setup-btn">Next</button>
+        </div>
+    </div>
+</div>
 
-                <div id="setup-step-3" class="setup-step hidden player-setup-fullscreen">
-                    <div class="w-full max-w-lg mx-auto px-6">
-                        <header class="text-center mb-8">
-                            <img id="team2-roster-logo" src="" alt="Team 2 Logo" class="w-20 h-20 mx-auto mb-4 rounded-full object-cover hidden shadow-md" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2NiZDVkNQoiPjxwYXRoIGQ9Ik0xMiAyQzYuNDggMiAyIDYuNDggMiAxMnM0LjQ4IDEwIDEwIDEwIDEwLTQuNDggMTAtMTBTMTcuNTIgMiAxMiAyeptMCAzYzEuNjYgMCAzIDEuMzQgMyAzcy0xLjM0IDMtMyAzLTMtMS4zNC0zLTMgMS4zNC0zIDMtM3ptMCAxNGMtMi42NyAwLTggMS4zNC04IDR2MmgxNnYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz48L3N2Zz4='">
-                            <h1 id="team2-roster-title" class="text-3xl font-bold"></h1>
-                            <p class="text-gray-500 mt-1">Enter player names & upload player images</p>
-                        </header>
-                        <div id="team2-player-inputs" class="space-y-3 pr-2 overflow-y-auto" style="max-height: 50vh;">
-                        </div>
-                        <div class="mt-8 flex justify-between items-center">
-                            <button onclick="goToStep(2)" class="back-btn font-semibold">Back</button>
-                            <button onclick="goToStep(4)" class="px-6 py-2 text-white font-bold rounded-lg setup-btn">Toss</button>
-                        </div>
-                    </div>
-                </div>
+<div id="setup-step-3" class="setup-step hidden">
+    <div class="w-full max-w-lg mx-auto px-6">
+        <header class="text-center mb-8">
+            <img id="team2-roster-logo" src="" alt="Team 2 Logo" class="w-20 h-20 mx-auto mb-4 rounded-full object-cover hidden shadow-md" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2NiZDVkNQoiPjxwYXRoIGQ9Ik0xMiAyQzYuNDggMiAyIDYuNDggMiAxMnM0LjQ4IDEwIDEwIDEwIDEwLTQuNDggMTAtMTBTMTcuNTIgMiAxMiAyeptMCAzYzEuNjYgMCAzIDEuMzQgMyAzcy0xLjM0IDMtMyAzLTMtMS4zNC0zLTMgMS4zNC0zIDMtM3ptMCAxNGMtMi4zMyAwLTguMTMgMS4xNy04LjEzIDMuNUM0IDIzLjUyIDcuNTggMjQgMTIgMjRzOC0uNDggOC0xLjVDMjAuMTMgMTkuMTcgMTQuMzMgMTggMTIgMTh6Ii8+PC9zdmc='">
+            <h1 id="team2-roster-title" class="text-3xl font-bold"></h1>
+            <p class="text-gray-500 mt-1">Enter player names & upload player images</p>
+        </header>
+        <div id="team2-player-inputs" class="space-y-3 pr-2 overflow-y-auto" style="max-height: 50vh;">
+        </div>
+        <div class="mt-8 flex justify-between items-center">
+            <button onclick="goToStep(2)" class="back-btn font-semibold">Back</button>
+            <button onclick="goToStep(4)" class="px-6 py-2 text-white font-bold rounded-lg setup-btn">Toss</button>
+        </div>
+    </div>
+</div>
 
                 <div id="setup-step-4" class="setup-step hidden text-slate-800">
                      <div class="w-full max-w-lg mx-auto px-6">
@@ -778,10 +854,10 @@
         <span class="font-bold text-xl leading-none">2</span>
         <span class="text-xs font-semibold mt-1 opacity-75">Double</span>
     </button>
-    <button onclick="undo()" class="flex flex-col items-center justify-center bg-orange-300 text-orange-900 transition-transform active:scale-95">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" transform="rotate(180 12 12)"/></svg>
-        <span class="text-sm font-semibold mt-1">Undo</span>
-    </button>
+    <button onclick="undoLastAction()" class="flex flex-col items-center justify-center bg-orange-300 text-orange-900 transition-transform active:scale-95">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" transform="rotate(180 12 12)"/></svg>
+    <span class="text-sm font-semibold mt-1">Undo</span>
+</button>
     
     <button onclick="addRuns(3)" class="flex flex-col items-center justify-center bg-slate-200 text-black transition-transform active:scale-95">
         <span class="font-bold text-xl leading-none">3</span>
@@ -896,87 +972,110 @@
         </div>
     </div>
     
-    <div id="edit-match-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50 p-4">
-        <div class="modal-content bg-white rounded-lg shadow-xl w-full max-w-4xl transform scale-95 max-h-[90vh] flex flex-col">
-            <div class="flex justify-between items-center p-4 border-b">
-                <h3 class="text-xl font-bold">Edit Match State</h3>
-                <button onclick="closeModal('edit-match-modal')" class="text-gray-400 hover:text-gray-700">
-                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+   <div id="edit-match-modal" class="modal-overlay fixed inset-0 bg-black/30 flex justify-center items-center hidden z-50 p-2 sm:p-4">
+        <div class="modal-content glass-modal-content rounded-2xl shadow-2xl w-full max-w-3xl transform scale-95 max-h-[95vh] flex flex-col">
+            <!-- Modal Header -->
+            <div class="flex-shrink-0 flex justify-between items-center p-4 sm:p-5 border-b border-white/20">
+                <div>
+                    <h3 class="text-xl sm:text-2xl font-bold text-gray-900">Edit Match State</h3>
+                    <p class="text-sm text-gray-600 mt-1">Make adjustments to the match settings, scores, and players.</p>
+                </div>
+                <button onclick="closeModal('edit-match-modal')" class="p-2 text-gray-500 hover:text-gray-800 hover:bg-white/50 rounded-full transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
 
-            <div class="flex-grow overflow-y-auto p-6 space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label for="edit-venue" class="block font-medium text-gray-700 mb-1">Venue</label>
-                        <input type="text" id="edit-venue" class="w-full p-2 border-gray-300 border rounded-md" style="text-transform: uppercase;">
+            <!-- Modal Body -->
+            <div class="flex-grow overflow-y-auto p-4 sm:p-6 space-y-6">
+                <!-- General Settings Section -->
+                <div class="glass-section p-4 sm:p-6">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-4">General Settings</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                        <div>
+                            <label for="edit-venue" class="block text-sm font-medium text-gray-700 mb-1.5">Venue</label>
+                            <input type="text" id="edit-venue" class="w-full glass-input" style="text-transform: uppercase;">
+                        </div>
+                        <div>
+                            <label for="edit-total-overs" class="block text-sm font-medium text-gray-700 mb-1.5">Match Format (Overs)</label>
+                            <select id="edit-total-overs" class="w-full glass-select">
+                                <option value="3">3 Overs</option><option value="4">4 Overs</option><option value="5">5 Overs</option><option value="6">6 Overs</option><option value="7">7 Overs</option><option value="8">8 Overs</option><option value="9">9 Overs</option><option value="10">10 Overs</option><option value="12">12 Overs</option><option value="15">15 Overs</option><option value="20">20 Overs</option><option value="50">50 Overs</option>
+                            </select>
+                        </div>
                     </div>
-                    <div>
-                        <label for="edit-total-overs" class="block font-medium text-gray-700 mb-1">Match Format (Overs)</label>
-                        <select id="edit-total-overs" class="w-full p-2 border-gray-300 border rounded-md">
-                            <option value="3">3 Overs</option><option value="4">4 Overs</option><option value="5">5 Overs</option><option value="6">6 Overs</option><option value="7">7 Overs</option><option value="8">8 Overs</option><option value="9">9 Overs</option><option value="10">10 Overs</option><option value="12">12 Overs</option><option value="15">15 Overs</option><option value="20">20 Overs</option><option value="50">50 Overs</option>
-                        </select>
+                     <div class="mt-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-2">Current Over</h4>
+                        <p class="text-sm text-gray-500 mb-4">Tap a ball to edit the sequence of the current over.</p>
+                        <div id="edit-over-chips-display" class="over-chips-display bg-gray-200/60 rounded-lg"></div>
                     </div>
                 </div>
-                <div>
-                    <label class="block font-medium text-gray-700 mb-1">Current Over (Tap a ball to edit)</label>
-                    <div id="edit-over-chips-display" class="over-chips-display"></div>
-                </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div id="edit-team1-panel" class="edit-team-panel p-4 border rounded-lg space-y-4">
-                        <div class="flex items-start gap-4">
-                            <div id="edit-team1-logo-uploader" class="logo-uploader"></div>
-                            <div class="flex-grow">
-                                <label class="font-medium">Team Name</label>
-                                <input type="text" id="edit-team1-name" class="w-full mt-1 p-2 border rounded-md">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="font-medium">Score</label>
-                            <div class="grid grid-cols-2 gap-2 mt-1">
-                                <div><label class="text-sm">Runs</label><input type="number" id="edit-team1-score" class="w-full p-2 border rounded-md"></div>
-                                <div><label class="text-sm">Wickets</label><input type="number" id="edit-team1-wickets" class="w-full p-2 border rounded-md"></div>
-                                <div><label class="text-sm">Overs</label><input type="number" id="edit-team1-overs" class="w-full p-2 border rounded-md"></div>
-                                <div><label class="text-sm">Balls</label><input type="number" id="edit-team1-balls" class="w-full p-2 border rounded-md"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="font-medium">Player List</label>
-                            <div id="edit-team1-players" class="player-list-editor mt-1 p-2 border rounded-md bg-gray-50"></div>
-                        </div>
+                <!-- Teams Section with Tabs -->
+                <div class="glass-section p-4 sm:p-6">
+                    <div class="border-b border-gray-900/10">
+                        <nav class="flex space-x-2" aria-label="Tabs">
+                            <button id="edit-team1-tab" class="edit-tab active">Team 1</button>
+                            <button id="edit-team2-tab" class="edit-tab">Team 2</button>
+                        </nav>
                     </div>
+                    <div class="pt-6">
+                        <!-- Team 1 Panel -->
+                        <div id="edit-team1-panel" class="edit-team-content-panel space-y-5">
+                            <div class="flex items-center gap-4">
+                                <div id="edit-team1-logo-uploader" class="logo-uploader flex-shrink-0"></div>
+                                <div class="flex-grow">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Team Name</label>
+                                    <input type="text" id="edit-team1-name" class="w-full glass-input">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Score</label>
+                                <div class="grid grid-cols-2 gap-x-4 gap-y-3">
+                                    <div><label class="text-xs text-gray-600">Runs</label><input type="number" id="edit-team1-score" class="w-full glass-input"></div>
+                                    <div><label class="text-xs text-gray-600">Wickets</label><input type="number" id="edit-team1-wickets" class="w-full glass-input"></div>
+                                    <div><label class="text-xs text-gray-600">Overs</label><input type="number" id="edit-team1-overs" class="w-full glass-input"></div>
+                                    <div><label class="text-xs text-gray-600">Balls</label><input type="number" id="edit-team1-balls" class="w-full glass-input"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Player List</label>
+                                <div id="edit-team1-players" class="player-list-editor mt-1 p-2 border rounded-lg bg-gray-200/20 border-gray-300/50"></div>
+                            </div>
+                        </div>
 
-                    <div id="edit-team2-panel" class="edit-team-panel p-4 border rounded-lg space-y-4">
-                        <div class="flex items-start gap-4">
-                            <div id="edit-team2-logo-uploader" class="logo-uploader"></div>
-                            <div class="flex-grow">
-                                <label class="font-medium">Team Name</label>
-                                <input type="text" id="edit-team2-name" class="w-full mt-1 p-2 border rounded-md">
+                        <!-- Team 2 Panel -->
+                        <div id="edit-team2-panel" class="edit-team-content-panel hidden space-y-5">
+                            <div class="flex items-center gap-4">
+                                <div id="edit-team2-logo-uploader" class="logo-uploader flex-shrink-0"></div>
+                                <div class="flex-grow">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Team Name</label>
+                                    <input type="text" id="edit-team2-name" class="w-full glass-input">
+                                </div>
                             </div>
-                        </div>
-                        <div>
-                            <label class="font-medium">Score</label>
-                            <div class="grid grid-cols-2 gap-2 mt-1">
-                               <div><label class="text-sm">Runs</label><input type="number" id="edit-team2-score" class="w-full p-2 border rounded-md"></div>
-                               <div><label class="text-sm">Wickets</label><input type="number" id="edit-team2-wickets" class="w-full p-2 border rounded-md"></div>
-                               <div><label class="text-sm">Overs</label><input type="number" id="edit-team2-overs" class="w-full p-2 border rounded-md"></div>
-                               <div><label class="text-sm">Balls</label><input type="number" id="edit-team2-balls" class="w-full p-2 border rounded-md"></div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Score</label>
+                                <div class="grid grid-cols-2 gap-x-4 gap-y-3">
+                                   <div><label class="text-xs text-gray-600">Runs</label><input type="number" id="edit-team2-score" class="w-full glass-input"></div>
+                                   <div><label class="text-xs text-gray-600">Wickets</label><input type="number" id="edit-team2-wickets" class="w-full glass-input"></div>
+                                   <div><label class="text-xs text-gray-600">Overs</label><input type="number" id="edit-team2-overs" class="w-full glass-input"></div>
+                                   <div><label class="text-xs text-gray-600">Balls</label><input type="number" id="edit-team2-balls" class="w-full glass-input"></div>
+                                </div>
                             </div>
-                        </div>
-                        <div>
-                            <label class="font-medium">Player List</label>
-                            <div id="edit-team2-players" class="player-list-editor mt-1 p-2 border rounded-md bg-gray-50"></div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Player List</label>
+                                <div id="edit-team2-players" class="player-list-editor mt-1 p-2 border rounded-lg bg-gray-200/20 border-gray-300/50"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="flex justify-end space-x-3 p-4 border-t bg-gray-50">
-                <button onclick="closeModal('edit-match-modal')" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancel</button>
-                <button onclick="saveMatchEdits()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Save Changes</button>
+            <!-- Modal Footer -->
+            <div class="flex-shrink-0 flex justify-end items-center space-x-3 p-4 border-t border-white/20">
+                <button onclick="closeModal('edit-match-modal')" class="glass-button-secondary">Cancel</button>
+                <button onclick="saveMatchEdits()" class="glass-button-primary">Save Changes</button>
             </div>
 
+            <!-- Popover for editing over -->
             <div id="over-edit-popover">
                 <div id="over-edit-options" class="options-grid"></div>
                 <div class="actions-footer">
@@ -988,7 +1087,6 @@
             </div>
         </div>
     </div>
-
 
     <div id="wicket-type-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50">
         <div class="modal-content bg-white rounded-lg shadow-xl p-6 w-11/12 max-w-sm transform scale-95">
@@ -1112,7 +1210,15 @@
             </div>
         </div>
     </div>
-
+<div id="choice-confirm-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50">
+    <div class="modal-content bg-white rounded-lg shadow-xl p-6 w-11/12 max-w-sm text-center transform scale-95">
+        <h3 id="choice-confirm-title" class="text-lg font-bold mb-2"></h3>
+        <p id="choice-confirm-message" class="mb-6"></p>
+        <div id="choice-confirm-buttons" class="flex flex-col space-y-2">
+            <!-- Buttons will be injected by JavaScript -->
+        </div>
+    </div>
+</div>
     <div id="end-match-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50 p-4">
     <div class="modal-content bg-white rounded-lg shadow-xl w-full max-w-2xl transform scale-95 max-h-[90vh] flex flex-col">
         <div class="flex justify-between items-center p-4 border-b">
@@ -1337,60 +1443,74 @@
     <h2 class="text-5xl font-black text-white tracking-widest" style="text-shadow: 0 0 15px rgba(59, 130, 246, 0.8);">FREE HIT</h2>
 </div> 
 <script>
+    function populatePlayerOptions(selectElement, teamKey, { disabledIds = [], isOutFilter = false, addBlankOption = false, blankOptionText = 'Select Player' } = {}) {
+    if (!selectElement || !state[teamKey] || !state[teamKey].players) return;
+
+    const currentSelection = selectElement.value; // Preserve selection
+    selectElement.innerHTML = '';
+
+    if (addBlankOption) {
+        const blankOpt = document.createElement('option');
+        blankOpt.value = '';
+        blankOpt.textContent = blankOptionText;
+        blankOpt.disabled = true;
+        selectElement.appendChild(blankOpt);
+    }
+
+    const players = state[teamKey].players; // Array of player objects
+
+    players.forEach(player => {
+        if (!player || !player.id) return;
+
+        const playerStats = state[teamKey].playerStats[player.id];
+        if (!playerStats) return;
+
+        const option = document.createElement('option');
+        option.value = player.id;
+
+        let text = playerStats.name; // Use the fresh name from playerStats
+        let isDisabled = disabledIds.includes(player.id);
+
+        if (isOutFilter && playerStats.isOut) {
+            text += ' (Out)';
+            isDisabled = true;
+        }
+
+        option.textContent = text;
+        option.disabled = isDisabled;
+        if (isDisabled) {
+            option.classList.add('text-gray-400');
+        }
+
+        selectElement.appendChild(option);
+    });
+
+    // Restore selection if the previously selected player still exists
+    if (Array.from(selectElement.options).some(opt => opt.value === currentSelection)) {
+        selectElement.value = currentSelection;
+    }
+}
         const EXPERIMENT_ENABLE__FOOTER_REMATCH = true;
         // --- ALL JAVASCRIPT IS IDENTICAL AND REMAINS UNCHANGED ---
         // ... (script content from your original file) ...
         // --- STATE MANAGEMENT ---
 const state = {
-            id: null,
-            innings: 1,
-    target: 0,
-    totalOvers: 20,
-    playersPerSide: 11,
-    venue: '',
-    matchDate: '',
+    id: null, innings: 1, target: 0, totalOvers: 20, playersPerSide: 11, venue: '', matchDate: '',
     team1: {
-        name: "HOME TEAM",
-        score: 0,
-        wickets: 0,
-        overs: 0,
-        balls: 0,
-        squad: [], // Full list of all players on the team
-        playing: [], // List of IDs of players selected for this match
-        playerStats: {},
-        inningsHistory: [],
-        extras: { b: 0, lb: 0, wd: 0, nb: 0, total: 0 }
+        name: "HOME TEAM", score: 0, wickets: 0, overs: 0, balls: 0, squad: [], playing: [], 
+        playerStats: {}, inningsHistory: [], extras: { b: 0, lb: 0, wd: 0, nb: 0, total: 0 }
     },
     team2: {
-        name: "AWAY TEAM",
-        score: 0,
-        wickets: 0,
-        overs: 0,
-        balls: 0,
-        squad: [], // Full list of all players on the team
-        playing: [], // List of IDs of players selected for this match
-        playerStats: {},
-        inningsHistory: [],
-        extras: { b: 0, lb: 0, wd: 0, nb: 0, total: 0 }
+        name: "AWAY TEAM", score: 0, wickets: 0, overs: 0, balls: 0, squad: [], playing: [],
+        playerStats: {}, inningsHistory: [], extras: { b: 0, lb: 0, wd: 0, nb: 0, total: 0 }
     },
-    battingTeam: 'team1',
-    bowlingTeam: 'team2',
-    striker: null,
-    nonStriker: null,
-    bowler: null,
-    lastBowler: null,
-    currentOver: [],
-    history: [],
-    isScoringLocked: false,
-    manOfTheMatch: null,
-    winner: null,
-    winMargin: '',
-    toss: {},
-    pendingExtra: null,
-    result: null
+    battingTeam: 'team1', bowlingTeam: 'team2',
+    striker: null, nonStriker: null, bowler: null, lastBowler: null,
+    currentOver: [], history: [], redoHistory: [], isScoringLocked: false, manOfTheMatch: null, winner: null,
+    winMargin: '', toss: {}, pendingExtra: null, result: null, isFreeHit: false
 };
 
-let currentPlayerSelection = {}; // Add this line
+let currentPlayerSelection = {};
 let alertCallback = null;
 let downloadAction = null;
 let tossWinnerKey = null;
@@ -1488,32 +1608,175 @@ const debouncedSave = debounce(saveStateToLocal, 200);
             team2Select: document.getElementById('team2-select'),
         };
         function selectFielderForCatch() {
-            const fielderSelect = document.getElementById('fielder-select');
-            fielderSelect.innerHTML = ''; // Clear previous options
+    const fielderSelect = document.getElementById('fielder-select');
+    const fieldingTeamKey = state.bowlingTeam;
 
-            // Populate with players from the bowling team
-            const bowlingTeamPlayers = state[state.bowlingTeam].players;
-            bowlingTeamPlayers.forEach(playerName => {
-                const option = document.createElement('option');
-                option.value = playerName;
-                option.textContent = playerName;
-                fielderSelect.appendChild(option);
-            });
+    populatePlayerOptions(fielderSelect, fieldingTeamKey, { 
+        addBlankOption: true, 
+        blankOptionText: 'Select Fielder' 
+    });
 
-            // Set up the confirm button
-            const confirmBtn = document.getElementById('fielder-save-btn');
-            confirmBtn.onclick = () => {
-                const selectedFielder = fielderSelect.value;
-                if (selectedFielder) {
-                    processWicket('Catch', state.striker.name, selectedFielder);
-                    closeModal('fielder-modal');
-                }
-            };
-
-            openModal('fielder-modal');
+    // Set up the confirm button
+    const confirmBtn = document.getElementById('fielder-save-btn');
+    confirmBtn.onclick = () => {
+        const selectedFielderId = fielderSelect.value;
+        if (selectedFielderId) {
+            const fielderName = state[fieldingTeamKey].playerStats[selectedFielderId].name;
+            processWicket('Catch', state.striker.playerId, fielderName, selectedFielderId);
+            closeModal('fielder-modal');
         }
+    };
+
+    openModal('fielder-modal');
+}
 
         // --- HELPER FUNCTIONS ---
+        function showChoiceConfirm(title, message, buttons) {
+    document.getElementById('choice-confirm-title').textContent = title;
+    document.getElementById('choice-confirm-message').textContent = message;
+    const buttonsContainer = document.getElementById('choice-confirm-buttons');
+    buttonsContainer.innerHTML = '';
+
+    buttons.forEach(btn => {
+        const buttonEl = document.createElement('button');
+        buttonEl.textContent = btn.text;
+        buttonEl.className = btn.class || 'px-6 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300';
+        buttonEl.onclick = () => {
+            closeModal('choice-confirm-modal');
+            if (btn.callback) btn.callback();
+        };
+        buttonsContainer.appendChild(buttonEl);
+    });
+
+    openModal('choice-confirm-modal');
+}
+
+function shiftBatterContribution({ fromBatterId, toBatterId, scope = 'currentStint' }) {
+    const battingTeamKey = state.battingTeam;
+    const inningsHistory = state[battingTeamKey].inningsHistory;
+    if (inningsHistory.length === 0) return;
+
+    saveState(); // Save state for undo functionality
+
+    let ballIndicesToChange = [];
+
+    if (scope === 'lastBall') {
+        // Find the absolute last ball of the innings and check if it was faced by the 'from' batter
+        if (inningsHistory.length > 0) {
+             const lastBall = inningsHistory[inningsHistory.length - 1];
+             if (lastBall.batterId === fromBatterId) {
+                ballIndicesToChange.push(inningsHistory.length - 1);
+             }
+        }
+    } else { // scope === 'currentStint'
+        // 1. Find the start of the current stint.
+        let stintStartIndex = 0;
+        // Iterate backwards to find the last wicket. The stint starts on the next ball.
+        for (let i = inningsHistory.length - 1; i >= 0; i--) {
+            const ball = inningsHistory[i];
+            if (ball.event === 'W' || (ball.event || '').includes('+W')) {
+                stintStartIndex = i + 1;
+                break;
+            }
+        }
+
+        // 2. Collect all ball indices within that stint faced by the 'from' batter
+        for (let i = stintStartIndex; i < inningsHistory.length; i++) {
+            if (inningsHistory[i].batterId === fromBatterId) {
+                ballIndicesToChange.push(i);
+            }
+        }
+    }
+
+    if (ballIndicesToChange.length === 0) {
+        console.log("No balls found for the 'from' batter in the selected scope. No changes made.");
+        return;
+    }
+
+    // 3. Re-attribute all identified balls
+    ballIndicesToChange.forEach(index => {
+        const ball = inningsHistory[index];
+        ball.batterId = toBatterId;
+
+        // If this ball was a wicket, the dismissal must also be moved
+        if (ball.dismissalInfo) {
+            const fromPlayerStats = state[battingTeamKey].playerStats[fromBatterId];
+            if (fromPlayerStats) {
+                fromPlayerStats.isOut = false;
+                fromPlayerStats.dismissalInfo = null;
+            }
+            const toPlayerStats = state[battingTeamKey].playerStats[toBatterId];
+            if (toPlayerStats) {
+                toPlayerStats.isOut = true;
+                toPlayerStats.dismissalInfo = ball.dismissalInfo;
+            }
+        }
+    });
+
+    // 4. Recalculate all stats from the ground up and update UI
+    recalculateAllPlayerStats();
+}
+
+function recalculateAllPlayerStats() {
+    // Recalculate for both teams to be safe
+    ['team1', 'team2'].forEach(teamKey => {
+        if (!state[teamKey] || !state[teamKey].playerStats) return;
+
+        // 1. Reset all numeric stats for every player on the team
+        Object.keys(state[teamKey].playerStats).forEach(playerId => {
+            const stats = state[teamKey].playerStats[playerId];
+            stats.runs = 0;
+            stats.balls = 0;
+            stats.fours = 0;
+            stats.sixes = 0;
+            stats.ballsBowled = 0;
+            stats.runsConceded = 0;
+            stats.wickets = 0;
+            stats.maidens = 0;
+            stats.dots = 0;
+        });
+
+        // 2. Iterate through the entire innings history and re-apply stats
+        const inningsHistory = state[teamKey].inningsHistory || [];
+        inningsHistory.forEach(ball => {
+            const batterStats = state[teamKey].playerStats[ball.batterId];
+            const bowlerTeamKey = teamKey === 'team1' ? 'team2' : 'team1';
+            const bowlerStats = state[bowlerTeamKey].playerStats[ball.bowlerId];
+
+            const runs = parseBallEvent(ball.event);
+            const isLegal = isLegalDelivery(ball.event);
+
+            // Apply batter stats
+            if (batterStats && !ball.extraType) { // Batting stats only apply for non-extra runs
+                batterStats.runs += runs;
+                if(isLegal) batterStats.balls++;
+                if (runs === 4) batterStats.fours++;
+                if (runs === 6) batterStats.sixes++;
+            }
+
+            // Apply bowler stats
+            if (bowlerStats) {
+                bowlerStats.runsConceded += runs;
+                if(isLegal) {
+                    bowlerStats.ballsBowled++;
+                    if (runs === 0 && ball.event !== 'W') bowlerStats.dots++;
+                    if (ball.event === 'W') bowlerStats.wickets++;
+                }
+            }
+        });
+    });
+
+    // 3. Refresh the active player objects (striker, non-striker, bowler) with the new data
+    if (state.striker) {
+        state.striker = { ...state[state.battingTeam].playerStats[state.striker.playerId] };
+    }
+    if (state.nonStriker) {
+        state.nonStriker = { ...state[state.battingTeam].playerStats[state.nonStriker.playerId] };
+    }
+    if (state.bowler) {
+        state.bowler = { ...state[state.bowlingTeam].playerStats[state.bowler.playerId] };
+    }
+}
         function generateUniqueId() {
             return `player_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         }
@@ -1568,7 +1831,65 @@ const debouncedSave = debounce(saveStateToLocal, 200);
 
             return 0; // Return 0 for any unrecognised format
         }
+function processFreeHitChoice(awardFreeHit) {
+    if (!state.pendingExtra || state.pendingExtra.type !== 'nb') return;
+    saveState();
 
+    state.isFreeHit = awardFreeHit;
+
+    const { type, runs } = state.pendingExtra;
+    state.pendingExtra = null; 
+
+    const baseExtraRun = 1;
+    const totalRuns = baseExtraRun + runs;
+
+    const battingTeam = state[state.battingTeam];
+    battingTeam.score += totalRuns;
+    battingTeam.extras[type] += totalRuns;
+    battingTeam.extras.total += totalRuns;
+
+    if (state.bowler) {
+        state.bowler.runsConceded += totalRuns;
+    }
+
+    state.striker.consecutiveFours = 0;
+    state.striker.consecutiveSixes = 0;
+
+    let ballEvent = 'NB';
+    if (runs > 0) {
+        ballEvent += `+${runs}`;
+    }
+
+    const ballData = { event: ballEvent, runs: totalRuns, batterId: state.striker.playerId, bowlerId: state.bowler.playerId, extraType: type };
+    battingTeam.inningsHistory.push(ballData);
+    state.currentOver.push({ event: ballEvent, runs: totalRuns });
+
+    generateRealCommentary('extra', { extraType: type, runs: runs, bowler: state.bowler.name });
+    if (awardFreeHit) {
+        updateLiveCommentary('<b>Free hit</b> on the next ball.', true);
+    }
+
+    if (runs > 0 && runs % 2 !== 0) {
+        swapBatsmen();
+    }
+
+    closeModal('freehit-confirm-modal');
+    updateUI();
+    checkWinCondition();
+}
+
+function updateFreeHitIndicator() {
+    const indicator = document.getElementById('freehit-indicator-container');
+    if (!indicator) return;
+
+    const shouldShow = state.isFreeHit && !state.isScoringLocked;
+
+    if (shouldShow) {
+        indicator.classList.remove('hidden');
+    } else {
+        indicator.classList.add('hidden');
+    }
+}
         // --- SETUP LOGIC ---
         function savePlayerInputsToState(teamKey) {
             const playerInputsContainer = (teamKey === 'team1') ? ui.team1PlayerInputs : ui.team2PlayerInputs;
@@ -1696,131 +2017,117 @@ const debouncedSave = debounce(saveStateToLocal, 200);
 
 
         function goToStep(step) {
-            // Before navigating, save data from the current player screen
-            const activeStepElement = document.querySelector('.setup-step.active');
-            if (activeStepElement) {
-                if (activeStepElement.id === 'setup-step-2') {
-                    savePlayerInputsToState('team1');
-                } else if (activeStepElement.id === 'setup-step-3') {
-                    savePlayerInputsToState('team2');
-                }
-            }
-
-            if (step === 2) {
-                if (!ui.totalOversInput.value) {
-                    showAlert('Please select a match format.');
-                    return;
-                }
-                if (!ui.playersPerSideInput.value) {
-                    showAlert('Please select the number of players per side.');
-                    return;
-                }
-            }
-
-            if (step === 2 || step === 3 || step === 4) {
-                ui.setupCard.classList.add('p-0', 'border-none', 'shadow-none');
-                ui.setupCard.style.background = 'transparent';
-                ui.progressContainer.classList.add('hidden');
-                
-            } else {
-                ui.setupCard.classList.remove('p-0', 'border-none', 'shadow-none');
-                ui.setupCard.style.background = '';
-                ui.progressContainer.classList.remove('hidden');
-            }
-
-            document.querySelectorAll('.setup-step').forEach(el => {
-                el.classList.remove('active');
-                el.classList.add('hidden');
-            });
-            document.getElementById(`setup-step-${step}`).classList.remove('hidden');
-            document.getElementById(`setup-step-${step}`).classList.add('active');
-
-            if (step === 1) ui.progressBar.style.width = '25%';
-            if (step === 2) {
-                document.getElementById('setup-step-2').style.background = `linear-gradient(135deg, #e2e8f0, #ffffff, #d1d5db)`;
-                if (state.team1.logo) {
-                    ui.team1RosterLogo.src = state.team1.logo;
-                    ui.team1RosterLogo.classList.remove('hidden');
-                } else {
-                    ui.team1RosterLogo.classList.add('hidden');
-                }
-                ui.team1RosterTitle.textContent = (ui.team1NameInput.value || 'HOME TEAM').toUpperCase();
-                generatePlayerInputs('team1');
-                ui.progressBar.style.width = '50%';
-            }
-            if (step === 3) {
-                 document.getElementById('setup-step-3').style.background = `linear-gradient(135deg, #e2e8f0, #ffffff, #d1d5db)`;
-                if (state.team2.logo) {
-                    ui.team2RosterLogo.src = state.team2.logo;
-                    ui.team2RosterLogo.classList.remove('hidden');
-                } else {
-                    ui.team2RosterLogo.classList.add('hidden');
-                }
-                ui.team2RosterTitle.textContent = (ui.team2NameInput.value || 'AWAY TEAM').toUpperCase();
-                generatePlayerInputs('team2');
-                ui.progressBar.style.width = '75%';
-            }
-            if (step === 4) {
-                ui.progressBar.style.width = '100%';
-                
-                // --- DATE-BASED UI LOGIC ---
-                const matchDateVal = ui.matchDateInput.value;
-                const today = new Date();
-                const matchDate = new Date(matchDateVal + 'T00:00:00');
-                today.setHours(0, 0, 0, 0);
-                const isFutureDate = matchDate > today;
-                
-                const startMatchBtn = document.getElementById('start-match-btn');
-                const tossFlowContainer = document.getElementById('toss-flow-container');
-                const header = ui.setupStep4.querySelector('h1');
-                const subHeader = ui.setupStep4.querySelector('p');
-
-                if (isFutureDate) {
-                    header.textContent = 'Schedule Match';
-                    subHeader.textContent = 'This match is scheduled for a future date and will be saved.';
-                    tossFlowContainer.style.display = 'none';
-                    startMatchBtn.textContent = 'Save Upcoming Match';
-                    startMatchBtn.onclick = saveMatchForLater;
-                    startMatchBtn.disabled = false;
-                    startMatchBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                } else {
-                    header.textContent = 'Toss Result';
-                    subHeader.textContent = 'Select the toss winner and their choice';
-                    tossFlowContainer.style.display = 'block';
-                    startMatchBtn.textContent = 'Start Match';
-                    startMatchBtn.onclick = startMatch;
-                    startMatchBtn.disabled = true;
-                    startMatchBtn.classList.add('opacity-50', 'cursor-not-allowed');
-
-                    tossWinnerKey = null;
-                    tossDecision = 'bat';
-                    ui.tossDecisionContainer.classList.add('hidden');
-                    ui.tossWinnerTeam1.classList.remove('selected');
-                    ui.tossWinnerTeam2.classList.remove('selected');
-                    selectTossChoice('bat');
-                }
-                // --- END OF DATE-BASED UI LOGIC ---
-
-                ui.tossTeam1Name.textContent = ui.team1NameInput.value || 'HOME TEAM';
-                if (state.team1.logo) {
-                    ui.tossTeam1LogoContainer.innerHTML = `<img src="${state.team1.logo}" class="w-full h-full object-cover rounded-full">`;
-                    ui.tossTeam1LogoContainer.style.backgroundColor = '';
-                } else {
-                    ui.tossTeam1LogoContainer.style.backgroundColor = ui.team1ColorInput.value;
-                    ui.tossTeam1LogoContainer.innerHTML = `<span>${(ui.team1NameInput.value || 'H').charAt(0)}</span>`;
-                }
-
-                ui.tossTeam2Name.textContent = ui.team2NameInput.value || 'AWAY TEAM';
-                if (state.team2.logo) {
-                    ui.tossTeam2LogoContainer.innerHTML = `<img src="${state.team2.logo}" class="w-full h-full object-cover rounded-full">`;
-                    ui.tossTeam2LogoContainer.style.backgroundColor = '';
-                } else {
-                    ui.tossTeam2LogoContainer.style.backgroundColor = ui.team2ColorInput.value;
-                    ui.tossTeam2LogoContainer.innerHTML = `<span>${(ui.team2NameInput.value || 'A').charAt(0)}</span>`;
-                }
-                ui.setupStep4.classList.add('toss-active');
-            }
+    // Before navigating, save data from the current player screen
+    const activeStepElement = document.querySelector('.setup-step.active');
+    if (activeStepElement) {
+        if (activeStepElement.id === 'setup-step-2') {
+            savePlayerInputsToState('team1');
+        } else if (activeStepElement.id === 'setup-step-3') {
+            savePlayerInputsToState('team2');
         }
+    }
+
+    if (step === 2) {
+        if (!ui.totalOversInput.value) {
+            showAlert('Please select a match format.');
+            return;
+        }
+        if (!ui.playersPerSideInput.value) {
+            showAlert('Please select the number of players per side.');
+            return;
+        }
+    }
+
+    document.querySelectorAll('.setup-step').forEach(el => {
+        el.classList.remove('active');
+        el.classList.add('hidden');
+    });
+    document.getElementById(`setup-step-${step}`).classList.remove('hidden');
+    document.getElementById(`setup-step-${step}`).classList.add('active');
+
+    if (step === 1) ui.progressBar.style.width = '25%';
+    if (step === 2) {
+        if (state.team1.logo) {
+            ui.team1RosterLogo.src = state.team1.logo;
+            ui.team1RosterLogo.classList.remove('hidden');
+        } else {
+            ui.team1RosterLogo.classList.add('hidden');
+        }
+        ui.team1RosterTitle.textContent = (ui.team1NameInput.value || 'HOME TEAM').toUpperCase();
+        generatePlayerInputs('team1');
+        ui.progressBar.style.width = '50%';
+    }
+    if (step === 3) {
+        if (state.team2.logo) {
+            ui.team2RosterLogo.src = state.team2.logo;
+            ui.team2RosterLogo.classList.remove('hidden');
+        } else {
+            ui.team2RosterLogo.classList.add('hidden');
+        }
+        ui.team2RosterTitle.textContent = (ui.team2NameInput.value || 'AWAY TEAM').toUpperCase();
+        generatePlayerInputs('team2');
+        ui.progressBar.style.width = '75%';
+    }
+    if (step === 4) {
+        ui.progressBar.style.width = '100%';
+
+        // --- DATE-BASED UI LOGIC ---
+        const matchDateVal = ui.matchDateInput.value;
+        const today = new Date();
+        const matchDate = new Date(matchDateVal + 'T00:00:00');
+        today.setHours(0, 0, 0, 0);
+        const isFutureDate = matchDate > today;
+
+        const startMatchBtn = document.getElementById('start-match-btn');
+        const tossFlowContainer = document.getElementById('toss-flow-container');
+        const header = ui.setupStep4.querySelector('h1');
+        const subHeader = ui.setupStep4.querySelector('p');
+
+        if (isFutureDate) {
+            header.textContent = 'Schedule Match';
+            subHeader.textContent = 'This match is scheduled for a future date and will be saved.';
+            tossFlowContainer.style.display = 'none';
+            startMatchBtn.textContent = 'Save Upcoming Match';
+            startMatchBtn.onclick = saveMatchForLater;
+            startMatchBtn.disabled = false;
+            startMatchBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        } else {
+            header.textContent = 'Toss Result';
+            subHeader.textContent = 'Select the toss winner and their choice';
+            tossFlowContainer.style.display = 'block';
+            startMatchBtn.textContent = 'Start Match';
+            startMatchBtn.onclick = startMatch;
+            startMatchBtn.disabled = true;
+            startMatchBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            tossWinnerKey = null;
+            tossDecision = 'bat';
+            ui.tossDecisionContainer.classList.add('hidden');
+            ui.tossWinnerTeam1.classList.remove('selected');
+            ui.tossWinnerTeam2.classList.remove('selected');
+            selectTossChoice('bat');
+        }
+        // --- END OF DATE-BASED UI LOGIC ---
+
+        ui.tossTeam1Name.textContent = ui.team1NameInput.value || 'HOME TEAM';
+        if (state.team1.logo) {
+            ui.tossTeam1LogoContainer.innerHTML = `<img src="${state.team1.logo}" class="w-full h-full object-cover rounded-full">`;
+            ui.tossTeam1LogoContainer.style.backgroundColor = '';
+        } else {
+            ui.tossTeam1LogoContainer.style.backgroundColor = ui.team1ColorInput.value;
+            ui.tossTeam1LogoContainer.innerHTML = `<span>${(ui.team1NameInput.value || 'H').charAt(0)}</span>`;
+        }
+
+        ui.tossTeam2Name.textContent = ui.team2NameInput.value || 'AWAY TEAM';
+        if (state.team2.logo) {
+            ui.tossTeam2LogoContainer.innerHTML = `<img src="${state.team2.logo}" class="w-full h-full object-cover rounded-full">`;
+            ui.tossTeam2LogoContainer.style.backgroundColor = '';
+        } else {
+            ui.tossTeam2LogoContainer.style.backgroundColor = ui.team2ColorInput.value;
+            ui.tossTeam2LogoContainer.innerHTML = `<span>${(ui.team2NameInput.value || 'A').charAt(0)}</span>`;
+        }
+    }
+}
 
         function handleLogoUpload(file, teamKey) {
             if (file) {
@@ -1849,31 +2156,31 @@ const debouncedSave = debounce(saveStateToLocal, 200);
             state.team2.color = ui.team2ColorInput.value;
 
             const processTeamData = (teamKey) => {
-                const playerStats = {};
-                const playingPlayerNames = [];
+    const playerStats = {};
+    const playingPlayerIds = state[teamKey].playing; // This is already a list of IDs
 
-                // Build stats only for players in the 'playing' list
-                state[teamKey].playing.forEach(playerId => {
-                    const player = state[teamKey].squad.find(p => p.id === playerId);
-                    if (player && player.name) {
-                        const playerName = player.name.trim().toUpperCase();
-                        playingPlayerNames.push(playerName);
-                        playerStats[playerName] = {
-                            playerId: player.id,
-                            name: playerName,
-                            image: player.image || '',
-                            runs: 0, balls: 0, fours: 0, sixes: 0, isOut: false, dismissalInfo: null,
-                            ballsBowled: 0, runsConceded: 0, wickets: 0, maidens: 0, dots: 0,
-                            foursConceded: 0, sixesConceded: 0, consecutiveFours: 0, consecutiveSixes: 0
-                        };
-                    }
-                });
-
-                state[teamKey].players = playingPlayerNames; // This is now the playing XI names
-                state[teamKey].playerStats = playerStats;
-                state[teamKey].inningsHistory = [];
-                state[teamKey].extras = { b: 0, lb: 0, wd: 0, nb: 0, total: 0 };
+    // Build stats only for players in the 'playing' list, keyed by playerId
+    playingPlayerIds.forEach(playerId => {
+        const player = state[teamKey].squad.find(p => p.id === playerId);
+        if (player && player.name) {
+            const playerName = player.name.trim().toUpperCase();
+            playerStats[playerId] = {
+                playerId: player.id,
+                name: playerName,
+                image: player.image || '',
+                runs: 0, balls: 0, fours: 0, sixes: 0, isOut: false, dismissalInfo: null,
+                ballsBowled: 0, runsConceded: 0, wickets: 0, maidens: 0, dots: 0,
+                foursConceded: 0, sixesConceded: 0, consecutiveFours: 0, consecutiveSixes: 0
             };
+        }
+    });
+
+    // The 'players' property should store the full player objects for easy access
+    state[teamKey].players = playingPlayerIds.map(id => state[teamKey].squad.find(p => p.id === id)).filter(Boolean);
+    state[teamKey].playerStats = playerStats;
+    state[teamKey].inningsHistory = [];
+    state[teamKey].extras = { b: 0, lb: 0, wd: 0, nb: 0, total: 0 };
+};
 
             processTeamData('team1');
             processTeamData('team2');
@@ -1997,45 +2304,38 @@ const debouncedSave = debounce(saveStateToLocal, 200);
         }
         
         function savePlayerStats(playerObject, teamKey) {
-            if (!playerObject || !playerObject.name || !teamKey) return;
-            state[teamKey].playerStats[playerObject.name] = { ...state[teamKey].playerStats[playerObject.name],
-                ...playerObject
-            };
-        }
+    if (!playerObject || !playerObject.playerId || !teamKey) return;
+    state[teamKey].playerStats[playerObject.playerId] = { ...state[teamKey].playerStats[playerObject.playerId],
+        ...playerObject
+    };
+}
 
-        function selectPlayer(role, onCompleteCallback) {
-            ui.modalTitle.textContent = `Select ${role.charAt(0).toUpperCase() + role.slice(1)}`;
-            
-            ui.modalTitle.classList.remove('text-red-800');
-            if (role === 'striker' || role === 'nonStriker') {
-                ui.modalTitle.classList.add('text-red-800');
-            }
+    function selectPlayer(role, onCompleteCallback) {
+    ui.modalTitle.textContent = `Select ${role.charAt(0).toUpperCase() + role.slice(1)}`;
 
-            const teamKey = role === 'bowler' ? state.bowlingTeam : state.battingTeam;
-            const players = state[teamKey].players;
-            
-            ui.playerSelect.innerHTML = players.map(player => {
-                const playerName = typeof player === 'string' ? player : player.name;
-                const playerStats = state[teamKey].playerStats[playerName];
-                if (!playerStats) return ''; // Safeguard
-                
-                const isOut = playerStats.isOut;
-                const isStriker = state.striker && playerName === state.striker.name;
-                const isNonStriker = state.nonStriker && playerName === state.nonStriker.name;
-                const isLastBowler = state.lastBowler && playerName === state.lastBowler;
-                const isDisabled = (role !== 'bowler' && isOut) || isStriker || isNonStriker || (role === 'bowler' && isLastBowler);
-                
-                let text = formatPlayerName(playerName);
-                if (role !== 'bowler' && isOut) text += ' (Out)';
-                if (role === 'bowler' && isLastBowler) text += ' (Can\'t bowl)';
+    ui.modalTitle.classList.remove('text-red-800');
+    if (role === 'striker' || role === 'nonStriker') {
+        ui.modalTitle.classList.add('text-red-800');
+    }
 
-                return `<option value="${playerName}" ${isDisabled ? 'disabled' : ''} class="${isDisabled ? 'text-gray-400' : ''}">${text}</option>`;
-            }).join('');
-            
-            // Set the context that the save button's event listener will use
-            currentPlayerSelection = { role, onCompleteCallback, teamKey };
-            openModal('player-modal');
-        }
+    const teamKey = role === 'bowler' ? state.bowlingTeam : state.battingTeam;
+
+    // Assemble list of players who should be disabled in the dropdown
+    const disabledIds = [];
+    if (state.striker) disabledIds.push(state.striker.playerId);
+    if (state.nonStriker) disabledIds.push(state.nonStriker.playerId);
+    if (role === 'bowler' && state.lastBowler) {
+        disabledIds.push(state.lastBowler);
+    }
+
+    populatePlayerOptions(ui.playerSelect, teamKey, {
+        disabledIds: disabledIds,
+        isOutFilter: (role !== 'bowler')
+    });
+
+    currentPlayerSelection = { role, onCompleteCallback, teamKey };
+    openModal('player-modal');
+}
 
         function triggerEventAnimation(text, colorClass) {
             const overlay = ui.eventAnimationOverlay;
@@ -2224,50 +2524,58 @@ const debouncedSave = debounce(saveStateToLocal, 200);
         }
 
         function addExtra(type, runs) {
-            if (state.isScoringLocked) return;
-            saveState();
-            const baseExtraRun = (type === 'wd' || type === 'nb' ? 1 : 0);
-            const totalRuns = baseExtraRun + runs;
-            
-            const battingTeam = state[state.battingTeam];
-            battingTeam.score += totalRuns;
-            battingTeam.extras[type] += totalRuns;
-            battingTeam.extras.total += totalRuns;
-            
-            if (state.bowler) {
-               state.bowler.runsConceded += totalRuns;
-            }
+    if (state.isScoringLocked) return;
+    saveState();
 
-            state.striker.consecutiveFours = 0;
-            state.striker.consecutiveSixes = 0;
+    if (type === 'nb') {
+        state.pendingExtra = { type: 'nb', runs: runs };
+        closeAllModals();
+        openModal('freehit-confirm-modal');
+        return; 
+    }
 
-            // FIX: Correctly format the event string for B/LB
-            let ballEvent = type.toUpperCase();
-            if (runs > 0) {
-                 // For B/LB, format is B1, B2 etc. For WD/NB, it's WD+1
-                ballEvent += (type === 'b' || type === 'lb') ? runs : `+${runs}`;
-            }
+    const baseExtraRun = (type === 'wd' || type === 'nb' ? 1 : 0);
+    const totalRuns = baseExtraRun + runs;
 
-            const ballData = { event: ballEvent, runs: totalRuns, batsman: state.striker.name, bowler: state.bowler.name, extraType: type };
-            battingTeam.inningsHistory.push(ballData);
-            
-            generateRealCommentary('extra', { extraType: type, runs: runs, bowler: state.bowler.name });
+    const battingTeam = state[state.battingTeam];
+    battingTeam.score += totalRuns;
+    battingTeam.extras[type] += totalRuns;
+    battingTeam.extras.total += totalRuns;
 
-            if (type === 'b' || type === 'lb') {
-                 processBall(totalRuns, ballEvent, type); // Legal delivery
-            } else {
-                 state.currentOver.push({ event: ballEvent, runs: totalRuns }); // Illegal delivery
-            }
+    if (state.bowler) {
+       state.bowler.runsConceded += totalRuns;
+    }
 
-            // Correctly swap strike if the physically run portion is odd
-            if (runs > 0 && runs % 2 !== 0) {
-                swapBatsmen();
-            }
-            
-            closeAllModals();
-            updateUI();
-            checkWinCondition();
-        }
+    state.striker.consecutiveFours = 0;
+    state.striker.consecutiveSixes = 0;
+
+    // FIX: Correctly format the event string for B/LB
+    let ballEvent = type.toUpperCase();
+    if (runs > 0) {
+         // For B/LB, format is B1, B2 etc. For WD/NB, it's WD+1
+        ballEvent += (type === 'b' || type === 'lb') ? runs : `+${runs}`;
+    }
+
+    const ballData = { event: ballEvent, runs: totalRuns, batterId: state.striker.playerId, bowlerId: state.bowler.playerId, extraType: type };
+    battingTeam.inningsHistory.push(ballData);
+
+    generateRealCommentary('extra', { extraType: type, runs: runs, bowler: state.bowler.name });
+
+    if (type === 'b' || type === 'lb') {
+         processBall(totalRuns, ballEvent, type); // Legal delivery
+    } else {
+         state.currentOver.push({ event: ballEvent, runs: totalRuns }); // Illegal delivery
+    }
+
+    // Correctly swap strike if the physically run portion is odd
+    if (runs > 0 && runs % 2 !== 0) {
+        swapBatsmen();
+    }
+
+    closeAllModals();
+    updateUI();
+    checkWinCondition();
+}
 
         function openWicketModal() {
             if (state.isScoringLocked) return;
@@ -2377,114 +2685,126 @@ const debouncedSave = debounce(saveStateToLocal, 200);
             }
         }
         
-        async function processWicket(type, playerName, fielderName = null) {
-            let playerOutObject;
-            closeAllModals();
-            saveState();
+        async function processWicket(type, playerOutId, fielderName = null, fielderId = null) {
+    if (state.isFreeHit && type !== 'Run Out') {
+        showAlert("Batsman cannot be out on a Free Hit (except for Run Out). No wicket recorded. Please score any runs taken.");
+        closeAllModals();
+        return;
+    }
 
-            const battingTeamKey = state.battingTeam;
-            const battingTeam = state[battingTeamKey];
-            playerOutObject = (state.striker && state.striker.name === playerName) ? state.striker : state.nonStriker;
-            
-            playerOutObject.consecutiveFours = 0;
-            playerOutObject.consecutiveSixes = 0;
-            battingTeam.wickets++;
+    let playerOutObject;
+    closeAllModals();
+    saveState();
 
-            const bowlerCreditedWickets = ['Catch', 'Bowled', 'Stump Out', 'LBW', 'Hit Wicket'];
-            if (bowlerCreditedWickets.includes(type) && state.bowler) {
-                state.bowler.wickets++;
-            }
-            
-            playerOutObject.balls++;
-            playerOutObject.isOut = true;
-            
-            const dismissalInfo = { 
-                type: type, 
-                bowler: state.bowler ? state.bowler.name : null, 
-                fielder: fielderName,
-                scoreAtFall: battingTeam.score,
-                overAtFall: `${battingTeam.overs}.${battingTeam.balls}`
-            };
-            playerOutObject.dismissalInfo = dismissalInfo;
-            
-            // Save the dismissed player's stats immediately.
-            savePlayerStats(playerOutObject, battingTeamKey); 
-            
-            generateRealCommentary('wicket', { wicketType: type, bowler: state.bowler, striker: playerOutObject, fielder: fielderName, playerOut: playerName });
-            
-            // Pass the dismissal info into the ball processing function
-            // so it can be saved to the permanent inningsHistory.
-            processBall(0, 'W', null, dismissalInfo);
-            
-            if (state.striker && state.striker.name === playerName) state.striker = null;
-            if (state.nonStriker && state.nonStriker.name === playerName) state.nonStriker = null;
+    const battingTeamKey = state.battingTeam;
+    const battingTeam = state[battingTeamKey];
+    playerOutObject = (state.striker && state.striker.playerId === playerOutId) ? state.striker : state.nonStriker;
 
+    playerOutObject.consecutiveFours = 0;
+    playerOutObject.consecutiveSixes = 0;
+    battingTeam.wickets++;
+
+    const bowlerCreditedWickets = ['Catch', 'Bowled', 'Stump Out', 'LBW', 'Hit Wicket'];
+    if (bowlerCreditedWickets.includes(type) && state.bowler) {
+        state.bowler.wickets++;
+    }
+
+    playerOutObject.balls++;
+    playerOutObject.isOut = true;
+
+    const dismissalInfo = { 
+        type: type, 
+        bowlerId: state.bowler ? state.bowler.playerId : null, 
+        bowlerName: state.bowler ? state.bowler.name : null,
+        fielderId: fielderId,
+        fielderName: fielderName,
+        scoreAtFall: battingTeam.score,
+        overAtFall: `${battingTeam.overs}.${battingTeam.balls}`
+    };
+    playerOutObject.dismissalInfo = dismissalInfo;
+
+    // Save the dismissed player's stats immediately.
+    savePlayerStats(playerOutObject, battingTeamKey); 
+
+    generateRealCommentary('wicket', { wicketType: type, bowler: state.bowler, striker: playerOutObject, fielder: fielderName, playerOut: playerName });
+
+    // Pass the dismissal info into the ball processing function
+    // so it can be saved to the permanent inningsHistory.
+    processBall(0, 'W', null, dismissalInfo);
+
+    if (state.striker && state.striker.name === playerName) state.striker = null;
+    if (state.nonStriker && state.nonStriker.name === playerName) state.nonStriker = null;
+
+    updateUI();
+    await triggerEventAnimation('OUT', 'text-red-700');
+
+    await showPlayerOutSummary(playerOutObject);
+
+    if (checkInningsEnd()) return;
+
+    state.isScoringLocked = true;
+    const roleToFill = !state.striker ? 'striker' : 'nonStriker';
+
+    showAlert(`Please select the next ${roleToFill}.`, () => {
+        ui.playerModalCancelBtnX.classList.add('hidden');
+        ui.playerModalCancelBtnText.classList.add('hidden');
+        selectPlayer(roleToFill, () => {
+            ui.playerModalCancelBtnX.classList.remove('hidden');
+            ui.playerModalCancelBtnText.classList.remove('hidden');
+            state.isScoringLocked = false;
             updateUI();
-            await triggerEventAnimation('OUT', 'text-red-700');
+        });
+    });
+}
+    function processBall(runs, event, extraType = null, dismissalInfo = null) {
+    const battingTeam = state[state.battingTeam];
+    const bowlingTeam = state[state.bowlingTeam];
 
-            await showPlayerOutSummary(playerOutObject);
-            
-            if (checkInningsEnd()) return;
-            
-            state.isScoringLocked = true;
-            const roleToFill = !state.striker ? 'striker' : 'nonStriker';
+    // Store complete ball data for the innings history, ensuring dismissalInfo is included
+    const ballData = { event, runs, batterId: state.striker.playerId, bowlerId: state.bowler.playerId, extraType, dismissalInfo };
+    battingTeam.inningsHistory.push(ballData);
 
-            showAlert(`Please select the next ${roleToFill}.`, () => {
-                ui.playerModalCancelBtnX.classList.add('hidden');
-                ui.playerModalCancelBtnText.classList.add('hidden');
-                selectPlayer(roleToFill, () => {
-                    ui.playerModalCancelBtnX.classList.remove('hidden');
-                    ui.playerModalCancelBtnText.classList.remove('hidden');
-                    state.isScoringLocked = false;
-                    updateUI();
-                });
-            });
-        }
-        function processBall(runs, event, extraType = null, dismissalInfo = null) {
-            const battingTeam = state[state.battingTeam];
-            const bowlingTeam = state[state.bowlingTeam];
+    // This is a legal delivery
+    battingTeam.balls++;
+    //...
+    if(state.bowler) {
+        state.bowler.ballsBowled++;
+        state.bowler.runsConceded += runs;
+        if (runs === 0 && event !== 'W') state.bowler.dots++;
+        if (runs === 4) state.bowler.foursConceded++;
+        if (runs === 6) state.bowler.sixesConceded++;
+    }
+    state.currentOver.push({ event, runs });
 
-            // Store complete ball data for the innings history, ensuring dismissalInfo is included
-            const ballData = { event, runs, batsman: state.striker.name, bowler: state.bowler.name, extraType, dismissalInfo };
-            battingTeam.inningsHistory.push(ballData);
-            
-            // This is a legal delivery
-            battingTeam.balls++;
-            if(state.bowler) {
-                state.bowler.ballsBowled++;
-                state.bowler.runsConceded += runs;
-                if (runs === 0 && event !== 'W') state.bowler.dots++;
-                if (runs === 4) state.bowler.foursConceded++;
-                if (runs === 6) state.bowler.sixesConceded++;
+    if (state.isFreeHit) {
+        state.isFreeHit = false;
+    }
+
+    const isOverComplete = battingTeam.balls === 6;
+
+    if (isOverComplete) {
+        state.isScoringLocked = true;
+        const overRuns = state.currentOver.reduce((acc, ball) => acc + ball.runs, 0);
+        const isMaiden = overRuns === 0 && state.currentOver.every(b => !b.event.includes('wd') && !b.event.includes('nb'));
+
+        setTimeout(() => {
+            battingTeam.overs++;
+            battingTeam.balls = 0;
+
+            if (isMaiden) {
+                state.bowler.maidens++;
             }
-            state.currentOver.push({ event, runs });
+            generateRealCommentary('endOfOver', { overRuns: overRuns, maiden: isMaiden, bowler: state.bowler.name });
 
-            const isOverComplete = battingTeam.balls === 6;
+savePlayerStats(state.bowler, state.bowlingTeam);
+state.lastBowler = state.bowler.playerId;
 
-            if (isOverComplete) {
-                state.isScoringLocked = true;
-                const overRuns = state.currentOver.reduce((acc, ball) => acc + ball.runs, 0);
-                const isMaiden = overRuns === 0 && state.currentOver.every(b => !b.event.includes('wd') && !b.event.includes('nb'));
-                
-                setTimeout(() => {
-                    battingTeam.overs++;
-                    battingTeam.balls = 0;
-                    
-                    if (isMaiden) {
-                        state.bowler.maidens++;
-                    }
-                    generateRealCommentary('endOfOver', { overRuns: overRuns, maiden: isMaiden, bowler: state.bowler.name });
+if (checkInningsEnd()) return;
 
-
-                    savePlayerStats(state.bowler, state.bowlingTeam);
-                    state.lastBowler = state.bowler.name;
-                    
-                    if (checkInningsEnd()) return;
-                    
-                    ui.bowlerPromptOverlay.classList.remove('hidden');
-                }, 2000); 
-            }
-        }
+            ui.bowlerPromptOverlay.classList.remove('hidden');
+        }, 2000); 
+    }
+}
 
         function checkInningsEnd() {
             const battingTeam = state[state.battingTeam];
@@ -2577,39 +2897,95 @@ const debouncedSave = debounce(saveStateToLocal, 200);
             updateUI();
         }
         
-        function undo() {
-            if (state.history.length > 0) {
-                const lastState = state.history.pop();
-                Object.assign(state, JSON.parse(lastState));
-                updateUI();
-            }
-        }
+        function undoLastAction() {
+    if (state.history.length > 0) {
+        const currentState = { ...state };
+        delete currentState.history;
+        delete currentState.redoHistory;
+        state.redoHistory.push(JSON.stringify(currentState));
 
-        function saveState() {
+        const lastState = state.history.pop();
+        Object.assign(state, JSON.parse(lastState));
+
+        updateUI();
+        debouncedSave();
+    }
+}
+
+function redoLastAction() {
+    if (state.redoHistory.length > 0) {
+        const currentState = { ...state };
+        delete currentState.history;
+        delete currentState.redoHistory;
+        state.history.push(JSON.stringify(currentState));
+
+        const nextState = state.redoHistory.pop();
+        Object.assign(state, JSON.parse(nextState));
+
+        updateUI();
+        debouncedSave();
+    }
+}
+
+function saveState() {
     const stateToSave = { ...state };
     delete stateToSave.history;
+    delete stateToSave.redoHistory; // Also remove redo history from snapshot
 
     try {
         state.history.push(JSON.stringify(stateToSave));
         if (state.history.length > 20) {
             state.history.shift();
         }
-        debouncedSave(); // Trigger autosave on every change
+        // A new action clears the redo history
+        state.redoHistory = [];
+        debouncedSave();
     } catch (e) {
         console.error("Could not save state to history:", e);
     }
 }
 
         // --- UI UPDATES ---
-        // --- UI UPDATES ---
-        function updateUI() {
-            updateMatchHeader();
-            updateScoreboard();
-            updateTargetInfo();
-            updateBattingTable();
-            updateBowlingTable();
-            updateFooterButtons(); // Add this line
-        }
+function updateUI() {
+    updateMatchHeader();
+    updateScoreboard();
+    updateTargetInfo();
+    updateBattingTable();
+    updateBowlingTable();
+    updateFooterButtons();
+    updateFreeHitIndicator();
+    updateHistoryButtons(); // Add this line
+}
+
+function updateHistoryButtons() {
+    const container = document.getElementById('history-actions');
+    if (!container) return;
+
+    let undoBtn = document.getElementById('undo-btn');
+    let redoBtn = document.getElementById('redo-btn');
+
+    // Create buttons only if they don't exist
+    if (!undoBtn) {
+        container.innerHTML = `
+            <button id="undo-btn" title="Undo (Ctrl+Z)" class="flex items-center justify-center sm:justify-start gap-2 px-3 py-2 text-sm font-semibold bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" style="min-height: 44px; min-width: 44px;">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l4-4m-4 4l4 4"></path></svg>
+                <span class="hidden sm:inline">Undo</span>
+            </button>
+            <button id="redo-btn" title="Redo (Shift+Ctrl+Z)" class="flex items-center justify-center sm:justify-start gap-2 px-3 py-2 text-sm font-semibold bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" style="min-height: 44px; min-width: 44px;">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10H11a8 8 0 00-8 8v2m18-10l-4-4m4 4l-4 4"></path></svg>
+                <span class="hidden sm:inline">Redo</span>
+            </button>
+        `;
+        undoBtn = document.getElementById('undo-btn');
+        redoBtn = document.getElementById('redo-btn');
+        undoBtn.onclick = undoLastAction;
+        redoBtn.onclick = redoLastAction;
+    }
+
+    // Always update the disabled state
+    undoBtn.disabled = state.history.length === 0;
+    redoBtn.disabled = state.redoHistory.length === 0;
+}
 
         function updateFooterButtons() {
             if (EXPERIMENT_ENABLE__FOOTER_REMATCH) {
@@ -2748,36 +3124,48 @@ const debouncedSave = debounce(saveStateToLocal, 200);
         }
         
         function updateBattingTable() {
-            ui.battingTable.innerHTML = '';
-            const batsman1HTML = state.striker ? createBatsmanRow(state.striker, true) : createEmptyBatsmanRow();
-            const batsman2HTML = state.nonStriker ? createBatsmanRow(state.nonStriker, false) : createEmptyBatsmanRow();
+    const battingTeam = state[state.battingTeam];
+    const hasInningsStarted = battingTeam.inningsHistory.length > 0 || battingTeam.overs > 0 || battingTeam.balls > 0;
 
-            let fullTableHTML = batsman1HTML;
+    // Stricter condition: Show placeholder ONLY if no batters are set AND the innings has not begun.
+    if (!state.striker && !state.nonStriker && !hasInningsStarted) {
+        ui.battingTable.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-gray-500">Select batsmen to begin</td></tr>`;
+        return;
+    }
 
-            // Only add the swap button row if both batsmen are on the field
-            if (state.striker && state.nonStriker) {
-                const swapRowHTML = `
-                    <tr class="h-0">
-                        <td class="p-0 border-t relative">
-                            <button onclick="swapBatsmen()" title="Swap Batsmen" class="absolute right-0 transform -translate-x-1/2 -translate-y-1/2 z-10 w-7 h-7 flex items-center justify-center bg-white border-2 border-blue-500 rounded-full text-blue-600 hover:bg-blue-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
-                                </svg>
-                            </button>
-                        </td>
-                        <td class="p-0 border-t"></td>
-                        <td class="p-0 border-t"></td>
-                        <td class="p-0 border-t"></td>
-                        <td class="p-0 border-t"></td>
-                        <td class="p-0 border-t"></td>
-                    </tr>
-                `;
-                fullTableHTML += swapRowHTML;
-            }
+    let fullTableHTML = '';
 
-            fullTableHTML += batsman2HTML;
-            ui.battingTable.innerHTML = fullTableHTML;
-        }
+    if (state.striker) {
+        fullTableHTML += createBatsmanRow(state.striker, true);
+    }
+
+    // Add swap button row only if both batsmen are actively on the field
+    if (state.striker && state.nonStriker) {
+        const swapRowHTML = `
+            <tr class="h-0">
+                <td class="p-0 border-t relative">
+                    <button onclick="swapBatsmen()" title="Swap Batsmen" class="absolute right-0 transform -translate-x-1/2 -translate-y-1/2 z-10 w-7 h-7 flex items-center justify-center bg-white border-2 border-blue-500 rounded-full text-blue-600 hover:bg-blue-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+                        </svg>
+                    </button>
+                </td>
+                <td class="p-0 border-t"></td>
+                <td class="p-0 border-t"></td>
+                <td class="p-0 border-t"></td>
+                <td class="p-0 border-t"></td>
+                <td class="p-0 border-t"></td>
+            </tr>
+        `;
+        fullTableHTML += swapRowHTML;
+    }
+
+    if (state.nonStriker) {
+        fullTableHTML += createBatsmanRow(state.nonStriker, false);
+    }
+
+    ui.battingTable.innerHTML = fullTableHTML;
+}
 
        function createBatsmanRow(batsman, isStriker) {
             const sr = batsman.balls > 0 ? ((batsman.runs / batsman.balls) * 100).toFixed(2) : '0.00';
@@ -2800,13 +3188,6 @@ const debouncedSave = debounce(saveStateToLocal, 200);
                     <td class="text-right p-2 text-base">${sr}</td>
                 </tr>
             `;
-        }
-        
-        function createEmptyBatsmanRow() {
-            if (!state.striker && !state.nonStriker) {
-                return `<tr><td colspan="6" class="text-center py-4 text-gray-500">Select batsmen to begin</td></tr>`;
-            }
-            return '';
         }
 
         function editPlayer(role) {
@@ -3490,6 +3871,127 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
             });
 
             return rankedPlayers.slice(0, 5);
+        }
+
+        function showSummaryScreen() {
+            if (state.striker) savePlayerStats(state.striker, state.battingTeam);
+            if (state.nonStriker) savePlayerStats(state.nonStriker, state.battingTeam);
+            if (state.bowler) savePlayerStats(state.bowler, state.bowlingTeam);
+            closeAllModals();
+
+            updateMatchHeader();
+            document.getElementById('summary-header-team1').innerHTML = `<img src="${state.team1.logo || ''}" class="summary-team-logo"><span class="summary-team-header hidden sm:inline">${state.team1.name}</span>`;
+            document.getElementById('summary-header-team2').innerHTML = `<span class="summary-team-header hidden sm:inline">${state.team2.name}</span><img src="${state.team2.logo || ''}" class="summary-team-logo">`;
+            document.getElementById('summary-status-ribbon').textContent = calculateCurrentStatus();
+            document.getElementById('summary-venue-date').textContent = `${toTitleCase(state.venue)} | ${new Date(state.matchDate + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`;
+
+            const scoreStripsContainer = document.getElementById('summary-score-strips');
+            const panel1 = document.getElementById('panel-innings1');
+            const panel2 = document.getElementById('panel-innings2');
+            const motmPanel = document.getElementById('summary-motm-panel');
+            scoreStripsContainer.innerHTML = '';
+            panel1.innerHTML = '';
+            panel2.innerHTML = '';
+            motmPanel.innerHTML = '';
+
+            const inningsOrder = [state.team1, state.team2];
+            if (state.innings === 1 && state.battingTeam === 'team2') inningsOrder.reverse();
+            if (state.innings === 2 && state.bowlingTeam === 'team2') inningsOrder.reverse();
+
+            inningsOrder.forEach((teamData, index) => {
+                const oversPlayed = `${teamData.overs}.${teamData.balls}`;
+                const ballsBowled = teamData.overs * 6 + teamData.balls;
+                const runRate = ballsBowled > 0 ? (teamData.score / (ballsBowled / 6)).toFixed(2) : '0.00';
+                let targetHTML = '';
+                if (index === 1 && state.target > 0) {
+                    targetHTML = `<div class="target">Target: ${state.target}</div>`;
+                }
+                scoreStripsContainer.innerHTML += `
+                    <div class="summary-score-strip">
+                        <img src="${teamData.logo || ''}" class="summary-team-logo mr-3">
+                        <span class="team-name">${teamData.name}</span>
+                        <span class="score ml-auto">${teamData.score}/${teamData.wickets}</span>
+                        <span class="overs">(${oversPlayed} Ov)</span>
+                        <span class="rr">RR: ${runRate}</span>
+                        ${targetHTML}
+                    </div>`;
+            });
+
+            panel1.innerHTML = buildInningsCardHTML(inningsOrder[0]);
+            panel2.innerHTML = (state.innings === 2 || state.winner) ? buildInningsCardHTML(inningsOrder[1]) : '<div class="summary-innings-card p-4 text-center text-gray-500">Yet to bat</div>';
+
+            const tab1 = document.getElementById('summary-tab-innings1');
+            const tab2 = document.getElementById('summary-tab-innings2');
+            tab1.textContent = `${inningsOrder[0].name} Innings`;
+            tab2.textContent = `${inningsOrder[1].name} Innings`;
+            const tabs = [tab1, tab2];
+            const panels = [panel1, panel2];
+            const switchTab = (tabToActivate) => {
+                tabs.forEach(tab => tab.setAttribute('aria-selected', (tab === tabToActivate).toString()));
+                panels.forEach(panel => panel.hidden = (panel.id !== tabToActivate.getAttribute('aria-controls')));
+            };
+            tab1.onclick = () => switchTab(tab1);
+            tab2.onclick = () => switchTab(tab2);
+            switchTab(tab1); 
+
+            if (state.winner && state.winner !== 'Match Tied') {
+                const rankedPlayers = calculateManOfTheMatch();
+                if (state.manOfTheMatch) {
+                    motmPanel.innerHTML = renderFinalMoMCard(state.manOfTheMatch);
+                } else if (rankedPlayers && rankedPlayers.length > 0) {
+                    motmPanel.innerHTML = renderSuggestedMoMCard(rankedPlayers);
+                }
+            }
+            
+            showScreen('summary-screen');
+        }
+
+        function backToScorecard() {
+            closeModal('win-modal');
+            if (state.winner) {
+                showScreen('app');
+            } else {
+                showScreen('app');
+            }
+        }
+
+        function renderSuggestedMoMCard(rankedPlayers) {
+            const topPlayer = rankedPlayers[0];
+            return `
+                <div class="mom-suggestion-card mt-4">
+                    <h3 class="font-semibold text-gray-700 mb-3">Suggested Man of the Match</h3>
+                    <div class="mom-player-header">
+                        <img src="${topPlayer.image || ''}" class="mom-player-image" onerror="this.src='data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='">
+                        <div>
+                            <p class="mom-player-name">${topPlayer.name}</p>
+                            <p class="mom-player-team">${topPlayer.teamName}</p>
+                        </div>
+                    </div>
+                    <p class="mom-player-performance">${topPlayer.performance}</p>
+                    <div class="mom-suggestion-actions">
+                        <button onclick="confirmSuggestedMoM()" class="px-4 py-2 bg-green-600 text-white font-semibold rounded-md flex-grow">Confirm</button>
+                        <button onclick="openMoMChoiceModal()" class="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-md">Choose Another</button>
+                    </div>
+                </div>`;
+        }
+
+        function confirmSuggestedMoM() {
+            const rankedPlayers = calculateManOfTheMatch();
+            if (rankedPlayers.length > 0) {
+                state.manOfTheMatch = rankedPlayers[0];
+                saveCompletedMatchSummary();
+                showSummaryScreen();
+            }
+        }
+
+        function renderFinalMoMCard(player) {
+            return `
+                 <div id="summary-motm-card" class="mt-4">
+                    <h3>Man of the Match</h3>
+                    <p class="motm-name">${player.name}</p>
+                    <p class="motm-team">${player.teamName}</p>
+                    <p class="motm-contribution">${player.performance}</p>
+                </div>`;
         }
 
         function showSummaryScreen() {
@@ -5149,52 +5651,35 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
             nameInput.className = 'w-full p-2 border rounded-md';
             
             nameInput.oninput = () => {
-                const oldName = player.name;
-                const newName = nameInput.value.trim().toUpperCase();
+    const oldName = player.name;
+    const newName = nameInput.value.trim().toUpperCase();
 
-                if (newName === oldName) return;
+    if (newName === oldName || !newName) return;
 
-                // Update name in the squad object immediately
-                player.name = newName;
+    // 1. Update the name in the master squad object
+    player.name = newName;
 
-                // Update the playing XI list if the player was in it
-                const playingXI = state[teamKey].players;
-                const playerIndexInXI = playingXI.indexOf(oldName);
-                if (playerIndexInXI > -1) {
-                    playingXI[playerIndexInXI] = newName;
-                }
+    // 2. Update the name in the playing XI array of objects
+    const playerInXI = state[teamKey].players.find(p => p.id === player.id);
+    if (playerInXI) {
+        playerInXI.name = newName;
+    }
 
-                // Update the master playerStats object
-                if (oldName && state[teamKey].playerStats[oldName]) {
-                    // This is a RENAME of a player with existing stats
-                    const stats = state[teamKey].playerStats[oldName];
-                    delete state[teamKey].playerStats[oldName];
-                    stats.name = newName;
-                    state[teamKey].playerStats[newName] = stats;
-                } else if (newName) {
-                    // This is a NEW player being named
-                    state[teamKey].playerStats[newName] = state[teamKey].playerStats[newName] || {
-                        playerId: player.id, name: newName, image: player.image,
-                        runs: 0, balls: 0, fours: 0, sixes: 0, isOut: false, dismissalInfo: null,
-                        ballsBowled: 0, runsConceded: 0, wickets: 0, maidens: 0, dots: 0,
-                        foursConceded: 0, sixesConceded: 0, consecutiveFours: 0, consecutiveSixes: 0
-                    };
-                }
+    // 3. Update the name within the master playerStats object (keyed by playerId)
+    const playerStats = state[teamKey].playerStats[player.id];
+    if (playerStats) {
+        playerStats.name = newName;
+    }
 
-                // If the old player is no longer in the squad (name cleared), remove their stats
-                if (!newName && oldName && state[teamKey].playerStats[oldName]) {
-                    delete state[teamKey].playerStats[oldName];
-                }
+    // 4. Update active player objects if their name changed
+    if (state.striker && state.striker.playerId === player.id) state.striker.name = newName;
+    if (state.nonStriker && state.nonStriker.playerId === player.id) state.nonStriker.name = newName;
+    if (state.bowler && state.bowler.playerId === player.id) state.bowler.name = newName;
 
-                // Update active player objects if their name changed
-                if (state.striker && state.striker.playerId === player.id) state.striker.name = newName;
-                if (state.nonStriker && state.nonStriker.playerId === player.id) state.nonStriker.name = newName;
-                if (state.bowler && state.bowler.playerId === player.id) state.bowler.name = newName;
-
-                // Trigger a full UI re-render and persist the changes
-                updateUI();
-                debouncedSave();
-            };
+    // 5. Trigger a full UI re-render and persist the changes
+    updateUI();
+    debouncedSave();
+};
 
             row.appendChild(uploaderDiv);
             row.appendChild(nameInput);
@@ -5227,70 +5712,87 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
             playersContainer.appendChild(addPlayerBtn);
         }
 
-        function openEditModal() {
-            editInitialStriker = JSON.parse(JSON.stringify(state.striker));
-            editInitialNonStriker = JSON.parse(JSON.stringify(state.nonStriker));
-            document.getElementById('edit-venue').value = state.venue;
-            document.getElementById('edit-total-overs').value = state.totalOvers;
-            editedOver = JSON.parse(JSON.stringify(state.currentOver));
-            
-            const battingTeamKey = state.battingTeam;
-            const initialOverRuns = state.currentOver.reduce((acc, ball) => acc + (ball.runs || 0), 0);
-            scoreBeforeOver = state[battingTeamKey].score - initialOverRuns;
+        function switchEditTab(teamKeyToShow) {
+    // Tab buttons
+    document.getElementById('edit-team1-tab').classList.toggle('active', teamKeyToShow === 'team1');
+    document.getElementById('edit-team2-tab').classList.toggle('active', teamKeyToShow === 'team2');
 
-            ['team1', 'team2'].forEach(teamKey => {
-                const team = state[teamKey];
-                document.getElementById(`edit-${teamKey}-panel`).classList.toggle('highlight', teamKey === battingTeamKey);
-                document.getElementById(`edit-${teamKey}-name`).value = team.name;
-                document.getElementById(`edit-${teamKey}-score`).value = team.score;
-                document.getElementById(`edit-${teamKey}-wickets`).value = team.wickets;
-                document.getElementById(`edit-${teamKey}-overs`).value = team.overs;
-                document.getElementById(`edit-${teamKey}-balls`).value = team.balls;
+    // Content panels
+    document.getElementById('edit-team1-panel').classList.toggle('hidden', teamKeyToShow !== 'team1');
+    document.getElementById('edit-team2-panel').classList.toggle('hidden', teamKeyToShow !== 'team2');
+}
 
-                const logoUploader = document.getElementById(`edit-${teamKey}-logo-uploader`);
-                logoUploader.innerHTML = `
-                    <img id="edit-${teamKey}-logo-preview" src="${team.logo || ''}" alt="${team.name} Logo" onerror="this.src='data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';">
-                    <label for="edit-${teamKey}-logo-input" class="overlay"><span>Change</span></label>
-                    <input type="file" id="edit-${teamKey}-logo-input" accept="image/png, image/jpeg">`;
-                
-                document.getElementById(`edit-${teamKey}-logo-input`).onchange = (e) => {
-                    if (e.target.files[0]) {
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                            document.getElementById(`edit-${teamKey}-logo-preview`).src = event.target.result;
-                        };
-                        reader.readAsDataURL(e.target.files[0]);
-                    }
+function openEditModal() {
+    editInitialStriker = JSON.parse(JSON.stringify(state.striker));
+    editInitialNonStriker = JSON.parse(JSON.stringify(state.nonStriker));
+    document.getElementById('edit-venue').value = state.venue;
+    document.getElementById('edit-total-overs').value = state.totalOvers;
+    editedOver = JSON.parse(JSON.stringify(state.currentOver));
+    
+    // Setup Tab Listeners & Text
+    document.getElementById('edit-team1-tab').textContent = state.team1.name;
+    document.getElementById('edit-team2-tab').textContent = state.team2.name;
+    document.getElementById('edit-team1-tab').onclick = () => switchEditTab('team1');
+    document.getElementById('edit-team2-tab').onclick = () => switchEditTab('team2');
+    
+    const battingTeamKey = state.battingTeam;
+    const initialOverRuns = state.currentOver.reduce((acc, ball) => acc + (ball.runs || 0), 0);
+    scoreBeforeOver = state[battingTeamKey].score - initialOverRuns;
+
+    ['team1', 'team2'].forEach(teamKey => {
+        const team = state[teamKey];
+        // document.getElementById(`edit-${teamKey}-panel`).classList.toggle('highlight', teamKey === battingTeamKey);
+        document.getElementById(`edit-${teamKey}-name`).value = team.name;
+        document.getElementById(`edit-${teamKey}-score`).value = team.score;
+        document.getElementById(`edit-${teamKey}-wickets`).value = team.wickets;
+        document.getElementById(`edit-${teamKey}-overs`).value = team.overs;
+        document.getElementById(`edit-${teamKey}-balls`).value = team.balls;
+
+        const logoUploader = document.getElementById(`edit-${teamKey}-logo-uploader`);
+        logoUploader.innerHTML = `
+            <img id="edit-${teamKey}-logo-preview" src="${team.logo || ''}" alt="${team.name} Logo" onerror="this.src='data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';">
+            <label for="edit-${teamKey}-logo-input" class="overlay"><span>Change</span></label>
+            <input type="file" id="edit-${teamKey}-logo-input" accept="image/png, image/jpeg">`;
+        
+        document.getElementById(`edit-${teamKey}-logo-input`).onchange = (e) => {
+            if (e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    document.getElementById(`edit-${teamKey}-logo-preview`).src = event.target.result;
                 };
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        };
 
-                renderEditablePlayerList(teamKey);
-            });
+        renderEditablePlayerList(teamKey);
+    });
 
-            const chipsContainer = document.getElementById('edit-over-chips-display');
-            const recalculateAndRender = () => {
-                const battingTeamScoreInput = document.getElementById(`edit-${battingTeamKey}-score`);
-                const battingTeamOversInput = document.getElementById(`edit-${battingTeamKey}-overs`);
-                const battingTeamBallsInput = document.getElementById(`edit-${battingTeamKey}-balls`);
-                let newOverRuns = editedOver.reduce((acc, ball) => acc + parseBallEvent(ball.event), 0);
-                battingTeamScoreInput.value = scoreBeforeOver + newOverRuns;
-                let legalBalls = editedOver.filter(ball => isLegalDelivery(ball.event)).length;
-                let baseOvers = state[state.battingTeam].overs;
-                
-                let totalBalls = (baseOvers * 6) + legalBalls;
-                battingTeamOversInput.value = Math.floor(totalBalls / 6);
-                battingTeamBallsInput.value = totalBalls % 6;
-                
-                chipsContainer.innerHTML = editedOver.map((ball, index) => 
-                    `<span class="over-chip" data-index="${index}">${ball.event}</span>`
-                ).join('');
-                chipsContainer.querySelectorAll('.over-chip').forEach(chip => {
-                    chip.onclick = () => openOverEditPopover(chip, chip.dataset.index);
-                });
-            };
+    const chipsContainer = document.getElementById('edit-over-chips-display');
+    const recalculateAndRender = () => {
+        const battingTeamScoreInput = document.getElementById(`edit-${battingTeamKey}-score`);
+        const battingTeamOversInput = document.getElementById(`edit-${battingTeamKey}-overs`);
+        const battingTeamBallsInput = document.getElementById(`edit-${battingTeamKey}-balls`);
+        let newOverRuns = editedOver.reduce((acc, ball) => acc + parseBallEvent(ball.event), 0);
+        battingTeamScoreInput.value = scoreBeforeOver + newOverRuns;
+        let legalBalls = editedOver.filter(ball => isLegalDelivery(ball.event)).length;
+        let baseOvers = state[state.battingTeam].overs;
+        
+        let totalBalls = (baseOvers * 6) + legalBalls;
+        battingTeamOversInput.value = Math.floor(totalBalls / 6);
+        battingTeamBallsInput.value = totalBalls % 6;
+        
+        chipsContainer.innerHTML = editedOver.map((ball, index) => 
+            `<span class="over-chip" data-index="${index}">${ball.event}</span>`
+        ).join('');
+        chipsContainer.querySelectorAll('.over-chip').forEach(chip => {
+            chip.onclick = () => openOverEditPopover(chip, chip.dataset.index);
+        });
+    };
 
-            recalculateAndRender();
-            openModal('edit-match-modal');
-        }
+    recalculateAndRender();
+    switchEditTab('team1'); // Set initial tab
+    openModal('edit-match-modal');
+}
         
         function openOverEditPopover(chipElement, ballIndex) {
             const popover = document.getElementById('over-edit-popover');
@@ -5379,81 +5881,50 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
         }
 
         function saveMatchEdits() {
-            saveState(); // Creates a checkpoint for the main Undo button
+    saveState(); // Log state before making major changes for undo history
 
-            try {
-                // --- STORE ORIGINAL ACTIVE PLAYER NAMES ---
-                const oldStrikerName = state.striker ? state.striker.name : null;
-                const oldNonStrikerName = state.nonStriker ? state.nonStriker.name : null;
-                const oldBowlerName = state.bowler ? state.bowler.name : null;
-                let nameChangeMap = {}; // To track oldName -> newName
+    // --- 1. GATHER ALL NEW VALUES FROM THE FORM ---
+    const newVenue = document.getElementById('edit-venue').value.toUpperCase();
+    const newTotalOvers = parseInt(document.getElementById('edit-total-overs').value);
 
-                // --- UPDATE GENERAL MATCH STATE ---
-                state.totalOvers = parseInt(document.getElementById('edit-total-overs').value);
-                state.currentOver = [...editedOver];
+    const newTeam1Data = {
+        name: document.getElementById('edit-team1-name').value.toUpperCase(),
+        score: parseInt(document.getElementById('edit-team1-score').value),
+        wickets: parseInt(document.getElementById('edit-team1-wickets').value),
+        overs: parseInt(document.getElementById('edit-team1-overs').value),
+        balls: parseInt(document.getElementById('edit-team1-balls').value),
+        logo: document.getElementById('edit-team1-logo-preview').src
+    };
+    const newTeam2Data = {
+        name: document.getElementById('edit-team2-name').value.toUpperCase(),
+        score: parseInt(document.getElementById('edit-team2-score').value),
+        wickets: parseInt(document.getElementById('edit-team2-wickets').value),
+        overs: parseInt(document.getElementById('edit-team2-overs').value),
+        balls: parseInt(document.getElementById('edit-team2-balls').value),
+        logo: document.getElementById('edit-team2-logo-preview').src
+    };
 
-                // --- UPDATE TEAM-SPECIFIC STATE ---
-                ['team1', 'team2'].forEach(teamKey => {
-                    const team = state[teamKey];
-                    team.name = document.getElementById(`edit-${teamKey}-name`).value.toUpperCase();
-                    team.score = parseInt(document.getElementById(`edit-${teamKey}-score`).value);
-                    team.wickets = parseInt(document.getElementById(`edit-${teamKey}-wickets`).value);
-                    team.overs = parseInt(document.getElementById(`edit-${teamKey}-overs`).value);
-                    team.balls = parseInt(document.getElementById(`edit-${teamKey}-balls`).value);
-                    
-                    const logoPreview = document.getElementById(`edit-${teamKey}-logo-preview`);
-                    if (logoPreview.src && !logoPreview.src.includes('data:image/gif') && logoPreview.src.startsWith('data:image')) {
-                        team.logo = logoPreview.src;
-                    }
+    // --- 2. APPLY ALL GATHERED CHANGES TO THE MAIN STATE ---
+    state.venue = newVenue;
+    state.totalOvers = newTotalOvers;
 
-                    const playerInputs = document.getElementById(`edit-${teamKey}-players`).querySelectorAll('input');
-                    const oldPlayerNames = [...team.players]; // Make a copy
-                    const newPlayers = [];
-                    const newPlayerStats = {};
+    state.team1 = { ...state.team1, ...newTeam1Data };
+    state.team2 = { ...state.team2, ...newTeam2Data };
 
-                    playerInputs.forEach((input, index) => {
-                        const newName = input.value.trim().toUpperCase();
-                        const oldName = oldPlayerNames[index];
-                        
-                        if (newName) {
-                            newPlayers.push(newName);
-                            if (oldName && oldName !== newName) {
-                                nameChangeMap[oldName] = newName;
-                            }
+    state.currentOver = JSON.parse(JSON.stringify(editedOver));
 
-                            // Transfer stats from old name if it exists, otherwise create new
-                            if (oldName && team.playerStats[oldName]) {
-                                newPlayerStats[newName] = team.playerStats[oldName];
-                                newPlayerStats[newName].name = newName; // Update name inside the object
-                            } else {
-                                // If a player was newly added or the old name didn't exist, create a new record
-                                newPlayerStats[newName] = team.playerStats[newName] || { name: newName, image: '', runs: 0, balls: 0, fours: 0, sixes: 0, isOut: false, dismissalInfo: null, ballsBowled: 0, runsConceded: 0, wickets: 0, maidens: 0, dots: 0, foursConceded: 0, sixesConceded: 0, consecutiveFours: 0, consecutiveSixes: 0 };
-                            }
-                        }
-                    });
-                    team.players = newPlayers;
-                    team.playerStats = newPlayerStats;
-                });
-                
-                // --- RE-SYNC ACTIVE PLAYER OBJECTS IF RENAMED ---
-                if (oldStrikerName && nameChangeMap[oldStrikerName]) {
-                    state.striker = state[state.battingTeam].playerStats[nameChangeMap[oldStrikerName]];
-                }
-                if (oldNonStrikerName && nameChangeMap[oldNonStrikerName]) {
-                    state.nonStriker = state[state.battingTeam].playerStats[nameChangeMap[oldNonStrikerName]];
-                }
-                if (oldBowlerName && nameChangeMap[oldBowlerName]) {
-                    state.bowler = state[state.bowlingTeam].playerStats[nameChangeMap[oldBowlerName]];
-                }
-                
-                closeModal('edit-match-modal');
-                updateUI(); // This will now re-render with updated names and logos
-                showAlert('Match state updated successfully!');
+    // --- 3. RECALCULATE ALL PLAYER STATS FROM INNINGS HISTORY ---
+    // This is the most robust way to ensure stats are correct after any edit.
+    recalculateAllPlayerStats();
 
-            } catch (error) {
-                showAlert(`Error saving changes: ${error.message}`);
-            }
-        }
+    // --- 4. FINALIZE ---
+    closeModal('edit-match-modal');
+    updateUI(); // Re-render everything with the fresh, correct state
+    debouncedSave();
+
+    showAlert('Match state has been updated successfully.');
+}
+
 
         function previewDownload(format) {
              const { jsPDF } = window.jspdf;
@@ -5819,23 +6290,74 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
                 };
 
                 // This is the single, stable handler for the player selection save button
-                ui.playerSaveBtn.onclick = () => {
-                    const { role, onCompleteCallback, teamKey } = currentPlayerSelection;
-                    if (!role || !teamKey) return;
+ui.playerSaveBtn.onclick = () => {
+    const { role, onCompleteCallback, teamKey } = currentPlayerSelection;
+    if (!role || !teamKey) return;
 
-                    const selectedPlayerName = ui.playerSelect.value;
-                    if (selectedPlayerName && state[teamKey].playerStats[selectedPlayerName]) {
-                        state[role] = { ...state[teamKey].playerStats[selectedPlayerName] };
-                        
-                        closeModal('player-modal');
-                        updateUI();
-                        
-                        if (typeof onCompleteCallback === 'function') {
-                            setTimeout(onCompleteCallback, 350);
-                        }
+    const selectedPlayerId = ui.playerSelect.value;
+
+    // --- START: NEW VALIDATION LOGIC ---
+    if (role === 'striker' && state.nonStriker && selectedPlayerId === state.nonStriker.playerId) {
+        showAlert("The same player cannot be both striker and non-striker. Please select a different player.");
+        return;
+    }
+    if (role === 'nonStriker' && state.striker && selectedPlayerId === state.striker.playerId) {
+        showAlert("The same player cannot be both striker and non-striker. Please select a different player.");
+        return;
+    }
+    // --- END: NEW VALIDATION LOGIC ---
+
+    const oldPlayerId = state[role] ? state[role].playerId : null;
+
+    if (!selectedPlayerId || !state[teamKey].playerStats[selectedPlayerId]) return;
+
+    // Default action: just update the player in the role (e.g., non-striker change)
+    const updatePlayerState = () => {
+        state[role] = { ...state[teamKey].playerStats[selectedPlayerId] };
+        closeModal('player-modal');
+        updateUI();
+        if (typeof onCompleteCallback === 'function') {
+            setTimeout(onCompleteCallback, 350);
+        }
+        currentPlayerSelection = {};
+    };
+
+    // If the striker was changed and there's history to re-attribute
+    const battingTeam = state[state.battingTeam];
+    if (role === 'striker' && selectedPlayerId !== oldPlayerId && battingTeam.inningsHistory.length > 0) {
+
+        showChoiceConfirm(
+            'Apply Batter Correction',
+            `How do you want to reassign runs from ${battingTeam.playerStats[oldPlayerId].name} to ${battingTeam.playerStats[selectedPlayerId].name}?`,
+            [
+                {
+                    text: 'Entire Current Stint (Recommended)',
+                    class: 'px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700',
+                    callback: () => {
+                        shiftBatterContribution({ fromBatterId: oldPlayerId, toBatterId: selectedPlayerId, scope: 'currentStint' });
+                        updatePlayerState();
                     }
-                    currentPlayerSelection = {}; // Clear context after use
-                };
+                },
+                {
+                    text: 'Last Ball Only',
+                    class: 'px-6 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300',
+                    callback: () => {
+                        shiftBatterContribution({ fromBatterId: oldPlayerId, toBatterId: selectedPlayerId, scope: 'lastBall' });
+                        updatePlayerState();
+                    }
+                },
+                {
+                    text: 'Do Not Reassign Runs',
+                    class: 'text-sm text-gray-500 hover:text-gray-800 mt-2',
+                    callback: updatePlayerState
+                }
+            ]
+        );
+
+    } else {
+        updatePlayerState(); // Default behavior
+    }
+};
 
                 ui.bowlerPromptOverlay.onclick = () => {
                     ui.playerModalCancelBtnX.classList.add('hidden');
@@ -5915,6 +6437,25 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
         }
 
         document.addEventListener('DOMContentLoaded', initializeApp);
+
+document.addEventListener('keydown', function(event) {
+    // Do not trigger shortcuts if an input field is focused
+    if (event.target.tagName === 'INPUT' || event.target.tagName === 'SELECT' || event.target.tagName === 'TEXTAREA') {
+        return;
+    }
+
+    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const isModifier = isMac ? event.metaKey : event.ctrlKey;
+
+    if (isModifier && event.key.toLowerCase() === 'z') {
+        event.preventDefault();
+        if (event.shiftKey) {
+            if (!document.getElementById('redo-btn').disabled) redoLastAction();
+        } else {
+            if (!document.getElementById('undo-btn').disabled) undoLastAction();
+        }
+    }
+});
 
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Enter' && !ui.setupScreen.classList.contains('hidden')) {
