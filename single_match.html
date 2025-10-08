@@ -2331,7 +2331,42 @@ function updateFreeHitIndicator() {
         isOutFilter: (role !== 'bowler')
     });
 
-    currentPlayerSelection = { role, onCompleteCallback, teamKey };
+    // DEFINITIVE FIX: Re-bind the onclick handler every time the modal is opened.
+    ui.playerSaveBtn.onclick = () => {
+        const selectedPlayerId = ui.playerSelect.value;
+
+        // Validation for duplicate batters
+        if (role === 'striker' && state.nonStriker && selectedPlayerId === state.nonStriker.playerId) {
+            showAlert("The same player cannot be both striker and non-striker. Please select a different player.");
+            return;
+        }
+        if (role === 'nonStriker' && state.striker && selectedPlayerId === state.striker.playerId) {
+            showAlert("The same player cannot be both striker and non-striker. Please select a different player.");
+            return;
+        }
+
+        const oldPlayerId = state[role] ? state[role].playerId : null;
+        if (!selectedPlayerId || !state[teamKey].playerStats[selectedPlayerId]) return;
+
+        const updatePlayerState = () => {
+            state[role] = { ...state[teamKey].playerStats[selectedPlayerId] };
+            closeModal('player-modal');
+            updateUI();
+            if (typeof onCompleteCallback === 'function') {
+                setTimeout(onCompleteCallback, 350);
+            }
+        };
+
+        const battingTeam = state[state.battingTeam];
+        if (role === 'striker' && oldPlayerId && selectedPlayerId !== oldPlayerId && battingTeam.inningsHistory.length > 0) {
+            // Automatically apply the correction for the entire current stint without asking the user.
+            shiftBatterContribution({ fromBatterId: oldPlayerId, toBatterId: selectedPlayerId, scope: 'currentStint' });
+            updatePlayerState();
+        } else {
+            updatePlayerState();
+        }
+    };
+
     openModal('player-modal');
 }
 
@@ -3004,6 +3039,27 @@ function updateUI() {
     updateHistoryButtons(); // Add this line
 }
 
+// NEW FUNCTION: Handles the water ripple effect on click
+function applyRipple(event) {
+    const button = event.currentTarget;
+    const circle = document.createElement("span");
+    const diameter = Math.max(button.clientWidth, button.clientHeight);
+    const radius = diameter / 2;
+
+    circle.style.width = circle.style.height = `${diameter}px`;
+    const rect = button.getBoundingClientRect();
+    circle.style.left = `${event.clientX - rect.left - radius}px`;
+    circle.style.top = `${event.clientY - rect.top - radius}px`;
+    circle.classList.add("ripple"); // Uses existing .ripple CSS from the toss buttons
+
+    const existingRipple = button.querySelector(".ripple");
+    if (existingRipple) {
+        existingRipple.remove();
+    }
+
+    button.appendChild(circle);
+}
+
 function updateHistoryButtons() {
     const container = document.getElementById('history-actions');
     if (!container) return;
@@ -3014,19 +3070,27 @@ function updateHistoryButtons() {
     // Create buttons only if they don't exist
     if (!undoBtn) {
         container.innerHTML = `
-            <button id="undo-btn" title="Undo (Ctrl+Z)" class="flex items-center justify-center sm:justify-start gap-2 px-3 py-2 text-sm font-semibold bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" style="min-height: 44px; min-width: 44px;">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l4-4m-4 4l4 4"></path></svg>
-                <span class="hidden sm:inline">Undo</span>
+            <button id="undo-btn" title="Undo (Ctrl+Z)" class="relative overflow-hidden flex items-center justify-center w-6 h-6 rounded-full bg-gray-200/60 backdrop-blur-sm border border-white/30 shadow-md text-gray-700 transition-all duration-200 active:scale-90 sm:w-auto sm:h-auto sm:rounded-md sm:py-2 sm:px-3 sm:gap-2 sm:bg-white sm:text-gray-800 sm:backdrop-blur-none sm:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                <svg class="w-3 h-3 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l4-4m-4 4l4 4"></path></svg>
+                <span class="hidden sm:inline font-semibold">Undo</span>
             </button>
-            <button id="redo-btn" title="Redo (Shift+Ctrl+Z)" class="flex items-center justify-center sm:justify-start gap-2 px-3 py-2 text-sm font-semibold bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" style="min-height: 44px; min-width: 44px;">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10H11a8 8 0 00-8 8v2m18-10l-4-4m4 4l-4 4"></path></svg>
-                <span class="hidden sm:inline">Redo</span>
+            <button id="redo-btn" title="Redo (Shift+Ctrl+Z)" class="relative overflow-hidden flex items-center justify-center w-6 h-6 rounded-full bg-gray-200/60 backdrop-blur-sm border border-white/30 shadow-md text-gray-700 transition-all duration-200 active:scale-90 sm:w-auto sm:h-auto sm:rounded-md sm:py-2 sm:px-3 sm:gap-2 sm:bg-white sm:text-gray-800 sm:backdrop-blur-none sm:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                <svg class="w-3 h-3 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 10H11a8 8 0 00-8 8v2m18-10l-4-4m4 4l-4 4"></path></svg>
+                <span class="hidden sm:inline font-semibold">Redo</span>
             </button>
         `;
         undoBtn = document.getElementById('undo-btn');
         redoBtn = document.getElementById('redo-btn');
-        undoBtn.onclick = undoLastAction;
-        redoBtn.onclick = redoLastAction;
+        
+        // Attach event listeners that include the ripple effect
+        undoBtn.addEventListener('click', (e) => {
+            applyRipple(e);
+            undoLastAction();
+        });
+        redoBtn.addEventListener('click', (e) => {
+            applyRipple(e);
+            redoLastAction();
+        });
     }
 
     // Always update the disabled state
@@ -3662,15 +3726,17 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
             document.getElementById('wm-meta-line').textContent = `${toTitleCase(state.venue)} • ${dateStr} • ${state.totalOvers} Overs`;
             
             // --- Final Setup ---
+            // This cloning is done to restart the CSS animations on the modal.
+            const modalContent = ui.winModal.querySelector('.modal-content');
+            const newModalContent = modalContent.cloneNode(true);
+            modalContent.parentNode.replaceChild(newModalContent, modalContent);
+            
+            // We must re-fetch the button from the new, live DOM element and attach the handler to it.
             const okBtn = document.getElementById('win-modal-ok-btn');
             okBtn.onclick = () => {
                 closeModal('win-modal');
                 showSummaryScreen();
             };
-            
-            const modalContent = ui.winModal.querySelector('.modal-content');
-            const newModalContent = modalContent.cloneNode(true);
-            modalContent.parentNode.replaceChild(newModalContent, modalContent);
             
             ui.winModal.classList.remove('hidden');
             if (winnerName !== 'Match Tied') {
@@ -5676,8 +5742,8 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
                         const newImageUrl = event.target.result;
                         img.src = newImageUrl;
                         player.image = newImageUrl;
-                        if(state[teamKey].playerStats[player.name]) {
-                            state[teamKey].playerStats[player.name].image = newImageUrl;
+                        if(state[teamKey].playerStats[player.id]) {
+                            state[teamKey].playerStats[player.id].image = newImageUrl;
                         }
                         updateUI();
                         debouncedSave();
@@ -5698,35 +5764,46 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
             nameInput.className = 'w-full p-2 border rounded-md';
             
             nameInput.oninput = () => {
-    const oldName = player.name;
-    const newName = nameInput.value.trim().toUpperCase();
+                const oldName = player.name;
+                const newName = nameInput.value.trim().toUpperCase();
 
-    if (newName === oldName || !newName) return;
+                if (newName === oldName || !newName) return;
 
-    // 1. Update the name in the master squad object
-    player.name = newName;
+                // 1. Update the name in the master squad object
+                player.name = newName;
 
-    // 2. Update the name in the playing XI array of objects
-    const playerInXI = state[teamKey].players.find(p => p.id === player.id);
-    if (playerInXI) {
-        playerInXI.name = newName;
-    }
+                // 2. Find or create the entry in the 'players' array (list of all available players)
+                let playerInList = state[teamKey].players.find(p => p.id === player.id);
+                if (playerInList) {
+                    playerInList.name = newName; // Update existing
+                } else {
+                    // This is a new player, add them to the list of available players
+                    state[teamKey].players.push({ ...player });
+                }
 
-    // 3. Update the name within the master playerStats object (keyed by playerId)
-    const playerStats = state[teamKey].playerStats[player.id];
-    if (playerStats) {
-        playerStats.name = newName;
-    }
-
-    // 4. Update active player objects if their name changed
-    if (state.striker && state.striker.playerId === player.id) state.striker.name = newName;
-    if (state.nonStriker && state.nonStriker.playerId === player.id) state.nonStriker.name = newName;
-    if (state.bowler && state.bowler.playerId === player.id) state.bowler.name = newName;
-
-    // 5. Trigger a full UI re-render and persist the changes
-    updateUI();
-    debouncedSave();
-};
+                // 3. Find or create the entry in the 'playerStats' object
+                let playerStats = state[teamKey].playerStats[player.id];
+                if (playerStats) {
+                    playerStats.name = newName; // Update existing
+                } else {
+                    // This is a new player, initialize their stats
+                    state[teamKey].playerStats[player.id] = {
+                        playerId: player.id, name: newName, image: player.image || '',
+                        runs: 0, balls: 0, fours: 0, sixes: 0, isOut: false, dismissalInfo: null,
+                        ballsBowled: 0, runsConceded: 0, wickets: 0, maidens: 0, dots: 0,
+                        foursConceded: 0, sixesConceded: 0, consecutiveFours: 0, consecutiveSixes: 0
+                    };
+                }
+                
+                // 4. Update active player objects if their name changed
+                if (state.striker && state.striker.playerId === player.id) state.striker.name = newName;
+                if (state.nonStriker && state.nonStriker.playerId === player.id) state.nonStriker.name = newName;
+                if (state.bowler && state.bowler.playerId === player.id) state.bowler.name = newName;
+                
+                // 5. Trigger a full UI re-render and persist the changes
+                updateUI();
+                debouncedSave();
+            };
 
             row.appendChild(uploaderDiv);
             row.appendChild(nameInput);
@@ -6306,7 +6383,12 @@ function openEditModal() {
         function initializeApp() {
             // This function sets up all the button clicks and input handlers for the app.
             const initializeCommonEventListeners = () => {
-                ui.matchDateInput.value = new Date().toISOString().split('T')[0];
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+                const day = String(today.getDate()).padStart(2, '0');
+                ui.matchDateInput.value = `${year}-${month}-${day}`;
+
                 ui.tossWinnerTeam1.onclick = () => selectTossWinner('team1');
                 ui.tossWinnerTeam2.onclick = () => selectTossWinner('team2');
                 ui.tossChoiceBat.onclick = () => selectTossChoice('bat');
@@ -6336,75 +6418,6 @@ function openEditModal() {
                     confirmCallback = null;
                 };
 
-                // This is the single, stable handler for the player selection save button
-ui.playerSaveBtn.onclick = () => {
-    const { role, onCompleteCallback, teamKey } = currentPlayerSelection;
-    if (!role || !teamKey) return;
-
-    const selectedPlayerId = ui.playerSelect.value;
-
-    // --- START: NEW VALIDATION LOGIC ---
-    if (role === 'striker' && state.nonStriker && selectedPlayerId === state.nonStriker.playerId) {
-        showAlert("The same player cannot be both striker and non-striker. Please select a different player.");
-        return;
-    }
-    if (role === 'nonStriker' && state.striker && selectedPlayerId === state.striker.playerId) {
-        showAlert("The same player cannot be both striker and non-striker. Please select a different player.");
-        return;
-    }
-    // --- END: NEW VALIDATION LOGIC ---
-
-    const oldPlayerId = state[role] ? state[role].playerId : null;
-
-    if (!selectedPlayerId || !state[teamKey].playerStats[selectedPlayerId]) return;
-
-    // Default action: just update the player in the role (e.g., non-striker change)
-    const updatePlayerState = () => {
-        state[role] = { ...state[teamKey].playerStats[selectedPlayerId] };
-        closeModal('player-modal');
-        updateUI();
-        if (typeof onCompleteCallback === 'function') {
-            setTimeout(onCompleteCallback, 350);
-        }
-        currentPlayerSelection = {};
-    };
-
-    // If the striker was changed and there's history to re-attribute
-    const battingTeam = state[state.battingTeam];
-    if (role === 'striker' && selectedPlayerId !== oldPlayerId && battingTeam.inningsHistory.length > 0) {
-
-        showChoiceConfirm(
-            'Apply Batter Correction',
-            `How do you want to reassign runs from ${battingTeam.playerStats[oldPlayerId].name} to ${battingTeam.playerStats[selectedPlayerId].name}?`,
-            [
-                {
-                    text: 'Entire Current Stint (Recommended)',
-                    class: 'px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700',
-                    callback: () => {
-                        shiftBatterContribution({ fromBatterId: oldPlayerId, toBatterId: selectedPlayerId, scope: 'currentStint' });
-                        updatePlayerState();
-                    }
-                },
-                {
-                    text: 'Last Ball Only',
-                    class: 'px-6 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300',
-                    callback: () => {
-                        shiftBatterContribution({ fromBatterId: oldPlayerId, toBatterId: selectedPlayerId, scope: 'lastBall' });
-                        updatePlayerState();
-                    }
-                },
-                {
-                    text: 'Do Not Reassign Runs',
-                    class: 'text-sm text-gray-500 hover:text-gray-800 mt-2',
-                    callback: updatePlayerState
-                }
-            ]
-        );
-
-    } else {
-        updatePlayerState(); // Default behavior
-    }
-};
 
                 ui.bowlerPromptOverlay.onclick = () => {
                     ui.playerModalCancelBtnX.classList.add('hidden');
