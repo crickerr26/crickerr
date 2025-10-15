@@ -133,12 +133,126 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
+        @media (max-width: 1023px) {
+            #tournament-dashboard .grid {
+                grid-template-columns: 1fr;
+            }
+             #tournament-dashboard .lg\:col-span-2, #tournament-dashboard .lg\:col-span-1 {
+                grid-column: span 1 / span 1;
+            }
+        }
+
         @media (max-width: 768px) {
+            body {
+                padding-top: env(safe-area-inset-top);
+                padding-left: env(safe-area-inset-left);
+                padding-right: env(safe-area-inset-right);
+                -webkit-tap-highlight-color: transparent;
+            }
+            body.modal-open {
+                overflow: hidden;
+            }
+
+            h1 { font-size: clamp(1.75rem, 5vw, 2.25rem); }
+            h2 { font-size: clamp(1.25rem, 4vw, 1.875rem); }
+            h3 { font-size: clamp(1.1rem, 3.5vw, 1.5rem); }
+
+            #tournament-setup .p-8 { padding: 1.5rem; }
+            #setup-step-1 .grid-cols-1, #setup-step-1 .grid-cols-2 {
+                grid-template-columns: 1fr;
+            }
+            #team-entry-container .grid {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+            }
+            #team-entry-container .sm\:col-span-2 {
+                grid-column: span 1 / span 1;
+            }
+            #progress-container .flex span { font-size: 0.65rem; }
+
+            #scorer-app {
+                height: 100svh;
+                padding-bottom: env(safe-area-inset-bottom);
+            }
             #scorer-app > .grid { display: flex; flex-direction: column; }
-            #scoring-controls-container { position: fixed; bottom: 0; left: 0; right: 0; background: #f8fafc; padding: 0.5rem; border-top: 1px solid #e2e8f0; border-radius: 0; }
-            #main-content-area { padding-bottom: 250px; }
+            #main-content-area {
+                padding-bottom: 260px; 
+            }
+            #scoring-controls-container {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: #f8fafc;
+                padding: 0.5rem;
+                border-top: 1px solid #e2e8f0;
+                border-radius: 0;
+                padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+                z-index: 40;
+            }
+            .scoring-grid {
+                height: 220px;
+            }
+            
+            #main-content-area .overflow-hidden {
+                overflow-x: auto;
+            }
+            #main-content-area table {
+                min-width: 500px;
+            }
             .fixture-card-ipl { flex-direction: column; text-align: center; }
             .fixture-card-ipl .team-info { justify-content: center; }
+        }
+
+        @media (max-width: 640px) {
+            .modal-overlay {
+                align-items: flex-end;
+            }
+            .modal-content {
+                width: 100%;
+                max-width: 100%;
+                margin: 0;
+                border-radius: 1rem 1rem 0 0;
+                transform: translateY(100%);
+                animation: bottom-sheet-enter 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+                padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+            }
+
+            .modal-overlay.hidden .modal-content {
+                animation: bottom-sheet-leave 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            }
+
+            #alert-modal, #confirm-modal {
+                align-items: center;
+            }
+            #alert-modal .modal-content, #confirm-modal .modal-content {
+                 width: 90%;
+                 max-width: 320px;
+                 border-radius: 0.75rem;
+                 animation: none;
+                 transform: translateY(0);
+            }
+            
+            .modal-content button, .modal-content select {
+                min-height: 44px;
+                padding-top: 0.75rem;
+                padding-bottom: 0.75rem;
+            }
+            
+            @keyframes bottom-sheet-enter {
+                from { transform: translateY(100%); }
+                to { transform: translateY(0); }
+            }
+            @keyframes bottom-sheet-leave {
+                from { transform: translateY(0); }
+                to { transform: translateY(100%); }
+            }
+        }
+
+        @media (max-width: 390px) {
+            .p-6 { padding: 1rem; }
+            .p-8 { padding: 1.25rem; }
+            #dashboard-title { font-size: 1.8rem; }
         }
     </style>
 </head>
@@ -734,8 +848,16 @@
         }
 
         // --- UI & MODALS ---
-        function openModal(modalId) { document.getElementById(modalId)?.classList.remove('hidden'); }
-        function closeModal(modalId) { document.getElementById(modalId)?.classList.add('hidden'); }
+        function openModal(modalId) { 
+            document.getElementById(modalId)?.classList.remove('hidden');
+            document.body.classList.add('modal-open');
+        }
+        function closeModal(modalId) { 
+            document.getElementById(modalId)?.classList.add('hidden');
+            if (document.querySelectorAll('.modal-overlay:not(.hidden)').length === 0) {
+                document.body.classList.remove('modal-open');
+            }
+        }
         function showAlert(message, onOk) {
             document.getElementById('alert-message').textContent = message;
             alertCallback = onOk;
