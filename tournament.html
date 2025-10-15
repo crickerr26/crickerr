@@ -86,6 +86,124 @@
         p, span, div { font-size: clamp(0.8rem, 1.5vw, 0.95rem); }
         .text-xs { font-size: clamp(0.7rem, 1.2vw, 0.75rem); }
 
+        .team-entry-card {
+            transition: all 180ms ease;
+        }
+        .team-entry-card:focus-within {
+            box-shadow: 0 0 0 2px var(--accent-color), 0 8px 20px var(--shadow-color);
+            transform: translateY(-2px);
+        }
+        .team-card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+        }
+        .team-card-header h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .team-card-header::before {
+            content: '';
+            width: 5px;
+            height: 20px;
+            background-color: var(--accent-color);
+            border-radius: 3px;
+            margin-right: 0.75rem;
+        }
+
+        .logo-uploader-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 9999px;
+            background-color: #e2e8f0;
+            cursor: pointer;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            border: 3px solid white;
+            transition: all 180ms ease;
+        }
+        .logo-uploader-container.dragover {
+            transform: scale(1.05);
+            border-color: var(--accent-color);
+        }
+        .logo-preview {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+        }
+        .logo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .upload-overlay {
+            position: absolute;
+            inset: 0;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 180ms ease;
+        }
+        .logo-uploader-container:hover .upload-overlay {
+            opacity: 1;
+        }
+        .floating-label-group {
+            position: relative;
+        }
+        .floating-label {
+            position: absolute;
+            top: 1rem;
+            left: 0.75rem;
+            color: var(--text-tertiary);
+            pointer-events: none;
+            transition: all 150ms ease-out;
+            font-size: 0.95rem;
+        }
+        .floating-input {
+            padding: 1.5rem 0.75rem 0.5rem 0.75rem; /* Top, Right, Bottom, Left */
+        }
+        .floating-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 1px var(--accent-color);
+        }
+        .floating-input:focus ~ .floating-label,
+        .floating-input:not(:placeholder-shown) ~ .floating-label {
+            transform: translateY(-0.75rem) scale(0.8);
+            background-color: white;
+            padding: 0 0.25rem;
+            color: var(--accent-color);
+            font-weight: 600;
+            left: 0.6rem;
+        }
+        .players-button {
+            background-color: var(--accent-color);
+            color: white;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 150ms ease;
+        }
+        .players-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+        }
+        .players-button.completed {
+            background-color: #10b981;
+        }
+
         .player-avatar {
             border-radius: 9999px;
             border: 1px solid rgba(255, 255, 255, 0.75);
@@ -98,6 +216,7 @@
             flex-shrink: 0;
             overflow: hidden;
         }
+
         .player-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .avatar-sm { width: 24px; height: 24px; font-size: 0.7rem; }
         .avatar-md { width: 32px; height: 32px; font-size: 0.85rem; }
@@ -239,6 +358,12 @@
                 <div class="relative"><input type="date" id="start-date" class="w-full p-3 border-gray-300 border rounded-md"><span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">📅</span></div>
             </div>
         </div>
+        <div class="grid grid-cols-1 gap-6">
+             <div>
+                <label for="tournament-venue" class="block text-sm font-bold text-gray-700 mb-1">Venue / City</label>
+                <input type="text" id="tournament-venue" placeholder="e.g., National Stadium, Toronto" class="w-full p-3 border-gray-300 border rounded-md capitalize">
+            </div>
+        </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
                 <label for="tournament-teams" class="block text-sm font-bold text-gray-700 mb-1 required-field">Number of Teams</label>
@@ -256,7 +381,7 @@
             </div>
             <div>
                 <label for="balls-per-over" class="block text-sm font-bold text-gray-700 mb-1 required-field">Balls per Over</label>
-                <select id="balls-per-over" class="w-full p-3 border-gray-300 border rounded-md"><option value="" disabled selected>Select Balls</option><option value="6">6 Balls</option><option value="5">5 Balls</option><option value="7">7 Balls</option><option value="8">8 Balls</option></select>
+                <select id="balls-per-over" class="w-full p-3 border-gray-300 border rounded-md"><option value="" disabled selected>Select Balls</option><option value="6">6 Balls</option><option value="5">5 Balls</option><option value="4">4 Balls</option><option value="3">3 Balls</option></select>
             </div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -320,13 +445,19 @@
     <div class="mt-8 flex justify-end items-center"><button onclick="goToStep(2)" class="px-6 py-3 text-white font-bold rounded-lg setup-btn">Next: Add Teams</button></div>
 </div>
     <div id="setup-step-2" class="setup-step hidden">
-     <div class="absolute top-4 left-4">
-        <button onclick="goToStep(1)" class="font-semibold text-gray-600 hover:text-gray-800">&larr; Back</button>
+        <div class="absolute top-4 left-4">
+            <button onclick="goToStep(1)" class="font-semibold text-slate-600 hover:text-slate-800">&larr; Back</button>
+        </div>
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">Enter Team Details</h1>
+            <p class="text-slate-500 mt-2">Add logos, names, and player rosters for each team in your tournament.</p>
+        </header>
+        <div id="team-entry-container" class="max-h-[60vh] overflow-y-auto p-1"></div>
+        <div class="mt-8 flex justify-between items-center">
+            <button onclick="goToStep(1)" class="font-semibold text-slate-600 hover:text-slate-800">Back</button>
+            <button onclick="goToStep(3)" class="px-6 py-3 text-white font-bold rounded-lg setup-btn">Next: Groups & Fixtures</button>
+        </div>
     </div>
-    <header class="text-center mb-8"><h1 class="text-3xl font-bold header-gradient">Enter Team Details</h1><p class="text-gray-500 mt-1">Enter the name and players for each team.</p></header>
-    <div id="team-entry-container" class="space-y-4 max-h-[50vh] overflow-y-auto pr-2"></div>
-    <div class="mt-8 flex justify-between items-center"><button onclick="goToStep(1)" class="font-semibold text-gray-600 hover:text-gray-800">Back</button><button onclick="goToStep(3)" class="px-6 py-3 text-white font-bold rounded-lg setup-btn">Next: Groups & Fixtures</button></div>
-</div>
     <div id="setup-step-3" class="setup-step hidden">
     <div class="absolute top-4 left-4">
         <button onclick="goToStep(2)" class="font-semibold text-gray-600 hover:text-gray-800">&larr; Back</button>
@@ -802,9 +933,7 @@
 
             // Populate name and color immediately
             teamRow.querySelector('.team-name-input').value = teamData.name;
-            teamRow.querySelector('.team-color-input').value = teamData.color;
             teamDataStore[teamIndex].name = teamData.name;
-            teamDataStore[teamIndex].color = teamData.color;
             teamDataStore[teamIndex].logoUrl = teamData.logoUrl;
             updateTeamLogoPreview(teamIndex);
 
@@ -991,47 +1120,46 @@
         }
 
         function goToStep(step) {
-    const currentStep = document.querySelector('.setup-step.active');
-    const nextStep = document.getElementById(`setup-step-${step}`);
-    
-    // Validation for current step before proceeding
-    if (step > 1) {
-        const requiredLabels = currentStep.querySelectorAll('.required-field');
-        for (const label of requiredLabels) {
-            const input = document.getElementById(label.htmlFor);
-            if (input) {
-                // An element is visible if its offsetParent is not null. This reliably
-                // checks for elements hidden with 'display: none'.
-                const isVisible = input.offsetParent !== null;
-
-                if (isVisible && !input.value) {
-                    showAlert('Please fill out all required fields.');
-                    return;
+            const currentStepEl = document.querySelector('.setup-step.active');
+            const currentStepNum = parseInt(currentStepEl.id.split('-')[2]);
+            const nextStep = document.getElementById(`setup-step-${step}`);
+            
+            if (step > currentStepNum) { // Moving forward
+                const requiredLabels = currentStepEl.querySelectorAll('.required-field');
+                for (const label of requiredLabels) {
+                    const input = document.getElementById(label.htmlFor);
+                    if (input) {
+                        const isVisible = input.offsetParent !== null;
+                        if (isVisible && !input.value) {
+                            showAlert('Please fill out all required fields.');
+                            return;
+                        }
+                    }
                 }
             }
+            
+            // Only generate team inputs if moving forward to step 2.
+            // This preserves data when navigating back from step 3.
+            if (step === 2 && currentStepNum === 1) {
+                generateTeamInputs();
+            }
+
+            if (step === 3) {
+                 if (Object.values(teamDataStore).length < 2 || Object.values(teamDataStore).some(team => !team.name)) {
+                     showAlert('Please enter names for all teams before proceeding.');
+                     return;
+                 }
+                 showGroupAssignment();
+            }
+
+            document.querySelectorAll('.setup-step').forEach(el => {
+                el.classList.remove('active');
+                el.classList.add('hidden');
+            });
+            nextStep.classList.remove('hidden');
+            nextStep.classList.add('active');
+            document.getElementById('progress-bar').style.width = `${step * 25}%`;
         }
-    }
-
-    if (step === 2) {
-        generateTeamInputs();
-    }
-
-    if (step === 3) {
-         if (Object.values(teamDataStore).length < 2 || Object.values(teamDataStore).some(team => !team.name)) {
-             showAlert('Please enter names for all teams before proceeding.');
-             return;
-         }
-         showGroupAssignment();
-    }
-
-    document.querySelectorAll('.setup-step').forEach(el => {
-        el.classList.remove('active');
-        el.classList.add('hidden');
-    });
-    nextStep.classList.remove('hidden');
-    nextStep.classList.add('active');
-    document.getElementById('progress-bar').style.width = `${step * 25}%`;
-}
         
         function toggleFreeHitRules() {
             const isEnabled = document.getElementById('free-hit-enabled').value === 'yes';
@@ -1042,81 +1170,122 @@
             const numTeams = parseInt(document.getElementById('tournament-teams').value) || 0;
             const container = document.getElementById('team-entry-container');
             container.innerHTML = '';
+            
+            const oldData = { ...teamDataStore };
             teamDataStore = {};
-            if (numTeams <= 0) return;
-            let savedTeamOptions = '<option value="">Import Saved Team...</option>';
-            for (const teamName in savedTeams) {
-                savedTeamOptions += `<option value="${teamName}">${teamName}</option>`;
-            }
-            for (let i = 0; i < numTeams; i++) {
-                const randomDarkColor = darkColors[i % darkColors.length];
-                teamDataStore[i] = { id: `T${Date.now() + i}`, name: '', color: randomDarkColor, players: [] };
-                const teamRow = document.createElement('div');
-                teamRow.className = 'grid grid-cols-1 sm:grid-cols-8 gap-3 items-center p-2 border rounded-lg';
-                const isPlayersAdded = teamDataStore[i].players.length >= (parseInt(document.getElementById('tournament-players').value) - 1);
-                const playersButtonClass = isPlayersAdded ? 'players-button completed' : '';
-                const playersButtonText = isPlayersAdded ? 'Players Added' : 'Players';
 
-                teamRow.innerHTML = `
-                    <div class="sm:col-span-2"><select onchange="importTeam(this)" class="w-full p-2 border-gray-300 border rounded-md" data-team-index="${i}">${savedTeamOptions}</select></div>
-                    <div class="flex justify-center items-center team-logo-preview-container cursor-pointer" onclick="triggerLogoUpload(${i})" title="Click to upload a logo" data-team-index="${i}">
-                        <div class="team-logo-compact" style="background-color: ${randomDarkColor};">?</div>
+            if (numTeams <= 0) return;
+
+            const savedTeamOptions = Object.keys(savedTeams).map(name => `<option value="${name}">${name}</option>`).join('');
+            
+            const trophyIconWithText = `
+                <div class="flex flex-col items-center justify-center h-full text-slate-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+                    <span class="text-xs font-semibold mt-1">Upload Logo</span>
+                </div>`;
+
+            for (let i = 0; i < numTeams; i++) {
+                teamDataStore[i] = oldData[i] || { id: `T${Date.now() + i}`, name: '', players: [], logoUrl: null };
+                
+                const teamCard = document.createElement('div');
+                teamCard.className = 'team-entry-card glass-card p-4 mb-4';
+                
+                const playersPerSide = parseInt(document.getElementById('tournament-players').value) || 11;
+                const isPlayersAdded = (teamDataStore[i].players || []).length >= playersPerSide;
+                const playersButtonClass = isPlayersAdded ? 'completed' : '';
+                const playersButtonText = isPlayersAdded ? 'Edit Players' : 'Add Players';
+
+                teamCard.innerHTML = `
+                    <div class="team-card-header"><h3>Team ${i + 1}</h3></div>
+                    <div class="flex flex-col md:flex-row items-start gap-6">
+                        <div id="logo-uploader-container-${i}" class="logo-uploader-container" onclick="triggerLogoUpload(${i})">
+                            <div class="logo-preview" id="logo-preview-${i}">${trophyIconWithText}</div>
+                            <div class="upload-overlay"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.4a2 2 0 0 0 1.6-.8L10.4 4.2A2 2 0 0 1 12 3h4a2 2 0 0 1 2 2v2"/><circle cx="12" cy="13" r="3"/></svg></div>
+                        </div>
+                        <input type="file" id="logo-uploader-${i}" class="hidden" accept="image/*" onchange="handleLogoFileSelect(event, ${i})">
+                        <div class="flex-grow w-full space-y-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+                                <div class="floating-label-group">
+                                    <input type="text" id="team-name-${i}" placeholder=" " class="floating-input w-full border-gray-300 border rounded-md team-name-input" data-team-index="${i}" value="${teamDataStore[i].name || ''}">
+                                    <label for="team-name-${i}" class="floating-label">Team Name</label>
+                                </div>
+                                <select onchange="importTeam(this)" class="w-full p-3 border-gray-300 border rounded-md bg-white text-sm" data-team-index="${i}">
+                                    <option value="">Import Saved Team...</option>
+                                    ${savedTeamOptions}
+                                </select>
+                            </div>
+                            <div class="text-right">
+                                <button onclick="openAddPlayersModal(${i})" class="players-button ${playersButtonClass}">
+                                    ${playersButtonText}
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <input type="file" id="logo-uploader-${i}" class="hidden" accept="image/*" onchange="handleLogoFileSelect(event, ${i})">
-                    <div class="sm:col-span-2"><input type="text" placeholder="Team ${i + 1}" class="w-full p-2 border-gray-300 border rounded-md team-name-input" data-team-index="${i}"></div>
-                    <input type="color" value="${teamDataStore[i].color}" class="w-full h-10 border-gray-300 border rounded-md team-color-input" data-team-index="${i}">
-                    <button onclick="openAddPlayersModal(${i})" class="w-full p-2 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 sm:col-span-2 font-bold transition-all duration-200 hover:scale-105 players-button ${playersButtonClass}">${playersButtonText}</button>
                 `;
-                container.appendChild(teamRow);
+                container.appendChild(teamCard);
+                updateTeamLogoPreview(i);
             }
             addTeamInputListeners();
         }
 
-        function triggerLogoUpload(teamIndex) {
-            document.getElementById(`logo-uploader-${teamIndex}`).click();
-        }
-
-        function handleLogoFileSelect(event, teamIndex) {
-            const file = event.target.files[0];
-            if (!file) { return; }
-            if (!file.type.startsWith('image/')){
-                showAlert('Please select a valid image file.');
-                return;
-            }
-            const reader = new FileReader();
-            reader.onloadend = function() {
-                const dataUrl = reader.result;
-                teamDataStore[teamIndex].logoUrl = dataUrl;
-                updateTeamLogoPreview(teamIndex);
-            }
-            reader.readAsDataURL(file);
-        }
-
         function updateTeamLogoPreview(teamIndex) {
             const teamData = teamDataStore[teamIndex];
-            const logoPreviewContainer = document.querySelector(`.team-logo-preview-container[data-team-index='${teamIndex}']`);
-            if (logoPreviewContainer) {
-                // If a logo URL is provided, use it. Otherwise, fall back to initials.
-                if (teamData.logoUrl) {
-                    logoPreviewContainer.innerHTML = `<img src="${teamData.logoUrl}" alt="Team Logo" class="team-logo-compact object-cover rounded-full">`;
+            const logoPreviewEl = document.getElementById(`logo-preview-${teamIndex}`);
+            if (!logoPreviewEl) return;
+
+            const trophyIconWithText = `
+                <div class="flex flex-col items-center justify-center h-full text-slate-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+                    <span class="text-xs font-semibold mt-1">Upload Logo</span>
+                </div>`;
+            
+            if (teamData.logoUrl) {
+                logoPreviewEl.innerHTML = `<img src="${teamData.logoUrl}" alt="${teamData.name || 'Team'} Logo">`;
+            } else {
+                const teamName = teamData.name || '';
+                const initials = getInitials(teamName);
+                if (initials) {
+                    const color = getDeterministicColor(teamName);
+                    logoPreviewEl.innerHTML = `<div class="w-full h-full flex items-center justify-center font-bold text-3xl text-white" style="background-color: ${color};">${initials}</div>`;
                 } else {
-                    const teamName = teamData.name || '';
-                    const teamColor = teamData.color || '#cbd5e1';
-                    logoPreviewContainer.innerHTML = `<div class="team-logo-compact" style="background-color: ${teamColor};">${teamName ? teamName.charAt(0).toUpperCase() : '?'}</div>`;
+                    logoPreviewEl.innerHTML = trophyIconWithText;
                 }
             }
         }
 
         function addTeamInputListeners() {
-            document.querySelectorAll('.team-name-input').forEach(input => input.onkeyup = (e) => {
+            document.querySelectorAll('.team-name-input').forEach(input => input.addEventListener('input', (e) => {
+                const start = e.target.selectionStart;
+                const end = e.target.selectionEnd;
+                e.target.value = e.target.value.toUpperCase();
+                e.target.setSelectionRange(start, end);
+                
                 const teamIndex = e.target.dataset.teamIndex;
                 teamDataStore[teamIndex].name = e.target.value;
                 updateTeamLogoPreview(teamIndex);
-            });
-            document.querySelectorAll('.team-color-input').forEach(input => input.onchange = (e) => {
-                const teamIndex = e.target.dataset.teamIndex;
-                teamDataStore[teamIndex].color = e.target.value;
-                updateTeamLogoPreview(teamIndex);
+            }));
+
+            document.querySelectorAll('.logo-uploader-container').forEach((container, index) => {
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    container.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }, false);
+                });
+
+                container.addEventListener('dragenter', () => container.classList.add('dragover'));
+                container.addEventListener('dragleave', () => container.classList.remove('dragover'));
+                container.addEventListener('drop', (e) => {
+                    container.classList.remove('dragover');
+                    const dt = e.dataTransfer;
+                    const files = dt.files;
+                    if (files.length) {
+                        // Create a synthetic event to reuse the existing file handler
+                        const syntheticEvent = { target: { files: files } };
+                        handleLogoFileSelect(syntheticEvent, index);
+                    }
+                });
             });
         }
         
@@ -1324,6 +1493,7 @@
 
             currentTournamentState = {
                 name: document.getElementById('tournament-name').value,
+                venue: document.getElementById('tournament-venue').value,
                 startDate: document.getElementById('start-date').value,
                 overs: parseInt(document.getElementById('tournament-overs').value),
                 ballsPerOver: parseInt(document.getElementById('balls-per-over').value) || 6,
@@ -1550,8 +1720,8 @@
                 const team1Name = team1 ? team1.name : match.team1Id.replace(/_/g, ' ').replace('placeholder', 'TBD');
                 const team2Name = team2 ? team2.name : match.team2Id.replace(/_/g, ' ').replace('placeholder', 'TBD');
                 
-                const team1Logo = team1 ? (team1.logoUrl ? `<img src="${team1.logoUrl}" class="team-logo-compact object-cover">` : `<div class="team-logo-compact" style="background-color: ${team1.color};">${team1.name.charAt(0)}</div>`) : `<div class="team-logo-compact bg-slate-200 text-slate-500">?</div>`;
-                const team2Logo = team2 ? (team2.logoUrl ? `<img src="${team2.logoUrl}" class="team-logo-compact object-cover">` : `<div class="team-logo-compact" style="background-color: ${team2.color};">${team2.name.charAt(0)}</div>`) : `<div class="team-logo-compact bg-slate-200 text-slate-500">?</div>`;
+                const team1Logo = team1 ? getPlayerAvatar({name: team1.name, photoUrl: team1.logoUrl}, 'md') : `<div class="player-avatar avatar-md bg-slate-200 text-slate-500">?</div>`;
+                const team2Logo = team2 ? getPlayerAvatar({name: team2.name, photoUrl: team2.logoUrl}, 'md') : `<div class="player-avatar avatar-md bg-slate-200 text-slate-500">?</div>`;
 
                 let statusChip = '';
                 let resultText = '';
@@ -1636,7 +1806,7 @@
             currentTournamentState.teams.forEach(team => {
                 team.players.forEach(playerName => {
                     allPlayers.set(playerName, {
-                        name: playerName, teamName: team.name, teamColor: team.color, photoUrl: null, 
+                        name: playerName, teamName: team.name, photoUrl: null, 
                         runs: 0, ballsFaced: 0, fours: 0, sixes: 0, dismissals: 0, notOuts: 0, inningsBatted: 0,
                         wickets: 0, runsConceded: 0, ballsBowled: 0, dots: 0, maidens: 0, fourWickets: 0, fiveWickets: 0,
                         catches: 0, runOuts: 0, stumpings: 0,
@@ -2000,22 +2170,11 @@
         function setupTossScreen(team1, team2) {
             document.getElementById('toss-team1-name').textContent = team1.name;
             document.getElementById('toss-team2-name').textContent = team2.name;
-            const t1Logo = document.getElementById('toss-team1-logo-container');
-            if (team1.logoUrl) {
-                t1Logo.innerHTML = `<img src="${team1.logoUrl}" alt="${team1.name}" class="w-full h-full rounded-full object-cover">`;
-                t1Logo.style.backgroundColor = 'transparent';
-            } else {
-                t1Logo.style.backgroundColor = team1.color;
-                t1Logo.innerHTML = `<span>${team1.name.charAt(0)}</span>`;
-            }
-            const t2Logo = document.getElementById('toss-team2-logo-container');
-            if (team2.logoUrl) {
-                t2Logo.innerHTML = `<img src="${team2.logoUrl}" alt="${team2.name}" class="w-full h-full rounded-full object-cover">`;
-                t2Logo.style.backgroundColor = 'transparent';
-            } else {
-                t2Logo.style.backgroundColor = team2.color;
-                t2Logo.innerHTML = `<span>${team2.name.charAt(0)}</span>`;
-            }
+            const t1LogoContainer = document.getElementById('toss-team1-logo-container');
+            const t2LogoContainer = document.getElementById('toss-team2-logo-container');
+
+            t1LogoContainer.innerHTML = getPlayerAvatar({name: team1.name, photoUrl: team1.logoUrl}, 'xl');
+            t2LogoContainer.innerHTML = getPlayerAvatar({name: team2.name, photoUrl: team2.logoUrl}, 'xl');
         }
         
         function selectTossWinner(teamKey) {
@@ -2550,20 +2709,12 @@
             
             const motmPerformance = motm.wickets > 0 ? `${motm.wickets}/${motm.runsConceded}` : `${motm.runs} (${motm.balls})`;
 
-            const winningTeamLogoHtml = winningTeam.logoUrl
-                ? `<img src="${winningTeam.logoUrl}" alt="${winningTeam.name}" class="team-logo-large mx-auto mb-2 rounded-full object-cover" style="border: 2px solid rgba(255,255,255,0.7);">`
-                : `<div class="team-logo-large mx-auto mb-2" style="background-color: ${winningTeam.color}; border: 2px solid rgba(255,255,255,0.7);">${winningTeam.name.charAt(0)}</div>`;
-
-            const inning1TeamLogoHtml = inning1Team.logoUrl
-                ? `<img src="${inning1Team.logoUrl}" alt="${inning1Team.name}" class="team-logo small inline-block mr-2 rounded-full object-cover" style="vertical-align: middle;">`
-                : `<div class="team-logo small inline-block mr-2" style="background-color: ${inning1Team.color}; vertical-align: middle;">${inning1Team.name.charAt(0)}</div>`;
-            
-            const inning2TeamLogoHtml = inning2Team.logoUrl
-                ? `<img src="${inning2Team.logoUrl}" alt="${inning2Team.name}" class="team-logo small inline-block ml-2 rounded-full object-cover" style="vertical-align: middle;">`
-                : `<div class="team-logo small inline-block ml-2" style="background-color: ${inning2Team.color}; vertical-align: middle;">${inning2Team.name.charAt(0)}</div>`;
+            const winningTeamLogoHtml = winningTeam ? getPlayerAvatar({name: winningTeam.name, photoUrl: winningTeam.logoUrl}, 'xl') : '';
+            const inning1TeamLogoHtml = getPlayerAvatar({name: inning1Team.name, photoUrl: inning1Team.logoUrl}, 'sm');
+            const inning2TeamLogoHtml = getPlayerAvatar({name: inning2Team.name, photoUrl: inning2Team.logoUrl}, 'sm');
 
             contentContainer.innerHTML = `
-                <div class="rounded-2xl text-white p-6" style="background: linear-gradient(135deg, ${winningTeam.color}, ${losingTeam.color})">
+                <div class="rounded-2xl text-white p-6 bg-gradient-to-br from-slate-800 to-slate-900">
                     <div class="text-center">
                          ${winningTeamLogoHtml}
                         <h2 class="text-3xl font-extrabold tracking-tight">${resultMessage}</h2>
@@ -2571,28 +2722,20 @@
                     </div>
 
                     <div class="summary-card rounded-xl p-4 my-6">
-                         <div class="flex justify-between items-center">
-                            <div class="w-2/5 text-left">
-                                <p class="font-bold">${inning1Team.name}</p>
-                            </div>
-                            <div class="w-1/5 text-center font-bold text-lg">${inning1Summary.score}/${inning1Summary.wickets} <span class="text-sm font-normal opacity-70">(${Math.floor(inning1Summary.balls/6)}.${inning1Summary.balls%6})</span></div>
-                            <div class="w-2/5 text-right">
-                               <p class="font-bold">${inning2Team.name}</p>
-                            </div>
-                         </div>
-                         <div class="flex justify-between items-center mt-1">
-                            <div class="w-2/5 text-left">
+                         <div class="flex justify-around items-center text-center">
+                            <div class="flex-1">
                                 ${inning1TeamLogoHtml}
+                                <p class="font-bold mt-1">${inning1Team.name}</p>
+                                <p class="font-bold text-lg">${inning1Summary.score}/${inning1Summary.wickets}</p>
+                                <p class="text-xs opacity-70">(${Math.floor(inning1Summary.balls/6)}.${inning1Summary.balls%6})</p>
                             </div>
-                             <div class="w-1/5 text-center font-bold text-lg"><span class="text-sm font-normal opacity-70">vs</span></div>
-                            <div class="w-2/5 text-right">
+                             <div class="font-bold text-lg opacity-70">vs</div>
+                             <div class="flex-1">
                                 ${inning2TeamLogoHtml}
+                                <p class="font-bold mt-1">${inning2Team.name}</p>
+                                <p class="font-bold text-lg">${inning2Summary.score}/${inning2Summary.wickets}</p>
+                                <p class="text-xs opacity-70">(${Math.floor(inning2Summary.balls/6)}.${inning2Summary.balls%6})</p>
                             </div>
-                         </div>
-                         <div class="flex justify-between items-center mt-1">
-                            <div class="w-2/5 text-left"></div>
-                             <div class="w-1/5 text-center font-bold text-lg">${inning2Summary.score}/${inning2Summary.wickets} <span class="text-sm font-normal opacity-70">(${Math.floor(inning2Summary.balls/6)}.${inning2Summary.balls%6})</span></div>
-                             <div class="w-2/5 text-right"></div>
                          </div>
                     </div>
                     
@@ -2885,6 +3028,21 @@
             const startDateInput = document.getElementById('start-date');
             if(startDateInput) startDateInput.value = new Date().toISOString().split('T')[0];
             
+            // Auto-capitalize venue input
+            const venueInput = document.getElementById('tournament-venue');
+            if (venueInput) {
+                venueInput.addEventListener('input', (e) => {
+                    const start = e.target.selectionStart;
+                    const end = e.target.selectionEnd;
+                    const originalValue = e.target.value;
+                    // This regex finds the beginning of a word (\b) and a word character (\w)
+                    // and capitalizes it, preserving cursor position for a smooth typing experience.
+                    const newValue = originalValue.replace(/\b\w/g, char => char.toUpperCase());
+                    e.target.value = newValue;
+                    e.target.setSelectionRange(start, end);
+                });
+            }
+
             loadSavedTeams();
 
             // Restore session state on page load
