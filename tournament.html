@@ -202,105 +202,113 @@
                     </div>
                     <div class="relative">
                         <div id="setup-step-1" class="setup-step active">
-                            <header class="text-center mb-8"><h1 class="text-3xl font-bold text-gray-800">Tournament Setup</h1><p class="text-gray-500 mt-1">Enter the basic details for your tournament.</p></header>
-                            <div class="space-y-6">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div><label for="tournament-name" class="block text-sm font-bold text-gray-700 mb-1 required-field">Tournament Name</label><input type="text" id="tournament-name" placeholder="e.g., Summer Cup 2025" class="w-full p-3 border-gray-300 border rounded-md uppercase"></div>
-                                    <div class="relative">
-                                        <label for="start-date" class="block text-sm font-bold text-gray-700 mb-1 required-field">Start Date</label>
-                                        <div class="relative"><input type="date" id="start-date" class="w-full p-3 border-gray-300 border rounded-md"><span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">📅</span></div>
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label for="tournament-overs" class="block text-sm font-bold text-gray-700 mb-1 required-field">Max Overs per Innings</label>
-                                        <select id="tournament-overs" class="w-full p-3 border-gray-300 border rounded-md"><option value="" disabled selected>Select Overs</option><script>for(let i = 1; i <= 20; i++) { document.write(`<option value="${i}">${i} Over${i > 1 ? 's' : ''}</option>`); }</script><option value="50">50 Overs</option></select>
-                                    </div>
-                                    <div>
-                                        <label for="balls-per-over" class="block text-sm font-bold text-gray-700 mb-1 required-field">Balls per Over</label>
-                                        <select id="balls-per-over" class="w-full p-3 border-gray-300 border rounded-md"><option value="" disabled selected>Select Balls</option><option value="6">6 Balls</option><option value="5">5 Balls</option><option value="7">7 Balls</option><option value="8">8 Balls</option></select>
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label for="tournament-players" class="block text-sm font-bold text-gray-700 mb-1 required-field">Max Players per Side</label>
-                                        <select id="tournament-players" class="w-full p-3 border-gray-300 border rounded-md"><option value="" disabled selected>Select Players</option><option value="6">6 Players</option><option value="7">7 Players</option><option value="8">8 Players</option><option value="9">9 Players</option><option value="10">10 Players</option><option value="11" selected>11 Players</option></select>
-                                    </div>
-                                    <div>
-                                        <label for="free-hit-enabled" class="block text-sm font-bold text-gray-700 mb-1">Free Hit Enabled?</label>
-                                        <select id="free-hit-enabled" class="w-full p-3 border-gray-300 border rounded-md" onchange="toggleFreeHitRules()"><option value="" disabled selected>Select Option</option><option value="no">No</option><option value="yes">Yes</option></select>
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div id="free-hit-rules-container" class="hidden">
-                                        <label for="free-hit-rules" class="block text-sm font-bold text-gray-700 mb-1">Free Hit on:</label>
-                                        <select id="free-hit-rules" class="w-full p-3 border-gray-300 border rounded-md"><option value="overstep_only">Overstepping No-ball Only</option><option value="all">All No-balls</option></select>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label for="tournament-rules" class="block text-sm font-bold text-gray-700 mb-1">Rules and Regulations</label>
-                                    <textarea id="tournament-rules" rows="4" class="w-full p-3 border-gray-300 border rounded-md" placeholder="Type tournament rules and regulations here..."></textarea>
-                                </div>
-                            </div>
-                            <div class="mt-8 flex justify-end items-center"><button onclick="goToStep(2)" class="px-6 py-3 text-white font-bold rounded-lg setup-btn">Next: Add Teams</button></div>
-                        </div>
-                        <div id="setup-step-2" class="setup-step hidden">
-                             <div class="absolute top-4 left-4">
-                                <button onclick="goToStep(1)" class="font-semibold text-gray-600 hover:text-gray-800">&larr; Back</button>
-                            </div>
-                            <header class="text-center mb-8"><h1 class="text-3xl font-bold header-gradient">Enter Team Details</h1><p class="text-gray-500 mt-1">Enter the name and players for each team.</p></header>
-                            <div><label for="tournament-teams" class="block text-sm font-bold text-gray-700 mb-1 required-field">Number of Teams</label><input type="number" id="tournament-teams" placeholder="e.g., 8" class="w-full p-3 border-gray-300 border rounded-md mb-4"></div>
-                            <div id="team-entry-container" class="space-y-4 max-h-[50vh] overflow-y-auto pr-2"></div>
-                            <div class="mt-8 flex justify-between items-center"><button onclick="goToStep(1)" class="font-semibold text-gray-600 hover:text-gray-800">Back</button><button onclick="goToStep(3)" class="px-6 py-3 text-white font-bold rounded-lg setup-btn">Next: Groups & Fixtures</button></div>
-                        </div>
-                        <div id="setup-step-3" class="setup-step hidden">
-                            <div class="absolute top-4 left-4">
-                                <button onclick="goToStep(2)" class="font-semibold text-gray-600 hover:text-gray-800">&larr; Back</button>
-                            </div>
-                             <header class="text-center mb-8"><h1 class="text-3xl font-bold text-gray-800">Groups & Fixtures</h1><p class="text-gray-500 mt-1">Assign teams to groups and review the auto-generated matches.</p></p></header>
-                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label for="tournament-format" class="block text-sm font-bold text-gray-700 mb-1 required-field">Tournament Format</label>
-                                    <select id="tournament-format" onchange="showGroupAssignment()" class="w-full p-3 border-gray-300 border rounded-md">
-                                        <option value="" disabled selected>Select Format</option>
-                                        <option value="round-robin">Round Robin</option>
-                                        <option value="double_round_robin">Double Round Robin</option>
-                                        <option value="knockout">Knockout</option>
-                                        <option value="group_knockout">Group Stage & Knockout</option>
-                                        <option value="playoffs">Playoffs (IPL Style)</option>
-                                        <option value="super_stage">Super Six/Eight</option>
-                                    </select>
-                                </div>
-                                <div id="group-selection-container">
-                                    <label for="number-of-groups" class="block text-sm font-bold text-gray-700 mb-1 required-field">Number of Groups</label>
-                                    <select id="number-of-groups" onchange="showGroupAssignment()" class="w-full p-3 border-gray-300 border rounded-md">
-                                        <option value="" disabled selected>Select Groups</option>
-                                        <option value="1">1 Group</option>
-                                        <option value="2">2 Groups</option>
-                                        <option value="4">4 Groups</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label for="matches-per-team" class="block text-sm font-bold text-gray-700 mb-1 required-field">Matches Per Team (in Group)</label>
-                                    <input type="number" id="matches-per-team" placeholder="e.g., 1" class="w-full p-3 border-gray-300 border rounded-md">
-                                </div>
-                                <div id="knockout-teams-per-group-container" class="hidden">
-                                    <label for="knockout-teams-per-group" class="block text-sm font-bold text-gray-700 mb-1 required-field">Teams Advancing per Group</label>
-                                    <input type="number" id="knockout-teams-per-group" placeholder="e.g., 2" class="w-full p-3 border-gray-300 border rounded-md">
-                                </div>
-                             </div>
-                             <div id="points-rules-container" class="mt-6 p-4 bg-slate-50 rounded-lg">
-                                <h3 class="font-bold text-lg text-indigo-600 mb-2">Points Rules</h3>
-                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                    <div><label class="block text-sm font-medium text-gray-700">Win</label><input type="number" id="points-win" value="2" class="w-full p-2 border-gray-300 border rounded-md"></div>
-                                    <div><label class="block text-sm font-medium text-gray-700">Loss</label><input type="number" id="points-loss" value="0" class="w-full p-2 border-gray-300 border rounded-md"></div>
-                                    <div><label class="block text-sm font-medium text-gray-700">Tie</label><input type="number" id="points-tie" value="1" class="w-full p-2 border-gray-300 border rounded-md"></div>
-                                    <div><label class="block text-sm font-medium text-gray-700">No Result</label><input type="number" id="points-no-result" value="1" class="w-full p-2 border-gray-300 border rounded-md"></div>
-                                </div>
-                            </div>
-                             <div id="group-assignment-container" class="mt-6 space-y-4 max-h-[40vh] overflow-y-auto pr-2"></div>
-                             <div class="mt-8 flex justify-between items-center"><button onclick="goToStep(2)" class="font-semibold text-gray-600 hover:text-gray-800">Back</button><button onclick="finalizeTeamsAndGoToDashboard()" class="px-6 py-3 text-white font-bold rounded-lg setup-btn">Confirm & Create Tournament</button></div>
-                        </div>
+    <header class="text-center mb-8"><h1 class="text-3xl font-bold text-gray-800">Tournament Setup</h1><p class="text-gray-500 mt-1">Enter the basic details for your tournament.</p></header>
+    <div class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div><label for="tournament-name" class="block text-sm font-bold text-gray-700 mb-1 required-field">Tournament Name</label><input type="text" id="tournament-name" placeholder="e.g., Summer Cup 2025" class="w-full p-3 border-gray-300 border rounded-md uppercase"></div>
+            <div class="relative">
+                <label for="start-date" class="block text-sm font-bold text-gray-700 mb-1 required-field">Start Date</label>
+                <div class="relative"><input type="date" id="start-date" class="w-full p-3 border-gray-300 border rounded-md"><span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">📅</span></div>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label for="tournament-teams" class="block text-sm font-bold text-gray-700 mb-1 required-field">Number of Teams</label>
+                <input type="number" id="tournament-teams" placeholder="e.g., 8" class="w-full p-3 border-gray-300 border rounded-md">
+            </div>
+            <div>
+                <label for="tournament-players" class="block text-sm font-bold text-gray-700 mb-1 required-field">Max Players per Side</label>
+                <select id="tournament-players" class="w-full p-3 border-gray-300 border rounded-md"><option value="" disabled selected>Select Players</option><option value="6">6 Players</option><option value="7">7 Players</option><option value="8">8 Players</option><option value="9">9 Players</option><option value="10">10 Players</option><option value="11" selected>11 Players</option></select>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label for="tournament-overs" class="block text-sm font-bold text-gray-700 mb-1 required-field">Max Overs per Innings</label>
+                <select id="tournament-overs" class="w-full p-3 border-gray-300 border rounded-md"><option value="" disabled selected>Select Overs</option><script>for(let i = 1; i <= 20; i++) { document.write(`<option value="${i}">${i} Over${i > 1 ? 's' : ''}</option>`); }</script><option value="50">50 Overs</option></select>
+            </div>
+            <div>
+                <label for="balls-per-over" class="block text-sm font-bold text-gray-700 mb-1 required-field">Balls per Over</label>
+                <select id="balls-per-over" class="w-full p-3 border-gray-300 border rounded-md"><option value="" disabled selected>Select Balls</option><option value="6">6 Balls</option><option value="5">5 Balls</option><option value="7">7 Balls</option><option value="8">8 Balls</option></select>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label for="free-hit-enabled" class="block text-sm font-bold text-gray-700 mb-1">Free Hit Enabled?</label>
+                <select id="free-hit-enabled" class="w-full p-3 border-gray-300 border rounded-md" onchange="toggleFreeHitRules()"><option value="" disabled selected>Select Option</option><option value="no">No</option><option value="yes">Yes</option></select>
+            </div>
+            <div id="free-hit-rules-container" class="hidden">
+                <label for="free-hit-rules" class="block text-sm font-bold text-gray-700 mb-1">Free Hit on:</label>
+                <select id="free-hit-rules" class="w-full p-3 border-gray-300 border rounded-md"><option value="overstep_only">Overstepping No-ball Only</option><option value="all">All No-balls</option></select>
+            </div>
+        </div>
+
+        <div class="pt-6 border-t mt-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Groups & Fixtures Settings</h2>
+            <div class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="tournament-format" class="block text-sm font-bold text-gray-700 mb-1 required-field">Tournament Format</label>
+                        <select id="tournament-format" class="w-full p-3 border-gray-300 border rounded-md">
+                            <option value="" disabled selected>Select Format</option>
+                            <option value="round-robin">Round Robin</option>
+                            <option value="double_round_robin">Double Round Robin</option>
+                            <option value="knockout">Knockout</option>
+                            <option value="group_knockout">Group Stage & Knockout</option>
+                            <option value="playoffs">Playoffs (IPL Style)</option>
+                            <option value="super_stage">Super Six/Eight</option>
+                        </select>
+                    </div>
+                    <div id="group-selection-container">
+                        <label for="number-of-groups" class="block text-sm font-bold text-gray-700 mb-1 required-field">Number of Groups</label>
+                        <select id="number-of-groups" class="w-full p-3 border-gray-300 border rounded-md">
+                            <option value="" disabled selected>Select Groups</option>
+                            <option value="1">1 Group</option>
+                            <option value="2">2 Groups</option>
+                            <option value="4">4 Groups</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="matches-per-team" class="block text-sm font-bold text-gray-700 mb-1 required-field">Matches Per Team (in Group)</label>
+                        <input type="number" id="matches-per-team" placeholder="e.g., 1" class="w-full p-3 border-gray-300 border rounded-md">
+                    </div>
+                    <div id="knockout-teams-per-group-container" class="hidden">
+                        <label for="knockout-teams-per-group" class="block text-sm font-bold text-gray-700 mb-1 required-field">Teams Advancing per Group</label>
+                        <input type="number" id="knockout-teams-per-group" placeholder="e.g., 2" class="w-full p-3 border-gray-300 border rounded-md">
+                    </div>
+                </div>
+                <div id="points-rules-container" class="p-4 bg-slate-50 rounded-lg">
+                    <h3 class="font-bold text-lg text-indigo-600 mb-2">Points Rules</h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div><label class="block text-sm font-medium text-gray-700">Win</label><input type="number" id="points-win" value="2" class="w-full p-2 border-gray-300 border rounded-md"></div>
+                        <div><label class="block text-sm font-medium text-gray-700">Loss</label><input type="number" id="points-loss" value="0" class="w-full p-2 border-gray-300 border rounded-md"></div>
+                        <div><label class="block text-sm font-medium text-gray-700">Tie</label><input type="number" id="points-tie" value="1" class="w-full p-2 border-gray-300 border rounded-md"></div>
+                        <div><label class="block text-sm font-medium text-gray-700">No Result</label><input type="number" id="points-no-result" value="1" class="w-full p-2 border-gray-300 border rounded-md"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="mt-8 flex justify-end items-center"><button onclick="goToStep(2)" class="px-6 py-3 text-white font-bold rounded-lg setup-btn">Next: Add Teams</button></div>
+</div>
+    <div id="setup-step-2" class="setup-step hidden">
+     <div class="absolute top-4 left-4">
+        <button onclick="goToStep(1)" class="font-semibold text-gray-600 hover:text-gray-800">&larr; Back</button>
+    </div>
+    <header class="text-center mb-8"><h1 class="text-3xl font-bold header-gradient">Enter Team Details</h1><p class="text-gray-500 mt-1">Enter the name and players for each team.</p></header>
+    <div id="team-entry-container" class="space-y-4 max-h-[50vh] overflow-y-auto pr-2"></div>
+    <div class="mt-8 flex justify-between items-center"><button onclick="goToStep(1)" class="font-semibold text-gray-600 hover:text-gray-800">Back</button><button onclick="goToStep(3)" class="px-6 py-3 text-white font-bold rounded-lg setup-btn">Next: Groups & Fixtures</button></div>
+</div>
+    <div id="setup-step-3" class="setup-step hidden">
+    <div class="absolute top-4 left-4">
+        <button onclick="goToStep(2)" class="font-semibold text-gray-600 hover:text-gray-800">&larr; Back</button>
+    </div>
+     <header class="text-center mb-8"><h1 class="text-3xl font-bold text-gray-800">Assign Teams to Groups</h1><p class="text-gray-500 mt-1">Select teams to assign them to their respective groups.</p></header>
+     
+     <div id="group-assignment-container" class="mt-6 space-y-4 max-h-[50vh] overflow-y-auto pr-2"></div>
+     
+     <div class="mt-8 flex justify-between items-center"><button onclick="goToStep(2)" class="font-semibold text-gray-600 hover:text-gray-800">Back</button><button onclick="finalizeTeamsAndGoToDashboard()" class="px-6 py-3 text-white font-bold rounded-lg setup-btn">Confirm & Create Tournament</button></div>
+</div>
                     </div>
                 </div>
             </div>
@@ -445,7 +453,7 @@
             </div>
     </div>
 
-    <div id="innings-break-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center hidden z-[70] p-4">
+     <div id="innings-break-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center hidden z-[70] p-4">
         <div id="innings-break-content" class="modal-content bg-slate-800 text-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden scale-95 opacity-0">
             <div id="innings-break-header" class="p-6 text-center border-b border-slate-700">
                 <h2 class="text-3xl font-extrabold tracking-tight">END OF INNINGS</h2>
@@ -473,7 +481,25 @@
             </div>
         </div>
     </div>
-
+<div id="leaderboard-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center hidden z-[70] p-4">
+        <div class="modal-content bg-white rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col">
+            <div class="p-4 bg-slate-50 border-b rounded-t-lg flex justify-between items-center">
+                <h3 id="leaderboard-modal-title" class="text-xl font-bold">Full Report</h3>
+                <button onclick="closeModal('leaderboard-modal')" class="text-gray-500 hover:text-gray-800 font-bold">&times;</button>
+            </div>
+            <div class="p-4 flex flex-wrap gap-4 border-b">
+                <input type="text" id="leaderboard-search" placeholder="Search players..." class="p-2 border rounded-md flex-grow">
+                <select id="leaderboard-team-filter" class="p-2 border rounded-md"></select>
+                <button id="leaderboard-export-csv" class="px-4 py-2 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700">Export CSV</button>
+            </div>
+            <div class="flex-grow overflow-auto">
+                <table class="w-full text-sm text-left">
+                    <thead id="leaderboard-modal-header" class="sticky top-0 bg-slate-100"></thead>
+                    <tbody id="leaderboard-modal-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
     <script>
         // --- GLOBAL STATE & SETUP ---
         let currentTournamentState = {};
@@ -486,6 +512,7 @@
         let alertCallback = null;
         let confirmCallback = null;
         let pendingRunOutDetails = null;
+        let tournamentStatsCache = null;
 
         const darkColors = [
             '#0f172a', // slate-900
@@ -858,39 +885,51 @@
         function showSetupScreen() {
             document.getElementById('tournament-choice-screen').classList.add('hidden');
             document.getElementById('app-container').classList.remove('hidden');
+            localStorage.setItem('cricker_current_view', 'tournament-setup');
         }
 
         function goToStep(step) {
-            const currentStep = document.querySelector('.setup-step.active');
-            const nextStep = document.getElementById(`setup-step-${step}`);
-            
-            // Validation for current step before proceeding
-            if (step > 1) {
-                const requiredFields = Array.from(currentStep.querySelectorAll('.required-field')).map(el => el.htmlFor);
-                for (const id of requiredFields) {
-                    const input = document.getElementById(id);
-                    if (!input.value) {
-                        showAlert('Please fill out all required fields.');
-                        return;
-                    }
+    const currentStep = document.querySelector('.setup-step.active');
+    const nextStep = document.getElementById(`setup-step-${step}`);
+    
+    // Validation for current step before proceeding
+    if (step > 1) {
+        const requiredLabels = currentStep.querySelectorAll('.required-field');
+        for (const label of requiredLabels) {
+            const input = document.getElementById(label.htmlFor);
+            if (input) {
+                // An element is visible if its offsetParent is not null. This reliably
+                // checks for elements hidden with 'display: none'.
+                const isVisible = input.offsetParent !== null;
+
+                if (isVisible && !input.value) {
+                    showAlert('Please fill out all required fields.');
+                    return;
                 }
             }
-            if (step === 3) {
-                 if (Object.values(teamDataStore).length < 2 || Object.values(teamDataStore).some(team => !team.name)) {
-                     showAlert('Please enter names for all teams before proceeding.');
-                     return;
-                 }
-                 showGroupAssignment();
-            }
-
-            document.querySelectorAll('.setup-step').forEach(el => {
-                el.classList.remove('active');
-                el.classList.add('hidden');
-            });
-            nextStep.classList.remove('hidden');
-            nextStep.classList.add('active');
-            document.getElementById('progress-bar').style.width = `${step * 25}%`;
         }
+    }
+
+    if (step === 2) {
+        generateTeamInputs();
+    }
+
+    if (step === 3) {
+         if (Object.values(teamDataStore).length < 2 || Object.values(teamDataStore).some(team => !team.name)) {
+             showAlert('Please enter names for all teams before proceeding.');
+             return;
+         }
+         showGroupAssignment();
+    }
+
+    document.querySelectorAll('.setup-step').forEach(el => {
+        el.classList.remove('active');
+        el.classList.add('hidden');
+    });
+    nextStep.classList.remove('hidden');
+    nextStep.classList.add('active');
+    document.getElementById('progress-bar').style.width = `${step * 25}%`;
+}
         
         function toggleFreeHitRules() {
             const isEnabled = document.getElementById('free-hit-enabled').value === 'yes';
@@ -1092,7 +1131,51 @@
                 select.value = currentValue;
             });
         }
-        
+        function calculateNRR(team, allFixtures, allTeams) {
+            let runsFor = 0;
+            let oversFor = 0;
+            let runsAgainst = 0;
+            let oversAgainst = 0;
+            const ballsPerOver = currentTournamentState.ballsPerOver || 6;
+
+            const relevantFixtures = allFixtures.filter(f => (f.team1Id === team.id || f.team2Id === team.id) && f.status === 'completed' && f.summary && f.summary.length === 2);
+
+            for (const fixture of relevantFixtures) {
+                const teamInning = fixture.summary.find(s => s.teamId === team.id);
+                const opponentInning = fixture.summary.find(s => s.teamId !== team.id);
+
+                if (teamInning) {
+                    runsFor += teamInning.score;
+                    oversFor += Math.floor(teamInning.balls / ballsPerOver) + (teamInning.balls % ballsPerOver) / ballsPerOver;
+                }
+                if (opponentInning) {
+                    runsAgainst += opponentInning.score;
+                    oversAgainst += Math.floor(opponentInning.balls / ballsPerOver) + (opponentInning.balls % ballsPerOver) / ballsPerOver;
+                }
+            }
+            
+            if (oversFor === 0 || oversAgainst === 0) return 0;
+
+            const nrr = (runsFor / oversFor) - (runsAgainst / oversAgainst);
+            return isNaN(nrr) ? 0 : nrr;
+        }
+
+        function getTeamStandings(teamIds) {
+            let teams = JSON.parse(JSON.stringify(currentTournamentState.teams.filter(t => teamIds.includes(t.id))));
+            
+            teams.forEach(team => {
+                team.nrr = calculateNRR(team, currentTournamentState.fixtures, currentTournamentState.teams);
+            });
+
+            teams.sort((a, b) => {
+                if (b.points !== a.points) return b.points - a.points;
+                if (b.nrr !== a.nrr) return b.nrr - a.nrr;
+                if (b.wins !== a.wins) return b.wins - a.wins;
+                // Note: Head-to-head logic would require additional implementation
+                return 0; 
+            });
+            return teams;
+        }
         function finalizeTeamsAndGoToDashboard() {
             const format = document.getElementById('tournament-format').value;
             const teams = Object.values(teamDataStore);
@@ -1135,7 +1218,7 @@
                 return;
             }
             
-            const rulesText = document.getElementById('tournament-rules').value;
+            // const rulesText = document.getElementById('tournament-rules').value; // This element does not exist and was causing an error.
 
             currentTournamentState = {
                 name: document.getElementById('tournament-name').value,
@@ -1145,11 +1228,15 @@
                 playersPerSide: parseInt(document.getElementById('tournament-players').value),
                 freeHitEnabled: document.getElementById('free-hit-enabled').value === 'yes',
                 freeHitRules: document.getElementById('free-hit-rules').value,
-                rules: rulesText,
+                rules: "", // Set to empty string as the input element was removed.
                 teams: teams.map(t => ({...t, played: 0, wins: 0, losses: 0, ties: 0, points: 0, nrr: 0})),
                 fixtures: currentTournamentState.fixtures,
                 pointsRules: pointsRules
             };
+
+            localStorage.setItem('cricker_tournament_state', JSON.stringify(currentTournamentState));
+            localStorage.setItem('cricker_current_view', 'tournament-dashboard');
+
             document.getElementById('tournament-setup').classList.add('hidden');
             document.getElementById('tournament-dashboard').classList.remove('hidden');
             displayDashboard();
@@ -1229,31 +1316,39 @@
         function generateFixtures() {
             const format = document.getElementById('tournament-format').value;
             const teams = Object.values(teamDataStore);
+            const numGroups = parseInt(document.getElementById('number-of-groups').value) || 1;
+            const teamsAdvancing = parseInt(document.getElementById('knockout-teams-per-group').value) || 2;
             let fixtures = [];
-            let knockoutFixtures = [];
 
             switch (format) {
-                case 'round-robin': {
-                    fixtures = generateFairRoundRobinFixtures(teams, false);
-                    knockoutFixtures.push({ matchId: 'sf_1', matchName: 'Semi-Final 1', team1Id: 'placeholder_rank_1', team2Id: 'placeholder_rank_4', status: 'upcoming', result: '', summary: null });
-                    knockoutFixtures.push({ matchId: 'sf_2', matchName: 'Semi-Final 2', team1Id: 'placeholder_rank_2', team2Id: 'placeholder_rank_3', status: 'upcoming', result: '', summary: null });
-                    knockoutFixtures.push({ matchId: 'final', matchName: 'Final', team1Id: 'winner_sf_1', team2Id: 'winner_sf_2', status: 'upcoming', result: '', summary: null });
+                case 'round-robin':
+                case 'double_round_robin': {
+                    let leagueFixtures = generateFairRoundRobinFixtures(teams, false);
+                    if (format === 'double_round_robin') {
+                        leagueFixtures = [...leagueFixtures, ...generateFairRoundRobinFixtures(teams.reverse(), false)];
+                    }
+                    fixtures.push(...leagueFixtures);
+
+                    if (teamsAdvancing === 2 && teams.length >= 2) {
+                        fixtures.push({ matchId: 'final', matchName: 'Final', team1Id: 'placeholder_rank_1', team2Id: 'placeholder_rank_2', status: 'upcoming', result: '', summary: null });
+                    } else if (teamsAdvancing === 4 && teams.length >= 4) {
+                        fixtures.push({ matchId: 'sf_1', matchName: 'Semi-Final', team1Id: 'placeholder_rank_1', team2Id: 'placeholder_rank_4', status: 'upcoming', result: '', summary: null });
+                        fixtures.push({ matchId: 'sf_2', matchName: 'Semi-Final', team1Id: 'placeholder_rank_2', team2Id: 'placeholder_rank_3', status: 'upcoming', result: '', summary: null });
+                        fixtures.push({ matchId: 'final', matchName: 'Final', team1Id: 'winner_sf_1', team2Id: 'winner_sf_2', status: 'upcoming', result: '', summary: null });
+                    }
                     break;
                 }
                 case 'knockout': {
                     if (teams.length < 2) {
                         showAlert("Knockout format requires at least 2 teams.");
-                        currentTournamentState.fixtures = [];
+                        fixtures = [];
                         return;
                     }
-                    let shuffledTeams = [...teams].sort(() => 0.5 - Math.random());
-                    fixtures = generateKnockoutBracket(shuffledTeams);
+                    let knockoutTeams = [...teams].sort(() => 0.5 - Math.random());
+                    fixtures = generateKnockoutBracket(knockoutTeams);
                     break;
                 }
                 case 'group_knockout': {
-                    const numGroups = parseInt(document.getElementById('number-of-groups').value) || 1;
-                    const teamsAdvancing = parseInt(document.getElementById('knockout-teams-per-group').value) || 2;
-                    
                     for (let i = 0; i < numGroups; i++) {
                         const groupName = `Group ${String.fromCharCode(65 + i)}`;
                         const groupTeams = teams.filter(t => t.group === groupName);
@@ -1261,75 +1356,72 @@
                             fixtures.push(...generateFairRoundRobinFixtures(groupTeams, true));
                         }
                     }
-
+                    
                     const totalAdvancing = numGroups * teamsAdvancing;
-                    if (totalAdvancing >= 2) {
+                    if (totalAdvancing < 2) break;
+
+                    if (numGroups === 2 && teamsAdvancing === 2) { // SF: A1xB2, B1xA2
+                        fixtures.push({ matchId: 'sf_1', matchName: 'Semi-Final', team1Id: 'placeholder_A_1', team2Id: 'placeholder_B_2', status: 'upcoming' });
+                        fixtures.push({ matchId: 'sf_2', matchName: 'Semi-Final', team1Id: 'placeholder_B_1', team2Id: 'placeholder_A_2', status: 'upcoming' });
+                        fixtures.push({ matchId: 'final', matchName: 'Final', team1Id: 'winner_sf_1', team2Id: 'winner_sf_2', status: 'upcoming' });
+                    } else if (numGroups === 4 && teamsAdvancing === 2) { // QF: A1vB2, C1vD2, etc. (standard draw)
+                        fixtures.push({ matchId: 'qf_1', matchName: 'Quarter-Final', team1Id: 'placeholder_A_1', team2Id: 'placeholder_B_2', status: 'upcoming' });
+                        fixtures.push({ matchId: 'qf_2', matchName: 'Quarter-Final', team1Id: 'placeholder_C_1', team2Id: 'placeholder_D_2', status: 'upcoming' });
+                        fixtures.push({ matchId: 'qf_3', matchName: 'Quarter-Final', team1Id: 'placeholder_B_1', team2Id: 'placeholder_A_2', status: 'upcoming' });
+                        fixtures.push({ matchId: 'qf_4', matchName: 'Quarter-Final', team1Id: 'placeholder_D_1', team2Id: 'placeholder_C_2', status: 'upcoming' });
+                        fixtures.push({ matchId: 'sf_1', matchName: 'Semi-Final', team1Id: 'winner_qf_1', team2Id: 'winner_qf_2', status: 'upcoming' });
+                        fixtures.push({ matchId: 'sf_2', matchName: 'Semi-Final', team1Id: 'winner_qf_3', team2Id: 'winner_qf_4', status: 'upcoming' });
+                        fixtures.push({ matchId: 'final', matchName: 'Final', team1Id: 'winner_sf_1', team2Id: 'winner_sf_2', status: 'upcoming' });
+                    } else { // Generic bracket for other combinations
                         let knockoutPlaceholders = [];
-                        for(let i=0; i<numGroups; i++) {
-                            for(let j=1; j<=teamsAdvancing; j++) {
-                                knockoutPlaceholders.push({id: `placeholder_G${String.fromCharCode(65 + i)}_Rank${j}`, name: `Group ${String.fromCharCode(65 + i)} #${j}`});
+                        for (let i = 0; i < numGroups; i++) {
+                            for (let j = 1; j <= teamsAdvancing; j++) {
+                                knockoutPlaceholders.push({ id: `placeholder_${String.fromCharCode(65 + i)}_${j}` });
                             }
                         }
-                        knockoutFixtures = generateKnockoutBracket(knockoutPlaceholders);
+                        fixtures.push(...generateKnockoutBracket(knockoutPlaceholders));
                     }
                     break;
                 }
-                default: {
-                     // Fallback to old logic for unhandled formats
-                    fixtures = generateFixtures_legacy();
-                }
-            }
-
-            currentTournamentState.fixtures = [...fixtures, ...knockoutFixtures];
-        }
-
-        function generateFixtures_legacy() {
-            // This is the old logic preserved for formats not yet updated.
-            const format = document.getElementById('tournament-format').value;
-            const teams = Object.values(teamDataStore);
-            let fixtures = [];
-
-            if (format === 'double_round_robin') {
-                const firstLeg = generateFairRoundRobinFixtures(teams);
-                const secondLeg = generateFairRoundRobinFixtures(teams.reverse());
-                fixtures = [...firstLeg, ...secondLeg];
-            } else if (format === 'playoffs') {
-                 if (teams.length < 4) {
-                    showAlert("Playoff format requires at least 4 teams.");
-                    return [];
-                }
-                fixtures = generateFairRoundRobinFixtures(teams, true);
-                fixtures.push({ matchId: 'qualifier_1', matchName: 'Qualifier 1', team1Id: 'placeholder_rank_1', team2Id: 'placeholder_rank_2', status: 'upcoming', result: '', summary: null});
-                fixtures.push({ matchId: 'eliminator', matchName: 'Eliminator', team1Id: 'placeholder_rank_3', team2Id: 'placeholder_rank_4', status: 'upcoming', result: '', summary: null});
-                fixtures.push({ matchId: 'qualifier_2', matchName: 'Qualifier 2', team1Id: 'placeholder_loser_q1', team2Id: 'placeholder_winner_e', status: 'upcoming', result: '', summary: null});
-                fixtures.push({ matchId: 'final', matchName: 'Final', team1Id: 'placeholder_winner_q1', team2Id: 'placeholder_winner_q2', status: 'upcoming', result: '', summary: null});
-            } else if (format === 'super_stage') {
-                const numGroups = parseInt(document.getElementById('number-of-groups').value);
-                const teamsAdvancing = parseInt(document.getElementById('knockout-teams-per-group').value);
-                const totalAdvancing = numGroups * teamsAdvancing;
-
-                 if (totalAdvancing !== 6 && totalAdvancing !== 8) {
-                    showAlert("Super Stage format requires 6 or 8 advancing teams.");
-                    return [];
-                }
-                for (let i = 0; i < numGroups; i++) {
-                    const groupName = `Group ${String.fromCharCode(65 + i)}`;
-                    const groupTeams = teams.filter(t => t.group === groupName);
-                    fixtures.push(...generateFairRoundRobinFixtures(groupTeams, true));
-                }
-
-                let superStagePlaceholders = [];
-                for (let i = 0; i < numGroups; i++) {
-                    for (let j = 1; j <= teamsAdvancing; j++) {
-                        superStagePlaceholders.push({ id: `placeholder_g${i}_rank_${j}`, name: `${String.fromCharCode(65 + i)}${j}` });
+                case 'playoffs': {
+                    if (teams.length < 4) {
+                        showAlert("Playoff (IPL Style) format requires at least 4 teams.");
+                        fixtures = [];
+                        return;
                     }
+                    fixtures.push(...generateFairRoundRobinFixtures(teams, true));
+                    fixtures.push({ matchId: 'qualifier_1', matchName: 'Qualifier 1', team1Id: 'placeholder_rank_1', team2Id: 'placeholder_rank_2', status: 'upcoming' });
+                    fixtures.push({ matchId: 'eliminator', matchName: 'Eliminator', team1Id: 'placeholder_rank_3', team2Id: 'placeholder_rank_4', status: 'upcoming' });
+                    fixtures.push({ matchId: 'qualifier_2', matchName: 'Qualifier 2', team1Id: 'loser_qualifier_1', team2Id: 'winner_eliminator', status: 'upcoming' });
+                    fixtures.push({ matchId: 'final', matchName: 'Final', team1Id: 'winner_qualifier_1', team2Id: 'winner_qualifier_2', status: 'upcoming' });
+                    break;
                 }
-                const superStageFixtures = generateFairRoundRobinFixtures(superStagePlaceholders);
-                superStageFixtures.forEach(f => f.matchName = `Super ${totalAdvancing} Stage`);
-                fixtures.push(...superStageFixtures);
-                fixtures.push({ matchId: 'final', matchName: 'Final', team1Id: 'placeholder_ss_rank_1', team2Id: 'placeholder_ss_rank_2', status: 'upcoming', result: '', summary: null});
+                 case 'super_stage': {
+                    const totalAdvancing = numGroups * teamsAdvancing;
+                    if (totalAdvancing !== 6 && totalAdvancing !== 8) {
+                        showAlert("Super Stage format currently supports Super 6 or Super 8 only.");
+                        fixtures = [];
+                        return;
+                    }
+                    for (let i = 0; i < numGroups; i++) {
+                        const groupName = `Group ${String.fromCharCode(65 + i)}`;
+                        const groupTeams = teams.filter(t => t.group === groupName);
+                        fixtures.push(...generateFairRoundRobinFixtures(groupTeams, true));
+                    }
+                    let superStagePlaceholders = [];
+                    for (let i = 0; i < numGroups; i++) {
+                        for (let j = 1; j <= teamsAdvancing; j++) {
+                            superStagePlaceholders.push({ id: `placeholder_${String.fromCharCode(65+i)}_${j}` });
+                        }
+                    }
+                    const superStageFixtures = generateFairRoundRobinFixtures(superStagePlaceholders);
+                    superStageFixtures.forEach(f => f.matchName = `Super ${totalAdvancing} Stage`);
+                    fixtures.push(...superStageFixtures);
+                    fixtures.push({ matchId: 'final', matchName: 'Final', team1Id: 'placeholder_ss_rank_1', team2Id: 'placeholder_ss_rank_2', status: 'upcoming' });
+                    break;
+                }
             }
-            return fixtures;
+            currentTournamentState.fixtures = fixtures;
         }
         
         function displayDashboard() {
@@ -1338,6 +1430,7 @@
             document.getElementById('dashboard-subtitle').textContent = `Starting: ${new Date(data.startDate + 'T00:00:00').toLocaleDateString()}`;
             renderFixtures();
             renderPointsTable();
+            renderLeaderboards();
         }
 
         function renderFixtures() {
@@ -1421,7 +1514,138 @@
             </table>`;
             container.innerHTML = tableHTML;
         }
-        
+        function aggregateTournamentStats() {
+            const completedFixtures = currentTournamentState.fixtures.filter(f => f.status === 'completed' && f.summary);
+            const allPlayers = new Map();
+
+            currentTournamentState.teams.forEach(team => {
+                team.players.forEach(playerName => {
+                    allPlayers.set(playerName, {
+                        name: playerName,
+                        teamName: team.name,
+                        teamColor: team.color,
+                        photoUrl: null, 
+                        runs: 0, ballsFaced: 0, fours: 0, sixes: 0, dismissals: 0, notOuts: 0,
+                        wickets: 0, runsConceded: 0, ballsBowled: 0, dots: 0, maidens: 0,
+                        catches: 0, runOuts: 0, stumpings: 0,
+                    });
+                });
+            });
+
+            completedFixtures.forEach(match => {
+                match.summary.forEach(inning => {
+                    Object.values(inning.playerStats).forEach(pStat => {
+                        if (allPlayers.has(pStat.name)) {
+                            const player = allPlayers.get(pStat.name);
+                            player.runs += pStat.runs;
+                            player.ballsFaced += pStat.balls;
+                            player.fours += pStat.fours;
+                            player.sixes += pStat.sixes;
+                            if (pStat.isOut) player.dismissals++;
+                            else if(pStat.balls > 0) player.notOuts++;
+                        }
+                    });
+                     Object.values(inning.bowlingStats).forEach(pStat => {
+                        if (allPlayers.has(pStat.name)) {
+                            const player = allPlayers.get(pStat.name);
+                            player.wickets += pStat.wickets;
+                            player.runsConceded += pStat.runsConceded;
+                            player.ballsBowled += pStat.ballsBowled;
+                            player.maidens += pStat.maidens;
+                        }
+                    });
+                });
+            });
+            
+            tournamentStatsCache = Array.from(allPlayers.values());
+            localStorage.setItem('cricker_leaderboards', JSON.stringify(tournamentStatsCache));
+            return tournamentStatsCache;
+        }
+
+        function renderLeaderboards() {
+            const stats = tournamentStatsCache || aggregateTournamentStats();
+            const container = document.getElementById('points-table-container');
+
+            // --- Batsmen Leaderboard ---
+            const batsmen = [...stats].sort((a, b) => {
+                const aAvg = a.dismissals > 0 ? a.runs / a.dismissals : a.runs;
+                const bAvg = b.dismissals > 0 ? b.runs / b.dismissals : b.runs;
+                const aSR = a.ballsFaced > 0 ? (a.runs / a.ballsFaced) * 100 : 0;
+                const bSR = b.ballsFaced > 0 ? (b.runs / b.ballsFaced) * 100 : 0;
+                return b.runs - a.runs || bSR - aSR || bAvg - aAvg || b.sixes - a.sixes || b.fours - a.fours || a.ballsFaced - b.ballsFaced || a.name.localeCompare(b.name);
+            });
+            
+            // --- Bowlers Leaderboard ---
+            const bowlers = [...stats].sort((a, b) => {
+                const aOvers = a.ballsBowled / 6;
+                const bOvers = b.ballsBowled / 6;
+                const aEcon = aOvers > 0 ? a.runsConceded / aOvers : Infinity;
+                const bEcon = bOvers > 0 ? b.runsConceded / bOvers : Infinity;
+                return b.wickets - a.wickets || aEcon - bEcon || b.dots - a.dots || a.runsConceded - b.runsConceded || bOvers - aOvers || a.name.localeCompare(b.name);
+            });
+
+            // --- Fielders Leaderboard (simplified for now) ---
+            const fielders = [...stats].sort((a,b) => (b.catches + b.runOuts + b.stumpings) - (a.catches + a.runOuts + a.stumpings) || b.catches - a.catches || a.name.localeCompare(b.name));
+
+            // --- MVP Calculation ---
+            const mvp = [...stats].map(p => {
+                const sr = p.ballsFaced > 0 ? (p.runs / p.ballsFaced) * 100 : 0;
+                p.mvpScore = (4 * p.wickets) + (0.5 * p.dots) - (0.25 * p.runsConceded) + p.runs + (2 * p.notOuts) + (3 * p.catches) + (3 * p.runOuts) + (4 * p.stumpings) + (0.02 * sr);
+                return p;
+            }).sort((a,b) => b.mvpScore - a.mvpScore)[0];
+            
+            const renderList = (players, type) => players.slice(0, type === 'fielders' ? 5 : 10).map((p, i) => {
+                const overs = Math.floor(p.ballsBowled / 6) + '.' + (p.ballsBowled % 6);
+                const econ = p.ballsBowled > 0 ? (p.runsConceded / (p.ballsBowled/6)).toFixed(2) : '0.00';
+                
+                let statsHtml = '';
+                if(type === 'batsmen') statsHtml = `<strong>${p.runs}</strong> runs`;
+                if(type === 'bowlers') statsHtml = `<strong>${p.wickets}</strong> wkts, ${econ} econ`;
+                if(type === 'fielders') statsHtml = `<strong>${p.catches + p.runOuts}</strong> dismissals`;
+
+                return `<li class="flex items-center justify-between text-xs py-1.5 border-b last:border-0">
+                    <span class="truncate"><strong class="mr-2">${i+1}</strong> ${p.name} <em class="text-gray-500">(${p.teamName})</em></span>
+                    <span class="font-semibold text-gray-700">${statsHtml}</span>
+                </li>`;
+            }).join('');
+
+            const leaderboardHtml = `
+                <div class="mt-6">
+                    <div class="p-4 bg-gray-50 rounded-lg mb-4">
+                        <div class="flex justify-between items-center mb-2">
+                             <h3 class="font-bold text-lg text-indigo-600">Top Batsmen</h3>
+                             <button class="text-xs font-semibold text-blue-600 hover:underline">View Full Report</button>
+                        </div>
+                        <ul class="space-y-1">${renderList(batsmen, 'batsmen')}</ul>
+                    </div>
+                     <div class="p-4 bg-gray-50 rounded-lg mb-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="font-bold text-lg text-indigo-600">Top Bowlers</h3>
+                             <button class="text-xs font-semibold text-blue-600 hover:underline">View Full Report</button>
+                        </div>
+                        <ul class="space-y-1">${renderList(bowlers, 'bowlers')}</ul>
+                    </div>
+                     <div class="p-4 bg-gray-50 rounded-lg mb-4">
+                        <div class="flex justify-between items-center mb-2">
+                             <h3 class="font-bold text-lg text-indigo-600">Top Fielders</h3>
+                             <button class="text-xs font-semibold text-blue-600 hover:underline">View Full Report</button>
+                        </div>
+                        <ul class="space-y-1">${renderList(fielders, 'fielders')}</ul>
+                    </div>
+                    ${mvp ? `
+                    <div class="p-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-lg shadow-lg">
+                        <h3 class="font-extrabold text-lg flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>Most Valuable Player</h3>
+                        <p class="font-bold text-xl mt-1">${mvp.name} <em class="font-medium opacity-80">(${mvp.teamName})</em></p>
+                        <p class="text-xs opacity-90">Score: ${mvp.mvpScore.toFixed(2)} | Runs: ${mvp.runs}, Wkts: ${mvp.wickets}</p>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+            // Append new leaderboards; clear previous ones if they exist
+            const existingLeaderboards = container.querySelector('.mt-6');
+            if(existingLeaderboards) existingLeaderboards.remove();
+            container.innerHTML += leaderboardHtml;
+        }
         function openCreateMatchModal() {
             const teamASelect = document.getElementById('team-a-select');
             const teamBSelect = document.getElementById('team-b-select');
@@ -1531,7 +1755,7 @@
             }
             
             if (isContinuing) {
-                const savedState = localStorage.getItem(`liveMatchState_${matchId}`);
+                const savedState = localStorage.getItem('cricker_match_state');
                 if (savedState) {
                     liveMatchState = JSON.parse(savedState);
                 } else {
@@ -1569,6 +1793,10 @@
                  currentTournamentState.fixtures.find(f => f.matchId === matchId).status = 'in-progress';
             }
             
+            localStorage.setItem('cricker_tournament_state', JSON.stringify(currentTournamentState));
+            localStorage.setItem('cricker_match_state', JSON.stringify(liveMatchState));
+            localStorage.setItem('cricker_current_view', 'toss-screen');
+
             document.getElementById('tournament-flow').classList.add('hidden');
             document.getElementById('scorer-section').classList.remove('hidden');
             document.getElementById('toss-screen').classList.remove('hidden');
@@ -1597,17 +1825,19 @@
         }
 
         function returnToDashboard(confirmFirst = false) {
-            if (confirmFirst && !liveMatchState.isLocked) {
-                showConfirm("Are you sure you want to quit the match?", () => {
-                    document.getElementById('scorer-section').classList.add('hidden');
-                    document.getElementById('tournament-flow').classList.remove('hidden');
-                    closeModal('confirm-modal');
-                    displayDashboard();
-                });
-            } else {
+            const performReturn = () => {
+                localStorage.removeItem('cricker_match_state');
+                localStorage.setItem('cricker_current_view', 'tournament-dashboard');
                 document.getElementById('scorer-section').classList.add('hidden');
                 document.getElementById('tournament-flow').classList.remove('hidden');
+                closeModal('confirm-modal'); // Ensure confirm modal is closed if it was open
                 displayDashboard();
+            };
+
+            if (confirmFirst && liveMatchState.matchId) {
+                showConfirm("Are you sure you want to end the match and return to the dashboard?", performReturn);
+            } else {
+                performReturn();
             }
         }
         
@@ -1661,6 +1891,10 @@
         function startMatch() {
             liveMatchState.battingTeam = tossDecision === 'bat' ? tossWinnerKey : (tossWinnerKey === 'team1' ? 'team2' : 'team1');
             liveMatchState.bowlingTeam = liveMatchState.battingTeam === 'team1' ? 'team2' : 'team1';
+            
+            localStorage.setItem('cricker_match_state', JSON.stringify(liveMatchState));
+            localStorage.setItem('cricker_current_view', 'scorer-app');
+
             document.getElementById('toss-screen').classList.add('hidden');
             document.getElementById('scorer-app').classList.remove('hidden');
             document.getElementById('scorer-app').classList.add('flex');
@@ -1700,7 +1934,7 @@
                 const bowlingPlayers = liveMatchState[liveMatchState.bowlingTeam].players;
                 let availablePlayers = [];
 
-                if (role === 'striker' || role === 'nonStriker') {
+                if (role === 'striker' || role === 'nonStriker' || role === 'batter') {
                     availablePlayers = battingPlayers.filter(p => !liveMatchState[liveMatchState.battingTeam].playerStats[p].isOut);
                 } else if (role === 'bowler') {
                     availablePlayers = bowlingPlayers;
@@ -1870,6 +2104,9 @@
             
             updateUI();
             
+            // Persist state after every ball
+            if (liveMatchState.matchId) localStorage.setItem('cricker_match_state', JSON.stringify(liveMatchState));
+
             const maxBalls = liveMatchState.totalOvers * liveMatchState.ballsPerOver;
             const maxWickets = liveMatchState.playersPerSide - 1;
 
@@ -1937,6 +2174,7 @@
                  } else {
                     liveMatchState.nonStriker = nextBatter;
                  }
+                 addCommentary(`${nextBatter.name} comes to the crease.`);
                  updateUI();
             }
         }
@@ -2046,6 +2284,9 @@
                 
                 updatePointsTable(matchStatus, winningTeam);
                 updateKnockoutBracket(liveMatchState.matchId, winningTeam);
+                
+                // Update tournament state in localStorage after a match concludes
+                localStorage.setItem('cricker_tournament_state', JSON.stringify(currentTournamentState));
             }
             
             const inning1Summary = liveMatchState.inningsSummary[0];
@@ -2246,43 +2487,65 @@
                 team2.points += currentTournamentState.pointsRules.tie;
             }
             
+            // Invalidate stats cache so leaderboards will be re-calculated
+            tournamentStatsCache = null;
+            localStorage.removeItem('cricker_leaderboards');
+
             renderPointsTable();
         }
         
-        function updateKnockoutBracket(matchId, winner) {
-            const winnerPlaceholderId = `winner_${matchId}`;
-            const winnerTeamId = winner ? winner.id : `tie_${matchId}`;
+        function updateKnockoutBracket(completedMatchId, winner) {
+            // Part 1: Handle simple winner/loser progression for playoff formats
+            const winnerPlaceholderId = `winner_${completedMatchId}`;
+            const loserPlaceholderId = `loser_${completedMatchId}`;
+            const winnerTeamId = winner ? winner.id : `tie_${completedMatchId}`;
             
-            const nextMatchIndex = currentTournamentState.fixtures.findIndex(f => f.team1Id === winnerPlaceholderId || f.team2Id === winnerPlaceholderId);
-            
-            if(nextMatchIndex !== -1) {
-                const nextMatch = currentTournamentState.fixtures[nextMatchIndex];
-                if (nextMatch.team1Id === winnerPlaceholderId) {
-                    nextMatch.team1Id = winnerTeamId;
-                } else if (nextMatch.team2Id === winnerPlaceholderId) {
-                    nextMatch.team2Id = winnerTeamId;
-                }
-            } else {
-                 // Logic to update knockout matches from group stage
-                currentTournamentState.fixtures.forEach(fixture => {
-                    if (fixture.matchName.startsWith('Group')) {
-                        const groupName = fixture.matchName.split(' ')[1];
-                        const teamsAdvancing = parseInt(document.getElementById('knockout-teams-per-group').value);
-                        const sortedTeams = currentTournamentState.teams.filter(t => t.group === groupName).sort((a, b) => b.points - a.points || b.nrr - a.nrr);
-                        for (let i = 0; i < teamsAdvancing; i++) {
-                            const advancingTeam = sortedTeams[i];
-                            const advancingPlaceholder = `winner_group_${groupName.replace('Group ', '').toLowerCase()}_${i + 1}`;
-                            const knockoutMatchIndex = currentTournamentState.fixtures.findIndex(f => f.team1Id === advancingPlaceholder || f.team2Id === advancingPlaceholder);
-                            if(knockoutMatchIndex !== -1) {
-                                if(currentTournamentState.fixtures[knockoutMatchIndex].team1Id === advancingPlaceholder) {
-                                    currentTournamentState.fixtures[knockoutMatchIndex].team1Id = advancingTeam.id;
-                                } else {
-                                    currentTournamentState.fixtures[knockoutMatchIndex].team2Id = advancingTeam.id;
-                                }
-                            }
-                        }
+            const completedMatch = currentTournamentState.fixtures.find(f => f.matchId === completedMatchId);
+            const loserTeamId = winner && completedMatch ? (completedMatch.team1Id === winner.id ? completedMatch.team2Id : completedMatch.team1Id) : `tie_${completedMatchId}`;
+
+            currentTournamentState.fixtures.forEach(f => {
+                if (f.team1Id === winnerPlaceholderId) f.team1Id = winnerTeamId;
+                if (f.team2Id === winnerPlaceholderId) f.team2Id = winnerTeamId;
+                if (f.team1Id === loserPlaceholderId) f.team1Id = loserTeamId;
+                if (f.team2Id === loserPlaceholderId) f.team2Id = loserTeamId;
+            });
+
+            // Part 2: Check if a league/group stage is complete to resolve rank-based placeholders
+            const leagueFixtures = currentTournamentState.fixtures.filter(f => f.matchName.toLowerCase().includes('group') || f.matchName.toLowerCase().includes('round'));
+            const areAllLeagueFixturesCompleted = leagueFixtures.length > 0 && leagueFixtures.every(f => f.status === 'completed');
+
+            if (areAllLeagueFixturesCompleted) {
+                const numGroups = parseInt(document.getElementById('number-of-groups').value) || 1;
+                
+                if (numGroups > 1) { // Multi-group logic
+                    for (let i = 0; i < numGroups; i++) {
+                        const groupChar = String.fromCharCode(65 + i);
+                        const groupName = `Group ${groupChar}`;
+                        const groupTeamIds = currentTournamentState.teams.filter(t => t.group === groupName).map(t => t.id);
+                        const groupStandings = getTeamStandings(groupTeamIds);
+                        
+                        groupStandings.forEach((team, rankIndex) => {
+                            const rank = rankIndex + 1;
+                            const placeholderId = `placeholder_${groupChar}_${rank}`;
+                            currentTournamentState.fixtures.forEach(f => {
+                                if (f.team1Id === placeholderId) f.team1Id = team.id;
+                                if (f.team2Id === placeholderId) f.team2Id = team.id;
+                            });
+                        });
                     }
-                });
+                } else { // Single table logic (Round Robin, Playoffs)
+                    const allTeamIds = currentTournamentState.teams.map(t => t.id);
+                    const leagueStandings = getTeamStandings(allTeamIds);
+                    
+                    leagueStandings.forEach((team, rankIndex) => {
+                        const rank = rankIndex + 1;
+                        const placeholderId = `placeholder_rank_${rank}`;
+                         currentTournamentState.fixtures.forEach(f => {
+                            if (f.team1Id === placeholderId) f.team1Id = team.id;
+                            if (f.team2Id === placeholderId) f.team2Id = team.id;
+                        });
+                    });
+                }
             }
             renderFixtures();
         }
@@ -2292,6 +2555,8 @@
             if (matchHistory.length > 0) { 
                 liveMatchState = matchHistory.pop(); 
                 updateUI(); 
+                // Persist state after undo
+                if (liveMatchState.matchId) localStorage.setItem('cricker_match_state', JSON.stringify(liveMatchState));
             } 
         }
 
@@ -2450,13 +2715,87 @@
             }
         }
         
-        // --- INITIALIZATION ---
+        // --- INITIALIZATION & SESSION PERSISTENCE ---
+
+        // Helper function to clear session data when navigating home
+        function clearSession() {
+            localStorage.removeItem('cricker_current_view');
+            localStorage.removeItem('cricker_tournament_state');
+            localStorage.removeItem('cricker_match_state');
+            sessionStorage.removeItem('fixtures_scroll_pos');
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const startDateInput = document.getElementById('start-date');
             if(startDateInput) startDateInput.value = new Date().toISOString().split('T')[0];
             
             loadSavedTeams();
 
+            // Restore session state on page load
+            const savedView = localStorage.getItem('cricker_current_view');
+            if (savedView) {
+                const savedTournamentState = localStorage.getItem('cricker_tournament_state');
+                const savedMatchState = localStorage.getItem('cricker_match_state');
+
+                if (savedTournamentState) {
+                    currentTournamentState = JSON.parse(savedTournamentState);
+                }
+                if (savedMatchState) {
+                    liveMatchState = JSON.parse(savedMatchState);
+                }
+
+                document.getElementById('tournament-choice-screen').classList.add('hidden');
+                document.getElementById('app-container').classList.remove('hidden');
+
+                switch (savedView) {
+                    case 'tournament-dashboard':
+                        document.getElementById('tournament-setup').classList.add('hidden');
+                        document.getElementById('tournament-dashboard').classList.remove('hidden');
+                        displayDashboard();
+                        // Restore scroll position for fixtures
+                        const scrollPos = sessionStorage.getItem('fixtures_scroll_pos');
+                        if (scrollPos) {
+                            setTimeout(() => { // Timeout ensures content is rendered before scrolling
+                                document.getElementById('fixtures-list').scrollTop = parseInt(scrollPos, 10);
+                            }, 100);
+                        }
+                        break;
+                    case 'toss-screen':
+                        document.getElementById('tournament-flow').classList.add('hidden');
+                        document.getElementById('scorer-section').classList.remove('hidden');
+                        document.getElementById('toss-screen').classList.remove('hidden');
+                        document.getElementById('scorer-app').classList.add('hidden');
+                        setupTossScreen(liveMatchState.team1, liveMatchState.team2);
+                        break;
+                    case 'scorer-app':
+                        document.getElementById('tournament-flow').classList.add('hidden');
+                        document.getElementById('scorer-section').classList.remove('hidden');
+                        document.getElementById('toss-screen').classList.add('hidden');
+                        document.getElementById('scorer-app').classList.remove('hidden');
+                        document.getElementById('scorer-app').classList.add('flex');
+                        updateUI();
+                        break;
+                    default: // Includes 'tournament-setup' and any invalid state
+                        document.getElementById('tournament-setup').classList.remove('hidden');
+                        document.getElementById('tournament-dashboard').classList.add('hidden');
+                        break;
+                }
+            }
+
+            // Add listeners to home buttons to clear session state
+            document.querySelectorAll('a[href="index.html"]').forEach(a => {
+                a.addEventListener('click', clearSession);
+            });
+
+            // Save scroll position for fixtures list
+            const fixturesList = document.getElementById('fixtures-list');
+            if (fixturesList) {
+                fixturesList.addEventListener('scroll', (e) => {
+                    sessionStorage.setItem('fixtures_scroll_pos', e.target.scrollTop);
+                });
+            }
+
+            // --- Original Event Listeners ---
             const alertOkBtn = document.getElementById('alert-ok-btn');
             if(alertOkBtn) alertOkBtn.onclick = () => { if(alertCallback) { alertCallback(); alertCallback = null; } closeModal('alert-modal'); };
             
@@ -2465,9 +2804,6 @@
             
             const confirmOkBtn = document.getElementById('confirm-ok-btn');
             if(confirmOkBtn) confirmOkBtn.onclick = () => { if(confirmCallback) confirmCallback(); confirmCallback = null; closeModal('confirm-modal'); };
-
-            const tournamentTeamsInput = document.getElementById('tournament-teams');
-            if(tournamentTeamsInput) tournamentTeamsInput.addEventListener('input', generateTeamInputs);
 
             const createMatchBtn = document.getElementById('create-match-btn');
             if(createMatchBtn) createMatchBtn.onclick = openCreateMatchModal;
