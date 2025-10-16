@@ -152,6 +152,7 @@
             justify-content: center;
             opacity: 0;
             transition: opacity 180ms ease;
+            pointer-events: none; /* Make it non-interactive */
         }
         .logo-uploader-container:hover .upload-overlay {
             opacity: 1;
@@ -894,6 +895,32 @@
             
             return fallbackHTML;
         }
+        function triggerLogoUpload(teamIndex) {
+            document.getElementById(`logo-uploader-${teamIndex}`).click();
+        }
+
+        function handleLogoFileSelect(event, teamIndex) {
+            const file = event.target.files[0];
+            if (!file) { return; }
+
+            // Validate file type and size
+            if (!file.type.startsWith('image/')) {
+                showAlert('Please upload a valid image file (e.g., JPG, PNG).');
+                return;
+            }
+            if (file.size > 2 * 1024 * 1024) { // 2 MB limit
+                showAlert('File size cannot exceed 2 MB.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onloadend = function() {
+                const dataUrl = reader.result;
+                teamDataStore[teamIndex].logoUrl = dataUrl;
+                updateTeamLogoPreview(teamIndex);
+            }
+            reader.readAsDataURL(file);
+        }
 
         // --- TEAM & DATA MANAGEMENT ---
         function loadSavedTeams() {
@@ -1097,11 +1124,10 @@
             };
 
             cancelBtn.onclick = () => {
-                const teamRow = dropdownElement.closest('.grid');
+                const teamCard = dropdownElement.closest('.team-entry-card');
                 dropdownElement.value = '';
-                teamRow.querySelector('.team-name-input').value = '';
+                teamCard.querySelector('.team-name-input').value = '';
                 teamDataStore[teamIndex].name = '';
-                teamDataStore[teamIndex].color = darkColors[teamIndex % darkColors.length]; // Reset color
                 teamDataStore[teamIndex].logoUrl = null;
                 teamDataStore[teamIndex].players = [];
                 updatePlayerButtonStatus(teamIndex);
@@ -1171,7 +1197,8 @@
             const container = document.getElementById('team-entry-container');
             container.innerHTML = '';
             
-            const oldData = { ...teamDataStore };
+            // Preserve existing data, only add new empty slots if numTeams increased
+            const existingData = { ...teamDataStore };
             teamDataStore = {};
 
             if (numTeams <= 0) return;
@@ -1185,15 +1212,11 @@
                 </div>`;
 
             for (let i = 0; i < numTeams; i++) {
-                teamDataStore[i] = oldData[i] || { id: `T${Date.now() + i}`, name: '', players: [], logoUrl: null };
+                teamDataStore[i] = existingData[i] || { id: `T${Date.now() + i}`, name: '', players: [], logoUrl: null };
                 
                 const teamCard = document.createElement('div');
                 teamCard.className = 'team-entry-card glass-card p-4 mb-4';
-                
-                const playersPerSide = parseInt(document.getElementById('tournament-players').value) || 11;
-                const isPlayersAdded = (teamDataStore[i].players || []).length >= playersPerSide;
-                const playersButtonClass = isPlayersAdded ? 'completed' : '';
-                const playersButtonText = isPlayersAdded ? 'Edit Players' : 'Add Players';
+                teamCard.dataset.teamIndex = i;
 
                 teamCard.innerHTML = `
                     <div class="team-card-header"><h3>Team ${i + 1}</h3></div>
@@ -1215,16 +1238,14 @@
                                 </select>
                             </div>
                             <div class="text-right">
-                                <button onclick="openAddPlayersModal(${i})" class="players-button ${playersButtonClass}">
-                                    ${playersButtonText}
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                                </button>
+                                <button onclick="openAddPlayersModal(${i})" class="players-button"></button>
                             </div>
                         </div>
                     </div>
                 `;
                 container.appendChild(teamCard);
                 updateTeamLogoPreview(i);
+                updatePlayerButtonStatus(i);
             }
             addTeamInputListeners();
         }
@@ -1290,18 +1311,20 @@
         }
         
         function updatePlayerButtonStatus(teamIndex) {
-            const playersPerSide = parseInt(document.getElementById('tournament-players').value);
-            const requiredSquadSize = playersPerSide + 1;
             const playerList = teamDataStore[teamIndex].players || [];
-            const teamRows = document.getElementById('team-entry-container').children;
-            if (teamRows[teamIndex]) {
-                const playerButton = teamRows[teamIndex].querySelector('.players-button');
-                if (playerList.length >= requiredSquadSize) {
+            const playerCount = playerList.length;
+            const teamCard = document.querySelector(`.team-entry-card[data-team-index="${teamIndex}"]`);
+
+            if (teamCard) {
+                const playerButton = teamCard.querySelector('.players-button');
+                const arrowIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
+
+                if (playerCount > 0) {
                     playerButton.classList.add('completed');
-                    playerButton.textContent = 'Players Added';
+                    playerButton.innerHTML = `${playerCount} Player${playerCount !== 1 ? 's' : ''} Added ${arrowIcon}`;
                 } else {
                     playerButton.classList.remove('completed');
-                    playerButton.textContent = 'Players';
+                    playerButton.innerHTML = `Add Players ${arrowIcon}`;
                 }
             }
         }
@@ -1729,7 +1752,7 @@
                 
                 if (isCompleted) {
                     statusChip = `<span class="text-xs font-semibold bg-slate-200 text-slate-600 px-2 py-1 rounded-full">Completed</span>`;
-                    resultText = `<p class="text-xs text-slate-500 mt-2 font-semibold truncate">${match.result}</p>`;
+                    resultText = `<p class="text-xs text-slate-500 font-semibold truncate">${match.result}</p>`;
                 } else if (match.status === 'in-progress') {
                     statusChip = `<span class="flex items-center text-xs font-semibold bg-red-100 text-red-600 px-2 py-1 rounded-full"><span class="w-2 h-2 bg-red-500 rounded-full mr-1.5 animate-pulse"></span>Live</span>`;
                 } else {
@@ -1753,18 +1776,15 @@
                             </div>
                             ${statusChip}
                         </div>
-                        <div class="mt-3 space-y-2">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-3">
-                                    ${team1Logo}
-                                    <span class="font-bold text-base">${team1Name}</span>
-                                </div>
+                        <div class="mt-3 flex items-center justify-between">
+                            <div class="flex items-center gap-3 w-2/5">
+                                ${team1Logo}
+                                <span class="font-bold text-base truncate">${team1Name}</span>
                             </div>
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-3">
-                                    ${team2Logo}
-                                    <span class="font-bold text-base">${team2Name}</span>
-                                </div>
+                            <span class="font-semibold text-sm text-slate-400">VS</span>
+                            <div class="flex items-center justify-end gap-3 w-2/5">
+                                <span class="font-bold text-base truncate text-right">${team2Name}</span>
+                                ${team2Logo}
                             </div>
                         </div>
                         <div class="flex justify-between items-center mt-3 pt-3 border-t border-slate-200/60">
