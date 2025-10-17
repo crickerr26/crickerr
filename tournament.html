@@ -224,6 +224,16 @@
         .avatar-lg { width: 48px; height: 48px; font-size: 1.2rem; }
         .avatar-xl { width: 64px; height: 64px; font-size: 1.75rem; border-width: 2px; }
 
+        .group-column {
+            transition: background-color 150ms ease-in-out;
+        }
+        .team-pill {
+            transition: opacity 150ms ease;
+        }
+        .team-pill:active {
+            cursor: grabbing;
+        }
+
         #tournament-dashboard .team-logo-compact {
             width: 28px;
             height: 28px;
@@ -463,11 +473,25 @@
     <div class="absolute top-4 left-4">
         <button onclick="goToStep(2)" class="font-semibold text-gray-600 hover:text-gray-800">&larr; Back</button>
     </div>
-     <header class="text-center mb-8"><h1 class="text-3xl font-bold text-gray-800">Assign Teams to Groups</h1><p class="text-gray-500 mt-1">Select teams to assign them to their respective groups.</p></header>
-     
-     <div id="group-assignment-container" class="mt-6 space-y-4 max-h-[50vh] overflow-y-auto pr-2"></div>
-     
-     <div class="mt-8 flex justify-between items-center"><button onclick="goToStep(2)" class="font-semibold text-gray-600 hover:text-gray-800">Back</button><button onclick="finalizeTeamsAndGoToDashboard()" class="px-6 py-3 text-white font-bold rounded-lg setup-btn">Confirm & Create Tournament</button></div>
+    <header class="text-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">Assign Teams to Groups</h1>
+        <p class="text-gray-500 mt-1">Drag and drop teams into their respective groups or use the auto-assign tools.</p>
+    </header>
+    
+    <div class="flex justify-center gap-4 mb-4">
+        <button onclick="autoBalanceGroups()" class="text-sm px-4 py-2 bg-slate-200 text-slate-700 font-semibold rounded-lg hover:bg-slate-300">Auto-Balance</button>
+        <button onclick="randomizeGroups()" class="text-sm px-4 py-2 bg-slate-200 text-slate-700 font-semibold rounded-lg hover:bg-slate-300">Randomize</button>
+        <button onclick="resetGroups()" class="text-sm px-4 py-2 bg-rose-100 text-rose-700 font-semibold rounded-lg hover:bg-rose-200">Reset</button>
+    </div>
+
+    <div id="group-assignment-container" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 min-h-[40vh] max-h-[60vh] overflow-y-auto p-2 bg-slate-100 rounded-lg">
+        </div>
+    <div id="group-validation-error" class="text-red-600 text-sm text-center mt-2 h-4"></div>
+
+    <div class="mt-8 flex justify-between items-center">
+        <button onclick="goToStep(2)" class="font-semibold text-gray-600 hover:text-gray-800">Back</button>
+        <button id="finalize-tournament-btn" onclick="finalizeTeamsAndGoToDashboard()" class="px-6 py-3 text-white font-bold rounded-lg setup-btn disabled:opacity-50 disabled:cursor-not-allowed" disabled>Confirm & Create Tournament</button>
+    </div>
 </div>
                     </div>
                 </div>
@@ -1350,80 +1374,209 @@
             showAlert(`Player list saved for ${teamDataStore[teamIndex].name || `Team ${teamIndex + 1}`}.`);
         }
 
+        let draggedTeamId = null;
+
         function showGroupAssignment() {
             const format = document.getElementById('tournament-format').value;
-            const teams = Object.values(teamDataStore);
+            const allTeams = Object.values(teamDataStore);
+            const numGroups = parseInt(document.getElementById('number-of-groups').value) || 1;
+            const container = document.getElementById('group-assignment-container');
             const groupsContainer = document.getElementById('group-selection-container');
-            const assignContainer = document.getElementById('group-assignment-container');
             const knockoutTeamsPerGroupContainer = document.getElementById('knockout-teams-per-group-container');
+            
             const requiresGroupStage = ['round-robin', 'double_round_robin', 'group_knockout', 'playoffs', 'super_stage'].includes(format);
             
             knockoutTeamsPerGroupContainer.classList.add('hidden');
+            container.innerHTML = '';
 
             if (requiresGroupStage) {
                 groupsContainer.style.display = 'block';
-                assignContainer.style.display = 'block';
-                generateGroupUI();
-            } else if (format === 'knockout') {
-                 if (teams.length < 2) {
-                    showAlert('A knockout tournament requires at least 2 teams.');
+
+                // Simplified and more reliable check for initialization.
+                // This ensures that if the groups haven't been created yet, or if the
+                // number of groups from settings doesn't match the current state,
+                // the group structure is reset and displayed correctly.
+                if (!currentTournamentState.groups || currentTournamentState.groups.length !== (numGroups + 1)) {
+                    initializeGroups(numGroups);
                 }
+                
+                renderGroupUI();
+
+            } else if (format === 'knockout') {
+                if (allTeams.length < 2) showAlert('A knockout tournament requires at least 2 teams.');
                 groupsContainer.style.display = 'none';
-                assignContainer.style.display = 'none';
+                currentTournamentState.groups = []; // No groups for knockout
+                validateGroupAssignments(); // Enable confirm button for knockout
             } else {
                 groupsContainer.style.display = 'none';
-                assignContainer.style.display = 'none';
+                currentTournamentState.groups = [];
             }
-
+            
             if (format === 'group_knockout' || format === 'super_stage') {
                 knockoutTeamsPerGroupContainer.classList.remove('hidden');
             }
         }
         
-        function generateGroupUI() {
-            const numGroups = parseInt(document.getElementById('number-of-groups').value);
-            const teams = Object.values(teamDataStore);
-            const container = document.getElementById('group-assignment-container');
-            container.innerHTML = '';
-            
-            if (teams.length > 0 && numGroups > 0 && teams.length % numGroups !== 0) {
-                container.innerHTML = `<p class="text-red-500">Number of teams must be divisible by the number of groups.</p>`;
-                return;
-            }
-            const teamsPerGroup = teams.length / numGroups;
-
+        function initializeGroups(numGroups) {
+            currentTournamentState.groups = [{ id: 'unassigned', name: 'Unassigned', teamIds: Object.keys(teamDataStore).map(i => teamDataStore[i].id) }];
             for (let i = 0; i < numGroups; i++) {
-                const groupName = `Group ${String.fromCharCode(65 + i)}`;
-                let groupHTML = `<div class="bg-slate-50 p-4 rounded-lg">
-                    <h3 class="font-bold text-lg text-indigo-600 mb-2">${groupName}</h3>
-                    <div class="space-y-2">`;
-                for (let j = 0; j < teamsPerGroup; j++) {
-                    groupHTML += `<div><select class="w-full p-2 border-gray-300 border rounded-md group-team-select" data-group-index="${i}"></select></div>`;
-                }
-                groupHTML += `</div></div>`;
-                container.innerHTML += groupHTML;
+                currentTournamentState.groups.push({
+                    id: `group_${i}`,
+                    name: `Group ${String.fromCharCode(65 + i)}`,
+                    teamIds: []
+                });
             }
-            updateGroupSelectOptions();
-            document.querySelectorAll('.group-team-select').forEach(select => {
-                select.addEventListener('change', updateGroupSelectOptions);
-            });
         }
 
-        function updateGroupSelectOptions() {
-            const teams = Object.values(teamDataStore);
-            const allSelects = document.querySelectorAll('.group-team-select');
-            const selectedTeamIds = Array.from(allSelects).map(s => s.value).filter(v => v);
+        function renderGroupUI() {
+            const container = document.getElementById('group-assignment-container');
+            // Change container styles for a list view instead of a grid
+            container.className = 'space-y-3 p-2 bg-slate-100 rounded-lg max-h-[60vh] overflow-y-auto';
+            container.innerHTML = '';
 
-            allSelects.forEach(select => {
-                const currentValue = select.value;
-                let optionsHTML = '<option value="">-- Select Team --</option>';
-                teams.forEach(team => {
-                    const isSelectedElsewhere = selectedTeamIds.includes(team.id) && currentValue !== team.id;
-                    optionsHTML += `<option value="${team.id}" ${isSelectedElsewhere ? 'disabled' : ''}>${team.name}</option>`;
+            const allTeams = Object.values(teamDataStore);
+            const groups = currentTournamentState.groups;
+            
+            // Create the HTML for the dropdown options
+            const groupOptionsHTML = groups.map(group => `<option value="${group.id}">${group.name}</option>`).join('');
+
+            // Create a row for each team
+            allTeams.forEach(team => {
+                // Find which group the team is currently in
+                const currentGroup = groups.find(g => g.teamIds.includes(team.id));
+                const currentGroupId = currentGroup ? currentGroup.id : 'unassigned';
+
+                const teamRow = document.createElement('div');
+                teamRow.className = 'flex items-center justify-between bg-white shadow-sm p-3 rounded-md';
+                
+                const logoHTML = getPlayerAvatar({ name: team.name, photoUrl: team.logoUrl }, 'md');
+
+                teamRow.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        ${logoHTML}
+                        <span class="font-bold text-slate-800">${team.name}</span>
+                    </div>
+                    <div>
+                        <select class="p-2 border-gray-300 border rounded-md bg-white text-sm font-semibold" data-team-id="${team.id}">
+                            ${groupOptionsHTML}
+                        </select>
+                    </div>
+                `;
+                
+                // Set the selected option in the dropdown
+                const selectElement = teamRow.querySelector('select');
+                selectElement.value = currentGroupId;
+
+                // Add an event listener to handle changes
+                selectElement.addEventListener('change', (event) => {
+                    const selectedGroupId = event.target.value;
+                    const teamIdToMove = event.target.dataset.teamId;
+                    moveTeamToGroup(teamIdToMove, selectedGroupId);
                 });
-                select.innerHTML = optionsHTML;
-                select.value = currentValue;
+
+                container.appendChild(teamRow);
             });
+            
+            validateGroupAssignments();
+        }
+
+        // This function's logic remains sound for moving a team between groups in the data state.
+        // It's now called by the dropdown's 'change' event instead of a 'drop' event.
+        function moveTeamToGroup(teamId, targetGroupId) {
+            if (!teamId) return;
+
+            // Remove team from any group it might be in
+            currentTournamentState.groups.forEach(g => {
+                const index = g.teamIds.indexOf(teamId);
+                if (index > -1) {
+                    g.teamIds.splice(index, 1);
+                }
+            });
+
+            // Add team to the new target group
+            const targetGroup = currentTournamentState.groups.find(g => g.id === targetGroupId);
+            if (targetGroup) {
+                targetGroup.teamIds.push(teamId);
+            }
+            
+            localStorage.setItem('cricker_tournament_state', JSON.stringify(currentTournamentState));
+            renderGroupUI(); // Re-render the UI to reflect the change and keep everything in sync
+        }
+
+        function autoBalanceGroups() {
+            const allTeams = Object.values(teamDataStore).sort((a, b) => a.name.localeCompare(b.name));
+            const numGroups = parseInt(document.getElementById('number-of-groups').value) || 1;
+
+            initializeGroups(numGroups); // Resets state with the correct number of groups
+
+            // Directly manipulate the state for efficiency
+            currentTournamentState.groups[0].teamIds = []; // Empty the unassigned group
+            allTeams.forEach((team, index) => {
+                const groupIndex = (index % numGroups) + 1; // +1 to skip the 'unassigned' group at index 0
+                currentTournamentState.groups[groupIndex].teamIds.push(team.id);
+            });
+
+            localStorage.setItem('cricker_tournament_state', JSON.stringify(currentTournamentState));
+            renderGroupUI(); // Render the UI once at the end
+        }
+
+        function randomizeGroups() {
+            let allTeams = Object.values(teamDataStore);
+            const numGroups = parseInt(document.getElementById('number-of-groups').value) || 1;
+
+            // Fisher-Yates shuffle
+            for (let i = allTeams.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [allTeams[i], allTeams[j]] = [allTeams[j], allTeams[i]];
+            }
+
+            initializeGroups(numGroups); // Resets state with the correct number of groups
+
+            // Directly manipulate the state
+            currentTournamentState.groups[0].teamIds = []; // Empty the unassigned group
+            allTeams.forEach((team, index) => {
+                const groupIndex = (index % numGroups) + 1; // +1 to skip 'unassigned'
+                currentTournamentState.groups[groupIndex].teamIds.push(team.id);
+            });
+
+            localStorage.setItem('cricker_tournament_state', JSON.stringify(currentTournamentState));
+            renderGroupUI(); // Render the UI once at the end
+        }
+        
+        function resetGroups() {
+            // Read the number of groups directly from the form input
+            const numGroups = parseInt(document.getElementById('number-of-groups').value) || 1;
+            initializeGroups(numGroups);
+            renderGroupUI();
+        }
+
+        function validateGroupAssignments() {
+            const format = document.getElementById('tournament-format').value;
+            const unassignedGroup = currentTournamentState.groups ? currentTournamentState.groups.find(g => g.id === 'unassigned') : null;
+            const errorEl = document.getElementById('group-validation-error');
+            const confirmBtn = document.getElementById('finalize-tournament-btn');
+            
+            let isValid = false;
+            errorEl.textContent = '';
+
+            if (format === 'knockout') {
+                isValid = true;
+            } else if (unassignedGroup) {
+                if (unassignedGroup.teamIds.length > 0) {
+                    errorEl.textContent = 'All teams must be assigned to a group.';
+                    isValid = false;
+                } else {
+                    const numTeams = Object.values(teamDataStore).length;
+                    const numGroups = currentTournamentState.groups.length - 1;
+                    if (numTeams > 0 && numGroups > 0 && numTeams % numGroups !== 0) {
+                         errorEl.textContent = 'Number of teams should be divisible by the number of groups for a balanced tournament.';
+                         // This is a warning, not a hard stop, so we can still set isValid to true
+                    }
+                    isValid = true;
+                }
+            }
+            
+            confirmBtn.disabled = !isValid;
         }
         function calculateNRR(team, allFixtures, allTeams) {
             let runsFor = 0;
@@ -1471,29 +1624,16 @@
             return teams;
         }
         function finalizeTeamsAndGoToDashboard() {
-            const format = document.getElementById('tournament-format').value;
             const teams = Object.values(teamDataStore);
-            const teamsWithPlayers = teams.filter(t => t.players && t.players.length >= (parseInt(document.getElementById('tournament-players').value) - 1));
+            const playersPerSide = parseInt(document.getElementById('tournament-players').value);
+            const teamsWithPlayers = teams.filter(t => t.players && t.players.length >= playersPerSide);
             
-            if (teams.length !== teamsWithPlayers.length) {
-                 showAlert("Please ensure all teams have their players added before creating the tournament.");
+            if (teams.length > 0 && teams.length !== teamsWithPlayers.length) {
+                 showAlert(`Please ensure all teams have at least ${playersPerSide} players added before creating the tournament.`);
                  return;
             }
             
-            if (['round-robin', 'group_knockout', 'double_round_robin', 'playoffs', 'super_stage'].includes(format)) {
-                const allSelects = document.querySelectorAll('.group-team-select');
-                const selectedCount = Array.from(allSelects).filter(s => s.value).length;
-                if (selectedCount !== teams.length) {
-                    showAlert('Please assign all teams to a group.');
-                    return;
-                }
-                allSelects.forEach(select => {
-                    const team = teams.find(t => t.id === select.value);
-                    if (team) {
-                        team.group = `Group ${String.fromCharCode(65 + parseInt(select.dataset.groupIndex))}`;
-                    }
-                });
-            }
+            // The new currentTournamentState.groups is already the source of truth, so no extra assignment logic is needed here.
 
             const pointsRules = {
                 win: parseInt(document.getElementById('points-win').value) || 0,
@@ -1502,32 +1642,28 @@
                 noResult: parseInt(document.getElementById('points-no-result').value) || 0
             };
 
-            generateFixtures();
+            currentTournamentState.name = document.getElementById('tournament-name').value;
+            currentTournamentState.venue = document.getElementById('tournament-venue').value;
+            currentTournamentState.startDate = document.getElementById('start-date').value;
+            currentTournamentState.overs = parseInt(document.getElementById('tournament-overs').value);
+            currentTournamentState.ballsPerOver = parseInt(document.getElementById('balls-per-over').value) || 6;
+            currentTournamentState.playersPerSide = playersPerSide;
+            currentTournamentState.freeHitEnabled = document.getElementById('free-hit-enabled').value === 'yes';
+            currentTournamentState.freeHitRules = document.getElementById('free-hit-rules').value;
+            currentTournamentState.rules = "";
+            currentTournamentState.teams = teams.map(t => ({...t, played: 0, wins: 0, losses: 0, ties: 0, points: 0, nrr: 0}));
+            currentTournamentState.pointsRules = pointsRules;
             
+            generateFixtures(); // This will now use currentTournamentState.groups
+
             // Allow proceeding even if fixtures are not auto-generated
+            const format = document.getElementById('tournament-format').value;
             if (['double_round_robin', 'playoffs', 'super_stage'].includes(format)) {
                  // Fixtures might be empty, which is ok for manual creation.
             } else if (!currentTournamentState.fixtures || currentTournamentState.fixtures.length === 0) {
                 showAlert("Could not generate fixtures. Please check your settings.");
                 return;
             }
-            
-            // const rulesText = document.getElementById('tournament-rules').value; // This element does not exist and was causing an error.
-
-            currentTournamentState = {
-                name: document.getElementById('tournament-name').value,
-                venue: document.getElementById('tournament-venue').value,
-                startDate: document.getElementById('start-date').value,
-                overs: parseInt(document.getElementById('tournament-overs').value),
-                ballsPerOver: parseInt(document.getElementById('balls-per-over').value) || 6,
-                playersPerSide: parseInt(document.getElementById('tournament-players').value),
-                freeHitEnabled: document.getElementById('free-hit-enabled').value === 'yes',
-                freeHitRules: document.getElementById('free-hit-rules').value,
-                rules: "", // Set to empty string as the input element was removed.
-                teams: teams.map(t => ({...t, played: 0, wins: 0, losses: 0, ties: 0, points: 0, nrr: 0})),
-                fixtures: currentTournamentState.fixtures,
-                pointsRules: pointsRules
-            };
 
             localStorage.setItem('cricker_tournament_state', JSON.stringify(currentTournamentState));
             localStorage.setItem('cricker_current_view', 'tournament-dashboard');
@@ -1610,23 +1746,28 @@
         
         function generateFixtures() {
             const format = document.getElementById('tournament-format').value;
-            const teams = Object.values(teamDataStore);
-            const numGroups = parseInt(document.getElementById('number-of-groups').value) || 1;
+            const allTeams = Object.values(teamDataStore);
+            const groups = currentTournamentState.groups.filter(g => g.id !== 'unassigned');
+            const numGroups = groups.length;
             const teamsAdvancing = parseInt(document.getElementById('knockout-teams-per-group').value) || 2;
             let fixtures = [];
+
+            // Helper to get team objects from IDs
+            const getTeamsFromIds = (ids) => ids.map(id => allTeams.find(t => t.id === id)).filter(Boolean);
 
             switch (format) {
                 case 'round-robin':
                 case 'double_round_robin': {
-                    let leagueFixtures = generateFairRoundRobinFixtures(teams, false);
+                    const leagueTeams = (groups[0] && getTeamsFromIds(groups[0].teamIds)) || allTeams;
+                    let leagueFixtures = generateFairRoundRobinFixtures(leagueTeams, false);
                     if (format === 'double_round_robin') {
-                        leagueFixtures = [...leagueFixtures, ...generateFairRoundRobinFixtures(teams.reverse(), false)];
+                        leagueFixtures = [...leagueFixtures, ...generateFairRoundRobinFixtures(leagueTeams.reverse(), false)];
                     }
                     fixtures.push(...leagueFixtures);
 
-                    if (teamsAdvancing === 2 && teams.length >= 2) {
+                    if (teamsAdvancing === 2 && leagueTeams.length >= 2) {
                         fixtures.push({ matchId: 'final', matchName: 'Final', team1Id: 'placeholder_rank_1', team2Id: 'placeholder_rank_2', status: 'upcoming', result: '', summary: null });
-                    } else if (teamsAdvancing === 4 && teams.length >= 4) {
+                    } else if (teamsAdvancing === 4 && leagueTeams.length >= 4) {
                         fixtures.push({ matchId: 'sf_1', matchName: 'Semi-Final', team1Id: 'placeholder_rank_1', team2Id: 'placeholder_rank_4', status: 'upcoming', result: '', summary: null });
                         fixtures.push({ matchId: 'sf_2', matchName: 'Semi-Final', team1Id: 'placeholder_rank_2', team2Id: 'placeholder_rank_3', status: 'upcoming', result: '', summary: null });
                         fixtures.push({ matchId: 'final', matchName: 'Final', team1Id: 'winner_sf_1', team2Id: 'winner_sf_2', status: 'upcoming', result: '', summary: null });
@@ -1634,24 +1775,23 @@
                     break;
                 }
                 case 'knockout': {
-                    if (teams.length < 2) {
+                    if (allTeams.length < 2) {
                         showAlert("Knockout format requires at least 2 teams.");
                         fixtures = [];
                         return;
                     }
-                    let knockoutTeams = [...teams].sort(() => 0.5 - Math.random());
+                    let knockoutTeams = [...allTeams].sort(() => 0.5 - Math.random());
                     fixtures = generateKnockoutBracket(knockoutTeams);
                     break;
                 }
                 case 'group_knockout': {
-                    for (let i = 0; i < numGroups; i++) {
-                        const groupName = `Group ${String.fromCharCode(65 + i)}`;
-                        const groupTeams = teams.filter(t => t.group === groupName);
+                    groups.forEach(group => {
+                        const groupTeams = getTeamsFromIds(group.teamIds);
                         if (groupTeams.length > 1) {
                             fixtures.push(...generateFairRoundRobinFixtures(groupTeams, true));
                         }
-                    }
-                    
+                    });
+
                     const totalAdvancing = numGroups * teamsAdvancing;
                     if (totalAdvancing < 2) break;
 
@@ -1679,30 +1819,31 @@
                     break;
                 }
                 case 'playoffs': {
-                    if (teams.length < 4) {
+                    if (allTeams.length < 4) {
                         showAlert("Playoff (IPL Style) format requires at least 4 teams.");
                         fixtures = [];
                         return;
                     }
-                    fixtures.push(...generateFairRoundRobinFixtures(teams, true));
+                    const leagueTeams = (groups[0] && getTeamsFromIds(groups[0].teamIds)) || allTeams;
+                    fixtures.push(...generateFairRoundRobinFixtures(leagueTeams, true));
                     fixtures.push({ matchId: 'qualifier_1', matchName: 'Qualifier 1', team1Id: 'placeholder_rank_1', team2Id: 'placeholder_rank_2', status: 'upcoming' });
                     fixtures.push({ matchId: 'eliminator', matchName: 'Eliminator', team1Id: 'placeholder_rank_3', team2Id: 'placeholder_rank_4', status: 'upcoming' });
                     fixtures.push({ matchId: 'qualifier_2', matchName: 'Qualifier 2', team1Id: 'loser_qualifier_1', team2Id: 'winner_eliminator', status: 'upcoming' });
                     fixtures.push({ matchId: 'final', matchName: 'Final', team1Id: 'winner_qualifier_1', team2Id: 'winner_qualifier_2', status: 'upcoming' });
                     break;
                 }
-                 case 'super_stage': {
+                case 'super_stage': {
                     const totalAdvancing = numGroups * teamsAdvancing;
                     if (totalAdvancing !== 6 && totalAdvancing !== 8) {
                         showAlert("Super Stage format currently supports Super 6 or Super 8 only.");
                         fixtures = [];
                         return;
                     }
-                    for (let i = 0; i < numGroups; i++) {
-                        const groupName = `Group ${String.fromCharCode(65 + i)}`;
-                        const groupTeams = teams.filter(t => t.group === groupName);
+                    groups.forEach(group => {
+                        const groupTeams = getTeamsFromIds(group.teamIds);
                         fixtures.push(...generateFairRoundRobinFixtures(groupTeams, true));
-                    }
+                    });
+
                     let superStagePlaceholders = [];
                     for (let i = 0; i < numGroups; i++) {
                         for (let j = 1; j <= teamsAdvancing; j++) {
