@@ -212,9 +212,120 @@
         @keyframes pulse-bg { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.7); } 70% { transform: scale(1.02); box-shadow: 0 0 0 12px rgba(234, 179, 8, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(234, 179, 8, 0); } }
 
         /* Win Modal Styles & Animations */
-        #win-modal .win-modal-content { background: radial-gradient(circle, #2d3748 0%, #1a202c 100%); }
-        #confetti-container i { position: absolute; width: 8px; height: 16px; background: #fde047; top: -20px; opacity: 0; animation: confetti-fall 4s linear infinite; }
-        @keyframes confetti-fall { 0% { transform: translateY(0) rotate(0); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+        #win-modal .win-modal-content { 
+            background: radial-gradient(circle, #2d3748 0%, #1a202c 100%); 
+            position: relative; /* Ensure content is above the fixed confetti */
+            z-index: 10;
+        }
+        
+        /* Celebration - Confetti */
+        #confetti-container {
+            position: fixed; /* Changed from absolute */
+            inset: 0;
+            pointer-events: none;
+            z-index: 5; /* Behind modal content, but inside modal overlay */
+        }
+        #confetti-container i { 
+            position: absolute; 
+            width: 8px; 
+            height: 16px; 
+            background: #fde047; 
+            top: -20px; 
+            opacity: 0; 
+            animation: confetti-fall 4s linear infinite; 
+        }
+        @keyframes confetti-fall { 
+            0% { transform: translateY(0) rotate(0); opacity: 1; } 
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } 
+        }
+
+        /* Celebration - Fireworks */
+        .firework {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+            opacity: 1;
+            animation: firework-burst 1.2s ease-out forwards;
+        }
+        @keyframes firework-burst {
+            0% { transform: scale(0.5); opacity: 1; }
+            100% { transform: scale(25); opacity: 0; }
+        }
+
+        /* Celebration - Victory Glow */
+        .victory-glow {
+            animation: victory-glow-animation 1.5s ease-in-out infinite alternate;
+        }
+        @keyframes victory-glow-animation {
+            from { box-shadow: 0 0 15px 5px rgba(253, 224, 71, 0.5), 0 0 5px 2px rgba(255, 255, 255, 0.7); }
+            to   { box-shadow: 0 0 25px 10px rgba(253, 224, 71, 0.7), 0 0 10px 4px rgba(255, 255, 255, 1); }
+        }
+        #win-modal h2.victory-glow {
+             text-shadow: 0 0 10px rgba(253, 224, 71, 0.7);
+             animation: victory-glow-text-animation 1.5s ease-in-out infinite alternate;
+        }
+         @keyframes victory-glow-text-animation {
+            from { text-shadow: 0 0 10px rgba(253, 224, 71, 0.5); }
+            to   { text-shadow: 0 0 20px rgba(253, 224, 71, 0.8); }
+        }
+
+        /* MoM Picker Styles */
+        #wm-mom-picker-list label {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        #wm-mom-picker-list label:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+        #wm-mom-picker-list input[type="radio"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background-color: #fff;
+            margin-right: 0.75rem;
+            font: inherit;
+            color: currentColor;
+            width: 1.15em;
+            height: 1.15em;
+            border: 0.15em solid currentColor;
+            border-radius: 50%;
+            transform: translateY(-0.075em);
+            display: grid;
+            place-content: center;
+            border-color: #9ca3af;
+        }
+        #wm-mom-picker-list input[type="radio"]::before {
+            content: "";
+            width: 0.65em;
+            height: 0.65em;
+            border-radius: 50%;
+            transform: scale(0);
+            transition: 120ms transform ease-in-out;
+            box-shadow: inset 1em 1em #3b82f6;
+        }
+        #wm-mom-picker-list input[type="radio"]:checked {
+            border-color: #3b82f6;
+        }
+        #wm-mom-picker-list input[type="radio"]:checked::before {
+            transform: scale(1);
+        }
+        #wm-mom-picker-list .mom-picker-name {
+            font-weight: 600;
+            color: white;
+        }
+        #wm-mom-picker-list .mom-picker-perf {
+            font-size: 0.75rem;
+            color: #d1d5db;
+        }
+        
+        /* Standard Animations */
         #win-modal .animate-pop-in { animation: pop-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; opacity: 0; transform: scale(0.5); }
         #win-modal .animate-slide-up { animation: slide-up 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; opacity: 0; transform: translateY(20px); animation-delay: var(--delay, 0s); }
         @keyframes pop-in { to { opacity: 1; transform: scale(1); } }
@@ -223,6 +334,22 @@
         /* FIX: Set team name color to white in scorelines */
         #win-modal [id^="wm-scoreline-"] span:first-child {
             color: white;
+        }
+
+        /* Respect Reduced Motion */
+        @media (prefers-reduced-motion: reduce) {
+            #confetti-container i, .firework {
+                animation: none;
+                display: none;
+            }
+            .victory-glow, #win-modal h2.victory-glow {
+                animation: none;
+            }
+            #win-modal .animate-pop-in, #win-modal .animate-slide-up {
+                animation: none;
+                opacity: 1;
+                transform: none;
+            }
         }
 
         /* --- FINAL LAYOUT FIX --- */
@@ -1281,25 +1408,21 @@
         </div>
 
         <div class="p-6 overflow-y-auto">
-            <!-- Step 1: Select Outcome -->
             <div id="end-match-step-1" class="end-match-step active">
                 <h4 class="font-semibold mb-3">1. Select the Match Outcome</h4>
                 <div id="end-match-outcomes" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    <!-- Radio Cards will be generated here by JavaScript -->
-                </div>
+                    </div>
             </div>
 
-            <!-- Step 2: Provide Details -->
             <div id="end-match-step-2" class="end-match-step">
                 <h4 class="font-semibold mb-3">2. Provide Result Details</h4>
                 <div id="end-match-dynamic-fields">
-                    <!-- Dynamic fields will be shown here based on selection -->
-                </div>
+                    </div>
             </div>
         </div>
 
         <div class="p-4 border-t bg-gray-50 space-y-3">
-            <div id="end-match-summary-preview">Select an outcome to see a summary...</div>
+            
             <div class="flex justify-end space-x-3">
                 <button id="end-match-back-btn" onclick="openEndMatchModal(1)" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 hidden">Back</button>
                 <button id="end-match-confirm-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>Confirm Result</button>
@@ -1309,10 +1432,11 @@
 </div>
 
     <div id="win-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center hidden z-50 p-4">
+        <div id="confetti-container" class="fixed inset-0 pointer-events-none z-[1]"></div>
+
         <div class="win-modal-content modal-content bg-gray-900 rounded-2xl shadow-xl w-full max-w-lg text-center transform scale-100 relative overflow-hidden border-2 border-yellow-400/50">
-            <div id="confetti-container" class="absolute inset-0 pointer-events-none"></div>
-            <div class="relative p-6 space-y-4">
-                <button onclick="closeModal('win-modal')" class="absolute top-0 right-0 mt-4 mr-4 text-gray-500 hover:text-white transition-colors z-10">
+            <div class="relative p-6 space-y-4 z-10">
+                <button onclick="closeModal('win-modal')" class="absolute top-0 right-0 mt-4 mr-4 text-gray-500 hover:text-white transition-colors z-20">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
 
@@ -1322,21 +1446,12 @@
                     <p id="wm-win-margin" class="text-lg text-yellow-400 font-bold"></p>
                 </div>
 
-                <div class="p-3 bg-black/20 rounded-lg text-sm space-y-2 text-left">
+                <div class="p-3 bg-black/20 rounded-lg text-sm space-y-2 text-left animate-slide-up" style="--delay: 0.2s;">
                     <p id="wm-scoreline-1" class="flex justify-between items-center font-mono"></p>
                     <p id="wm-scoreline-2" class="flex justify-between items-center font-mono"></p>
                 </div>
 
-                <div id="wm-mom-section" class="flex items-center gap-3 p-2 bg-yellow-400/10 rounded-lg text-left">
-                    <img id="wm-mom-avatar" src="" class="w-12 h-12 rounded-full object-cover border-2 border-yellow-400/50 flex-shrink-0" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2NiZDVkNQoiPjxwYXRoIGQ9Ik0xMiAyQzYuNDggMiAyIDYuNDggMiAxMnM0LjQ4IDEwIDEwIDEwIDEwLTQuNDggMTAtMTBTMTcuNTIgMiAxMiAyeptMCAzYzEuNjYgMCAzIDEuMzQgMyAzcy0xLjM0IDMtMyAzLTMtMS4zNC0zLTMgMS4zNC0zIDMtM3ptMCAxNGMtMi4zMyAwLTguMTMgMS4xNy04LjEzIDMuNUM0IDIzLjUyIDcuNTggMjQgMTIgMjRzOC0uNDggOC0xLjVDMjAuMTMgMTkuMTcgMTQuMzMgMTggMTIgMTh6Ii8+PC9zdmc+'">
-                    <div>
-                        <p class="text-xs text-yellow-300 font-bold tracking-wider">PLAYER OF THE MATCH</p>
-                        <p id="wm-mom-name" class="font-bold text-white leading-tight"></p>
-                        <p id="wm-mom-performance" class="text-xs text-gray-300 leading-tight"></p>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4 text-xs text-left">
+                <div class="grid grid-cols-2 gap-4 text-xs text-left animate-slide-up" style="--delay: 0.3s;">
                     <div>
                         <h4 class="font-bold text-gray-400 mb-1">TOP BATTERS</h4>
                         <div id="wm-top-batters" class="space-y-1 text-gray-200"></div>
@@ -1347,9 +1462,15 @@
                     </div>
                 </div>
 
-                <p id="wm-meta-line" class="text-center text-xs text-gray-500 border-t border-gray-700 pt-3"></p>
+                <div id="wm-mom-picker-section" class="text-left animate-slide-up" style="--delay: 0.4s;">
+                    <h4 class="font-bold text-gray-400 mb-2 text-center text-xs tracking-wider">SELECT PLAYER OF THE MATCH</h4>
+                    <div id="wm-mom-picker-list" class="space-y-1.5 max-h-48 overflow-y-auto p-2 bg-black/20 rounded-lg border border-gray-700">
+                        </div>
+                </div>
+
+                <p id="wm-meta-line" class="text-center text-xs text-gray-500 border-t border-gray-700 pt-3 animate-slide-up" style="--delay: 0.5s;"></p>
                 
-                <button id="win-modal-ok-btn" class="w-full mt-2 px-8 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-transform hover:scale-105">View Full Summary</button>
+                <button id="win-modal-confirm-btn" class="w-full mt-2 px-8 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-transform hover:scale-105 animate-slide-up" style="--delay: 0.6s;">Confirm & View Summary</button>
             </div>
         </div>
     </div>
@@ -2841,20 +2962,11 @@ function updateFreeHitIndicator() {
         function handleWicket(type) {
     closeModal('wicket-type-modal');
 
-    if (type === 'Run Out' && state.isFreeHit) {
-        // Special flow for Run Out on a Free Hit
-        handleFreeHitRunOutAttempt();
+    if (type === 'Run Out') {
+        // NEW: Unified Run Out flow for both normal and Free Hit deliveries
+        initiateRunOutFlow();
     } else if (type === 'Catch') {
         selectFielderForCatch(); // Existing flow for catch
-    } else if (type === 'Run Out') {
-        // Standard Run Out flow (not on Free Hit)
-        document.getElementById('run-out-modal-title').textContent = "Who was Run Out?";
-        document.getElementById('run-out-runs-section').classList.add('hidden'); // Ensure runs section is hidden
-        ui.runOutOptions.innerHTML = `
-            <button onclick="processWicket('Run Out', '${state.striker.playerId}')" class="p-3 bg-gray-100 rounded-lg">${formatPlayerName(state.striker.name)}</button>
-            <button onclick="processWicket('Run Out', '${state.nonStriker.playerId}')" class="p-3 bg-gray-100 rounded-lg">${formatPlayerName(state.nonStriker.name)}</button>
-        `;
-        openModal('run-out-modal');
     } else {
         // Other wicket types (Bowled, LBW, etc.) - always striker
         processWicket(type, state.striker.playerId);
@@ -2949,7 +3061,7 @@ function updateFreeHitIndicator() {
         });
     });
 }
-function handleFreeHitRunOutAttempt() {
+function initiateRunOutFlow() {
             const modalTitle = document.getElementById('run-out-modal-title');
             const runsSection = document.getElementById('run-out-runs-section');
             const runsPrompt = document.getElementById('run-out-runs-prompt');
@@ -2958,8 +3070,9 @@ function handleFreeHitRunOutAttempt() {
             const selectedRunsInput = document.getElementById('run-out-selected-runs');
             const runOutOptionsContainer = document.getElementById('run-out-options');
 
-            modalTitle.textContent = "Run Out on Free Hit"; // Updated Title
-            runsPrompt.textContent = "Runs completed before run-out:"; // Standard prompt
+            // Set modal title based on whether it's a Free Hit
+            modalTitle.textContent = state.isFreeHit ? "Run Out on Free Hit" : "Who was Run Out?";
+            runsPrompt.textContent = "Runs completed before run-out:";
             runsSection.classList.remove('hidden'); // Ensure runs section is visible
             runsInput.classList.add('hidden'); // Hide numeric input initially
             selectedRunsInput.value = '0'; // Default to 0 runs
@@ -2990,21 +3103,21 @@ function handleFreeHitRunOutAttempt() {
 
 
             // --- Setup Player Radio Buttons ---
-            // These call finalizeFreeHitRunOutDismissal
+            // These now call the generic finalizeRunOutDismissal
             runOutOptionsContainer.innerHTML = `
                 <label class="flex items-center p-3 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200">
-                    <input type="radio" name="runOutPlayer" value="${state.striker.playerId}" class="mr-3 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" onclick="finalizeFreeHitRunOutDismissal('${state.striker.playerId}')">
+                    <input type="radio" name="runOutPlayer" value="${state.striker.playerId}" class="mr-3 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" onclick="finalizeRunOutDismissal('${state.striker.playerId}')">
                     <span class="font-medium">${formatPlayerName(state.striker.name)} (Striker)</span>
                 </label>
                 <label class="flex items-center p-3 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200">
-                    <input type="radio" name="runOutPlayer" value="${state.nonStriker.playerId}" class="mr-3 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" onclick="finalizeFreeHitRunOutDismissal('${state.nonStriker.playerId}')">
+                    <input type="radio" name="runOutPlayer" value="${state.nonStriker.playerId}" class="mr-3 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" onclick="finalizeRunOutDismissal('${state.nonStriker.playerId}')">
                     <span class="font-medium">${formatPlayerName(state.nonStriker.name)} (Non-Striker)</span>
                 </label>
             `;
 
             openModal('run-out-modal');
         }
-        async function finalizeFreeHitRunOutDismissal(playerOutId) {
+        async function finalizeRunOutDismissal(playerOutId) {
             closeModal('run-out-modal');
             saveState(); // Save state before processing dismissal
 
@@ -3054,8 +3167,10 @@ function handleFreeHitRunOutAttempt() {
             //    It's a legal delivery (Free Hit or not, run out ball counts).
             processBall(runsTaken, eventString, null, dismissalInfo);
 
-            // 6. Clear Free Hit status (even though wicket fell, ball was bowled under FH)
-            state.isFreeHit = false;
+            // 6. Clear Free Hit status if it was active
+            if (state.isFreeHit) {
+                state.isFreeHit = false;
+            }
 
             // 7. Nullify the correct player role
             if (state.striker && state.striker.playerId === playerOutId) state.striker = null;
@@ -3080,16 +3195,16 @@ function handleFreeHitRunOutAttempt() {
                  const shouldBeStrikerId = (state.striker?.playerId === playerOutId) ? state.nonStriker?.playerId : state.striker?.playerId;
 
                  if (state.striker?.playerId !== shouldBeStrikerId && state.nonStriker?.playerId === shouldBeStrikerId) {
-                      console.log("FH RO: Swapping strike after odd runs completed.");
+                      console.log("Run Out: Swapping strike after odd runs completed.");
                       [state.striker, state.nonStriker] = [state.nonStriker, state.striker];
                  } else {
-                     console.log("FH RO: No strike swap needed after odd runs completed.");
+                     console.log("Run Out: No strike swap needed after odd runs completed.");
                  }
 
              } else {
                  // Even runs completed, new batter takes strike of dismissed player.
                  // The remaining batter stays where they were.
-                 console.log("FH RO: Even runs completed, new batter takes strike of dismissed player.");
+                 console.log("Run Out: Even runs completed, new batter takes strike of dismissed player.");
              }
 
 
@@ -3779,7 +3894,7 @@ function openEndMatchModal(step = 1) {
         confirmBtn.disabled = false;
     }
 
-    updateResultPreview();
+    
     openModal('end-match-modal');
 }
 
@@ -3838,7 +3953,7 @@ function selectMatchOutcome(outcome) {
                 resultDraft.winner = concededBySelect.value === state.team1.name ? state.team2.name : state.team1.name;
             }
 
-            updateResultPreview();
+            
         };
         // Trigger initial input to populate draft
         el.dispatchEvent(new Event('input'));
@@ -3848,34 +3963,43 @@ function selectMatchOutcome(outcome) {
 }
 
 function generateResultSummaryLine(result) {
-    if (!result || !result.type) return 'Select an outcome to see a summary...';
+    // This function is now only used for the *summary screen ribbon*
+    if (!result || !result.status) return 'Match in progress...';
 
-    const team1 = state.team1.name;
-    const team2 = state.team2.name;
+    const winnerName = result.winnerSide ? state[result.winnerSide].name : null;
 
-    switch(result.type) {
+    // Handle Super Over win specifically
+    if (result.superOver && winnerName) {
+        return `${winnerName} won in Super Over.`;
+    }
+
+    switch(result.status) {
         case 'completed_normal':
         case 'completed_dls':
-            if (!result.winner || !result.marginValue || !result.marginType) return 'Please provide winner and margin.';
-            const loser = result.winner === team1 ? team2 : team1;
-            let summary = `${result.winner} won by ${result.marginValue} ${result.marginType}.`;
-            if(result.dlsApplied) summary += ' (DLS Method)';
-            return summary;
+            if (winnerName && result.margin && result.marginType) {
+                let summary = `${winnerName} won by ${result.margin} ${result.marginType}.`;
+                if(result.status === 'completed_dls') summary += ' (DLS Method)';
+                return summary;
+            }
+            // Fallback if data is missing
+            return `${winnerName || 'Team'} won the match.`;
+            
         case 'tie':
-            return `Match tied${result.superOver ? ', Super Over to follow' : ''}.`;
+            return `Match tied.`;
+            
         case 'forfeit':
-             if (!result.winner) return 'Please select the team that conceded.';
-             return `${result.winner} won by forfeit.`;
+             if (winnerName) {
+                return `${winnerName} won by forfeit.`;
+             }
+             return 'Match forfeited.';
+
         case 'no_result':
         case 'abandoned':
-            return `Match ${result.type === 'abandoned' ? 'abandoned' : 'ended in No Result'} due to ${result.reason || '...'}.`;
+            return `No result.`;
+            
         default:
-            return 'Invalid result type.';
+            return 'Match concluded.';
     }
-}
-
-function updateResultPreview() {
-    document.getElementById('end-match-summary-preview').textContent = generateResultSummaryLine(resultDraft);
 }
 
 function endMatch() {
@@ -3903,13 +4027,16 @@ function endMatch() {
     };
     
     state.winner = resultDraft.winner || (resultDraft.type === 'tie' ? 'Match Tied' : 'No Result');
+    
+    // NEW: Generate the summary line *after* state.result is set
+    const summaryLine = generateResultSummaryLine(state.result);
+    
     // Deprecated but kept for compatibility with older modals if needed
-    state.winMargin = generateResultSummaryLine(resultDraft);
+    state.winMargin = summaryLine; 
 
     state.isScoringLocked = true;
     ui.scoringControls.classList.add('hidden');
 
-    const summaryLine = generateResultSummaryLine(resultDraft);
     updateLiveCommentary(`<b>MATCH ENDED:</b> ${summaryLine}`);
 
     saveCompletedMatchSummary();
@@ -3932,34 +4059,72 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
 }
 
         // --- WIN MODAL & SUMMARY CONTROLS ---
-        function launchConfetti() {
-            ui.confettiContainer.innerHTML = '';
+        function launchCelebration() {
+            const container = document.getElementById('confetti-container');
+            container.innerHTML = '';
+            
+            // 1. Victory Glow
+            const logo = document.getElementById('wm-winner-logo');
+            const name = document.getElementById('wm-winner-name');
+            logo.classList.add('victory-glow');
+            name.classList.add('victory-glow');
+            
+            // Stop glow after 5 seconds
+            setTimeout(() => {
+                logo.classList.remove('victory-glow');
+                name.classList.remove('victory-glow');
+            }, 5000);
+
+            // 2. Confetti
             const colors = ['#fde047', '#06b6d4', '#f43f5e', '#4ade80', '#a78bfa', '#f97316', '#3b82f6', '#d946ef'];
             const confettiCount = 100;
             for (let i = 0; i < confettiCount; i++) {
                 const confetti = document.createElement('i');
                 const color = colors[Math.floor(Math.random() * colors.length)];
                 confetti.style.left = Math.random() * 100 + 'vw';
-                confetti.style.animationDelay = Math.random() * 2 + 's';
-                confetti.style.animationDuration = 2 + Math.random() * 2 + 's';
+                confetti.style.animationDelay = Math.random() * 4 + 's';
+                confetti.style.animationDuration = 3 + Math.random() * 3 + 's';
                 confetti.style.backgroundColor = color;
                 
-                if (i % 3 === 0) {
-                    confetti.style.width = '5px';
-                    confetti.style.height = '10px';
-                } else if (i % 2 === 0) {
-                    confetti.style.width = '8px';
-                    confetti.style.height = '8px';
-                    confetti.style.borderRadius = '50%';
-                }
+                if (i % 3 === 0) { confetti.style.width = '5px'; confetti.style.height = '10px'; }
+                else if (i % 2 === 0) { confetti.style.width = '8px'; confetti.style.height = '8px'; confetti.style.borderRadius = '50%'; }
                 
-                ui.confettiContainer.appendChild(confetti);
+                container.appendChild(confetti);
+            }
+
+            // 3. Fireworks
+            const fireworksCount = 10;
+            for (let i = 0; i < fireworksCount; i++) {
+                setTimeout(() => {
+                    const firework = document.createElement('div');
+                    firework.className = 'firework';
+                    firework.style.left = (10 + Math.random() * 80) + 'vw';
+                    firework.style.top = (10 + Math.random() * 80) + 'vh';
+                    
+                    const particleCount = 30;
+                    for (let j = 0; j < particleCount; j++) {
+                        const particle = document.createElement('div');
+                        particle.className = 'firework';
+                        particle.style.transform = `rotate(${Math.random() * 360}deg) scale(0.5)`;
+                        particle.style.animationDuration = (0.8 + Math.random() * 0.4) + 's';
+                        particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                        firework.appendChild(particle);
+                    }
+                    container.appendChild(firework);
+                    // Remove firework element after animation
+                    setTimeout(() => firework.remove(), 1200);
+                }, Math.random() * 3000); // Stagger fireworks
             }
         }
 
         function openWinModal(winnerName, margin) {
+            // This cloning is done to restart the CSS animations on the modal.
+            const modalContent = ui.winModal.querySelector('.modal-content');
+            const newModalContent = modalContent.cloneNode(true);
+            modalContent.parentNode.replaceChild(newModalContent, modalContent);
+            
+            // --- 1. Display Winner Info ---
             if (winnerName === 'Match Tied') {
-                // Simplified display for a tie
                 document.getElementById('wm-winner-name').textContent = "MATCH TIED";
                 document.getElementById('wm-win-margin').textContent = '';
                 document.getElementById('wm-winner-logo').style.display = 'none';
@@ -3972,7 +4137,7 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
                 document.getElementById('wm-win-margin').textContent = `by ${state.result.margin} ${state.result.marginType}`;
             }
 
-            // --- Scorelines ---
+            // --- 2. Scorelines ---
             const teams = [state.team1, state.team2];
             teams.forEach((team, index) => {
                 const ballsFaced = team.overs * 6 + team.balls;
@@ -3989,20 +4154,8 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
                     </span>`;
             });
 
-            // --- Man of the Match ---
-            const mom = state.manOfTheMatch;
-            if (mom) {
-                document.getElementById('wm-mom-section').style.display = 'flex';
-                document.getElementById('wm-mom-avatar').src = mom.image || '';
-                document.getElementById('wm-mom-name').textContent = mom.name;
-                document.getElementById('wm-mom-performance').textContent = mom.performance;
-            } else {
-                document.getElementById('wm-mom-section').style.display = 'none';
-            }
-
-            // --- Top Performers ---
+            // --- 3. Top Performers ---
             const allPlayers = [...Object.values(state.team1.playerStats), ...Object.values(state.team2.playerStats)];
-            
             const topBatters = allPlayers.filter(p => p.runs > 0).sort((a,b) => b.runs - a.runs).slice(0, 2);
             document.getElementById('wm-top-batters').innerHTML = topBatters.map(p => `
                 <div>
@@ -4017,26 +4170,54 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
                     <p class="text-gray-400">${Math.floor(p.ballsBowled/6)}.${p.ballsBowled%6}-${p.maidens}-${p.runsConceded}-${p.wickets}, ECO ${p.ballsBowled > 0 ? (p.runsConceded/(p.ballsBowled/6)).toFixed(2) : '0.00'}</p>
                 </div>`).join('');
 
-            // --- Meta Line ---
+            // --- 4. Man of the Match Picker ---
+            const momPickerList = document.getElementById('wm-mom-picker-list');
+            const rankedPlayers = calculateManOfTheMatch().slice(0, 5); // Get top 5
+            
+            // --- FIX: Add a better fallback silhouette image for onerror ---
+            const fallbackSvg = `data:image/svg+xml;base64,PHN2ZyBjbGFzcz0idy0xMCBoLTEwIHRleHQtZ3JheS00MDAiIGZpbGw9ImN1cnJlbnRDb2xvciIgdmlld0JveD0iMCAwIDIwIDIwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgZD0iTTEwIDlhMyAzIDAgMTAwLTYgMyAzIDAgMDAwIDZ6bS03IDlhNyA3IDAgMTExNCAwSDN6IiBjbGlwLXJ1bGU9ImV2ZW5vZGQiPjwvcGF0aD48L3N2Zz4=`;
+
+            if (rankedPlayers.length > 0) {
+                momPickerList.innerHTML = rankedPlayers.map((player, index) => {
+                    // Use player.image, which is (player.avatar || team.logo) from calculateManOfTheMatch
+                    const imageSrc = player.image || fallbackSvg; 
+                    return `
+                    <label>
+                        <input type="radio" name="mom-picker" value="${player.playerId}" ${index === 0 ? 'checked' : ''}>
+                        <img src="${imageSrc}" class="w-8 h-8 rounded-full object-cover border border-gray-600" onerror="this.src='${fallbackSvg}'">
+                        <div>
+                            <p class="mom-picker-name">${player.name} <span class="text-xs text-gray-400">(${player.teamName})</span></p>
+                            <p class="mom-picker-perf">${player.performance || 'No notable performance'}</p>
+                        </div>
+                    </label>
+                `}).join('');
+            } else {
+                 document.getElementById('wm-mom-picker-section').style.display = 'none';
+            }
+
+            // --- 5. Meta Line ---
             const dateStr = new Date(state.matchDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
             document.getElementById('wm-meta-line').textContent = `${toTitleCase(state.venue)} • ${dateStr} • ${state.totalOvers} Overs`;
             
-            // --- Final Setup ---
-            // This cloning is done to restart the CSS animations on the modal.
-            const modalContent = ui.winModal.querySelector('.modal-content');
-            const newModalContent = modalContent.cloneNode(true);
-            modalContent.parentNode.replaceChild(newModalContent, modalContent);
-            
-            // We must re-fetch the button from the new, live DOM element and attach the handler to it.
-            const okBtn = document.getElementById('win-modal-ok-btn');
-            okBtn.onclick = () => {
+            // --- 6. Final Setup & Button Handler ---
+            const confirmBtn = document.getElementById('win-modal-confirm-btn');
+            confirmBtn.onclick = () => {
+                const selectedRadio = document.querySelector('input[name="mom-picker"]:checked');
+                if (selectedRadio) {
+                    const selectedPlayerId = selectedRadio.value;
+                    const chosenPlayer = rankedPlayers.find(p => p.playerId === selectedPlayerId);
+                    if (chosenPlayer) {
+                        state.manOfTheMatch = chosenPlayer;
+                        saveCompletedMatchSummary(); // Persist the MoM selection
+                    }
+                }
                 closeModal('win-modal');
                 showSummaryScreen();
             };
             
             ui.winModal.classList.remove('hidden');
             if (winnerName !== 'Match Tied') {
-                launchConfetti();
+                launchCelebration(); // Use the new celebration function
             }
         }
 
@@ -4246,14 +4427,16 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
                 if(player.stumpings > 0) performance.push(`${player.stumpings} stumping${player.stumpings > 1 ? 's' : ''}`);
 
                 const totalScore = battingScore + bowlingScore + fieldingScore;
-                const teamKey = state.team1.players.includes(player.name) ? 'team1' : 'team2';
+                
+                // --- FIX: Correctly determine teamKey by checking if the playerId exists in team1's stats ---
+                const teamKey = state.team1.playerStats[player.playerId] ? 'team1' : 'team2';
 
                 return {
                     playerId: player.playerId, // Pass the stable ID through
                     name: player.name,
                     teamName: state[teamKey].name,
                     teamKey: teamKey,
-                    image: player.image || state[teamKey].logo,
+                    image: player.image || state[teamKey].logo, // Prioritizes player avatar, falls back to team logo
                     score: totalScore,
                     performance: performance.join(' & '),
                     // For tie-breaking
@@ -4343,13 +4526,10 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
             tab2.onclick = () => switchTab(tab2);
             switchTab(tab1); 
 
-            if (state.winner && state.winner !== 'Match Tied') {
-                const rankedPlayers = calculateManOfTheMatch();
-                if (state.manOfTheMatch) {
-                    motmPanel.innerHTML = renderFinalMoMCard(state.manOfTheMatch);
-                } else if (rankedPlayers && rankedPlayers.length > 0) {
-                    motmPanel.innerHTML = renderSuggestedMoMCard(rankedPlayers);
-                }
+            // MODIFIED: MoM selection is now done in the win modal.
+            // We just need to display the final result if it exists.
+            if (state.manOfTheMatch) {
+                motmPanel.innerHTML = renderFinalMoMCard(state.manOfTheMatch);
             }
             
             showScreen('summary-screen');
@@ -4362,26 +4542,6 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
             } else {
                 showScreen('app');
             }
-        }
-
-        function renderSuggestedMoMCard(rankedPlayers) {
-            const topPlayer = rankedPlayers[0];
-            return `
-                <div class="mom-suggestion-card mt-4">
-                    <h3 class="font-semibold text-gray-700 mb-3">Suggested Man of the Match</h3>
-                    <div class="mom-player-header">
-                        <img src="${topPlayer.image || ''}" class="mom-player-image" onerror="this.src='data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='">
-                        <div>
-                            <p class="mom-player-name">${topPlayer.name}</p>
-                            <p class="mom-player-team">${topPlayer.teamName}</p>
-                        </div>
-                    </div>
-                    <p class="mom-player-performance">${topPlayer.performance}</p>
-                    <div class="mom-suggestion-actions">
-                        <button onclick="confirmSuggestedMoM()" class="px-4 py-2 bg-green-600 text-white font-semibold rounded-md flex-grow">Confirm</button>
-                        <button onclick="openMoMChoiceModal()" class="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-md">Choose Another</button>
-                    </div>
-                </div>`;
         }
 
         function confirmSuggestedMoM() {
@@ -4503,15 +4663,6 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
                         <button onclick="openMoMChoiceModal()" class="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-md">Choose Another</button>
                     </div>
                 </div>`;
-        }
-
-        function confirmSuggestedMoM() {
-            const rankedPlayers = calculateManOfTheMatch();
-            if (rankedPlayers.length > 0) {
-                state.manOfTheMatch = rankedPlayers[0];
-                saveCompletedMatchSummary();
-                showSummaryScreen();
-            }
         }
 
         function renderFinalMoMCard(player) {
@@ -6466,7 +6617,20 @@ function openEditModal() {
             const counterEl = document.getElementById('squad-selection-counter');
             const confirmBtn = document.getElementById('squad-confirm-btn');
 
-            const requiredPlayers = playersPerSide + 2; // Always players on field + 2 reserves
+            // --- NEW RULES ---
+            const optionalBench = 2;
+            const minRequired = playersPerSide;
+            const maxAllowed = playersPerSide + optionalBench;
+            // --- END NEW RULES ---
+
+            // --- NEW: Handle persistence ---
+            let previouslySelectedNames = [];
+            if (currentTeamSelectionKey && state[currentTeamSelectionKey].isLoaded && state[currentTeamSelectionKey].name === teamData.name) {
+                 previouslySelectedNames = state[currentTeamSelectionKey].playing
+                    .map(id => state[currentTeamSelectionKey].playerStats[id]?.name)
+                    .filter(Boolean);
+            }
+            // --- END NEW ---
 
             titleEl.textContent = `Select Squad for ${teamData.name}`;
             squadListContainer.innerHTML = '';
@@ -6475,32 +6639,54 @@ function openEditModal() {
                 squadListContainer.innerHTML = '<p class="text-gray-500">This saved team has no players in its roster.</p>';
             } else {
                 teamData.players.forEach(player => {
+                    // NEW: Check if this player was previously selected
+                    const isChecked = previouslySelectedNames.includes(player.name);
+                    const checkboxId = `player-${player.name.replace(/\s+/g, '-')}-${Math.random().toString(36).substr(2, 9)}`; // Ensure unique ID
+
                     const playerDiv = document.createElement('div');
                     playerDiv.className = 'flex items-center bg-gray-50 p-2 rounded-md hover:bg-gray-100';
                     playerDiv.innerHTML = `
-                        <input type="checkbox" id="player-${player.name.replace(/\s+/g, '-')}" value="${player.name}" class="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-3 cursor-pointer">
-                        <img src="${player.image || `data:image/svg+xml;base64,${btoa('<svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>')}`}" class="w-8 h-8 rounded-full object-cover mr-3 bg-gray-20
-                        <label for="player-${player.name.replace(/\s+/g, '-')}" class="font-medium text-gray-800 flex-grow cursor-pointer">${player.name}</label>
+                        <input type="checkbox" id="${checkboxId}" value="${player.name}" class="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-3 cursor-pointer" ${isChecked ? 'checked' : ''}>
+                        <img src="${player.image || `data:image/svg+xml;base64,${btoa('<svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>')}`}" class="w-8 h-8 rounded-full object-cover mr-3 bg-gray-200">
+                        <label for="${checkboxId}" class="font-medium text-gray-800 flex-grow cursor-pointer">${player.name}</label>
                     `;
                     squadListContainer.appendChild(playerDiv);
                 });
             }
 
             const updateCounter = () => {
+                const allCheckboxes = squadListContainer.querySelectorAll('input[type="checkbox"]');
                 const selectedCount = squadListContainer.querySelectorAll('input[type="checkbox"]:checked').length;
-                counterEl.textContent = `${selectedCount} / ${requiredPlayers} selected`;
+                
+                // Update counter text
+                counterEl.textContent = `${selectedCount} / ${maxAllowed} selected`;
 
-                if (selectedCount === requiredPlayers) {
+                // Update button state
+                if (selectedCount >= minRequired && selectedCount <= maxAllowed) {
                     counterEl.classList.add('text-green-600', 'font-semibold');
                     counterEl.classList.remove('text-gray-600');
                     confirmBtn.disabled = false;
                     confirmBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-
                 } else {
                     counterEl.classList.remove('text-green-600', 'font-semibold');
                     counterEl.classList.add('text-gray-600');
                     confirmBtn.disabled = true;
                     confirmBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+
+                // Update checkbox disabled state
+                if (selectedCount >= maxAllowed) {
+                    allCheckboxes.forEach(cb => {
+                        if (!cb.checked) {
+                            cb.disabled = true;
+                            cb.parentElement.classList.add('opacity-50'); // Grey out the row
+                        }
+                    });
+                } else {
+                    allCheckboxes.forEach(cb => {
+                        cb.disabled = false;
+                        cb.parentElement.classList.remove('opacity-50');
+                    });
                 }
             };
             
@@ -6514,17 +6700,20 @@ function openEditModal() {
                 
                 selectedCheckboxes.forEach(checkbox => {
                     const playerName = checkbox.value;
+                    // Find the player in the original teamData (from saved storage)
                     const playerObject = teamData.players.find(p => p.name === playerName);
                     if (playerObject) {
                         selectedPlayers.push(playerObject);
                     }
                 });
 
+                // FinalizeTeamSelection will create new IDs if they don't exist
+                // and store the selected player IDs in state[teamKey].playing
                 finalizeTeamSelection(currentTeamSelectionKey, teamData, selectedPlayers);
                 closeModal('squad-selection-modal');
             };
             
-            updateCounter();
+            updateCounter(); // Run once on open
             openModal('squad-selection-modal');
         }
 
