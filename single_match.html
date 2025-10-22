@@ -707,8 +707,19 @@
 
         .summary-innings-card h3 { font-size: 1.1rem; font-weight: 700; padding: 0.6rem; background-color: #f3f4f6; border-radius: 0.375rem; margin-bottom: 0.5rem; position: sticky; top: 0; z-index: 10; }
         .summary-table-container { overflow-x: auto; }
-        .summary-table { width: 100%; border-collapse: collapse; min-width: 600px; }
-        .summary-table th, .summary-table td { padding: 0.6rem 0.5rem; text-align: left; border-bottom: 1px solid #f3f4f6; font-size: 0.85rem; white-space: nowrap; }
+        .summary-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            /* Remove min-width from global scope, handled in media query */
+            /* table-layout: auto; /* Let browser decide column widths */
+        }
+        .summary-table th, .summary-table td { 
+            padding: 0.6rem 0.5rem; 
+            text-align: left; 
+            border-bottom: 1px solid #f3f4f6; 
+            font-size: 0.85rem; 
+            /* Remove white-space: nowrap globally, handled in media query */
+        }
         .summary-table th { font-weight: 600; color: #4b5563; font-size: 0.75rem; text-transform: uppercase; }
         .summary-table tr:nth-child(even) { background-color: #f9fafb; }
         .summary-table .text-right { text-align: right; }
@@ -741,14 +752,32 @@
         #mom-choice-modal .player-rank-score { margin-left: auto; font-weight: 700; font-size: 1.1rem; color: #1e3a8a; }
 
         @media (max-width: 768px) {
-            .summary-table-container { overflow-x: hidden; }
-            .summary-table { min-width: 100%; table-layout: fixed; }
-            .summary-table th, .summary-table td { font-size: 0.7rem; padding: 0.5rem 0.25rem; white-space: normal; }
-            .summary-table th { font-size: 0.65rem; }
-            .summary-table th:first-child, .summary-table td:first-child { width: 35%; padding-left: 0.5rem; }
-            .summary-table th:nth-child(2), .summary-table td:nth-child(2) { width: 30%; }
-
-            /* --- NEW MOBILE SUMMARY STYLES --- */
+            /* --- Keep existing mobile layout rules --- */
+            body { font-size: 14px; }
+            #setup-screen, #choice-screen { padding: 0; }
+            .setup-card, .choice-card { max-width: 100%; min-height: 100vh; border-radius: 0; box-shadow: none; border: none; }
+            #app { overflow: hidden; }
+            #app > .flex-grow { padding: 8px; display: flex; flex-direction: column; }
+            #match-header h1 { font-size: 1rem; font-weight: 700; }
+            #match-header p { font-size: 0.65rem; }
+            .lg\\:col-span-2, .lg\\:col-span-1 { overflow-y: hidden; }
+             .lg\\:col-span-2 { flex-grow: 1; min-height: 0; display: flex; flex-direction: column; }
+            .lg\\:col-span-2 > .space-y-2 { flex-grow: 1; overflow-y: auto; min-height: 0; }
+            .lg\\:col-span-1 { flex-shrink: 0; display: flex; flex-direction: column; min-height: 0; }
+            #scoring-controls { display: flex; flex-direction: column; }
+            .scoring-grid button { padding-top: 8px; padding-bottom: 8px; font-size: 0.875rem; }
+            .scoring-grid button:nth-last-child(-n+4) { padding-top: 4px; padding-bottom: 4px; font-size: 0.8rem; min-height: 44px; }
+            .scoring-grid button > .text-xl { font-size: 1.125rem; }
+            .scoring-grid button > .text-xs { font-size: 0.7rem; margin-top: 1px; }
+            #live-commentary-box { padding: 0.2rem 0.5rem; }
+            #live-commentary-content { margin-top: 0.1rem; padding-top: 0.15rem; }
+            #live-commentary { font-size: 0.6rem; line-height: 0.85rem; }
+            #scoreboard { padding: 4px; }
+            #batting-table th, #batting-table td, #bowling-table th, #bowling-table td { padding: 6px 2px; font-size: 0.8rem; }
+            #batting-table td:first-child, #bowling-table td:first-child { font-size: 0.75rem; font-weight: 500; }
+            #batting-table th.p-1, #bowling-table th.p-1 { font-size: 0.7rem; }
+            
+            /* --- MODIFIED MOBILE SUMMARY STYLES --- */
             #summary-screen { padding: 0.25rem; }
             #summary-content { border-radius: 0.5rem; }
             #summary-content > header { padding: 0.75rem; }
@@ -768,14 +797,47 @@
             #summary-main-content { padding: 0.5rem; }
 
             .summary-innings-card h3 { font-size: 0.9rem; padding: 0.5rem; margin-bottom: 0.25rem; }
-            .summary-table-container { overflow-x: auto; } /* Allow horizontal scroll */
-            .summary-table { min-width: 450px; } /* Force a min-width to prevent squishing */
-            .summary-table th, .summary-table td { padding: 0.4rem 0.3rem; font-size: 0.75rem; white-space: nowrap; }
+            
+            /* Table Responsiveness */
+            .summary-table-container { overflow-x: hidden; } /* Prevent horizontal scroll */
+            .summary-table { 
+                width: 100%; 
+                table-layout: auto; /* Allow browser to adjust columns */
+                min-width: unset; /* Remove min-width */
+            } 
+            .summary-table th, .summary-table td { 
+                padding: 4px 6px; /* Tighter padding */
+                font-size: 13px; /* Smaller data font */
+                white-space: normal; /* Allow wrapping */
+                /* Remove fixed widths */
+            }
+            .summary-table th { 
+                font-size: 12px; /* Smaller header font */
+            }
+            .summary-table th:first-child, .summary-table td:first-child { /* Player name */
+                 padding-left: 8px; /* Keep slightly more padding for the first column */
+                 /* width: unset; Remove fixed width */
+            }
+             .summary-table th:nth-child(2), .summary-table td:nth-child(2) { /* Dismissal */
+                 /* width: unset; Remove fixed width */
+                 color: #6b7280; /* text-gray-500 */
+             }
+            .summary-table th.text-right, .summary-table td.text-right {
+                 padding-right: 8px; /* Keep right padding for right-aligned columns */
+            }
 
-            .summary-extras-row td, .summary-total-row td { font-size: 0.8rem; }
-            .summary-dnb-section, .summary-fow-section { margin-top: 0.75rem; padding: 0 0.25rem; }
-            .summary-dnb-section h4, .summary-fow-section h4 { font-size: 0.8rem; }
-            .summary-dnb-section p, .summary-fow-list { font-size: 0.75rem; line-height: 1.4; }
+            .summary-extras-row td, .summary-total-row td { 
+                font-size: 12px; /* Smaller extras/total font */
+            }
+            .summary-dnb-section, .summary-fow-section { 
+                margin-top: 0.75rem; padding: 0 0.25rem; 
+            }
+            .summary-dnb-section h4, .summary-fow-section h4 { 
+                font-size: 12px; 
+            }
+            .summary-dnb-section p, .summary-fow-list { 
+                font-size: 12px; line-height: 1.4; 
+            }
         }
     </style>
 </head>
