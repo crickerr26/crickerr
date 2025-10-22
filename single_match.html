@@ -212,27 +212,46 @@
         @keyframes pulse-bg { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.7); } 70% { transform: scale(1.02); box-shadow: 0 0 0 12px rgba(234, 179, 8, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(234, 179, 8, 0); } }
 
         /* Win Modal Styles & Animations */
+        #win-modal {
+            /* Lighten backdrop, add blur */
+            background-color: rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            /* Add padding for safe areas */
+            padding: env(safe-area-inset-top, 1rem) env(safe-area-inset-right, 1rem) env(safe-area-inset-bottom, 1rem) env(safe-area-inset-left, 1rem);
+        }
         #win-modal .win-modal-content { 
             background: radial-gradient(circle, #2d3748 0%, #1a202c 100%); 
             position: relative; /* Ensure content is above the fixed confetti */
             z-index: 10;
+            /* Sizing adjustments */
+            width: 88vw;
+            max-width: 420px;
+            max-height: 70vh; /* Limit height */
+            border-radius: 1rem; /* rounded-xl */
+            border-width: 1px; /* Thinner border */
+            /* Ensure content scrolls if it overflows */
+            display: flex; /* Use flex to manage child height */
+            flex-direction: column;
+        }
+        #win-modal .win-modal-body {
+            padding: 0.75rem 1rem; /* p-3 sm:p-4 equivalent */
+            overflow-y: auto; /* Allow body content to scroll */
+            flex-grow: 1; /* Allow body to take available space */
+            space-y: 0.75rem; /* space-y-3 */
         }
         
         /* Celebration - Confetti */
         #confetti-container {
-            position: fixed; /* Changed from absolute */
+            position: fixed; /* Keep fixed */
             inset: 0;
             pointer-events: none;
             z-index: 5; /* Behind modal content, but inside modal overlay */
+            /* Canvas would go here if implemented */
         }
         #confetti-container i { 
-            position: absolute; 
-            width: 8px; 
-            height: 16px; 
-            background: #fde047; 
-            top: -20px; 
-            opacity: 0; 
-            animation: confetti-fall 4s linear infinite; 
+            position: absolute; width: 8px; height: 16px; background: #fde047; 
+            top: -20px; opacity: 0; animation: confetti-fall 4s linear infinite; 
         }
         @keyframes confetti-fall { 
             0% { transform: translateY(0) rotate(0); opacity: 1; } 
@@ -241,115 +260,183 @@
 
         /* Celebration - Fireworks */
         .firework {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            background: white;
-            border-radius: 50%;
-            opacity: 1;
-            animation: firework-burst 1.2s ease-out forwards;
+            position: absolute; width: 4px; height: 4px; background: white;
+            border-radius: 50%; opacity: 1; animation: firework-burst 1.2s ease-out forwards;
         }
         @keyframes firework-burst {
             0% { transform: scale(0.5); opacity: 1; }
             100% { transform: scale(25); opacity: 0; }
         }
 
-        /* Celebration - Victory Glow */
+        /* Celebration - Victory Glow (Thinner) */
         .victory-glow {
             animation: victory-glow-animation 1.5s ease-in-out infinite alternate;
         }
         @keyframes victory-glow-animation {
-            from { box-shadow: 0 0 15px 5px rgba(253, 224, 71, 0.5), 0 0 5px 2px rgba(255, 255, 255, 0.7); }
-            to   { box-shadow: 0 0 25px 10px rgba(253, 224, 71, 0.7), 0 0 10px 4px rgba(255, 255, 255, 1); }
+            from { box-shadow: 0 0 8px 2px rgba(253, 224, 71, 0.4), 0 0 3px 1px rgba(255, 255, 255, 0.6); }
+            to   { box-shadow: 0 0 15px 4px rgba(253, 224, 71, 0.6), 0 0 5px 2px rgba(255, 255, 255, 0.9); }
         }
         #win-modal h2.victory-glow {
-             text-shadow: 0 0 10px rgba(253, 224, 71, 0.7);
+             text-shadow: 0 0 6px rgba(253, 224, 71, 0.6);
              animation: victory-glow-text-animation 1.5s ease-in-out infinite alternate;
         }
          @keyframes victory-glow-text-animation {
-            from { text-shadow: 0 0 10px rgba(253, 224, 71, 0.5); }
-            to   { text-shadow: 0 0 20px rgba(253, 224, 71, 0.8); }
+            from { text-shadow: 0 0 6px rgba(253, 224, 71, 0.4); }
+            to   { text-shadow: 0 0 12px rgba(253, 224, 71, 0.7); }
         }
 
-        /* MoM Picker Styles */
+        /* Compact Header */
+        #wm-header-logo {
+            width: 48px; /* w-12 */
+            height: 48px; /* h-12 */
+            border-width: 2px; /* border-2 */
+        }
+        #wm-header-title {
+            /* clamp(18px, 5vw, 22px) -> Tailwind approx: text-lg sm:text-xl */
+            font-size: 1.125rem; /* text-lg */
+            line-height: 1.5rem;
+            margin-top: 0.5rem; /* mt-2 */
+        }
+        @media (min-width: 640px) {
+            #wm-header-title {
+                font-size: 1.25rem; /* sm:text-xl */
+                line-height: 1.75rem;
+            }
+        }
+        #wm-header-margin {
+            /* Smaller text, tighter spacing */
+            font-size: 0.875rem; /* text-sm */
+            line-height: 1.25rem;
+             margin-top: 0.1rem; /* Adjust as needed */
+        }
+
+        /* Compact Scorelines */
+        #wm-scorelines-block {
+             padding: 0.5rem; /* p-2 */
+             font-size: 0.75rem; /* text-xs */
+             line-height: 1rem;
+             space-y: 0.25rem; /* space-y-1 */
+        }
+        #wm-scorelines-block img {
+             width: 1rem; /* w-4 */
+             height: 1rem; /* h-4 */
+        }
+        #wm-scorelines-block span:first-child { /* Team name container */
+            color: white;
+            gap: 0.25rem; /* gap-1 */
+        }
+         #wm-scorelines-block span:last-child b { /* Score */
+            font-size: 0.875rem; /* text-sm */
+        }
+         #wm-scorelines-block span:last-child span { /* Overs/RR */
+             margin-left: 0.25rem; /* ml-1 */
+         }
+
+
+        /* Compact Top Performers */
+        #wm-performers-block h4 {
+             font-size: 0.65rem; /* Smaller than text-xs */
+             margin-bottom: 0.1rem;
+        }
+        #wm-performers-block > div > div { /* Individual performer div */
+            font-size: 0.7rem; /* Smaller than text-xs */
+            line-height: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+         #wm-performers-block > div > div p:first-child { /* Name */
+             font-weight: 500; /* font-medium */
+         }
+         #wm-performers-block > div > div p:last-child { /* Stats */
+             color: #9ca3af; /* text-gray-400 */
+         }
+
+        /* Compact MoM Picker Styles */
+        #wm-mom-picker-list {
+            max-height: calc(3 * 44px + 2 * 0.375rem); /* Max 3 items + gaps visible */
+            padding: 0.3rem; /* Tighter padding */
+        }
         #wm-mom-picker-list label {
             display: flex;
             align-items: center;
-            padding: 0.5rem;
+            min-height: 44px; /* Ensure tappable height */
+            padding: 0.3rem 0.5rem; /* Reduced padding */
             background-color: rgba(255, 255, 255, 0.05);
-            border-radius: 0.375rem;
+            border-radius: 0.25rem; /* rounded-sm */
             cursor: pointer;
             transition: background-color 0.2s;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            gap: 0.5rem; /* gap-2 */
         }
         #wm-mom-picker-list label:hover {
             background-color: rgba(255, 255, 255, 0.15);
         }
+        #wm-mom-picker-list label img {
+            width: 28px; /* w-7 */
+            height: 28px; /* h-7 */
+            flex-shrink: 0;
+        }
         #wm-mom-picker-list input[type="radio"] {
-            -webkit-appearance: none;
-            appearance: none;
-            background-color: #fff;
-            margin-right: 0.75rem;
-            font: inherit;
-            color: currentColor;
-            width: 1.15em;
-            height: 1.15em;
-            border: 0.15em solid currentColor;
-            border-radius: 50%;
-            transform: translateY(-0.075em);
-            display: grid;
-            place-content: center;
-            border-color: #9ca3af;
+            /* Kept previous styles, size might be okay */
+             margin-right: 0.5rem; /* Reduced margin */
+             width: 1em; height: 1em;
         }
-        #wm-mom-picker-list input[type="radio"]::before {
-            content: "";
-            width: 0.65em;
-            height: 0.65em;
-            border-radius: 50%;
-            transform: scale(0);
-            transition: 120ms transform ease-in-out;
-            box-shadow: inset 1em 1em #3b82f6;
-        }
-        #wm-mom-picker-list input[type="radio"]:checked {
-            border-color: #3b82f6;
-        }
-        #wm-mom-picker-list input[type="radio"]:checked::before {
-            transform: scale(1);
+        #wm-mom-picker-list .mom-picker-details {
+            /* Container for name and stats to allow truncation */
+            flex-grow: 1;
+            overflow: hidden;
+            white-space: nowrap;
         }
         #wm-mom-picker-list .mom-picker-name {
-            font-weight: 600;
-            color: white;
+            font-weight: 600; color: white;
+            font-size: 0.8rem; /* Slightly smaller */
+            display: block; /* Ensure it takes full width */
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
+         #wm-mom-picker-list .mom-picker-name span { /* Team name */
+             font-size: 0.65rem; color: #9ca3af;
+         }
         #wm-mom-picker-list .mom-picker-perf {
+            font-size: 0.65rem; color: #d1d5db; /* Lighter gray */
+            display: block; /* Ensure it takes full width */
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        #wm-mom-show-all {
             font-size: 0.75rem;
-            color: #d1d5db;
+            color: #60a5fa; /* blue-400 */
+            text-align: center;
+            margin-top: 0.25rem;
+            cursor: pointer;
+        }
+        #wm-mom-show-all:hover {
+            text-decoration: underline;
         }
         
-        /* Standard Animations */
+        /* Compact Meta Line & Button */
+        #wm-meta-line {
+            padding-top: 0.5rem; /* pt-2 */
+            margin-top: 0.5rem; /* Add some space above */
+            font-size: 0.65rem; /* Smaller text */
+        }
+        #win-modal-confirm-btn {
+            padding-top: 0.6rem; /* py-2.5 approx */
+            padding-bottom: 0.6rem;
+            min-height: 44px; /* Ensure tappable */
+            font-size: 0.875rem; /* text-sm */
+        }
+
+        /* Standard Animations (Unchanged, but apply to new structure) */
         #win-modal .animate-pop-in { animation: pop-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; opacity: 0; transform: scale(0.5); }
         #win-modal .animate-slide-up { animation: slide-up 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; opacity: 0; transform: translateY(20px); animation-delay: var(--delay, 0s); }
         @keyframes pop-in { to { opacity: 1; transform: scale(1); } }
         @keyframes slide-up { to { opacity: 1; transform: translateY(0); } }
 
-        /* FIX: Set team name color to white in scorelines */
-        #win-modal [id^="wm-scoreline-"] span:first-child {
-            color: white;
-        }
-
-        /* Respect Reduced Motion */
+        /* Respect Reduced Motion (Unchanged) */
         @media (prefers-reduced-motion: reduce) {
-            #confetti-container i, .firework {
-                animation: none;
-                display: none;
-            }
-            .victory-glow, #win-modal h2.victory-glow {
-                animation: none;
-            }
-            #win-modal .animate-pop-in, #win-modal .animate-slide-up {
-                animation: none;
-                opacity: 1;
-                transform: none;
-            }
+            #confetti-container i, .firework { animation: none; display: none; }
+            .victory-glow, #win-modal h2.victory-glow { animation: none; }
+            #win-modal .animate-pop-in, #win-modal .animate-slide-up { animation: none; opacity: 1; transform: none; }
         }
 
         /* --- FINAL LAYOUT FIX --- */
@@ -1431,46 +1518,47 @@
     </div>
 </div>
 
-    <div id="win-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center hidden z-50 p-4">
+    <div id="win-modal" class="modal-overlay fixed inset-0 flex justify-center items-center hidden z-50">
         <div id="confetti-container" class="fixed inset-0 pointer-events-none z-[1]"></div>
 
-        <div class="win-modal-content modal-content bg-gray-900 rounded-2xl shadow-xl w-full max-w-lg text-center transform scale-100 relative overflow-hidden border-2 border-yellow-400/50">
-            <div class="relative p-6 space-y-4 z-10">
-                <button onclick="closeModal('win-modal')" class="absolute top-0 right-0 mt-4 mr-4 text-gray-500 hover:text-white transition-colors z-20">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
+        <div class="win-modal-content modal-content bg-gray-900 shadow-xl text-center transform scale-100 relative overflow-hidden border border-yellow-400/30">
+            <button onclick="closeModal('win-modal')" class="absolute top-2 right-2 text-gray-400 hover:text-white transition-colors z-20 p-1">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
 
+            <div class="win-modal-body relative z-10">
                 <div class="flex flex-col items-center animate-pop-in">
-                    <img id="wm-winner-logo" src="" class="w-24 h-24 mx-auto rounded-full object-cover border-4 border-white shadow-lg">
-                    <h2 id="wm-winner-name" class="text-3xl font-black uppercase text-white mt-3"></h2>
-                    <p id="wm-win-margin" class="text-lg text-yellow-400 font-bold"></p>
+                    <img id="wm-winner-logo" src="" class="mx-auto rounded-full object-cover border-white shadow-lg" id="wm-header-logo">
+                    <h2 id="wm-winner-name" class="font-black uppercase text-white" id="wm-header-title"></h2>
+                    <p id="wm-win-margin" class="text-yellow-400 font-bold" id="wm-header-margin"></p>
                 </div>
 
-                <div class="p-3 bg-black/20 rounded-lg text-sm space-y-2 text-left animate-slide-up" style="--delay: 0.2s;">
+                <div id="wm-scorelines-block" class="bg-black/20 rounded-md text-left animate-slide-up" style="--delay: 0.1s;">
                     <p id="wm-scoreline-1" class="flex justify-between items-center font-mono"></p>
                     <p id="wm-scoreline-2" class="flex justify-between items-center font-mono"></p>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4 text-xs text-left animate-slide-up" style="--delay: 0.3s;">
+                <div id="wm-performers-block" class="grid grid-cols-2 gap-3 text-left animate-slide-up" style="--delay: 0.2s;">
                     <div>
-                        <h4 class="font-bold text-gray-400 mb-1">TOP BATTERS</h4>
-                        <div id="wm-top-batters" class="space-y-1 text-gray-200"></div>
+                        <h4 class="font-bold text-gray-400 uppercase tracking-wider">Top Batters</h4>
+                        <div id="wm-top-batters" class="space-y-0.5 text-gray-200"></div>
                     </div>
                     <div>
-                        <h4 class="font-bold text-gray-400 mb-1">TOP BOWLERS</h4>
-                        <div id="wm-top-bowlers" class="space-y-1 text-gray-200"></div>
+                        <h4 class="font-bold text-gray-400 uppercase tracking-wider">Top Bowlers</h4>
+                        <div id="wm-top-bowlers" class="space-y-0.5 text-gray-200"></div>
                     </div>
                 </div>
 
-                <div id="wm-mom-picker-section" class="text-left animate-slide-up" style="--delay: 0.4s;">
-                    <h4 class="font-bold text-gray-400 mb-2 text-center text-xs tracking-wider">SELECT PLAYER OF THE MATCH</h4>
-                    <div id="wm-mom-picker-list" class="space-y-1.5 max-h-48 overflow-y-auto p-2 bg-black/20 rounded-lg border border-gray-700">
+                <div id="wm-mom-picker-section" class="text-left animate-slide-up" style="--delay: 0.3s;">
+                    <h4 class="font-bold text-gray-400 mb-1 text-center text-xs tracking-wider">SELECT PLAYER OF THE MATCH</h4>
+                    <div id="wm-mom-picker-list" class="space-y-1.5 overflow-y-auto bg-black/20 rounded-md border border-gray-700/50">
                         </div>
+                    <p id="wm-mom-show-all" class="hidden" onclick="toggleMomList()">Show all candidates</p>
                 </div>
 
-                <p id="wm-meta-line" class="text-center text-xs text-gray-500 border-t border-gray-700 pt-3 animate-slide-up" style="--delay: 0.5s;"></p>
+                <p id="wm-meta-line" class="text-center text-gray-500 border-t border-gray-700/50 animate-slide-up" style="--delay: 0.4s;"></p>
                 
-                <button id="win-modal-confirm-btn" class="w-full mt-2 px-8 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-transform hover:scale-105 animate-slide-up" style="--delay: 0.6s;">Confirm & View Summary</button>
+                <button id="win-modal-confirm-btn" class="w-full bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 transition-transform hover:scale-105 active:scale-100 animate-slide-up" style="--delay: 0.5s;">View Full Summary</button>
             </div>
         </div>
     </div>
@@ -4172,27 +4260,76 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
 
             // --- 4. Man of the Match Picker ---
             const momPickerList = document.getElementById('wm-mom-picker-list');
-            const rankedPlayers = calculateManOfTheMatch().slice(0, 5); // Get top 5
+            const momShowAll = document.getElementById('wm-mom-show-all');
+            const allRankedPlayers = calculateManOfTheMatch(); // Get all ranked players
+            const topPlayers = allRankedPlayers.slice(0, 3); // Initially show top 3
             
-            // --- FIX: Add a better fallback silhouette image for onerror ---
             const fallbackSvg = `data:image/svg+xml;base64,PHN2ZyBjbGFzcz0idy0xMCBoLTEwIHRleHQtZ3JheS00MDAiIGZpbGw9ImN1cnJlbnRDb2xvciIgdmlld0JveD0iMCAwIDIwIDIwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgZD0iTTEwIDlhMyAzIDAgMTAwLTYgMyAzIDAgMDAwIDZ6bS03IDlhNyA3IDAgMTExNCAwSDN6IiBjbGlwLXJ1bGU9ImV2ZW5vZGQiPjwvcGF0aD48L3N2Zz4=`;
 
-            if (rankedPlayers.length > 0) {
-                momPickerList.innerHTML = rankedPlayers.map((player, index) => {
-                    // Use player.image, which is (player.avatar || team.logo) from calculateManOfTheMatch
+            // Function to generate compact performance string
+            const formatMomPerformance = (player) => {
+                let parts = [];
+                if (player.runs !== undefined && player.balls !== undefined && (player.runs > 0 || player.balls > 0 || player.isOut)) {
+                    parts.push(`${player.runs}${!player.isOut ? '*' : ''} (${player.balls || 0})`);
+                }
+                if (player.wickets !== undefined && player.runsConceded !== undefined && player.ballsBowled > 0) {
+                     parts.push(`${player.wickets || 0}/${player.runsConceded || 0}`);
+                }
+                // Only add fielding if significant and other stats are low/absent
+                 if (parts.length < 2 && player.fieldingInvolvements > 1) {
+                     if (player.catches > 0) parts.push(`${player.catches}C`);
+                     if (player.runouts > 0) parts.push(`${player.runouts}RO`);
+                     if (player.stumpings > 0) parts.push(`${player.stumpings}St`);
+                 }
+                return parts.join(' & ') || 'No notable performance';
+            };
+            
+            // Function to render the list
+            const renderMomList = (playersToShow) => {
+                 momPickerList.innerHTML = playersToShow.map((player, index) => {
                     const imageSrc = player.image || fallbackSvg; 
+                    // Use the compact performance string
+                    const performanceText = formatMomPerformance(player); 
                     return `
                     <label>
-                        <input type="radio" name="mom-picker" value="${player.playerId}" ${index === 0 ? 'checked' : ''}>
-                        <img src="${imageSrc}" class="w-8 h-8 rounded-full object-cover border border-gray-600" onerror="this.src='${fallbackSvg}'">
-                        <div>
-                            <p class="mom-picker-name">${player.name} <span class="text-xs text-gray-400">(${player.teamName})</span></p>
-                            <p class="mom-picker-perf">${player.performance || 'No notable performance'}</p>
+                        <input type="radio" name="mom-picker" value="${player.playerId}" ${index === 0 && playersToShow === topPlayers ? 'checked' : ''}>
+                        <img src="${imageSrc}" class="rounded-full object-cover border border-gray-600/50" onerror="this.src='${fallbackSvg}'">
+                        <div class="mom-picker-details">
+                            <p class="mom-picker-name">${player.name} <span class="font-normal">(${player.teamName})</span></p>
+                            <p class="mom-picker-perf">${performanceText}</p>
                         </div>
                     </label>
                 `}).join('');
+            };
+
+            if (allRankedPlayers.length > 0) {
+                renderMomList(topPlayers); // Render top 3 initially
+                momPickerList.style.maxHeight = ''; // Reset max-height
+                momPickerList.dataset.expanded = 'false';
+
+                if (allRankedPlayers.length > 3) {
+                    momShowAll.classList.remove('hidden');
+                    momShowAll.textContent = `Show all ${allRankedPlayers.length} candidates`;
+                    momShowAll.onclick = () => {
+                         if (momPickerList.dataset.expanded === 'false') {
+                            renderMomList(allRankedPlayers);
+                            momPickerList.style.maxHeight = '200px'; // Expand height
+                            momShowAll.textContent = 'Show top 3';
+                            momPickerList.dataset.expanded = 'true';
+                         } else {
+                            renderMomList(topPlayers);
+                             momPickerList.style.maxHeight = ''; // Reset max-height
+                            momShowAll.textContent = `Show all ${allRankedPlayers.length} candidates`;
+                            momPickerList.dataset.expanded = 'false';
+                         }
+                    };
+                } else {
+                    momShowAll.classList.add('hidden');
+                }
+                 document.getElementById('wm-mom-picker-section').style.display = 'block';
             } else {
                  document.getElementById('wm-mom-picker-section').style.display = 'none';
+                 momShowAll.classList.add('hidden');
             }
 
             // --- 5. Meta Line ---
@@ -4201,15 +4338,28 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
             
             // --- 6. Final Setup & Button Handler ---
             const confirmBtn = document.getElementById('win-modal-confirm-btn');
+            // Ensure button text is updated
+            confirmBtn.textContent = 'View Full Summary'; 
             confirmBtn.onclick = () => {
                 const selectedRadio = document.querySelector('input[name="mom-picker"]:checked');
                 if (selectedRadio) {
                     const selectedPlayerId = selectedRadio.value;
-                    const chosenPlayer = rankedPlayers.find(p => p.playerId === selectedPlayerId);
+                     // Find chosen player from the *full* list of candidates
+                    const chosenPlayer = allRankedPlayers.find(p => p.playerId === selectedPlayerId); 
                     if (chosenPlayer) {
                         state.manOfTheMatch = chosenPlayer;
                         saveCompletedMatchSummary(); // Persist the MoM selection
+                    } else {
+                        // Fallback: If somehow not found in full list, try top players (shouldn't happen)
+                        const chosenFromTop = topPlayers.find(p => p.playerId === selectedPlayerId);
+                        if(chosenFromTop) state.manOfTheMatch = chosenFromTop;
+                         saveCompletedMatchSummary();
                     }
+                } else if (allRankedPlayers.length > 0 && !state.manOfTheMatch) {
+                    // If no radio is selected (e.g., user didn't interact) AND MoM not already set,
+                    // default to the top suggested player before closing.
+                    state.manOfTheMatch = allRankedPlayers[0];
+                     saveCompletedMatchSummary();
                 }
                 closeModal('win-modal');
                 showSummaryScreen();
