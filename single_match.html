@@ -205,11 +205,102 @@
         .summary-pop-in-animation { animation: summary-pop-in 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
         @keyframes summary-pop-in { 0% { opacity: 0; transform: translateY(20px) scale(0.9); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
         
-        /* Innings Break Modal Animation */
-        #innings-break-modal .modal-content { transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease; }
-        .modal-overlay.hidden .modal-content { transform: scale(0.8) !important; opacity: 0 !important; }
+        /* Prevent body scroll when any modal is open */
+        body.modal-open { overflow: hidden; }
+
+        /* Innings Break Modal Animation & Styles */
+        #innings-break-modal .modal-content { 
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease; 
+            /* Base styles for larger screens */
+            width: 90%; 
+            max-width: 36rem; /* max-w-2xl */
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-overlay.hidden #innings-break-modal .modal-content { 
+            transform: scale(0.8) !important; 
+            opacity: 0 !important; 
+        }
+
+        #innings-break-modal .modal-scroll {
+            overflow-y: auto;
+            flex-grow: 1; /* Allows this area to take up space and scroll */
+            padding: 1.5rem; /* p-6 */
+        }
+        
+        #innings-break-modal .modal-actions {
+            position: sticky; /* Make button sticky at the bottom */
+            bottom: 0;
+            background-color: #1f2937; /* bg-gray-800 */
+            padding: 1rem; /* p-4 */
+             padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px)); /* Add safe area padding */
+            border-top: 1px solid #374151; /* border-gray-700 */
+            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1), 0 -2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin-top: auto; /* Push to bottom */
+            flex-shrink: 0; /* Prevent shrinking */
+            z-index: 10; /* Ensure it's above scrolled content */
+            text-align: center;
+        }
+
+        /* Target container animation */
         .target-container { animation: pulse-bg 2.5s infinite; }
         @keyframes pulse-bg { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.7); } 70% { transform: scale(1.02); box-shadow: 0 0 0 12px rgba(234, 179, 8, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(234, 179, 8, 0); } }
+
+        /* Mobile Specific Adjustments for Innings Break Modal */
+        @media (max-width: 640px) { /* sm breakpoint */
+            #innings-break-modal .modal-content {
+                width: 92vw;
+                max-height: 80vh; 
+                 border-radius: 1rem; /* rounded-xl */
+            }
+             #innings-break-modal .modal-scroll {
+                 padding: 1rem; /* p-4 on mobile */
+             }
+             #innings-break-modal h2#innings-break-title {
+                 /* clamp(16px, 4.5vw, 20px) -> approx text-base to text-lg */
+                 font-size: 1.125rem; /* text-lg */
+                 margin-bottom: 0.5rem; /* mb-2 */
+             }
+             #innings-summary-content {
+                 font-size: 0.8rem; /* Smaller body text */
+                 margin-top: 1rem; margin-bottom: 1rem; /* my-4 */
+                 space-y: 0.75rem; /* space-y-3 */
+             }
+              #innings-summary-content .bg-gray-900 { /* Score box */
+                 padding: 0.5rem; /* p-2 */
+             }
+             #innings-summary-content span#ib-batting-team-name { font-size: 1rem; } /* text-base */
+             #innings-summary-content span#ib-batting-team-score { font-size: 1.5rem; } /* text-2xl */
+             #innings-summary-content span#ib-batting-team-overs { font-size: 0.7rem; }
+             #innings-summary-content #ib-run-rate { font-size: 0.75rem; } /* text-xs */
+
+             #innings-summary-content h4 { font-size: 0.7rem; margin-bottom: 0.25rem; } /* mb-1 */
+             #innings-summary-content ul { padding: 0.3rem; } /* tighter list padding */
+             #innings-summary-content li { font-size: 0.75rem; } /* text-xs */
+             #innings-summary-content #ib-fow { font-size: 0.65rem; line-height: 1.2; } /* Smaller FOW */
+              #innings-summary-content .grid > div > h4 { font-size: 0.65rem; }
+             #innings-summary-content .grid > div > p { font-size: 0.7rem; }
+
+             .target-container {
+                 padding: 0.5rem 0.75rem; /* py-2 px-3 */
+             }
+             .target-container p {
+                 line-height: 1.2; /* Tighter lines */
+             }
+             #innings-break-target-team { font-size: 0.8rem; }
+             #innings-break-target-runs { font-size: 1.5rem; } /* text-2xl */
+             .target-container p:last-child { font-size: 0.8rem; }
+
+              #innings-break-modal .modal-actions {
+                 padding: 0.75rem; /* p-3 */
+                 padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+             }
+              #start-second-innings-btn {
+                 padding: 0.5rem 1rem; /* py-2 px-4 */
+                 font-size: 0.875rem; /* text-sm */
+              }
+        }
 
         /* Win Modal Styles & Animations */
         #win-modal {
@@ -285,17 +376,30 @@
             to   { text-shadow: 0 0 12px rgba(253, 224, 71, 0.7); }
         }
 
-        /* Compact Header */
-        #wm-header-logo {
-            width: 48px; /* w-12 */
-            height: 48px; /* h-12 */
-            border-width: 2px; /* border-2 */
+        /* Compact Header - Adjusted Logo Size */
+        #wm-winner-logo { /* Corrected ID selector */
+             /* Updated Size */
+             width: auto; /* Allow natural width based on max-width */
+             height: auto; /* Allow natural height based on max-width */
+             max-width: 120px; /* Limit maximum width */
+             max-height: 80px; /* Limit maximum height for very wide logos */
+             object-fit: contain; /* Maintain aspect ratio */
+             border-width: 2px; /* border-2 */
+             margin-bottom: 0.5rem; /* Add some space below logo */
+             /* Ensure centering - mx-auto is already applied via Tailwind in HTML */
+             filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); /* Add subtle shadow */
         }
+        /* Keep victory glow animation subtle */
+        @keyframes victory-glow-animation {
+            from { box-shadow: 0 0 8px 2px rgba(253, 224, 71, 0.4), 0 0 3px 1px rgba(255, 255, 255, 0.6); filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); }
+            to   { box-shadow: 0 0 15px 4px rgba(253, 224, 71, 0.6), 0 0 5px 2px rgba(255, 255, 255, 0.9); filter: drop-shadow(0 6px 10px rgba(0,0,0,0.25)); }
+        }
+
         #wm-header-title {
             /* clamp(18px, 5vw, 22px) -> Tailwind approx: text-lg sm:text-xl */
             font-size: 1.125rem; /* text-lg */
             line-height: 1.5rem;
-            margin-top: 0.5rem; /* mt-2 */
+            margin-top: 0; /* Remove top margin */
         }
         @media (min-width: 640px) {
             #wm-header-title {
@@ -1590,9 +1694,10 @@
 
             <div class="win-modal-body relative z-10">
                 <div class="flex flex-col items-center animate-pop-in">
-                    <img id="wm-winner-logo" src="" class="mx-auto rounded-full object-cover border-white shadow-lg" id="wm-header-logo">
-                    <h2 id="wm-winner-name" class="font-black uppercase text-white" id="wm-header-title"></h2>
-                    <p id="wm-win-margin" class="text-yellow-400 font-bold" id="wm-header-margin"></p>
+                     <img id="wm-winner-logo" src="" class="mx-auto border-white shadow-lg"> 
+                    <h2 id="wm-winner-name" class="font-black uppercase text-white"></h2> 
+                    <p id="wm-win-margin" class="text-yellow-400 font-bold"></p>
+                </div>
                 </div>
 
                 <div id="wm-scorelines-block" class="bg-black/20 rounded-md text-left animate-slide-up" style="--delay: 0.1s;">
@@ -1626,55 +1731,57 @@
     </div>
     
     <div id="innings-break-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-75 flex flex-col justify-center items-center hidden z-[60] p-4">
-        <div class="modal-content bg-gray-800 text-white rounded-2xl shadow-xl p-6 sm:p-8 w-11/12 max-w-2xl text-center transform scale-95 relative overflow-hidden border-4 border-blue-500">
-            <h2 class="text-3xl sm:text-4xl font-black uppercase mb-4 tracking-wider" id="innings-break-title">INNINGS BREAK</h2>
+        <div class="modal-content bg-gray-800 text-white rounded-2xl shadow-xl relative overflow-hidden border-4 border-blue-500 transform scale-95">
             
-            <div id="innings-summary-content" class="text-left space-y-4 my-6 text-sm">
-                <div class="bg-gray-900 bg-opacity-50 p-3 rounded-lg border border-gray-700">
-                    <div class="flex justify-between items-center">
-                        <span id="ib-batting-team-name" class="text-xl font-bold"></span>
-                        <div class="text-right">
-                            <span id="ib-batting-team-score" class="text-3xl font-black"></span>
-                            <span id="ib-batting-team-overs" class="text-gray-400 ml-1"></span>
+            <div class="modal-scroll"> 
+                <h2 class="text-3xl sm:text-4xl font-black uppercase mb-4 tracking-wider text-center" id="innings-break-title">INNINGS BREAK</h2>
+                
+                <div id="innings-summary-content" class="text-left space-y-4 my-6 text-sm">
+                    <div class="bg-gray-900 bg-opacity-50 p-3 rounded-lg border border-gray-700">
+                        <div class="flex justify-between items-center">
+                            <span id="ib-batting-team-name" class="text-xl font-bold"></span>
+                            <div class="text-right">
+                                <span id="ib-batting-team-score" class="text-3xl font-black"></span>
+                                <span id="ib-batting-team-overs" class="text-gray-400 ml-1"></span>
+                            </div>
+                        </div>
+                        <div id="ib-run-rate" class="text-sm text-gray-300 mt-1"></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <h4 class="font-semibold mb-2 text-gray-400 tracking-wider">TOP BATTERS</h4>
+                            <ul id="ib-top-batters" class="space-y-1 bg-gray-900 bg-opacity-50 p-2 rounded-md"></ul>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold mb-2 text-gray-400 tracking-wider">TOP BOWLERS</h4>
+                            <ul id="ib-top-bowlers" class="space-y-1 bg-gray-900 bg-opacity-50 p-2 rounded-md"></ul>
                         </div>
                     </div>
-                    <div id="ib-run-rate" class="text-sm text-gray-300 mt-1"></div>
-                </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <h4 class="font-semibold mb-2 text-gray-400 tracking-wider">TOP BATTERS</h4>
-                        <ul id="ib-top-batters" class="space-y-1 bg-gray-900 bg-opacity-50 p-2 rounded-md"></ul>
+                    <div class="border-t border-gray-700 pt-3">
+                        <h4 class="font-semibold mb-1 text-gray-400 tracking-wider text-xs">FALL OF WICKETS</h4>
+                        <p id="ib-fow" class="text-xs leading-relaxed text-gray-300"></p>
                     </div>
-                    <div>
-                        <h4 class="font-semibold mb-2 text-gray-400 tracking-wider">TOP BOWLERS</h4>
-                        <ul id="ib-top-bowlers" class="space-y-1 bg-gray-900 bg-opacity-50 p-2 rounded-md"></ul>
-                    </div>
-                </div>
-
-                <div class="border-t border-gray-700 pt-3">
-                    <h4 class="font-semibold mb-1 text-gray-400 tracking-wider text-xs">FALL OF WICKETS</h4>
-                    <p id="ib-fow" class="text-xs leading-relaxed text-gray-300"></p>
-                </div>
-                <div class="grid grid-cols-2 gap-4 text-sm border-t border-gray-700 pt-3">
-                    <div>
-                        <h4 class="font-semibold mb-1 text-gray-400 tracking-wider text-xs">EXTRAS</h4>
-                        <p id="ib-extras" class="font-semibold"></p>
-                    </div>
-                    <div>
-                        <h4 class="font-semibold mb-1 text-gray-400 tracking-wider text-xs">SUMMARY</h4>
-                        <p id="ib-boundaries" class="font-semibold"></p>
+                    <div class="grid grid-cols-2 gap-4 text-sm border-t border-gray-700 pt-3">
+                        <div>
+                            <h4 class="font-semibold mb-1 text-gray-400 tracking-wider text-xs">EXTRAS</h4>
+                            <p id="ib-extras" class="font-semibold"></p>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold mb-1 text-gray-400 tracking-wider text-xs">SUMMARY</h4>
+                            <p id="ib-boundaries" class="font-semibold"></p>
+                        </div>
                     </div>
                 </div>
+                
+                <div class="target-container bg-yellow-500 text-black py-3 px-4 rounded-lg text-center mb-4"> <p id="innings-break-target-team" class="font-semibold text-sm sm:text-base"></p>
+                    <p class="text-2xl sm:text-3xl font-black tracking-tighter" id="innings-break-target-runs"></p>
+                    <p class="font-semibold text-sm sm:text-base">to win</p>
+                </div>
+            </div> <div class="modal-actions">
+                 <button id="start-second-innings-btn" class="px-8 py-3 bg-blue-600 font-bold rounded-lg hover:bg-blue-700 transition-transform hover:scale-105">Start 2nd Innings</button>
             </div>
-            
-            <div class="target-container bg-yellow-500 text-black py-3 px-4 rounded-lg">
-                <p id="innings-break-target-team" class="font-semibold text-sm sm:text-base"></p>
-                <p class="text-2xl sm:text-3xl font-black tracking-tighter" id="innings-break-target-runs"></p>
-                <p class="font-semibold text-sm sm:text-base">to win</p>
-            </div>
-            
-            <button id="start-second-innings-btn" class="mt-8 px-8 py-3 bg-blue-600 font-bold rounded-lg hover:bg-blue-700 transition-transform hover:scale-105">Start 2nd Innings</button>
         </div>
     </div>
 
@@ -3956,6 +4063,7 @@ function updateHistoryButtons() {
             const modal = document.getElementById(modalId);
             if (!modal) return;
             modal.classList.remove('hidden');
+            document.body.classList.add('modal-open'); // Add class to body
             const modalContent = modal.querySelector('.modal-content');
             if (modalContent) {
                 modalContent.style.transform = '';
@@ -3972,13 +4080,29 @@ function updateHistoryButtons() {
         function closeModal(modalId) {
             const modal = document.getElementById(modalId);
             if (!modal) return;
+            
+            // Check if any *other* modals are still open before removing the body class
+             const otherModalsOpen = Array.from(document.querySelectorAll('.modal-overlay:not(.hidden)'))
+                                         .some(m => m.id !== modalId);
+            if (!otherModalsOpen) {
+                 document.body.classList.remove('modal-open'); // Remove class from body ONLY if this is the last modal
+            }
+
             modal.classList.add('bg-opacity-0');
             const modalContent = modal.querySelector('.modal-content');
             if (modalContent) {
                 modalContent.classList.add('scale-95');
+                 // Add specific closing animations if needed, e.g., for bottom sheets
+                 if (['wide-modal', 'noball-modal', 'byes-modal', 'legbyes-modal'].includes(modalId)) {
+                     modalContent.classList.add('translate-y-full');
+                 }
             }
             setTimeout(() => {
                 modal.classList.add('hidden');
+                // Reset transform after animation for re-opening
+                if (modalContent) {
+                     modalContent.classList.remove('translate-y-full'); 
+                }
             }, 300);
         }
         
