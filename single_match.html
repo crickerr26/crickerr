@@ -1873,6 +1873,22 @@
     <h2 class="text-5xl font-black text-white tracking-widest" style="text-shadow: 0 0 15px rgba(59, 130, 246, 0.8);">FREE HIT</h2>
 </div> 
 <script>
+    // --- NEW: Type-Safe Parsing Helpers ---
+    const toInt = (v, d = 0) => {
+      const n = Number.parseInt(v, 10);
+      return Number.isFinite(n) ? n : d;
+    };
+    const toNum = (v, d = 0) => {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : d;
+    };
+    // Helper to format numbers, ensuring NaN becomes 0
+    const formatNumber = (n, decimalPlaces = 0) => {
+        const num = toNum(n, 0); // Ensure it's a valid number, default to 0
+        return num.toFixed(decimalPlaces);
+    };
+
+
     function populatePlayerOptions(selectElement, teamKey, { disabledIds = [], isOutFilter = false, addBlankOption = false, blankOptionText = 'Select Player' } = {}) {
     if (!selectElement || !state[teamKey] || !state[teamKey].players) return;
 
@@ -3821,15 +3837,22 @@ function updateHistoryButtons() {
             const bowlingTeam = state[bowlingTeamKey];
 
             const createTeamHTML = (team, isBatting) => {
-                const overs = `${team.overs}.${team.balls}`;
+                 // Use helpers to ensure valid numbers
+                const score = toInt(team.score);
+                const wickets = toInt(team.wickets);
+                const oversNum = toInt(team.overs);
+                const ballsNum = toInt(team.balls);
+                const totalOvers = toInt(state.totalOvers);
+
+                const overs = `${oversNum}.${ballsNum}`; // Display remains the same format
                 let scoreHTML;
 
                 if (!isBatting && state.innings === 1) {
                     scoreHTML = `<p class="text-sm font-semibold text-gray-500">Yet to bat</p>`;
                 } else {
                     scoreHTML = `
-                        <p class="text-xl font-bold text-gray-900">${team.score}/${team.wickets}</p>
-                        <p class="text-xs text-gray-500">(${overs} / ${state.totalOvers} ov)</p>
+                        <p class="text-xl font-bold text-gray-900">${score}/${wickets}</p>
+                        <p class="text-xs text-gray-500">(${overs} / ${totalOvers} ov)</p>
                     `;
                 }
 
@@ -3870,15 +3893,23 @@ function updateHistoryButtons() {
             }
 
             const battingTeam = state[state.battingTeam];
-            const runsNeeded = state.target - battingTeam.score;
+             // Use helpers
+            const score = toInt(battingTeam.score);
+            const target = toInt(state.target);
+            const runsNeeded = target - score;
+
 
             if (runsNeeded <= 0) {
                 ui.targetInfoContainer.classList.add('hidden');
                 return;
             }
 
-            const totalBalls = state.totalOvers * 6;
-            const ballsBowled = battingTeam.overs * 6 + battingTeam.balls;
+            const totalOvers = toInt(state.totalOvers);
+            const oversNum = toInt(battingTeam.overs);
+            const ballsNum = toInt(battingTeam.balls);
+
+            const totalBalls = totalOvers * 6;
+            const ballsBowled = oversNum * 6 + ballsNum;
             const ballsRemaining = totalBalls - ballsBowled;
 
             if (ballsRemaining <= 0 && runsNeeded > 0) {
@@ -3886,12 +3917,15 @@ function updateHistoryButtons() {
                 return;
             }
 
-            const crr = ballsBowled > 0 ? (battingTeam.score / (ballsBowled / 6)).toFixed(2) : '0.00';
-            const rrr = ballsRemaining > 0 ? (runsNeeded / (ballsRemaining / 6)).toFixed(2) : '&infin;';
+             // Guard division by zero for RRR
+            const rrr = ballsRemaining > 0 ? formatNumber((runsNeeded / (ballsRemaining / 6)), 2) : '&infin;'; 
+            // CRR is implicitly handled by buildInningsCardHTML/updateScoreboard now, but good practice:
+            // const crr = ballsBowled > 0 ? formatNumber((score / (ballsBowled / 6)), 2) : '0.00';
+
 
              ui.targetInfoContainer.innerHTML = `
                 <p class="text-xs font-semibold text-gray-800 truncate">
-                    <span>Target: <b class="font-black text-blue-700">${state.target}</b></span>
+                    <span>Target: <b class="font-black text-blue-700">${target}</b></span>
                     <span class="mx-2">|</span>
                     <span>Need <b class="font-black text-blue-700">${runsNeeded}</b> off <b>${ballsRemaining}</b> balls</span>
                     <span class="mx-2">|</span>
@@ -3899,7 +3933,7 @@ function updateHistoryButtons() {
                 </p>
             `;
             
-            ui.targetInfoContainer.className = 'bg-blue-100 border-t border-b border-blue-200 py-1 px-2 text-center';
+            ui.targetInfoContainer.className = 'bg-blue-100 border-t border-b border-blue-200 py-1 px-2 text-center'; // Keep existing class
         }
         
         function updateBattingTable() {
@@ -3947,7 +3981,13 @@ function updateHistoryButtons() {
 }
 
        function createBatsmanRow(batsman, isStriker) {
-            const sr = batsman.balls > 0 ? ((batsman.runs / batsman.balls) * 100).toFixed(2) : '0.00';
+            // Use helpers to ensure valid numbers and handle division by zero
+            const runs = toInt(batsman.runs);
+            const balls = toInt(batsman.balls);
+            const fours = toInt(batsman.fours);
+            const sixes = toInt(batsman.sixes);
+            const sr = balls > 0 ? formatNumber((runs / balls) * 100, 2) : '0.00'; // Guard division by zero
+            
             const fallbackImg = `data:image/svg+xml;base64,${btoa('<svg class="w-full h-full text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>')}`;
             
             return `
@@ -3960,10 +4000,10 @@ function updateHistoryButtons() {
                             </button>
                         </div>
                     </td>
-                    <td class="text-center p-2 font-bold text-base">${batsman.runs}</td>
-                    <td class="text-center p-2 text-base">${batsman.balls}</td>
-                    <td class="text-center p-2 text-base">${batsman.fours}</td>
-                    <td class="text-center p-2 text-base">${batsman.sixes}</td>
+                    <td class="text-center p-2 font-bold text-base">${runs}</td>
+                    <td class="text-center p-2 text-base">${balls}</td>
+                    <td class="text-center p-2 text-base">${fours}</td>
+                    <td class="text-center p-2 text-base">${sixes}</td>
                     <td class="text-right p-2 text-base">${sr}</td>
                 </tr>
             `;
@@ -3980,10 +4020,17 @@ function updateHistoryButtons() {
             ui.bowlingTable.innerHTML = '';
             if (state.bowler) {
                 const bowler = state.bowler;
-                const overs = Math.floor(bowler.ballsBowled / 6);
-                const balls = bowler.ballsBowled % 6;
+                // Use helpers to ensure valid numbers
+                const ballsBowled = toInt(bowler.ballsBowled);
+                const runsConceded = toInt(bowler.runsConceded);
+                const maidens = toInt(bowler.maidens);
+                const wickets = toInt(bowler.wickets);
+                
+                const overs = Math.floor(ballsBowled / 6);
+                const balls = ballsBowled % 6;
                 const oversDisplay = `${overs}.${balls}`;
-                const econ = bowler.ballsBowled > 0 ? (bowler.runsConceded / (bowler.ballsBowled / 6)).toFixed(2) : '0.00';
+                // Guard division by zero for economy
+                const econ = ballsBowled > 0 ? formatNumber((runsConceded / (ballsBowled / 6)), 2) : '0.00'; 
                 const fallbackImg = `data:image/svg+xml;base64,${btoa('<svg class="w-full h-full text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>')}`;
 
                 // This part creates the main row for the bowler's stats
@@ -3996,24 +4043,27 @@ function updateHistoryButtons() {
                             </button>
                         </td>
                         <td class="text-center p-2 text-base">${oversDisplay}</td>
-                        <td class="text-center p-2 text-base">${bowler.maidens}</td>
-                        <td class="text-center p-2 text-base">${bowler.runsConceded}</td>
-                        <td class="text-center p-2 text-base">${bowler.wickets}</td>
+                        <td class="text-center p-2 text-base">${maidens}</td>
+                        <td class="text-center p-2 text-base">${runsConceded}</td>
+                        <td class="text-center p-2 text-base">${wickets}</td>
                         <td class="text-right p-2 text-base">${econ}</td>
                     </tr>
                 `;
 
                 // This new part adds the ball-by-ball display below the bowler
-                if (state.currentOver.length > 0) {
+                 if (state.currentOver && state.currentOver.length > 0) { // Check if currentOver exists
                     let legalBallCount = 0; // Initialize a new counter for legal balls
-                    const overHistoryHTML = state.currentOver.map((ball, index) => {
-                        let ballEventText = ball.event;
+                     // Sanitize runs in currentOver before mapping
+                    const sanitizedCurrentOver = state.currentOver.map(ball => ({...ball, runs: toInt(ball.runs)}));
+                    const overHistoryHTML = sanitizedCurrentOver.map((ball, index) => {
+                        let ballEventText = ball.event || ''; // Default to empty string if event is missing
                         let bgColor = 'bg-gray-300';
-                        if (ballEventText === '0') { bgColor = 'bg-yellow-400 text-black'; }
-                        if (ballEventText === '1') { bgColor = 'bg-sky-400 text-white'; }
-                        if (ballEventText === '4') { bgColor = 'bg-blue-500 text-white'; }
-                        if (ballEventText === '6') { bgColor = 'bg-green-500 text-white'; }
-                        if (ballEventText.includes('W')) { bgColor = 'bg-red-500 text-white'; }
+                        // Visual styles based on event
+                        if (ballEventText === '0' || ballEventText === '.') { bgColor = 'bg-yellow-400 text-black'; } 
+                        else if (ballEventText === '1') { bgColor = 'bg-sky-400 text-white'; }
+                        else if (ballEventText === '4') { bgColor = 'bg-blue-500 text-white'; }
+                        else if (ballEventText === '6') { bgColor = 'bg-green-500 text-white'; }
+                        else if (ballEventText.includes('W')) { bgColor = 'bg-red-500 text-white'; }
                         
                         const isIllegalDelivery = ballEventText.toLowerCase().includes('wd') || ballEventText.toLowerCase().includes('nb');
 
@@ -4024,16 +4074,23 @@ function updateHistoryButtons() {
                         }
                         
                         let ballEventHTML;
-                        if ((ballEventText.includes('NB+') || ballEventText.includes('WD+')) && ballEventText.length > 2) {
-                            const prefix = ballEventText.substring(0, 3);
-                            const runs = ballEventText.substring(3);
-                            ballEventHTML = `<span style="font-size: 0.55rem; font-weight: 600; margin-right: -1px; letter-spacing: -0.5px;">${prefix}</span><span style="font-size: 0.8rem; font-weight: 700;">${runs}</span>`;
-                        } else {
-                            ballEventHTML = ballEventText;
-                        }
+                         // Handle complex extra strings like WD+1, NB+4+W
+                        if ((ballEventText.includes('+')) && (ballEventText.startsWith('WD') || ballEventText.startsWith('NB') || ballEventText.startsWith('B') || ballEventText.startsWith('LB'))) {
+                             const parts = ballEventText.split('+');
+                             const prefix = parts[0];
+                             const runsPart = parts[1]; // Can be just number or number + W
+                             const runsNum = toInt(runsPart.replace('W','')); // Extract number
+                             const wicketSuffix = runsPart.includes('W') ? '+W' : '';
+                             
+                            ballEventHTML = `<span style="font-size: 0.55rem; font-weight: 600; margin-right: -1px; letter-spacing: -0.5px;">${prefix}${wicketSuffix}</span><span style="font-size: 0.8rem; font-weight: 700;">${runsNum}</span>`;
+                         } else {
+                            ballEventHTML = ballEventText; // Simple event like '1', 'W', '4'
+                         }
 
-                        const ballNumberLabel = `${state[state.battingTeam].overs}.${legalBallCount}`; // Use the new counter
-                        
+                        // Use sanitized over numbers
+                        const currentOverNum = toInt(state[state.battingTeam].overs);
+                        const ballNumberLabel = `${currentOverNum}.${legalBallCount}`; 
+
                         return `
                             <div class="flex flex-col items-center space-y-1">
                                 <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs ${bgColor}">${ballEventHTML}</div>
@@ -5159,6 +5216,7 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
             const battingTeamKey = teamData.name === state.team1.name ? 'team1' : 'team2';
             const bowlingTeamKey = teamData.name === state.team1.name ? 'team2' : 'team1';
             
+            // Batting Table
             let battingHTML = `
                 <div class="summary-table-container">
                     <table class="summary-table">
@@ -5167,47 +5225,75 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
                         </thead>
                         <tbody>`;
 
-            const batsmen = Object.values(state[battingTeamKey].playerStats).filter(p => p.balls > 0 || p.isOut);
+             // Use Object.values which might contain sanitized data already
+            const batsmen = Object.values(state[battingTeamKey].playerStats).filter(p => toInt(p.balls) > 0 || p.isOut); 
             batsmen.forEach(p => {
-                const sr = p.balls > 0 ? ((p.runs / p.balls) * 100).toFixed(2) : '0.00';
+                 // Use helpers
+                const runs = toInt(p.runs);
+                const balls = toInt(p.balls);
+                const fours = toInt(p.fours);
+                const sixes = toInt(p.sixes);
+                const sr = balls > 0 ? formatNumber(((runs / balls) * 100), 2) : '0.00'; // Guard division by zero
                 battingHTML += `
                     <tr>
                         <td class="font-bold">${p.name}</td>
                         <td class="text-gray-500">${formatDismissalText(p.dismissalInfo)}</td>
-                        <td class="text-right font-bold">${p.runs}</td>
-                        <td class="text-right">${p.balls}</td>
-                        <td class="text-right">${p.fours}</td>
-                        <td class="text-right">${p.sixes}</td>
+                        <td class="text-right font-bold">${runs}</td>
+                        <td class="text-right">${balls}</td>
+                        <td class="text-right">${fours}</td>
+                        <td class="text-right">${sixes}</td>
                         <td class="text-right">${sr}</td>
                     </tr>`;
             });
 
+            // Extras and Total
             const extras = state[battingTeamKey].extras;
-            const extrasString = `(B ${extras.b}, LB ${extras.lb}, WD ${extras.wd}, NB ${extras.nb})`;
+             // Use helpers for extras display
+            const extrasString = `(B ${toInt(extras.b)}, LB ${toInt(extras.lb)}, WD ${toInt(extras.wd)}, NB ${toInt(extras.nb)})`;
+            const totalExtras = toInt(extras.total);
+             // Use helpers for total display
+            const totalScore = toInt(state[battingTeamKey].score);
+            const totalWickets = toInt(state[battingTeamKey].wickets);
+            const totalOvers = toInt(state[battingTeamKey].overs);
+            const totalBalls = toInt(state[battingTeamKey].balls);
             battingHTML += `
                     <tr class="summary-extras-row">
                         <td colspan="2">Extras</td>
-                        <td colspan="5" class="text-right">${extras.total} ${extrasString}</td>
+                        <td colspan="5" class="text-right">${totalExtras} ${extrasString}</td>
                     </tr>
                     <tr class="summary-total-row">
                         <td colspan="2">Total</td>
-                        <td colspan="5" class="text-right">${state[battingTeamKey].score}/${state[battingTeamKey].wickets} (${state[battingTeamKey].overs}.${state[battingTeamKey].balls} Overs)</td>
+                        <td colspan="5" class="text-right">${totalScore}/${totalWickets} (${totalOvers}.${totalBalls} Overs)</td>
                     </tr>
                 </tbody></table></div>`;
             
-            const didNotBat = state[battingTeamKey].players.filter(pName => !batsmen.some(b => b.name === pName));
+            // Did Not Bat
+            // Get player *objects* from the 'players' array (which holds objects)
+            const allPlayingPlayers = state[battingTeamKey].players || []; // Add fallback for safety
+            // Filter out players who batted (present in the 'batsmen' array by ID)
+            const didNotBatPlayers = allPlayingPlayers.filter(playerObj => 
+                 playerObj && !batsmen.some(batsman => batsman.playerId === playerObj.id)
+            );
+            
             let dnbHTML = '';
-            if (didNotBat.length > 0) {
-                dnbHTML = `<div class="summary-dnb-section mt-4 px-2 sm:px-0"><h4 class="font-semibold text-sm">Did not bat:</h4><p class="text-gray-600 text-sm">${didNotBat.join(', ')}</p></div>`;
+            if (didNotBatPlayers.length > 0) {
+                 // Map the player objects to their names and join
+                const didNotBatNames = didNotBatPlayers.map(player => player.name).join(', ');
+                dnbHTML = `<div class="summary-dnb-section mt-4 px-2 sm:px-0"><h4 class="font-semibold text-sm">Did not bat:</h4><p class="text-gray-600 text-sm">${didNotBatNames}</p></div>`;
             }
 
-            const fow = state[battingTeamKey].inningsHistory
-                .filter(ball => ball.dismissalInfo)
+            // Fall of Wickets
+            const fow = (state[battingTeamKey].inningsHistory || []) // Add fallback
+                .filter(ball => ball && ball.dismissalInfo) // Check ball exists
                 .map(ball => {
-                    const batsmanOut = Object.values(state[battingTeamKey].playerStats).find(p => p.dismissalInfo === ball.dismissalInfo);
+                     // Ensure playerStats exists before accessing
+                    const playerStats = state[battingTeamKey].playerStats || {}; 
+                    const batsmanOut = Object.values(playerStats).find(p => p.dismissalInfo === ball.dismissalInfo);
+                    // Sanitize scoreAtFall
+                    const scoreAtFall = toInt(ball.dismissalInfo.scoreAtFall, '?'); // Use '?' if invalid
                     return {
-                        score: ball.dismissalInfo.scoreAtFall,
-                        over: ball.dismissalInfo.overAtFall,
+                        score: scoreAtFall,
+                        over: ball.dismissalInfo.overAtFall || '?.?', // Default if missing
                         player: batsmanOut ? batsmanOut.name : 'Unknown'
                     };
                 })
@@ -5221,21 +5307,29 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
                 </div>`;
             }
 
+            // Bowling Table
             let bowlingHTML = `<div class="summary-table-container mt-6"><table class="summary-table">
                 <thead><tr><th>BOWLING</th><th class="text-right">O</th><th class="text-right">M</th><th class="text-right">R</th><th class="text-right">W</th><th class="text-right">ECON</th></tr></thead>
                 <tbody>`;
 
-            const bowlers = Object.values(state[bowlingTeamKey].playerStats).filter(p => p.ballsBowled > 0);
+             // Use Object.values which might contain sanitized data already
+            const bowlers = Object.values(state[bowlingTeamKey].playerStats || {}).filter(p => toInt(p.ballsBowled) > 0); 
             bowlers.forEach(p => {
-                const overs = `${Math.floor(p.ballsBowled / 6)}.${p.ballsBowled % 6}`;
-                const econ = p.ballsBowled > 0 ? (p.runsConceded / (p.ballsBowled / 6)).toFixed(2) : '0.00';
+                 // Use helpers
+                const ballsBowled = toInt(p.ballsBowled);
+                const runsConceded = toInt(p.runsConceded);
+                const maidens = toInt(p.maidens);
+                const wickets = toInt(p.wickets);
+                const overs = `${Math.floor(ballsBowled / 6)}.${ballsBowled % 6}`;
+                 // Guard division by zero
+                const econ = ballsBowled > 0 ? formatNumber((runsConceded / (ballsBowled / 6)), 2) : '0.00'; 
                 bowlingHTML += `
                     <tr>
                         <td class="font-bold">${p.name}</td>
                         <td class="text-right">${overs}</td>
-                        <td class="text-right">${p.maidens}</td>
-                        <td class="text-right">${p.runsConceded}</td>
-                        <td class="text-right font-bold">${p.wickets}</td>
+                        <td class="text-right">${maidens}</td>
+                        <td class="text-right">${runsConceded}</td>
+                        <td class="text-right font-bold">${wickets}</td>
                         <td class="text-right">${econ}</td>
                     </tr>`;
             });
@@ -6812,49 +6906,98 @@ function openEditModal() {
         }
 
         function saveMatchEdits() {
-    saveState(); // Log state before making major changes for undo history
+            saveState(); // Log state before making major changes for undo history
 
-    // --- 1. GATHER ALL NEW VALUES FROM THE FORM ---
-    const newVenue = document.getElementById('edit-venue').value.toUpperCase();
-    const newTotalOvers = parseInt(document.getElementById('edit-total-overs').value);
+            // --- 1. GATHER AND SANITIZE ALL NEW VALUES FROM THE FORM ---
+            const newVenue = document.getElementById('edit-venue').value.toUpperCase();
+            const newTotalOvers = toInt(document.getElementById('edit-total-overs').value, state.totalOvers); // Use helper, default to current state value if invalid
 
-    const newTeam1Data = {
-        name: document.getElementById('edit-team1-name').value.toUpperCase(),
-        score: parseInt(document.getElementById('edit-team1-score').value),
-        wickets: parseInt(document.getElementById('edit-team1-wickets').value),
-        overs: parseInt(document.getElementById('edit-team1-overs').value),
-        balls: parseInt(document.getElementById('edit-team1-balls').value),
-        logo: document.getElementById('edit-team1-logo-preview').src
-    };
-    const newTeam2Data = {
-        name: document.getElementById('edit-team2-name').value.toUpperCase(),
-        score: parseInt(document.getElementById('edit-team2-score').value),
-        wickets: parseInt(document.getElementById('edit-team2-wickets').value),
-        overs: parseInt(document.getElementById('edit-team2-overs').value),
-        balls: parseInt(document.getElementById('edit-team2-balls').value),
-        logo: document.getElementById('edit-team2-logo-preview').src
-    };
+            // Validate required fields
+            const validateNumberInput = (id, fieldName) => {
+                const input = document.getElementById(id);
+                const value = input.value;
+                 // Use toNum for potentially non-integer values initially, then check finite
+                const parsedNum = toNum(value, NaN); // Use NaN to explicitly check for invalid parse
+                if (!Number.isFinite(parsedNum) || parsedNum < 0) { // Check if finite AND non-negative
+                     showAlert(`Invalid input for ${fieldName}. Please enter a valid non-negative number.`);
+                     input.focus(); // Focus the problematic input
+                     return null; // Indicate failure
+                }
+                 // If it's supposed to be an integer (like overs, balls, wickets, score), parse again or round
+                if (['score', 'wickets', 'overs', 'balls'].some(suffix => id.includes(suffix))) {
+                    return toInt(parsedNum); // Ensure integer for these fields
+                }
+                return parsedNum; // Return the potentially float number if not score/wickets/overs/balls
+            };
 
-    // --- 2. APPLY ALL GATHERED CHANGES TO THE MAIN STATE ---
-    state.venue = newVenue;
-    state.totalOvers = newTotalOvers;
+            const team1Score = validateNumberInput('edit-team1-score', 'Team 1 Score');
+            const team1Wickets = validateNumberInput('edit-team1-wickets', 'Team 1 Wickets');
+            const team1Overs = validateNumberInput('edit-team1-overs', 'Team 1 Overs');
+            const team1Balls = validateNumberInput('edit-team1-balls', 'Team 1 Balls');
+            const team2Score = validateNumberInput('edit-team2-score', 'Team 2 Score');
+            const team2Wickets = validateNumberInput('edit-team2-wickets', 'Team 2 Wickets');
+            const team2Overs = validateNumberInput('edit-team2-overs', 'Team 2 Overs');
+            const team2Balls = validateNumberInput('edit-team2-balls', 'Team 2 Balls');
 
-    state.team1 = { ...state.team1, ...newTeam1Data };
-    state.team2 = { ...state.team2, ...newTeam2Data };
+            // If any validation failed, stop the save process
+            if ([team1Score, team1Wickets, team1Overs, team1Balls, team2Score, team2Wickets, team2Overs, team2Balls].includes(null)) {
+                return; 
+            }
+             // Ensure balls are within 0-5 range
+             if (team1Balls > 5 || team2Balls > 5) {
+                 showAlert('Invalid input for Balls. Must be between 0 and 5.');
+                 // Optionally focus the incorrect input
+                 if(team1Balls > 5) document.getElementById('edit-team1-balls').focus();
+                 else document.getElementById('edit-team2-balls').focus();
+                 return;
+             }
+             // Ensure wickets don't exceed players-1
+             const maxWickets = toInt(state.playersPerSide, 11) - 1;
+              if (team1Wickets > maxWickets || team2Wickets > maxWickets) {
+                 showAlert(`Invalid input for Wickets. Cannot exceed ${maxWickets} for a ${state.playersPerSide}-a-side game.`);
+                  if(team1Wickets > maxWickets) document.getElementById('edit-team1-wickets').focus();
+                 else document.getElementById('edit-team2-wickets').focus();
+                 return;
+             }
 
-    state.currentOver = JSON.parse(JSON.stringify(editedOver));
 
-    // --- 3. RECALCULATE ALL PLAYER STATS FROM INNINGS HISTORY ---
-    // This is the most robust way to ensure stats are correct after any edit.
-    recalculateAllPlayerStats();
+            const newTeam1Data = {
+                name: document.getElementById('edit-team1-name').value.toUpperCase(),
+                score: team1Score,
+                wickets: team1Wickets,
+                overs: team1Overs,
+                balls: team1Balls,
+                logo: document.getElementById('edit-team1-logo-preview').src
+            };
+            const newTeam2Data = {
+                name: document.getElementById('edit-team2-name').value.toUpperCase(),
+                score: team2Score,
+                wickets: team2Wickets,
+                overs: team2Overs,
+                balls: team2Balls,
+                logo: document.getElementById('edit-team2-logo-preview').src
+            };
 
-    // --- 4. FINALIZE ---
-    closeModal('edit-match-modal');
-    updateUI(); // Re-render everything with the fresh, correct state
-    debouncedSave();
+              // --- 2. APPLY ALL GATHERED CHANGES TO THE MAIN STATE ---
+            state.venue = newVenue;
+            state.totalOvers = newTotalOvers;
 
-    showAlert('Match state has been updated successfully.');
-}
+            state.team1 = { ...state.team1, ...newTeam1Data };
+            state.team2 = { ...state.team2, ...newTeam2Data };
+
+            state.currentOver = JSON.parse(JSON.stringify(editedOver));
+
+            // --- 3. RECALCULATE ALL PLAYER STATS FROM INNINGS HISTORY ---
+            // This is the most robust way to ensure stats are correct after any edit.
+            recalculateAllPlayerStats();
+
+            // --- 4. FINALIZE ---
+            closeModal('edit-match-modal');
+            updateUI(); // Re-render everything with the fresh, correct state
+            debouncedSave();
+
+            showAlert('Match state has been updated successfully.');
+        }
 
 
         function previewDownload(format) {
@@ -7256,6 +7399,69 @@ function openEditModal() {
 
         // --- INITIALIZATION ---
 // --- INITIALIZATION ---
+        // --- NEW: Function to sanitize loaded state ---
+        function sanitizeState(loadedState) {
+            if (!loadedState) return loadedState;
+
+            ['team1', 'team2'].forEach(teamKey => {
+                const team = loadedState[teamKey];
+                if (team) {
+                    team.score = toInt(team.score);
+                    team.wickets = toInt(team.wickets);
+                    team.overs = toInt(team.overs);
+                    team.balls = toInt(team.balls);
+                    if (team.extras) {
+                         team.extras.b = toInt(team.extras.b);
+                         team.extras.lb = toInt(team.extras.lb);
+                         team.extras.wd = toInt(team.extras.wd);
+                         team.extras.nb = toInt(team.extras.nb);
+                         team.extras.total = toInt(team.extras.total);
+                    }
+                    if (team.playerStats) {
+                        Object.values(team.playerStats).forEach(p => {
+                            p.runs = toInt(p.runs);
+                            p.balls = toInt(p.balls);
+                            p.fours = toInt(p.fours);
+                            p.sixes = toInt(p.sixes);
+                            p.ballsBowled = toInt(p.ballsBowled);
+                            p.runsConceded = toInt(p.runsConceded);
+                            p.wickets = toInt(p.wickets);
+                            p.maidens = toInt(p.maidens);
+                            p.dots = toInt(p.dots);
+                            p.foursConceded = toInt(p.foursConceded);
+                            p.sixesConceded = toInt(p.sixesConceded);
+                            // Ensure dismissalInfo score/over are numbers if they exist
+                             if (p.dismissalInfo) {
+                                p.dismissalInfo.scoreAtFall = toInt(p.dismissalInfo.scoreAtFall, null); // Allow null if not set
+                                // overAtFall is string 'X.Y', leave as is
+                             }
+                        });
+                    }
+                     if (team.inningsHistory) {
+                         team.inningsHistory.forEach(ball => {
+                              if(ball) ball.runs = toInt(ball.runs); // Ensure runs in history are numbers, check if ball exists
+                         });
+                     }
+                }
+            });
+            loadedState.innings = toInt(loadedState.innings, 1);
+            loadedState.target = toInt(loadedState.target);
+            loadedState.totalOvers = toInt(loadedState.totalOvers, 20); // Default if invalid
+            loadedState.playersPerSide = toInt(loadedState.playersPerSide, 11); // Default if invalid
+            // Sanitize currentOver array runs
+             if (loadedState.currentOver && Array.isArray(loadedState.currentOver)) { // Check if it's an array
+                loadedState.currentOver.forEach(ball => {
+                     if(ball) ball.runs = toInt(ball.runs); // Check if ball exists
+                });
+            } else {
+                 loadedState.currentOver = []; // Default to empty array if invalid
+            }
+
+
+            return loadedState;
+        }
+
+
         function initializeApp() {
             // This function sets up all the button clicks and input handlers for the app.
             const initializeCommonEventListeners = () => {
@@ -7329,8 +7535,9 @@ function openEditModal() {
             if (savedStateJSON && savedStateJSON !== 'null') {
                 // An active match was found in storage.
                 try {
-                    const savedState = JSON.parse(savedStateJSON);
-                    Object.assign(state, savedState);
+                    let savedState = JSON.parse(savedStateJSON);
+                    savedState = sanitizeState(savedState); // Sanitize the loaded state
+                    Object.assign(state, savedState); 
 
                     window.addEventListener('beforeunload', beforeUnloadHandler);
 
@@ -7338,38 +7545,39 @@ function openEditModal() {
                     
                     if (lastPath === 'summary-screen') {
                         showScreen('summary-screen');
-                        showSummaryScreen();
+                        showSummaryScreen(); // Call showSummaryScreen to render based on sanitized state
                     } else {
                         // Default to the main scoring screen if a match is in progress.
                         showScreen('app');
-                        updateUI();
+                        updateUI(); // Render based on sanitized state
                     }
                 } catch (e) {
-                    // If loading the saved state fails, it's corrupt. Clear it and start over.
+                     // If loading the saved state fails, it's corrupt. Clear it and start over.
                     console.error("Failed to load saved state, starting fresh.", e);
                     localStorage.removeItem('matchState_v1');
                     localStorage.removeItem('lastVisitedPath');
                     showScreen('choice-screen');
                 }
-            } else {
+            } else { 
                 // No active match. Check if we are trying to view a completed match from history.
-                const summaryToViewJSON = localStorage.getItem('summaryToView');
+                 const summaryToViewJSON = localStorage.getItem('summaryToView');
                 if (summaryToViewJSON) {
                     localStorage.removeItem('summaryToView'); // Clear it after reading
                     try {
-                        const summaryData = JSON.parse(summaryToViewJSON);
+                        let summaryData = JSON.parse(summaryToViewJSON);
+                         summaryData = sanitizeState(summaryData); // Sanitize summary data
                         Object.assign(state, summaryData);
                         showScreen('summary-screen');
-                        showSummaryScreen();
+                        showSummaryScreen(); // Render based on sanitized state
                     } catch (e) { 
                         console.error("Failed to parse summary data, starting fresh.", e); 
                         showScreen('choice-screen');
                     }
                 } else {
-                    // This is a fresh session. Show the main choice screen.
-                    showScreen('choice-screen');
+                     // This is a fresh session. Show the main choice screen.
+                     showScreen('choice-screen');
                 }
-            }
+             }
         }
 
         document.addEventListener('DOMContentLoaded', initializeApp);
