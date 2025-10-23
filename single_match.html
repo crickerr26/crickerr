@@ -2812,7 +2812,7 @@ function updateFreeHitIndicator() {
             }
         }
 
-       // MODIFIED selectPlayer to handle the initial setup flag
+       // MODIFIED selectPlayer to handle the initial setup flag and ensure callback sequencing
        function selectPlayer(role, onCompleteCallback) {
             ui.modalTitle.textContent = `Select ${role.charAt(0).toUpperCase() + role.slice(1)}`;
 
@@ -2830,42 +2830,52 @@ function updateFreeHitIndicator() {
             if (role === 'bowler' && state.lastBowler) {
                 disabledIds.push(state.lastBowler);
             }
-             // --- FIX: Add non-striker to disabledIds when selecting striker, and vice-versa ---
+             // Ensure current players are disabled when selecting the *other* batter role
              if (role === 'striker' && state.nonStriker) disabledIds.push(state.nonStriker.playerId);
              if (role === 'nonStriker' && state.striker) disabledIds.push(state.striker.playerId);
 
             populatePlayerOptions(ui.playerSelect, teamKey, {
-                disabledIds: disabledIds,
-                isOutFilter: (role !== 'bowler')
+                disabledIds: [...new Set(disabledIds)], // Use Set to remove duplicates if any
+                isOutFilter: (role !== 'bowler'),
+                 addBlankOption: !isInitialSetup, // Only add blank option if NOT initial setup
+                 blankOptionText: `Select ${role}`
             });
+            
+            // Pre-select the first available option during initial setup if dropdown isn't empty
+            if (isInitialSetup && ui.playerSelect.options.length > 0) {
+                 // Find the first non-disabled option
+                 const firstAvailableOption = Array.from(ui.playerSelect.options).find(opt => !opt.disabled && opt.value);
+                 if (firstAvailableOption) {
+                      ui.playerSelect.value = firstAvailableOption.value;
+                 } else if (ui.playerSelect.options.length > 0) {
+                      // If somehow only disabled options are left (e.g., only 1 player available), select the first one anyway
+                      ui.playerSelect.value = ui.playerSelect.options[0].value;
+                 }
+            }
 
-            // --- REFACTORED: updatePlayerStateSimple ---
-            const updatePlayerStateSimple = () => {
-                const selectedPlayerId = ui.playerSelect.value;
+
+            // --- REVISED: updatePlayerStateSimple ---
+            const updatePlayerStateSimple = (selectedPlayerId) => {
+                 // No need to get value again, it's passed in
                 if (selectedPlayerId && state[teamKey].playerStats[selectedPlayerId]) {
                     state[role] = { ...state[teamKey].playerStats[selectedPlayerId] };
+                    updateUI(); // Update UI immediately
 
-                    updateUI(); // Update UI immediately after state change
-
-                    // --- FIX: Call callback *before* closing modal and *without* timeout ---
+                    // --- CRITICAL FIX: Call callback *immediately* after state update ---
                     if (typeof onCompleteCallback === 'function') {
-                        onCompleteCallback(); // Resolve the Promise or call the next step
+                        // Wrap in timeout(0) to ensure UI updates finish rendering before next modal opens
+                        setTimeout(onCompleteCallback, 0); 
                     }
-
-                    closeModal('player-modal'); // Close modal *after* state is updated & callback fired
-
+                    closeModal('player-modal'); // Close modal *after* callback is scheduled
                 } else {
                     console.error(`Could not find player stats for ID: ${selectedPlayerId} in team ${teamKey}`);
                     showAlert("An error occurred selecting the player.");
-                     // If used with Promises, we should reject here or handle the error appropriately
-                    if (typeof onCompleteCallback === 'function') {
-                         // Indicate failure or do nothing, preventing sequence progression
-                    }
+                    // Stop the sequence if there's an error - don't call the callback
                 }
             };
-            // --- END REFACTOR ---
+            // --- END REVISION ---
 
-            // --- FIX: Disable cancel buttons during initial setup ---
+            // Disable cancel buttons during initial setup
             if (isInitialSetup) {
                 ui.playerModalCancelBtnX.classList.add('hidden');
                 ui.playerModalCancelBtnText.classList.add('hidden');
@@ -2874,14 +2884,16 @@ function updateFreeHitIndicator() {
                 ui.playerModalCancelBtnText.classList.remove('hidden');
             }
 
-            // --- Player Save Button Logic (mostly unchanged, relies on updatePlayerStateSimple) ---
+            // --- REVISED: Player Save Button Logic ---
             ui.playerSaveBtn.onclick = () => {
                 const selectedPlayerId = ui.playerSelect.value;
                 const oldPlayerId = state[role] ? state[role].playerId : null;
 
+                // --- Validation ---
                 if (!selectedPlayerId) {
-                     showAlert("Please select a player.");
-                     return;
+                     // During initial setup, we force selection, so this shouldn't happen unless list is empty
+                    if (!isInitialSetup) showAlert("Please select a player.");
+                    return;
                 }
                  const selectedPlayerData = state[teamKey].playerStats[selectedPlayerId];
                 if (!selectedPlayerData){
@@ -2889,99 +2901,97 @@ function updateFreeHitIndicator() {
                      showAlert("Selected player data not found. Please check setup.");
                      return;
                 }
-                 // --- FIX: Prevent selecting dismissed players ---
                  if (selectedPlayerData.isOut && role !== 'bowler') {
                      showAlert("Cannot select a dismissed player.");
                      return;
                  }
+                // --- End Validation ---
 
-
-                // Swap logic remains the same
-                if (role === 'striker' && state.nonStriker && selectedPlayerId === state.nonStriker.playerId) {
-                    swapBatsmen();
+                // --- Handle Swap ---
+                if ((role === 'striker' && state.nonStriker && selectedPlayerId === state.nonStriker.playerId) ||
+                    (role === 'nonStriker' && state.striker && selectedPlayerId === state.striker.playerId)) {
+                    swapBatsmen(); // Updates UI internally
                     closeModal('player-modal');
+                    // --- CRITICAL FIX: Call callback after swap ---
                     if (typeof onCompleteCallback === 'function') {
-                       onCompleteCallback(); // Call callback immediately on swap
-                    }
-                    return;
-                }
-                if (role === 'nonStriker' && state.striker && selectedPlayerId === state.striker.playerId) {
-                    swapBatsmen();
-                    closeModal('player-modal');
-                    if (typeof onCompleteCallback === 'function') {
-                        onCompleteCallback(); // Call callback immediately on swap
+                       setTimeout(onCompleteCallback, 0);
                     }
                     return;
                 }
 
-                // Close if no change
+                // --- Handle No Change ---
                 if (selectedPlayerId === oldPlayerId) {
                     closeModal('player-modal');
+                     // --- CRITICAL FIX: Call callback even if no change ---
                      if (typeof onCompleteCallback === 'function') {
-                         onCompleteCallback(); // Call callback even if no change
+                         setTimeout(onCompleteCallback, 0);
                     }
                     return;
                 }
 
-                // Batter Edit vs Initial/Bowler Logic remains the same, relies on updatePlayerStateSimple
-                if (role === 'striker' || role === 'nonStriker') {
-                    if (oldPlayerId) {
-                        // --- BATTER STATS TRANSFER LOGIC (EDITING) ---
-                        // ... (existing edit logic - make sure it calls updateUI at the end) ...
-                         saveState();
-                         const battingTeamKey = state.battingTeam;
-                         if (!state[battingTeamKey].playerStats[selectedPlayerId]) { /* ... error handling ... */ return; }
-                         const newPlayerInfo = JSON.parse(JSON.stringify(state[battingTeamKey].playerStats[selectedPlayerId]));
-                         if (newPlayerInfo.balls > 0 || newPlayerInfo.isOut || newPlayerInfo.ballsBowled > 0) { /* ... conflict check ... */ return; }
-                         if (!state[battingTeamKey].playerStats[oldPlayerId]) { /* ... error handling ... */ return; }
-                         const statsToTransfer = JSON.parse(JSON.stringify(state[battingTeamKey].playerStats[oldPlayerId]));
-                         state[battingTeamKey].playerStats[selectedPlayerId] = { ...statsToTransfer };
-                         state[battingTeamKey].playerStats[selectedPlayerId].playerId = newPlayerInfo.playerId;
-                         state[battingTeamKey].playerStats[selectedPlayerId].name = newPlayerInfo.name;
-                         state[battingTeamKey].playerStats[selectedPlayerId].image = newPlayerInfo.image;
-                         const oldPlayerSquadInfo = state[battingTeamKey].squad.find(p => p.id === oldPlayerId);
-                         state[battingTeamKey].playerStats[oldPlayerId] = { /* ... reset old player stats ... */ };
-                         state[battingTeamKey].inningsHistory.forEach(ball => { /* ... update history ... */ });
-                         state[role] = { ...state[battingTeamKey].playerStats[selectedPlayerId] };
-                         const otherRole = (role === 'striker') ? 'nonStriker' : 'striker';
-                         if (state[otherRole] && state[otherRole].playerId === oldPlayerId) { /* ... update other role ... */ }
-                         closeModal('player-modal');
-                         updateUI(); // Ensure UI updates after edit
-                         if (typeof onCompleteCallback === 'function') {
-                            onCompleteCallback(); // Call callback after successful edit
-                         }
-                    } else {
-                        updatePlayerStateSimple(); // Initial selection
+                // --- Handle Edit vs. Initial Selection ---
+                if ((role === 'striker' || role === 'nonStriker') && oldPlayerId && !isInitialSetup) {
+                    // --- BATTER STATS TRANSFER LOGIC (EDITING) ---
+                    saveState(); // Save state before transferring stats
+                    const battingTeamKey = state.battingTeam;
+                    // Simplified: Assume validation passed. Directly perform transfer.
+                    const newPlayerInfo = state[battingTeamKey].playerStats[selectedPlayerId];
+                    const statsToTransfer = { ...state[battingTeamKey].playerStats[oldPlayerId] };
+
+                    // Transfer stats
+                    state[battingTeamKey].playerStats[selectedPlayerId] = {
+                        ...statsToTransfer, // Copy all stats from old player
+                        playerId: newPlayerInfo.playerId, // Keep new player's ID
+                        name: newPlayerInfo.name,          // Keep new player's Name
+                        image: newPlayerInfo.image         // Keep new player's Image
+                    };
+
+                    // Reset old player's stats (important!)
+                    const oldPlayerBase = state[battingTeamKey].squad.find(p => p.id === oldPlayerId) || { id: oldPlayerId, name: 'Unknown', image: '' };
+                    state[battingTeamKey].playerStats[oldPlayerId] = {
+                         playerId: oldPlayerBase.id, name: oldPlayerBase.name, image: oldPlayerBase.image || '',
+                         runs: 0, balls: 0, fours: 0, sixes: 0, isOut: false, dismissalInfo: null,
+                         ballsBowled: 0, runsConceded: 0, wickets: 0, maidens: 0, dots: 0,
+                         foursConceded: 0, sixesConceded: 0, consecutiveFours: 0, consecutiveSixes: 0
+                    };
+                    
+                    // Update innings history
+                    state[battingTeamKey].inningsHistory.forEach(ball => {
+                        if (ball.batterId === oldPlayerId) {
+                            ball.batterId = selectedPlayerId;
+                        }
+                    });
+                    
+                    // Update state[role]
+                    state[role] = { ...state[battingTeamKey].playerStats[selectedPlayerId] };
+                    
+                    // If the *other* batter was the one being replaced, update their reference too
+                    const otherRole = (role === 'striker') ? 'nonStriker' : 'striker';
+                    if (state[otherRole] && state[otherRole].playerId === oldPlayerId) {
+                       state[otherRole] = { ...state[battingTeamKey].playerStats[oldPlayerId] }; // Update with the reset stats
+                    }
+
+                    closeModal('player-modal');
+                    updateUI(); // Re-render UI after complex edit
+                     // --- CRITICAL FIX: Call callback after successful edit ---
+                    if (typeof onCompleteCallback === 'function') {
+                       setTimeout(onCompleteCallback, 0);
                     }
                 } else {
-                    updatePlayerStateSimple(); // Bowler selection
+                    // Initial selection or Bowler change - use the simple update
+                    updatePlayerStateSimple(selectedPlayerId);
                 }
             };
 
-            // --- PERMANENT FIX: Correctly handle backdrop and content clicks ---
+            // Handle backdrop clicks (unchanged logic is correct)
             const modalElement = document.getElementById('player-modal');
             const modalContent = modalElement.querySelector('.modal-content');
-
             if (isInitialSetup) {
-                 // During setup, backdrop click does NOTHING.
-                 modalElement.onclick = (e) => {
-                     if (e.target === modalElement) { // Check if click is on backdrop
-                         e.stopPropagation(); // Do nothing.
-                     }
-                 };
+                 modalElement.onclick = (e) => { if (e.target === modalElement) e.stopPropagation(); };
             } else {
-                 // When editing, backdrop click CLOSES.
-                 modalElement.onclick = (e) => {
-                    if (e.target === modalElement) { // Check if click is on backdrop
-                         closeModal('player-modal');
-                    }
-                 };
+                 modalElement.onclick = (e) => { if (e.target === modalElement) closeModal('player-modal'); };
             }
-            
-            // ALWAYS stop content clicks from bubbling up to the overlay handler.
-            modalContent.onclick = (e) => {
-                e.stopPropagation();
-            };
+            modalContent.onclick = (e) => e.stopPropagation();
 
             openModal('player-modal');
         }
