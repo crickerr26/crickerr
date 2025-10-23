@@ -2825,6 +2825,9 @@ function updateFreeHitIndicator() {
     // DEFINITIVE FIX: Re-bind the onclick handler every time the modal is opened.
     ui.playerSaveBtn.onclick = () => {
         const selectedPlayerId = ui.playerSelect.value;
+        const oldPlayerId = state[role] ? state[role].playerId : null;
+        
+        if (!selectedPlayerId || !state[teamKey].playerStats[selectedPlayerId]) return;
 
         // Validation for duplicate batters
         if (role === 'striker' && state.nonStriker && selectedPlayerId === state.nonStriker.playerId) {
@@ -2835,25 +2838,89 @@ function updateFreeHitIndicator() {
             showAlert("The same player cannot be both striker and non-striker. Please select a different player.");
             return;
         }
+        
+        // If the selection hasn't changed, just close the modal.
+        if (selectedPlayerId === oldPlayerId) {
+            closeModal('player-modal');
+            return;
+        }
 
-        const oldPlayerId = state[role] ? state[role].playerId : null;
-        if (!selectedPlayerId || !state[teamKey].playerStats[selectedPlayerId]) return;
+        // --- BRANCH LOGIC: Handle Batter Edit (Stat Transfer) vs. Bowler Edit (Simple Swap) ---
 
-        const updatePlayerState = () => {
-            state[role] = { ...state[teamKey].playerStats[selectedPlayerId] };
+        if (role === 'striker' || role === 'nonStriker') {
+            // --- NEW: BATTER STATS TRANSFER LOGIC ---
+            saveState(); // Save for undo
+            
+            const battingTeamKey = state.battingTeam;
+            const newPlayerInfo = JSON.parse(JSON.stringify(state[battingTeamKey].playerStats[selectedPlayerId]));
+
+            // 1. Check for conflict: If the new player already has stats, block the swap.
+            if (newPlayerInfo.balls > 0 || newPlayerInfo.isOut || newPlayerInfo.ballsBowled > 0) {
+                showAlert("Cannot swap. The selected player already has stats. Please choose a player who has not batted or bowled.");
+                state.history.pop(); // Revert the saveState
+                return;
+            }
+
+            // 2. No conflict, proceed with stats transfer
+            const statsToTransfer = JSON.parse(JSON.stringify(state[battingTeamKey].playerStats[oldPlayerId]));
+
+            // 3. Copy stats from Old to New
+            state[battingTeamKey].playerStats[selectedPlayerId] = { ...statsToTransfer };
+            // 4. Update New's personal info (name, image, ID)
+            state[battingTeamKey].playerStats[selectedPlayerId].playerId = newPlayerInfo.playerId;
+            state[battingTeamKey].playerStats[selectedPlayerId].name = newPlayerInfo.name;
+            state[battingTeamKey].playerStats[selectedPlayerId].image = newPlayerInfo.image;
+
+            // 5. Reset the Old player's stats (find their base info from squad)
+            const oldPlayerSquadInfo = state[battingTeamKey].squad.find(p => p.id === oldPlayerId);
+            state[battingTeamKey].playerStats[oldPlayerId] = {
+                playerId: oldPlayerId,
+                name: oldPlayerSquadInfo ? oldPlayerSquadInfo.name : 'OLD PLAYER',
+                image: oldPlayerSquadInfo ? oldPlayerSquadInfo.image : '',
+                runs: 0, balls: 0, fours: 0, sixes: 0, isOut: false, dismissalInfo: null,
+                ballsBowled: 0, runsConceded: 0, wickets: 0, maidens: 0, dots: 0,
+                foursConceded: 0, sixesConceded: 0, consecutiveFours: 0, consecutiveSixes: 0
+            };
+
+            // 6. Update all ball-by-ball history references
+            state[battingTeamKey].inningsHistory.forEach(ball => {
+                if (ball.batterId === oldPlayerId) {
+                    ball.batterId = selectedPlayerId;
+                }
+                // Update dismissal info if the batter who was out is the one being renamed
+                if (ball.dismissalInfo && ball.dismissalInfo.playerId === oldPlayerId) {
+                    ball.dismissalInfo.playerId = selectedPlayerId;
+                    // Note: This does not re-run recalculateAllPlayerStats, but the live stats objects are correct.
+                }
+            });
+
+            // 7. Update the active role (state[role]) to point to the *new* player's stats object.
+            state[role] = { ...state[battingTeamKey].playerStats[selectedPlayerId] };
+
+            // 8. Check if the *other* batter role was the one we just transferred stats *from*.
+            const otherRole = (role === 'striker') ? 'nonStriker' : 'striker';
+            if (state[otherRole] && state[otherRole].playerId === oldPlayerId) {
+                state[otherRole] = { ...state[battingTeamKey].playerStats[oldPlayerId] }; // Point to the newly reset stats
+            }
+            
+            // 9. Finalize
             closeModal('player-modal');
             updateUI();
             if (typeof onCompleteCallback === 'function') {
                 setTimeout(onCompleteCallback, 350);
             }
-        };
 
-        const battingTeam = state[state.battingTeam];
-        if (role === 'striker' && oldPlayerId && selectedPlayerId !== oldPlayerId && battingTeam.inningsHistory.length > 0) {
-            // Automatically apply the correction for the entire current stint without asking the user.
-            shiftBatterContribution({ fromBatterId: oldPlayerId, toBatterId: selectedPlayerId, scope: 'currentStint' });
-            updatePlayerState();
         } else {
+            // --- OLD: BOWLER (OR OTHER ROLE) LOGIC ---
+            // This is a simple assignment, which is correct for changing the bowler.
+            const updatePlayerState = () => {
+                state[role] = { ...state[teamKey].playerStats[selectedPlayerId] };
+                closeModal('player-modal');
+                updateUI();
+                if (typeof onCompleteCallback === 'function') {
+                    setTimeout(onCompleteCallback, 350);
+                }
+            };
             updatePlayerState();
         }
     };
@@ -3513,9 +3580,29 @@ function initiateRunOutFlow() {
                 return isNaN(runs) ? 0 : runs;
             }
 
-            // Existing logic...
+            // Simple number runs (0, 1, 2, 3, 4, 6)
             const simpleRuns = parseInt(e);
-            // ... rest of parseBallEvent
+            if (!isNaN(simpleRuns) && simpleRuns >= 0 && simpleRuns <= 6) {
+                return simpleRuns;
+            }
+
+            // Extras
+            if (e.startsWith('WD')) {
+                const runs = parseInt(e.substring(2)) || 0;
+                return 1 + runs;
+            }
+            if (e.startsWith('NB')) {
+                const runs = parseInt(e.substring(2)) || 0;
+                return 1 + runs;
+            }
+            if (e.startsWith('B')) {
+                return parseInt(e.substring(1)) || 0;
+            }
+            if (e.startsWith('LB')) {
+                return parseInt(e.substring(2)) || 0;
+            }
+
+            return 0; // Return 0 for any unrecognised format
         }
 
         // No direct changes needed inside processBall itself if parseBallEvent is correct.
@@ -6747,12 +6834,24 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
     document.getElementById('edit-team2-panel').classList.toggle('hidden', teamKeyToShow !== 'team2');
 }
 
+let originalOverOnEdit = []; // Store the original full-data over
 function openEditModal() {
     editInitialStriker = JSON.parse(JSON.stringify(state.striker));
     editInitialNonStriker = JSON.parse(JSON.stringify(state.nonStriker));
     document.getElementById('edit-venue').value = state.venue;
     document.getElementById('edit-total-overs').value = state.totalOvers;
-    editedOver = JSON.parse(JSON.stringify(state.currentOver));
+
+    // --- FIX: Load the FULL ball data from inningsHistory, not the simplified state.currentOver ---
+    const originalOverLength = state.currentOver.length;
+    const history = state[state.battingTeam].inningsHistory;
+    let historySlice = [];
+    if (originalOverLength > 0 && history.length >= originalOverLength) {
+         historySlice = history.slice(history.length - originalOverLength);
+    }
+    // Store both the original and the mutable version
+    originalOverOnEdit = JSON.parse(JSON.stringify(historySlice)); 
+    editedOver = JSON.parse(JSON.stringify(historySlice)); // This array now contains full ball objects
+    // --- END FIX ---
     
     // Setup Tab Listeners & Text
     document.getElementById('edit-team1-tab').textContent = state.team1.name;
@@ -6761,17 +6860,17 @@ function openEditModal() {
     document.getElementById('edit-team2-tab').onclick = () => switchEditTab('team2');
     
     const battingTeamKey = state.battingTeam;
-    const initialOverRuns = state.currentOver.reduce((acc, ball) => acc + (ball.runs || 0), 0);
-    scoreBeforeOver = state[battingTeamKey].score - initialOverRuns;
+    // Calculation of scoreBeforeOver is now based on the full-data over
+    const initialOverRuns = editedOver.reduce((acc, ball) => acc + (ball.runs || 0), 0);
+    scoreBeforeOver = toInt(state[battingTeamKey].score) - toInt(initialOverRuns);
 
     ['team1', 'team2'].forEach(teamKey => {
         const team = state[teamKey];
-        // document.getElementById(`edit-${teamKey}-panel`).classList.toggle('highlight', teamKey === battingTeamKey);
         document.getElementById(`edit-${teamKey}-name`).value = team.name;
-        document.getElementById(`edit-${teamKey}-score`).value = team.score;
-        document.getElementById(`edit-${teamKey}-wickets`).value = team.wickets;
-        document.getElementById(`edit-${teamKey}-overs`).value = team.overs;
-        document.getElementById(`edit-${teamKey}-balls`).value = team.balls;
+        document.getElementById(`edit-${teamKey}-score`).value = toInt(team.score);
+        document.getElementById(`edit-${teamKey}-wickets`).value = toInt(team.wickets);
+        document.getElementById(`edit-${teamKey}-overs`).value = toInt(team.overs);
+        document.getElementById(`edit-${teamKey}-balls`).value = toInt(team.balls);
 
         const logoUploader = document.getElementById(`edit-${teamKey}-logo-uploader`);
         logoUploader.innerHTML = `
@@ -6793,19 +6892,35 @@ function openEditModal() {
     });
 
     const chipsContainer = document.getElementById('edit-over-chips-display');
+    
     const recalculateAndRender = () => {
         const battingTeamScoreInput = document.getElementById(`edit-${battingTeamKey}-score`);
         const battingTeamOversInput = document.getElementById(`edit-${battingTeamKey}-overs`);
         const battingTeamBallsInput = document.getElementById(`edit-${battingTeamKey}-balls`);
+
+        // 1. Recalculate score (this logic remains correct)
         let newOverRuns = editedOver.reduce((acc, ball) => acc + parseBallEvent(ball.event), 0);
-        battingTeamScoreInput.value = scoreBeforeOver + newOverRuns;
-        let legalBalls = editedOver.filter(ball => isLegalDelivery(ball.event)).length;
-        let baseOvers = state[state.battingTeam].overs;
+        battingTeamScoreInput.value = toInt(scoreBeforeOver + newOverRuns); 
+
+        // 2. Recalculate overs/balls (using the correct logic)
+        let newLegalBalls = editedOver.filter(ball => isLegalDelivery(ball.event)).length;
+        // --- FIX: Use the stored originalOverOnEdit, not state.currentOver ---
+        let originalLegalBalls = originalOverOnEdit.filter(ball => isLegalDelivery(ball.event)).length;
+
+        let baseOvers = toInt(state[battingTeamKey].overs);
+        let baseBalls = toInt(state[battingTeamKey].balls) - originalLegalBalls; 
         
-        let totalBalls = (baseOvers * 6) + legalBalls;
+        if (baseBalls < 0) {
+            baseOvers -= 1;
+            baseBalls += 6;
+        }
+        if (baseOvers < 0) baseOvers = 0; 
+        
+        let totalBalls = (baseOvers * 6) + baseBalls + newLegalBalls; 
         battingTeamOversInput.value = Math.floor(totalBalls / 6);
         battingTeamBallsInput.value = totalBalls % 6;
         
+        // 3. Render chips (this logic remains correct)
         chipsContainer.innerHTML = editedOver.map((ball, index) => 
             `<span class="over-chip" data-index="${index}">${ball.event}</span>`
         ).join('');
@@ -6836,13 +6951,13 @@ function openEditModal() {
             const options = ['0', '1', '2', '3', '4', '6', '.', 'W', 'WD', 'WD+1', 'WD+2', 'NB', 'NB+1', 'B1', 'LB1'];
             optionsContainer.innerHTML = options.map(opt => `<button data-event="${opt}">${opt}</button>`).join('');
 
-            let selectedEvent = editedOver[ballIndex].event;
+            // --- FIX: Accessing .event from a full ball object ---
+            let selectedEvent = editedOver[ballIndex] ? editedOver[ballIndex].event : '1'; // Default to '1' if ball somehow doesn't exist
             
             // Event handlers for popover
             optionsContainer.querySelectorAll('button').forEach(btn => {
                 btn.onclick = () => {
                     selectedEvent = btn.dataset.event;
-                    // For single-action buttons, we can just replace directly
                     document.getElementById('popover-replace-btn').click();
                 };
             });
@@ -6857,14 +6972,15 @@ function openEditModal() {
                 const battingTeamBallsInput = document.getElementById(`edit-${battingTeamKey}-balls`);
 
                 let newOverRuns = editedOver.reduce((acc, ball) => acc + parseBallEvent(ball.event), 0);
-                battingTeamScoreInput.value = scoreBeforeOver + newOverRuns;
+                battingTeamScoreInput.value = toInt(scoreBeforeOver + newOverRuns); // Use toInt
 
                 let legalBalls = editedOver.filter(ball => isLegalDelivery(ball.event)).length;
-                let originalLegalBalls = state.currentOver.filter(ball => isLegalDelivery(ball.event)).length;
+                // --- FIX: Use originalOverOnEdit for the original ball count ---
+                let originalLegalBalls = originalOverOnEdit.filter(ball => isLegalDelivery(ball.event)).length;
                 
-                let baseOvers = state[battingTeamKey].overs;
-                let baseBalls = state[battingTeamKey].balls - originalLegalBalls;
-                if (baseBalls < 0) { // Borrow from overs if needed
+                let baseOvers = toInt(state[battingTeamKey].overs);
+                let baseBalls = toInt(state[battingTeamKey].balls) - originalLegalBalls;
+                if (baseBalls < 0) { 
                     baseOvers -= 1;
                     baseBalls += 6;
                 }
@@ -6880,22 +6996,43 @@ function openEditModal() {
                 popover.style.display = 'none';
             };
 
+            // --- FIX: All buttons now handle full ball objects ---
             document.getElementById('popover-replace-btn').onclick = () => {
                 saveHistory();
                 const newRuns = parseBallEvent(selectedEvent);
-                editedOver[ballIndex] = { event: selectedEvent, runs: newRuns };
+                // Update existing ball object
+                editedOver[ballIndex].event = selectedEvent;
+                editedOver[ballIndex].runs = newRuns;
+                // If event changed from Wicket to non-Wicket, clear dismissal info
+                if (!(selectedEvent || '').includes('W') && editedOver[ballIndex].dismissalInfo) {
+                    editedOver[ballIndex].dismissalInfo = null;
+                }
                 recalculateAndClose();
             };
             document.getElementById('popover-insertBefore-btn').onclick = () => {
                 saveHistory();
                 const newRuns = parseBallEvent(selectedEvent);
-                editedOver.splice(ballIndex, 0, { event: selectedEvent, runs: newRuns });
+                const templateBall = editedOver[ballIndex]; // Get metadata from current ball
+                const newBall = {
+                    ...templateBall, // Clones batterId, bowlerId, etc.
+                    event: selectedEvent,
+                    runs: newRuns,
+                    dismissalInfo: null // New balls can't be wickets from this simple UI
+                };
+                editedOver.splice(ballIndex, 0, newBall);
                 recalculateAndClose();
             };
             document.getElementById('popover-insertAfter-btn').onclick = () => {
                 saveHistory();
                 const newRuns = parseBallEvent(selectedEvent);
-                editedOver.splice(parseInt(ballIndex) + 1, 0, { event: selectedEvent, runs: newRuns });
+                const templateBall = editedOver[ballIndex]; // Get metadata from current ball
+                const newBall = {
+                    ...templateBall, // Clones batterId, bowlerId, etc.
+                    event: selectedEvent,
+                    runs: newRuns,
+                    dismissalInfo: null // New balls can't be wickets from this simple UI
+                };
+                editedOver.splice(parseInt(ballIndex) + 1, 0, newBall);
                 recalculateAndClose();
             };
             document.getElementById('popover-delete-btn').onclick = () => {
@@ -6906,28 +7043,26 @@ function openEditModal() {
         }
 
         function saveMatchEdits() {
-            saveState(); // Log state before making major changes for undo history
+            // Log state before making major changes for undo history
+            // We save BEFORE applying edits, so undo reverts to the state before saveMatchEdits was called.
+            saveState(); 
 
             // --- 1. GATHER AND SANITIZE ALL NEW VALUES FROM THE FORM ---
             const newVenue = document.getElementById('edit-venue').value.toUpperCase();
-            const newTotalOvers = toInt(document.getElementById('edit-total-overs').value, state.totalOvers); // Use helper, default to current state value if invalid
+            const newTotalOvers = toInt(document.getElementById('edit-total-overs').value, state.totalOvers);
 
-            // Validate required fields
+            // Validation function remains the same
             const validateNumberInput = (id, fieldName) => {
                 const input = document.getElementById(id);
                 const value = input.value;
-                 // Use toNum for potentially non-integer values initially, then check finite
-                const parsedNum = toNum(value, NaN); // Use NaN to explicitly check for invalid parse
-                if (!Number.isFinite(parsedNum) || parsedNum < 0) { // Check if finite AND non-negative
+                const parsedNum = toInt(value, NaN); 
+                
+                if (!Number.isFinite(parsedNum) || parsedNum < 0) {
                      showAlert(`Invalid input for ${fieldName}. Please enter a valid non-negative number.`);
-                     input.focus(); // Focus the problematic input
-                     return null; // Indicate failure
+                     input.focus(); 
+                     return null; 
                 }
-                 // If it's supposed to be an integer (like overs, balls, wickets, score), parse again or round
-                if (['score', 'wickets', 'overs', 'balls'].some(suffix => id.includes(suffix))) {
-                    return toInt(parsedNum); // Ensure integer for these fields
-                }
-                return parsedNum; // Return the potentially float number if not score/wickets/overs/balls
+                return parsedNum;
             };
 
             const team1Score = validateNumberInput('edit-team1-score', 'Team 1 Score');
@@ -6939,19 +7074,16 @@ function openEditModal() {
             const team2Overs = validateNumberInput('edit-team2-overs', 'Team 2 Overs');
             const team2Balls = validateNumberInput('edit-team2-balls', 'Team 2 Balls');
 
-            // If any validation failed, stop the save process
+            // If any validation failed, stop the save process (do not modify state)
             if ([team1Score, team1Wickets, team1Overs, team1Balls, team2Score, team2Wickets, team2Overs, team2Balls].includes(null)) {
                 return; 
             }
-             // Ensure balls are within 0-5 range
              if (team1Balls > 5 || team2Balls > 5) {
                  showAlert('Invalid input for Balls. Must be between 0 and 5.');
-                 // Optionally focus the incorrect input
                  if(team1Balls > 5) document.getElementById('edit-team1-balls').focus();
                  else document.getElementById('edit-team2-balls').focus();
                  return;
              }
-             // Ensure wickets don't exceed players-1
              const maxWickets = toInt(state.playersPerSide, 11) - 1;
               if (team1Wickets > maxWickets || team2Wickets > maxWickets) {
                  showAlert(`Invalid input for Wickets. Cannot exceed ${maxWickets} for a ${state.playersPerSide}-a-side game.`);
@@ -6959,46 +7091,60 @@ function openEditModal() {
                  else document.getElementById('edit-team2-wickets').focus();
                  return;
              }
-
-
-            const newTeam1Data = {
-                name: document.getElementById('edit-team1-name').value.toUpperCase(),
-                score: team1Score,
-                wickets: team1Wickets,
-                overs: team1Overs,
-                balls: team1Balls,
-                logo: document.getElementById('edit-team1-logo-preview').src
-            };
-            const newTeam2Data = {
-                name: document.getElementById('edit-team2-name').value.toUpperCase(),
-                score: team2Score,
-                wickets: team2Wickets,
-                overs: team2Overs,
-                balls: team2Balls,
-                logo: document.getElementById('edit-team2-logo-preview').src
-            };
-
-              // --- 2. APPLY ALL GATHERED CHANGES TO THE MAIN STATE ---
+             
+            // --- 2. APPLY VALIDATED CHANGES DIRECTLY TO THE STATE (Merge carefully) ---
             state.venue = newVenue;
             state.totalOvers = newTotalOvers;
 
-            state.team1 = { ...state.team1, ...newTeam1Data };
-            state.team2 = { ...state.team2, ...newTeam2Data };
+            // Apply Team 1 updates (from manual input fields)
+            state.team1.name = document.getElementById('edit-team1-name').value.toUpperCase();
+            state.team1.score = team1Score; 
+            state.team1.wickets = team1Wickets; 
+            state.team1.overs = team1Overs; 
+            state.team1.balls = team1Balls; 
+            state.team1.logo = document.getElementById('edit-team1-logo-preview').src; 
 
-            state.currentOver = JSON.parse(JSON.stringify(editedOver));
+            // Apply Team 2 updates (from manual input fields)
+            state.team2.name = document.getElementById('edit-team2-name').value.toUpperCase();
+            state.team2.score = team2Score; 
+            state.team2.wickets = team2Wickets; 
+            state.team2.overs = team2Overs; 
+            state.team2.balls = team2Balls; 
+            state.team2.logo = document.getElementById('edit-team2-logo-preview').src; 
+            
+            // --- 3. RECONCILE EDITED OVER WITH INNINGS HISTORY ---
+            // originalOverOnEdit was set when the modal was opened (with full ball data)
+            const originalOverLength = originalOverOnEdit.length;
+            const battingTeamKey = state.battingTeam;
+            const history = state[battingTeamKey].inningsHistory;
+            
+            // newOver is the array of full ball objects that was just edited
+            const newOver = JSON.parse(JSON.stringify(editedOver)); 
 
-            // --- 3. RECALCULATE ALL PLAYER STATS FROM INNINGS HISTORY ---
-            // This is the most robust way to ensure stats are correct after any edit.
-            recalculateAllPlayerStats();
+            if (originalOverLength > 0 && history.length >= originalOverLength) {
+                const historyStartIdx = history.length - originalOverLength;
+                // Splice the history: remove old balls, add new ones
+                history.splice(historyStartIdx, originalOverLength, ...newOver);
+            } else {
+                // Original over was empty, or history is shorter. Just append.
+                history.push(...newOver);
+            }
+            
+            // NOW apply the edited over to the simplified state.currentOver
+            state.currentOver = newOver.map(ball => ({ event: ball.event, runs: ball.runs }));
 
-            // --- 4. FINALIZE ---
+            // --- 4. RECALCULATE PLAYER STATS ---
+            // This will now use the *updated* inningsHistory and fix all player stats (runs, 4s, 6s, SR, etc.)
+            // to match the ball-by-ball data, which aligns with the user's Acceptance Criteria.
+            recalculateAllPlayerStats(); 
+            
+            // --- 5. FINALIZE ---
             closeModal('edit-match-modal');
-            updateUI(); // Re-render everything with the fresh, correct state
-            debouncedSave();
+            updateUI(); // Re-render everything with the updated state
+            debouncedSave(); // Autosave the updated state
 
             showAlert('Match state has been updated successfully.');
-        }
-
+}
 
         function previewDownload(format) {
              const { jsPDF } = window.jspdf;
