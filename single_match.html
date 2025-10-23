@@ -2,7 +2,7 @@
     <meta charset="UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Cricker - Cricket Live Scoring</title>
+    <title>Cricker - Live Scoring</title>
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2563eb"/>
@@ -205,144 +205,34 @@
         .summary-pop-in-animation { animation: summary-pop-in 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
         @keyframes summary-pop-in { 0% { opacity: 0; transform: translateY(20px) scale(0.9); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
         
-        /* Prevent body scroll when any modal is open */
-        body.modal-open { overflow: hidden; }
-
-        /* Innings Break Modal Animation & Styles */
-        #innings-break-modal .modal-content { 
-            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease; 
-            /* Base styles for larger screens */
-            width: 90%; 
-            max-width: 36rem; /* max-w-2xl */
-            max-height: 90vh;
-            display: flex;
-            flex-direction: column;
-        }
-        .modal-overlay.hidden #innings-break-modal .modal-content { 
-            transform: scale(0.8) !important; 
-            opacity: 0 !important; 
-        }
-
-        #innings-break-modal .modal-scroll {
-            overflow-y: auto;
-            flex-grow: 1; /* Allows this area to take up space and scroll */
-            padding: 1.5rem; /* p-6 */
-        }
-        
-        #innings-break-modal .modal-actions {
-            position: sticky; /* Make button sticky at the bottom */
-            bottom: 0;
-            background-color: #1f2937; /* bg-gray-800 */
-            padding: 1rem; /* p-4 */
-             padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px)); /* Add safe area padding */
-            border-top: 1px solid #374151; /* border-gray-700 */
-            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1), 0 -2px 4px -1px rgba(0, 0, 0, 0.06);
-            margin-top: auto; /* Push to bottom */
-            flex-shrink: 0; /* Prevent shrinking */
-            z-index: 10; /* Ensure it's above scrolled content */
-            text-align: center;
-        }
-
-        /* Target container animation */
+        /* Innings Break Modal Animation */
+        #innings-break-modal .modal-content { transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease; }
+        .modal-overlay.hidden .modal-content { transform: scale(0.8) !important; opacity: 0 !important; }
         .target-container { animation: pulse-bg 2.5s infinite; }
         @keyframes pulse-bg { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.7); } 70% { transform: scale(1.02); box-shadow: 0 0 0 12px rgba(234, 179, 8, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(234, 179, 8, 0); } }
 
-        /* Mobile Specific Adjustments for Innings Break Modal */
-        @media (max-width: 640px) { /* sm breakpoint */
-            #innings-break-modal .modal-content {
-                width: 92vw;
-                max-height: 80vh; 
-                 border-radius: 1rem; /* rounded-xl */
-            }
-             #innings-break-modal .modal-scroll {
-                 padding: 1rem; /* p-4 on mobile */
-             }
-             #innings-break-modal h2#innings-break-title {
-                 /* clamp(16px, 4.5vw, 20px) -> approx text-base to text-lg */
-                 font-size: 1.125rem; /* text-lg */
-                 margin-bottom: 0.5rem; /* mb-2 */
-             }
-             #innings-summary-content {
-                 font-size: 0.8rem; /* Smaller body text */
-                 margin-top: 1rem; margin-bottom: 1rem; /* my-4 */
-                 space-y: 0.75rem; /* space-y-3 */
-             }
-              #innings-summary-content .bg-gray-900 { /* Score box */
-                 padding: 0.5rem; /* p-2 */
-             }
-             #innings-summary-content span#ib-batting-team-name { font-size: 1rem; } /* text-base */
-             #innings-summary-content span#ib-batting-team-score { font-size: 1.5rem; } /* text-2xl */
-             #innings-summary-content span#ib-batting-team-overs { font-size: 0.7rem; }
-             #innings-summary-content #ib-run-rate { font-size: 0.75rem; } /* text-xs */
-
-             #innings-summary-content h4 { font-size: 0.7rem; margin-bottom: 0.25rem; } /* mb-1 */
-             #innings-summary-content ul { padding: 0.3rem; } /* tighter list padding */
-             #innings-summary-content li { font-size: 0.75rem; } /* text-xs */
-             #innings-summary-content #ib-fow { font-size: 0.65rem; line-height: 1.2; } /* Smaller FOW */
-              #innings-summary-content .grid > div > h4 { font-size: 0.65rem; }
-             #innings-summary-content .grid > div > p { font-size: 0.7rem; }
-
-             .target-container {
-                 padding: 0.5rem 0.75rem; /* py-2 px-3 */
-             }
-             .target-container p {
-                 line-height: 1.2; /* Tighter lines */
-             }
-             #innings-break-target-team { font-size: 0.8rem; }
-             #innings-break-target-runs { font-size: 1.5rem; } /* text-2xl */
-             .target-container p:last-child { font-size: 0.8rem; }
-
-              #innings-break-modal .modal-actions {
-                 padding: 0.75rem; /* p-3 */
-                 padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
-             }
-              #start-second-innings-btn {
-                 padding: 0.5rem 1rem; /* py-2 px-4 */
-                 font-size: 0.875rem; /* text-sm */
-              }
-        }
-
         /* Win Modal Styles & Animations */
-        #win-modal {
-            /* Lighten backdrop, add blur */
-            background-color: rgba(0, 0, 0, 0.25);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-            /* Add padding for safe areas */
-            padding: env(safe-area-inset-top, 1rem) env(safe-area-inset-right, 1rem) env(safe-area-inset-bottom, 1rem) env(safe-area-inset-left, 1rem);
-        }
         #win-modal .win-modal-content { 
             background: radial-gradient(circle, #2d3748 0%, #1a202c 100%); 
             position: relative; /* Ensure content is above the fixed confetti */
             z-index: 10;
-            /* Sizing adjustments */
-            width: 88vw;
-            max-width: 420px;
-            max-height: 70vh; /* Limit height */
-            border-radius: 1rem; /* rounded-xl */
-            border-width: 1px; /* Thinner border */
-            /* Ensure content scrolls if it overflows */
-            display: flex; /* Use flex to manage child height */
-            flex-direction: column;
-        }
-        #win-modal .win-modal-body {
-            padding: 0.75rem 1rem; /* p-3 sm:p-4 equivalent */
-            overflow-y: auto; /* Allow body content to scroll */
-            flex-grow: 1; /* Allow body to take available space */
-            space-y: 0.75rem; /* space-y-3 */
         }
         
         /* Celebration - Confetti */
         #confetti-container {
-            position: fixed; /* Keep fixed */
+            position: fixed; /* Changed from absolute */
             inset: 0;
             pointer-events: none;
             z-index: 5; /* Behind modal content, but inside modal overlay */
-            /* Canvas would go here if implemented */
         }
         #confetti-container i { 
-            position: absolute; width: 8px; height: 16px; background: #fde047; 
-            top: -20px; opacity: 0; animation: confetti-fall 4s linear infinite; 
+            position: absolute; 
+            width: 8px; 
+            height: 16px; 
+            background: #fde047; 
+            top: -20px; 
+            opacity: 0; 
+            animation: confetti-fall 4s linear infinite; 
         }
         @keyframes confetti-fall { 
             0% { transform: translateY(0) rotate(0); opacity: 1; } 
@@ -351,196 +241,115 @@
 
         /* Celebration - Fireworks */
         .firework {
-            position: absolute; width: 4px; height: 4px; background: white;
-            border-radius: 50%; opacity: 1; animation: firework-burst 1.2s ease-out forwards;
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+            opacity: 1;
+            animation: firework-burst 1.2s ease-out forwards;
         }
         @keyframes firework-burst {
             0% { transform: scale(0.5); opacity: 1; }
             100% { transform: scale(25); opacity: 0; }
         }
 
-        /* Celebration - Victory Glow (Thinner) */
+        /* Celebration - Victory Glow */
         .victory-glow {
             animation: victory-glow-animation 1.5s ease-in-out infinite alternate;
         }
         @keyframes victory-glow-animation {
-            from { box-shadow: 0 0 8px 2px rgba(253, 224, 71, 0.4), 0 0 3px 1px rgba(255, 255, 255, 0.6); }
-            to   { box-shadow: 0 0 15px 4px rgba(253, 224, 71, 0.6), 0 0 5px 2px rgba(255, 255, 255, 0.9); }
+            from { box-shadow: 0 0 15px 5px rgba(253, 224, 71, 0.5), 0 0 5px 2px rgba(255, 255, 255, 0.7); }
+            to   { box-shadow: 0 0 25px 10px rgba(253, 224, 71, 0.7), 0 0 10px 4px rgba(255, 255, 255, 1); }
         }
         #win-modal h2.victory-glow {
-             text-shadow: 0 0 6px rgba(253, 224, 71, 0.6);
+             text-shadow: 0 0 10px rgba(253, 224, 71, 0.7);
              animation: victory-glow-text-animation 1.5s ease-in-out infinite alternate;
         }
          @keyframes victory-glow-text-animation {
-            from { text-shadow: 0 0 6px rgba(253, 224, 71, 0.4); }
-            to   { text-shadow: 0 0 12px rgba(253, 224, 71, 0.7); }
+            from { text-shadow: 0 0 10px rgba(253, 224, 71, 0.5); }
+            to   { text-shadow: 0 0 20px rgba(253, 224, 71, 0.8); }
         }
 
-        /* Compact Header - Adjusted Logo Size */
-        #wm-winner-logo { /* Corrected ID selector */
-             /* Updated Size */
-             width: auto; /* Allow natural width based on max-width */
-             height: auto; /* Allow natural height based on max-width */
-             max-width: 120px; /* Limit maximum width */
-             max-height: 80px; /* Limit maximum height for very wide logos */
-             object-fit: contain; /* Maintain aspect ratio */
-             border-width: 2px; /* border-2 */
-             margin-bottom: 0.5rem; /* Add some space below logo */
-             /* Ensure centering - mx-auto is already applied via Tailwind in HTML */
-             filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); /* Add subtle shadow */
-        }
-        /* Keep victory glow animation subtle */
-        @keyframes victory-glow-animation {
-            from { box-shadow: 0 0 8px 2px rgba(253, 224, 71, 0.4), 0 0 3px 1px rgba(255, 255, 255, 0.6); filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); }
-            to   { box-shadow: 0 0 15px 4px rgba(253, 224, 71, 0.6), 0 0 5px 2px rgba(255, 255, 255, 0.9); filter: drop-shadow(0 6px 10px rgba(0,0,0,0.25)); }
-        }
-
-        #wm-header-title {
-            /* clamp(18px, 5vw, 22px) -> Tailwind approx: text-lg sm:text-xl */
-            font-size: 1.125rem; /* text-lg */
-            line-height: 1.5rem;
-            margin-top: 0; /* Remove top margin */
-        }
-        @media (min-width: 640px) {
-            #wm-header-title {
-                font-size: 1.25rem; /* sm:text-xl */
-                line-height: 1.75rem;
-            }
-        }
-        #wm-header-margin {
-            /* Smaller text, tighter spacing */
-            font-size: 0.875rem; /* text-sm */
-            line-height: 1.25rem;
-             margin-top: 0.1rem; /* Adjust as needed */
-        }
-
-        /* Compact Scorelines */
-        #wm-scorelines-block {
-             padding: 0.5rem; /* p-2 */
-             font-size: 0.75rem; /* text-xs */
-             line-height: 1rem;
-             space-y: 0.25rem; /* space-y-1 */
-        }
-        #wm-scorelines-block img {
-             width: 1rem; /* w-4 */
-             height: 1rem; /* h-4 */
-        }
-        #wm-scorelines-block span:first-child { /* Team name container */
-            color: white;
-            gap: 0.25rem; /* gap-1 */
-        }
-         #wm-scorelines-block span:last-child b { /* Score */
-            font-size: 0.875rem; /* text-sm */
-        }
-         #wm-scorelines-block span:last-child span { /* Overs/RR */
-             margin-left: 0.25rem; /* ml-1 */
-         }
-
-
-        /* Compact Top Performers */
-        #wm-performers-block h4 {
-             font-size: 0.65rem; /* Smaller than text-xs */
-             margin-bottom: 0.1rem;
-        }
-        #wm-performers-block > div > div { /* Individual performer div */
-            font-size: 0.7rem; /* Smaller than text-xs */
-            line-height: 1;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-         #wm-performers-block > div > div p:first-child { /* Name */
-             font-weight: 500; /* font-medium */
-         }
-         #wm-performers-block > div > div p:last-child { /* Stats */
-             color: #9ca3af; /* text-gray-400 */
-         }
-
-        /* Compact MoM Picker Styles */
-        #wm-mom-picker-list {
-            max-height: calc(3 * 44px + 2 * 0.375rem); /* Max 3 items + gaps visible */
-            padding: 0.3rem; /* Tighter padding */
-        }
+        /* MoM Picker Styles */
         #wm-mom-picker-list label {
             display: flex;
             align-items: center;
-            min-height: 44px; /* Ensure tappable height */
-            padding: 0.3rem 0.5rem; /* Reduced padding */
+            padding: 0.5rem;
             background-color: rgba(255, 255, 255, 0.05);
-            border-radius: 0.25rem; /* rounded-sm */
+            border-radius: 0.375rem;
             cursor: pointer;
             transition: background-color 0.2s;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            gap: 0.5rem; /* gap-2 */
         }
         #wm-mom-picker-list label:hover {
             background-color: rgba(255, 255, 255, 0.15);
         }
-        #wm-mom-picker-list label img {
-            width: 28px; /* w-7 */
-            height: 28px; /* h-7 */
-            flex-shrink: 0;
-        }
         #wm-mom-picker-list input[type="radio"] {
-            /* Kept previous styles, size might be okay */
-             margin-right: 0.5rem; /* Reduced margin */
-             width: 1em; height: 1em;
+            -webkit-appearance: none;
+            appearance: none;
+            background-color: #fff;
+            margin-right: 0.75rem;
+            font: inherit;
+            color: currentColor;
+            width: 1.15em;
+            height: 1.15em;
+            border: 0.15em solid currentColor;
+            border-radius: 50%;
+            transform: translateY(-0.075em);
+            display: grid;
+            place-content: center;
+            border-color: #9ca3af;
         }
-        #wm-mom-picker-list .mom-picker-details {
-            /* Container for name and stats to allow truncation */
-            flex-grow: 1;
-            overflow: hidden;
-            white-space: nowrap;
+        #wm-mom-picker-list input[type="radio"]::before {
+            content: "";
+            width: 0.65em;
+            height: 0.65em;
+            border-radius: 50%;
+            transform: scale(0);
+            transition: 120ms transform ease-in-out;
+            box-shadow: inset 1em 1em #3b82f6;
+        }
+        #wm-mom-picker-list input[type="radio"]:checked {
+            border-color: #3b82f6;
+        }
+        #wm-mom-picker-list input[type="radio"]:checked::before {
+            transform: scale(1);
         }
         #wm-mom-picker-list .mom-picker-name {
-            font-weight: 600; color: white;
-            font-size: 0.8rem; /* Slightly smaller */
-            display: block; /* Ensure it takes full width */
-            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            font-weight: 600;
+            color: white;
         }
-         #wm-mom-picker-list .mom-picker-name span { /* Team name */
-             font-size: 0.65rem; color: #9ca3af;
-         }
         #wm-mom-picker-list .mom-picker-perf {
-            font-size: 0.65rem; color: #d1d5db; /* Lighter gray */
-            display: block; /* Ensure it takes full width */
-            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-        }
-        #wm-mom-show-all {
             font-size: 0.75rem;
-            color: #60a5fa; /* blue-400 */
-            text-align: center;
-            margin-top: 0.25rem;
-            cursor: pointer;
-        }
-        #wm-mom-show-all:hover {
-            text-decoration: underline;
+            color: #d1d5db;
         }
         
-        /* Compact Meta Line & Button */
-        #wm-meta-line {
-            padding-top: 0.5rem; /* pt-2 */
-            margin-top: 0.5rem; /* Add some space above */
-            font-size: 0.65rem; /* Smaller text */
-        }
-        #win-modal-confirm-btn {
-            padding-top: 0.6rem; /* py-2.5 approx */
-            padding-bottom: 0.6rem;
-            min-height: 44px; /* Ensure tappable */
-            font-size: 0.875rem; /* text-sm */
-        }
-
-        /* Standard Animations (Unchanged, but apply to new structure) */
+        /* Standard Animations */
         #win-modal .animate-pop-in { animation: pop-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; opacity: 0; transform: scale(0.5); }
         #win-modal .animate-slide-up { animation: slide-up 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; opacity: 0; transform: translateY(20px); animation-delay: var(--delay, 0s); }
         @keyframes pop-in { to { opacity: 1; transform: scale(1); } }
         @keyframes slide-up { to { opacity: 1; transform: translateY(0); } }
 
-        /* Respect Reduced Motion (Unchanged) */
+        /* FIX: Set team name color to white in scorelines */
+        #win-modal [id^="wm-scoreline-"] span:first-child {
+            color: white;
+        }
+
+        /* Respect Reduced Motion */
         @media (prefers-reduced-motion: reduce) {
-            #confetti-container i, .firework { animation: none; display: none; }
-            .victory-glow, #win-modal h2.victory-glow { animation: none; }
-            #win-modal .animate-pop-in, #win-modal .animate-slide-up { animation: none; opacity: 1; transform: none; }
+            #confetti-container i, .firework {
+                animation: none;
+                display: none;
+            }
+            .victory-glow, #win-modal h2.victory-glow {
+                animation: none;
+            }
+            #win-modal .animate-pop-in, #win-modal .animate-slide-up {
+                animation: none;
+                opacity: 1;
+                transform: none;
+            }
         }
 
         /* --- FINAL LAYOUT FIX --- */
@@ -811,19 +620,8 @@
 
         .summary-innings-card h3 { font-size: 1.1rem; font-weight: 700; padding: 0.6rem; background-color: #f3f4f6; border-radius: 0.375rem; margin-bottom: 0.5rem; position: sticky; top: 0; z-index: 10; }
         .summary-table-container { overflow-x: auto; }
-        .summary-table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            /* Remove min-width from global scope, handled in media query */
-            /* table-layout: auto; /* Let browser decide column widths */
-        }
-        .summary-table th, .summary-table td { 
-            padding: 0.6rem 0.5rem; 
-            text-align: left; 
-            border-bottom: 1px solid #f3f4f6; 
-            font-size: 0.85rem; 
-            /* Remove white-space: nowrap globally, handled in media query */
-        }
+        .summary-table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        .summary-table th, .summary-table td { padding: 0.6rem 0.5rem; text-align: left; border-bottom: 1px solid #f3f4f6; font-size: 0.85rem; white-space: nowrap; }
         .summary-table th { font-weight: 600; color: #4b5563; font-size: 0.75rem; text-transform: uppercase; }
         .summary-table tr:nth-child(even) { background-color: #f9fafb; }
         .summary-table .text-right { text-align: right; }
@@ -856,32 +654,14 @@
         #mom-choice-modal .player-rank-score { margin-left: auto; font-weight: 700; font-size: 1.1rem; color: #1e3a8a; }
 
         @media (max-width: 768px) {
-            /* --- Keep existing mobile layout rules --- */
-            body { font-size: 14px; }
-            #setup-screen, #choice-screen { padding: 0; }
-            .setup-card, .choice-card { max-width: 100%; min-height: 100vh; border-radius: 0; box-shadow: none; border: none; }
-            #app { overflow: hidden; }
-            #app > .flex-grow { padding: 8px; display: flex; flex-direction: column; }
-            #match-header h1 { font-size: 1rem; font-weight: 700; }
-            #match-header p { font-size: 0.65rem; }
-            .lg\\:col-span-2, .lg\\:col-span-1 { overflow-y: hidden; }
-             .lg\\:col-span-2 { flex-grow: 1; min-height: 0; display: flex; flex-direction: column; }
-            .lg\\:col-span-2 > .space-y-2 { flex-grow: 1; overflow-y: auto; min-height: 0; }
-            .lg\\:col-span-1 { flex-shrink: 0; display: flex; flex-direction: column; min-height: 0; }
-            #scoring-controls { display: flex; flex-direction: column; }
-            .scoring-grid button { padding-top: 8px; padding-bottom: 8px; font-size: 0.875rem; }
-            .scoring-grid button:nth-last-child(-n+4) { padding-top: 4px; padding-bottom: 4px; font-size: 0.8rem; min-height: 44px; }
-            .scoring-grid button > .text-xl { font-size: 1.125rem; }
-            .scoring-grid button > .text-xs { font-size: 0.7rem; margin-top: 1px; }
-            #live-commentary-box { padding: 0.2rem 0.5rem; }
-            #live-commentary-content { margin-top: 0.1rem; padding-top: 0.15rem; }
-            #live-commentary { font-size: 0.6rem; line-height: 0.85rem; }
-            #scoreboard { padding: 4px; }
-            #batting-table th, #batting-table td, #bowling-table th, #bowling-table td { padding: 6px 2px; font-size: 0.8rem; }
-            #batting-table td:first-child, #bowling-table td:first-child { font-size: 0.75rem; font-weight: 500; }
-            #batting-table th.p-1, #bowling-table th.p-1 { font-size: 0.7rem; }
-            
-            /* --- MODIFIED MOBILE SUMMARY STYLES --- */
+            .summary-table-container { overflow-x: hidden; }
+            .summary-table { min-width: 100%; table-layout: fixed; }
+            .summary-table th, .summary-table td { font-size: 0.7rem; padding: 0.5rem 0.25rem; white-space: normal; }
+            .summary-table th { font-size: 0.65rem; }
+            .summary-table th:first-child, .summary-table td:first-child { width: 35%; padding-left: 0.5rem; }
+            .summary-table th:nth-child(2), .summary-table td:nth-child(2) { width: 30%; }
+
+            /* --- NEW MOBILE SUMMARY STYLES --- */
             #summary-screen { padding: 0.25rem; }
             #summary-content { border-radius: 0.5rem; }
             #summary-content > header { padding: 0.75rem; }
@@ -901,47 +681,14 @@
             #summary-main-content { padding: 0.5rem; }
 
             .summary-innings-card h3 { font-size: 0.9rem; padding: 0.5rem; margin-bottom: 0.25rem; }
-            
-            /* Table Responsiveness */
-            .summary-table-container { overflow-x: hidden; } /* Prevent horizontal scroll */
-            .summary-table { 
-                width: 100%; 
-                table-layout: auto; /* Allow browser to adjust columns */
-                min-width: unset; /* Remove min-width */
-            } 
-            .summary-table th, .summary-table td { 
-                padding: 4px 6px; /* Tighter padding */
-                font-size: 13px; /* Smaller data font */
-                white-space: normal; /* Allow wrapping */
-                /* Remove fixed widths */
-            }
-            .summary-table th { 
-                font-size: 12px; /* Smaller header font */
-            }
-            .summary-table th:first-child, .summary-table td:first-child { /* Player name */
-                 padding-left: 8px; /* Keep slightly more padding for the first column */
-                 /* width: unset; Remove fixed width */
-            }
-             .summary-table th:nth-child(2), .summary-table td:nth-child(2) { /* Dismissal */
-                 /* width: unset; Remove fixed width */
-                 color: #6b7280; /* text-gray-500 */
-             }
-            .summary-table th.text-right, .summary-table td.text-right {
-                 padding-right: 8px; /* Keep right padding for right-aligned columns */
-            }
+            .summary-table-container { overflow-x: auto; } /* Allow horizontal scroll */
+            .summary-table { min-width: 450px; } /* Force a min-width to prevent squishing */
+            .summary-table th, .summary-table td { padding: 0.4rem 0.3rem; font-size: 0.75rem; white-space: nowrap; }
 
-            .summary-extras-row td, .summary-total-row td { 
-                font-size: 12px; /* Smaller extras/total font */
-            }
-            .summary-dnb-section, .summary-fow-section { 
-                margin-top: 0.75rem; padding: 0 0.25rem; 
-            }
-            .summary-dnb-section h4, .summary-fow-section h4 { 
-                font-size: 12px; 
-            }
-            .summary-dnb-section p, .summary-fow-list { 
-                font-size: 12px; line-height: 1.4; 
-            }
+            .summary-extras-row td, .summary-total-row td { font-size: 0.8rem; }
+            .summary-dnb-section, .summary-fow-section { margin-top: 0.75rem; padding: 0 0.25rem; }
+            .summary-dnb-section h4, .summary-fow-section h4 { font-size: 0.8rem; }
+            .summary-dnb-section p, .summary-fow-list { font-size: 0.75rem; line-height: 1.4; }
         }
     </style>
 </head>
@@ -1684,104 +1431,100 @@
     </div>
 </div>
 
-    <div id="win-modal" class="modal-overlay fixed inset-0 flex justify-center items-center hidden z-50">
+    <div id="win-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center hidden z-50 p-4">
         <div id="confetti-container" class="fixed inset-0 pointer-events-none z-[1]"></div>
 
-        <div class="win-modal-content modal-content bg-gray-900 shadow-xl text-center transform scale-100 relative overflow-hidden border border-yellow-400/30">
-            <button onclick="closeModal('win-modal')" class="absolute top-2 right-2 text-gray-400 hover:text-white transition-colors z-20 p-1">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
+        <div class="win-modal-content modal-content bg-gray-900 rounded-2xl shadow-xl w-full max-w-lg text-center transform scale-100 relative overflow-hidden border-2 border-yellow-400/50">
+            <div class="relative p-6 space-y-4 z-10">
+                <button onclick="closeModal('win-modal')" class="absolute top-0 right-0 mt-4 mr-4 text-gray-500 hover:text-white transition-colors z-20">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
 
-            <div class="win-modal-body relative z-10">
                 <div class="flex flex-col items-center animate-pop-in">
-                     <img id="wm-winner-logo" src="" class="mx-auto border-white shadow-lg"> 
-                    <h2 id="wm-winner-name" class="font-black uppercase text-white"></h2> 
-                    <p id="wm-win-margin" class="text-yellow-400 font-bold"></p>
-                </div>
+                    <img id="wm-winner-logo" src="" class="w-24 h-24 mx-auto rounded-full object-cover border-4 border-white shadow-lg">
+                    <h2 id="wm-winner-name" class="text-3xl font-black uppercase text-white mt-3"></h2>
+                    <p id="wm-win-margin" class="text-lg text-yellow-400 font-bold"></p>
                 </div>
 
-                <div id="wm-scorelines-block" class="bg-black/20 rounded-md text-left animate-slide-up" style="--delay: 0.1s;">
+                <div class="p-3 bg-black/20 rounded-lg text-sm space-y-2 text-left animate-slide-up" style="--delay: 0.2s;">
                     <p id="wm-scoreline-1" class="flex justify-between items-center font-mono"></p>
                     <p id="wm-scoreline-2" class="flex justify-between items-center font-mono"></p>
                 </div>
 
-                <div id="wm-performers-block" class="grid grid-cols-2 gap-3 text-left animate-slide-up" style="--delay: 0.2s;">
+                <div class="grid grid-cols-2 gap-4 text-xs text-left animate-slide-up" style="--delay: 0.3s;">
                     <div>
-                        <h4 class="font-bold text-gray-400 uppercase tracking-wider">Top Batters</h4>
-                        <div id="wm-top-batters" class="space-y-0.5 text-gray-200"></div>
+                        <h4 class="font-bold text-gray-400 mb-1">TOP BATTERS</h4>
+                        <div id="wm-top-batters" class="space-y-1 text-gray-200"></div>
                     </div>
                     <div>
-                        <h4 class="font-bold text-gray-400 uppercase tracking-wider">Top Bowlers</h4>
-                        <div id="wm-top-bowlers" class="space-y-0.5 text-gray-200"></div>
+                        <h4 class="font-bold text-gray-400 mb-1">TOP BOWLERS</h4>
+                        <div id="wm-top-bowlers" class="space-y-1 text-gray-200"></div>
                     </div>
                 </div>
 
-                <div id="wm-mom-picker-section" class="text-left animate-slide-up" style="--delay: 0.3s;">
-                    <h4 class="font-bold text-gray-400 mb-1 text-center text-xs tracking-wider">SELECT PLAYER OF THE MATCH</h4>
-                    <div id="wm-mom-picker-list" class="space-y-1.5 overflow-y-auto bg-black/20 rounded-md border border-gray-700/50">
+                <div id="wm-mom-picker-section" class="text-left animate-slide-up" style="--delay: 0.4s;">
+                    <h4 class="font-bold text-gray-400 mb-2 text-center text-xs tracking-wider">SELECT PLAYER OF THE MATCH</h4>
+                    <div id="wm-mom-picker-list" class="space-y-1.5 max-h-48 overflow-y-auto p-2 bg-black/20 rounded-lg border border-gray-700">
                         </div>
-                    <p id="wm-mom-show-all" class="hidden" onclick="toggleMomList()">Show all candidates</p>
                 </div>
 
-                <p id="wm-meta-line" class="text-center text-gray-500 border-t border-gray-700/50 animate-slide-up" style="--delay: 0.4s;"></p>
+                <p id="wm-meta-line" class="text-center text-xs text-gray-500 border-t border-gray-700 pt-3 animate-slide-up" style="--delay: 0.5s;"></p>
                 
-                <button id="win-modal-confirm-btn" class="w-full bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 transition-transform hover:scale-105 active:scale-100 animate-slide-up" style="--delay: 0.5s;">View Full Summary</button>
+                <button id="win-modal-confirm-btn" class="w-full mt-2 px-8 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-transform hover:scale-105 animate-slide-up" style="--delay: 0.6s;">Confirm & View Summary</button>
             </div>
         </div>
     </div>
     
     <div id="innings-break-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-75 flex flex-col justify-center items-center hidden z-[60] p-4">
-        <div class="modal-content bg-gray-800 text-white rounded-2xl shadow-xl relative overflow-hidden border-4 border-blue-500 transform scale-95">
+        <div class="modal-content bg-gray-800 text-white rounded-2xl shadow-xl p-6 sm:p-8 w-11/12 max-w-2xl text-center transform scale-95 relative overflow-hidden border-4 border-blue-500">
+            <h2 class="text-3xl sm:text-4xl font-black uppercase mb-4 tracking-wider" id="innings-break-title">INNINGS BREAK</h2>
             
-            <div class="modal-scroll"> 
-                <h2 class="text-3xl sm:text-4xl font-black uppercase mb-4 tracking-wider text-center" id="innings-break-title">INNINGS BREAK</h2>
-                
-                <div id="innings-summary-content" class="text-left space-y-4 my-6 text-sm">
-                    <div class="bg-gray-900 bg-opacity-50 p-3 rounded-lg border border-gray-700">
-                        <div class="flex justify-between items-center">
-                            <span id="ib-batting-team-name" class="text-xl font-bold"></span>
-                            <div class="text-right">
-                                <span id="ib-batting-team-score" class="text-3xl font-black"></span>
-                                <span id="ib-batting-team-overs" class="text-gray-400 ml-1"></span>
-                            </div>
+            <div id="innings-summary-content" class="text-left space-y-4 my-6 text-sm">
+                <div class="bg-gray-900 bg-opacity-50 p-3 rounded-lg border border-gray-700">
+                    <div class="flex justify-between items-center">
+                        <span id="ib-batting-team-name" class="text-xl font-bold"></span>
+                        <div class="text-right">
+                            <span id="ib-batting-team-score" class="text-3xl font-black"></span>
+                            <span id="ib-batting-team-overs" class="text-gray-400 ml-1"></span>
                         </div>
-                        <div id="ib-run-rate" class="text-sm text-gray-300 mt-1"></div>
                     </div>
+                    <div id="ib-run-rate" class="text-sm text-gray-300 mt-1"></div>
+                </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <h4 class="font-semibold mb-2 text-gray-400 tracking-wider">TOP BATTERS</h4>
-                            <ul id="ib-top-batters" class="space-y-1 bg-gray-900 bg-opacity-50 p-2 rounded-md"></ul>
-                        </div>
-                        <div>
-                            <h4 class="font-semibold mb-2 text-gray-400 tracking-wider">TOP BOWLERS</h4>
-                            <ul id="ib-top-bowlers" class="space-y-1 bg-gray-900 bg-opacity-50 p-2 rounded-md"></ul>
-                        </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-semibold mb-2 text-gray-400 tracking-wider">TOP BATTERS</h4>
+                        <ul id="ib-top-batters" class="space-y-1 bg-gray-900 bg-opacity-50 p-2 rounded-md"></ul>
                     </div>
-
-                    <div class="border-t border-gray-700 pt-3">
-                        <h4 class="font-semibold mb-1 text-gray-400 tracking-wider text-xs">FALL OF WICKETS</h4>
-                        <p id="ib-fow" class="text-xs leading-relaxed text-gray-300"></p>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4 text-sm border-t border-gray-700 pt-3">
-                        <div>
-                            <h4 class="font-semibold mb-1 text-gray-400 tracking-wider text-xs">EXTRAS</h4>
-                            <p id="ib-extras" class="font-semibold"></p>
-                        </div>
-                        <div>
-                            <h4 class="font-semibold mb-1 text-gray-400 tracking-wider text-xs">SUMMARY</h4>
-                            <p id="ib-boundaries" class="font-semibold"></p>
-                        </div>
+                    <div>
+                        <h4 class="font-semibold mb-2 text-gray-400 tracking-wider">TOP BOWLERS</h4>
+                        <ul id="ib-top-bowlers" class="space-y-1 bg-gray-900 bg-opacity-50 p-2 rounded-md"></ul>
                     </div>
                 </div>
-                
-                <div class="target-container bg-yellow-500 text-black py-3 px-4 rounded-lg text-center mb-4"> <p id="innings-break-target-team" class="font-semibold text-sm sm:text-base"></p>
-                    <p class="text-2xl sm:text-3xl font-black tracking-tighter" id="innings-break-target-runs"></p>
-                    <p class="font-semibold text-sm sm:text-base">to win</p>
+
+                <div class="border-t border-gray-700 pt-3">
+                    <h4 class="font-semibold mb-1 text-gray-400 tracking-wider text-xs">FALL OF WICKETS</h4>
+                    <p id="ib-fow" class="text-xs leading-relaxed text-gray-300"></p>
                 </div>
-            </div> <div class="modal-actions">
-                 <button id="start-second-innings-btn" class="px-8 py-3 bg-blue-600 font-bold rounded-lg hover:bg-blue-700 transition-transform hover:scale-105">Start 2nd Innings</button>
+                <div class="grid grid-cols-2 gap-4 text-sm border-t border-gray-700 pt-3">
+                    <div>
+                        <h4 class="font-semibold mb-1 text-gray-400 tracking-wider text-xs">EXTRAS</h4>
+                        <p id="ib-extras" class="font-semibold"></p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-1 text-gray-400 tracking-wider text-xs">SUMMARY</h4>
+                        <p id="ib-boundaries" class="font-semibold"></p>
+                    </div>
+                </div>
             </div>
+            
+            <div class="target-container bg-yellow-500 text-black py-3 px-4 rounded-lg">
+                <p id="innings-break-target-team" class="font-semibold text-sm sm:text-base"></p>
+                <p class="text-2xl sm:text-3xl font-black tracking-tighter" id="innings-break-target-runs"></p>
+                <p class="font-semibold text-sm sm:text-base">to win</p>
+            </div>
+            
+            <button id="start-second-innings-btn" class="mt-8 px-8 py-3 bg-blue-600 font-bold rounded-lg hover:bg-blue-700 transition-transform hover:scale-105">Start 2nd Innings</button>
         </div>
     </div>
 
@@ -1873,22 +1616,6 @@
     <h2 class="text-5xl font-black text-white tracking-widest" style="text-shadow: 0 0 15px rgba(59, 130, 246, 0.8);">FREE HIT</h2>
 </div> 
 <script>
-    // --- NEW: Type-Safe Parsing Helpers ---
-    const toInt = (v, d = 0) => {
-      const n = Number.parseInt(v, 10);
-      return Number.isFinite(n) ? n : d;
-    };
-    const toNum = (v, d = 0) => {
-      const n = Number(v);
-      return Number.isFinite(n) ? n : d;
-    };
-    // Helper to format numbers, ensuring NaN becomes 0
-    const formatNumber = (n, decimalPlaces = 0) => {
-        const num = toNum(n, 0); // Ensure it's a valid number, default to 0
-        return num.toFixed(decimalPlaces);
-    };
-
-
     function populatePlayerOptions(selectElement, teamKey, { disabledIds = [], isOutFilter = false, addBlankOption = false, blankOptionText = 'Select Player' } = {}) {
     if (!selectElement || !state[teamKey] || !state[teamKey].players) return;
 
@@ -2244,6 +1971,97 @@ function recalculateAllPlayerStats() {
             }
             // Return the full name after trimming whitespace, without shortening the last name.
             return fullName.trim();
+        }
+
+        // --- NEW HELPER FUNCTIONS as requested ---
+        const toInt = v => {
+            const n = parseInt(v, 10);
+            return isNaN(n) ? 0 : n;
+        };
+
+        const toNum = v => {
+            const n = parseFloat(v);
+            return isNaN(n) ? 0 : n;
+        };
+        
+        const formatOvers = (totalBalls) => {
+            if (totalBalls < 0) totalBalls = 0;
+            return {
+                overs: Math.floor(totalBalls / 6),
+                balls: totalBalls % 6
+            };
+        };
+        
+        const parseOversToBalls = (overs, balls) => {
+            return (toInt(overs) * 6) + toInt(balls);
+        };
+
+        function sanitizeState(s) {
+            // Sanitize top-level
+            s.innings = toInt(s.innings);
+            s.target = toInt(s.target);
+            s.totalOvers = toInt(s.totalOvers);
+            s.playersPerSide = toInt(s.playersPerSide);
+
+            // Sanitize teams
+            ['team1', 'team2'].forEach(teamKey => {
+                if (s[teamKey]) {
+                    const team = s[teamKey];
+                    team.score = toInt(team.score);
+                    team.wickets = toInt(team.wickets);
+                    team.overs = toInt(team.overs);
+                    team.balls = toInt(team.balls);
+                    
+                    // Sanitize extras
+                    if (team.extras) {
+                        team.extras.b = toInt(team.extras.b);
+                        team.extras.lb = toInt(team.extras.lb);
+                        team.extras.wd = toInt(team.extras.wd);
+                        team.extras.nb = toInt(team.extras.nb);
+                        team.extras.total = toInt(team.extras.total);
+                    }
+
+                    // Sanitize playerStats
+                    if (team.playerStats) {
+                        Object.values(team.playerStats).forEach(player => {
+                            if (player) { // Add safety check for player object
+                                player.runs = toInt(player.runs);
+                                player.balls = toInt(player.balls);
+                                player.fours = toInt(player.fours);
+                                player.sixes = toInt(player.sixes);
+                                player.ballsBowled = toInt(player.ballsBowled);
+                                player.runsConceded = toInt(player.runsConceded);
+                                player.wickets = toInt(player.wickets);
+                                player.maidens = toInt(player.maidens);
+                                player.dots = toInt(player.dots);
+                                player.foursConceded = toInt(player.foursConceded);
+                                player.sixesConceded = toInt(player.sixesConceded);
+                                player.consecutiveFours = toInt(player.consecutiveFours);
+                                player.consecutiveSixes = toInt(player.consecutiveSixes);
+                            }
+                        });
+                    }
+                }
+            });
+
+            // Sanitize active players (by re-copying from sanitized stats)
+            try {
+                if (s.striker && s.battingTeam && s[s.battingTeam].playerStats[s.striker.playerId]) {
+                    s.striker = { ...s[s.battingTeam].playerStats[s.striker.playerId] };
+                }
+                if (s.nonStriker && s.battingTeam && s[s.battingTeam].playerStats[s.nonStriker.playerId]) {
+                    s.nonStriker = { ...s[s.battingTeam].playerStats[s.nonStriker.playerId] };
+                }
+                if (s.bowler && s.bowlingTeam && s[s.bowlingTeam].playerStats[s.bowler.playerId]) {
+                    s.bowler = { ...s[s.bowlingTeam].playerStats[s.bowler.playerId] };
+                }
+            } catch (e) {
+                console.error("Error sanitizing active players:", e);
+                // This might happen if player IDs are out of sync, force a reset
+                s.striker = null;
+                s.nonStriker = null;
+                s.bowler = null;
+            }
         }
         function proceedFromStep3() {
             const playersSelected = ui.team2PlayerInputs.querySelectorAll('input[type="checkbox"]:checked').length;
@@ -2764,266 +2582,102 @@ function updateFreeHitIndicator() {
             matchHeader.appendChild(details);
         }
 
-        // NEW: Flag to control initial setup behavior
-        let isInitialSetup = false;
-
-    async function initialize(isSecondInnings = false) {
-            updateMatchHeader();
-            state.isScoringLocked = true; // Lock scoring initially
-            isInitialSetup = true; // Set the flag for the entire sequence
-            updateUI(); // Initial UI update
-
-            // Helper function wrapping selectPlayer in a Promise
-            // Now correctly handles resolve/reject
-            const selectPlayerAsync = (role) => {
-                return new Promise((resolve, reject) => {
-                    selectPlayer(role, resolve, reject); // Pass both resolve and reject
-                });
-            };
-
-            const setupPlayers = async () => {
-                try {
-                    // --- Await sequence ---
-                    await selectPlayerAsync('striker');
-                    console.log("Striker selected, proceeding to non-striker..."); // Debug log
-                    await selectPlayerAsync('nonStriker');
-                    console.log("Non-striker selected, proceeding to bowler..."); // Debug log
-                    await selectPlayerAsync('bowler');
-                    console.log("Bowler selected, setup complete."); // Debug log
-                    // --- Sequence complete ---
-
-                    state.isScoringLocked = false; // Unlock scoring *only* after bowler is set
-                    isInitialSetup = false; // Clear the flag *after* the entire sequence
-                    updateUI(); // Final UI update after all selections
-                    showIntroCommentary(); // Show commentary
-
-                } catch (error) {
-                    // Handle potential errors during selection
-                    console.error("Error during initial player setup:", error);
-                    showAlert(`Setup cancelled or failed: ${error}. Please reload.`);
-                    // Keep scoring locked if setup fails
-                    state.isScoringLocked = true;
-                    isInitialSetup = false; // Clear flag even on error
-                    updateUI();
-                }
-            };
-
-            // Wrap the call in the alert callback if needed
-            const startSetup = () => {
-                // Use .then().catch() for the async setupPlayers itself
-                // to avoid unhandled promise rejection warnings in the console
-                setupPlayers().catch(err => {
-                    // This catch is mainly for unexpected errors *within* setupPlayers's own logic,
-                    // not usually for selection cancellation (handled by reject in selectPlayerAsync)
-                    console.error("Unexpected error in setupPlayers execution:", err);
-                    if (!state.winner) { // Avoid alert if match ended abruptly
-                       showAlert("An unexpected error occurred during setup.");
-                    }
+        function initialize(isSecondInnings = false) {
+            updateMatchHeader(); // Use the new reusable function
+            state.isScoringLocked = true;
+            updateUI();
+            
+            const setupPlayers = () => {
+                ui.playerModalCancelBtnX.classList.add('hidden');
+                ui.playerModalCancelBtnText.classList.add('hidden');
+                selectPlayer('striker', () => {
+                    selectPlayer('nonStriker', () => {
+                        selectPlayer('bowler', () => {
+                            ui.playerModalCancelBtnX.classList.remove('hidden');
+                            ui.playerModalCancelBtnText.classList.remove('hidden');
+                            state.isScoringLocked = false;
+                            updateUI();
+                            showIntroCommentary();
+                        });
+                    });
                 });
             };
 
             if (isSecondInnings) {
-                showAlert('The 2nd innings is about to begin. Please select the opening batsmen and bowler.', startSetup);
+                showAlert('The 2nd innings is about to begin. Please select the opening batsmen and bowler.', setupPlayers);
             } else {
-                startSetup(); // Start the setup directly
+                setupPlayers();
             }
         }
+        
+        function savePlayerStats(playerObject, teamKey) {
+    if (!playerObject || !playerObject.playerId || !teamKey) return;
+    state[teamKey].playerStats[playerObject.playerId] = { ...state[teamKey].playerStats[playerObject.playerId],
+        ...playerObject
+    };
+}
 
-       // REVISED selectPlayer to properly work with Promises and fix save button handler
-       function selectPlayer(role, resolve, reject) {
-            // Get references to elements *inside* the modal *each time* the function runs
-            const modalElement = document.getElementById('player-modal');
-            const modalContent = modalElement.querySelector('.modal-content');
-            let playerSaveBtn = document.getElementById('player-save-btn'); // Use let
-            let playerModalCancelBtnX = document.getElementById('player-modal-cancel-btn-x'); // Use let
-            let playerModalCancelBtnText = document.getElementById('player-modal-cancel-btn-text'); // Use let
-            const playerSelect = document.getElementById('player-select');
-            const modalTitle = document.getElementById('modal-title');
+    function selectPlayer(role, onCompleteCallback) {
+    ui.modalTitle.textContent = `Select ${role.charAt(0).toUpperCase() + role.slice(1)}`;
 
-            console.log(`selectPlayer called for: ${role}, initialSetup: ${isInitialSetup}`); // Debug log
+    ui.modalTitle.classList.remove('text-red-800');
+    if (role === 'striker' || role === 'nonStriker') {
+        ui.modalTitle.classList.add('text-red-800');
+    }
 
-            modalTitle.textContent = `Select ${role.charAt(0).toUpperCase() + role.slice(1)}`;
-            modalTitle.classList.remove('text-red-800');
-            if (role === 'striker' || role === 'nonStriker') {
-                modalTitle.classList.add('text-red-800');
-            }
+    const teamKey = role === 'bowler' ? state.bowlingTeam : state.battingTeam;
 
-            const teamKey = role === 'bowler' ? state.bowlingTeam : state.battingTeam;
-            const disabledIds = [];
-            if (state.striker) disabledIds.push(state.striker.playerId);
-            if (state.nonStriker) disabledIds.push(state.nonStriker.playerId);
-            if (role === 'bowler' && state.lastBowler) disabledIds.push(state.lastBowler);
-            if (role === 'striker' && state.nonStriker) disabledIds.push(state.nonStriker.playerId);
-            if (role === 'nonStriker' && state.striker) disabledIds.push(state.striker.playerId);
+    // Assemble list of players who should be disabled in the dropdown
+    const disabledIds = [];
+    if (state.striker) disabledIds.push(state.striker.playerId);
+    if (state.nonStriker) disabledIds.push(state.nonStriker.playerId);
+    if (role === 'bowler' && state.lastBowler) {
+        disabledIds.push(state.lastBowler);
+    }
 
-            populatePlayerOptions(playerSelect, teamKey, {
-                disabledIds: [...new Set(disabledIds)],
-                isOutFilter: (role !== 'bowler'),
-                addBlankOption: !isInitialSetup,
-                blankOptionText: `Select ${role}`
-            });
+    populatePlayerOptions(ui.playerSelect, teamKey, {
+        disabledIds: disabledIds,
+        isOutFilter: (role !== 'bowler')
+    });
 
-            if (isInitialSetup && playerSelect.options.length > 0) {
-                 const firstAvailableOption = Array.from(playerSelect.options).find(opt => !opt.disabled && opt.value);
-                 if (firstAvailableOption) {
-                      playerSelect.value = firstAvailableOption.value;
-                 } else if (playerSelect.options.length > 0) {
-                      playerSelect.value = playerSelect.options[0].value;
-                 }
-            }
+    // DEFINITIVE FIX: Re-bind the onclick handler every time the modal is opened.
+    ui.playerSaveBtn.onclick = () => {
+        const selectedPlayerId = ui.playerSelect.value;
 
-            const completeSelection = (selectedPlayerId) => {
-                // Check if player exists and update state
-                if (selectedPlayerId && state[teamKey].playerStats[selectedPlayerId]) {
-                     console.log(`Completing selection for ${role} with ${selectedPlayerId}`); // Debug log
-                    state[role] = { ...state[teamKey].playerStats[selectedPlayerId] };
-                    updateUI();
-                    closeModal('player-modal');
-                    resolve(); // Resolve AFTER closing
-                } else {
-                     const errorMsg = `Player stats not found for ID: ${selectedPlayerId} in team ${teamKey}`;
-                     console.error(errorMsg);
-                    reject(errorMsg);
-                     closeModal('player-modal');
-                     showAlert("Error selecting player.");
-                }
-            };
-
-             const saveButtonHandler = () => {
-                 console.log(`Save button clicked for ${role}`); // Debug log
-                 const selectedPlayerId = playerSelect.value;
-                 const oldPlayerId = state[role] ? state[role].playerId : null;
-
-                 // Validation
-                 if (!selectedPlayerId) {
-                      if (!isInitialSetup) showAlert("Please select a player.");
-                      return;
-                 }
-                 const selectedPlayerData = state[teamKey].playerStats[selectedPlayerId];
-                 if (!selectedPlayerData){
-                      console.error(`Save Error: Player data not found for ${selectedPlayerId}`);
-                      reject("Selected player data not found.");
-                      closeModal('player-modal');
-                      showAlert("Selected player data not found.");
-                      return;
-                 }
-                 if (selectedPlayerData.isOut && role !== 'bowler') {
-                      showAlert("Cannot select a dismissed player.");
-                      return;
-                 }
-
-                 // Handle Swap
-                 if ((role === 'striker' && state.nonStriker && selectedPlayerId === state.nonStriker.playerId) ||
-                     (role === 'nonStriker' && state.striker && selectedPlayerId === state.striker.playerId)) {
-                     console.log("Handling swap..."); // Debug log
-                     swapBatsmen();
-                     closeModal('player-modal');
-                     resolve();
-                     return;
-                 }
-
-                 // Handle No Change
-                 if (selectedPlayerId === oldPlayerId) {
-                     console.log("No change in selection."); // Debug log
-                     closeModal('player-modal');
-                     resolve();
-                     return;
-                 }
-
-                 // Handle Edit vs. Initial Selection
-                 if ((role === 'striker' || role === 'nonStriker') && oldPlayerId && !isInitialSetup) {
-                      console.log("Handling edit (stats transfer)..."); // Debug log
-                      saveState();
-                      // --- BATTER STATS TRANSFER LOGIC (Simplified Example) ---
-                       const battingTeamKey = state.battingTeam;
-                       const newPlayerInfo = state[battingTeamKey].playerStats[selectedPlayerId];
-                       const statsToTransfer = { ...state[battingTeamKey].playerStats[oldPlayerId] };
-                       state[battingTeamKey].playerStats[selectedPlayerId] = {
-                            ...statsToTransfer, playerId: newPlayerInfo.playerId,
-                            name: newPlayerInfo.name, image: newPlayerInfo.image
-                       };
-                       const oldPlayerBase = state[battingTeamKey].squad.find(p => p.id === oldPlayerId) || { id: oldPlayerId, name: 'Unknown', image: '' };
-                       state[battingTeamKey].playerStats[oldPlayerId] = {
-                            playerId: oldPlayerBase.id, name: oldPlayerBase.name, image: oldPlayerBase.image || '',
-                            runs: 0, balls: 0, fours: 0, sixes: 0, isOut: false, dismissalInfo: null,
-                            ballsBowled: 0, runsConceded: 0, wickets: 0, maidens: 0, dots: 0,
-                            foursConceded: 0, sixesConceded: 0, consecutiveFours: 0, consecutiveSixes: 0
-                       };
-                       state[battingTeamKey].inningsHistory.forEach(ball => { if (ball.batterId === oldPlayerId) ball.batterId = selectedPlayerId; });
-                       state[role] = { ...state[battingTeamKey].playerStats[selectedPlayerId] };
-                       const otherRole = (role === 'striker') ? 'nonStriker' : 'striker';
-                       if (state[otherRole] && state[otherRole].playerId === oldPlayerId) {
-                            state[otherRole] = { ...state[battingTeamKey].playerStats[oldPlayerId] };
-                       }
-                      // --- End Transfer ---
-                      closeModal('player-modal');
-                      updateUI();
-                      resolve();
-                 } else {
-                      // Initial selection or Bowler change
-                      console.log("Handling initial selection or bowler change..."); // Debug log
-                      completeSelection(selectedPlayerId);
-                 }
-             };
-
-            const cancelHandler = () => {
-                 console.log(`Cancel button clicked for ${role}`); // Debug log
-                 closeModal('player-modal');
-                 reject('Player selection cancelled.');
-            };
-
-            // --- Simplified Listener Attachment ---
-            // 1. Clone the specific buttons to remove old listeners
-            const newSaveBtn = playerSaveBtn.cloneNode(true);
-            playerSaveBtn.parentNode.replaceChild(newSaveBtn, playerSaveBtn);
-            playerSaveBtn = newSaveBtn; // Update local reference to the new button
-
-            const newCancelBtnX = playerModalCancelBtnX.cloneNode(true);
-            playerModalCancelBtnX.parentNode.replaceChild(newCancelBtnX, playerModalCancelBtnX);
-            playerModalCancelBtnX = newCancelBtnX; // Update local reference
-
-            const newCancelBtnText = playerModalCancelBtnText.cloneNode(true);
-            playerModalCancelBtnText.parentNode.replaceChild(newCancelBtnText, playerModalCancelBtnText);
-            playerModalCancelBtnText = newCancelBtnText; // Update local reference
-
-            // 2. Attach the new handlers
-            playerSaveBtn.onclick = saveButtonHandler;
-
-            if (isInitialSetup) {
-                playerModalCancelBtnX.classList.add('hidden');
-                playerModalCancelBtnText.classList.add('hidden');
-                // No onclick needed for cancel buttons during setup
-            } else {
-                playerModalCancelBtnX.classList.remove('hidden');
-                playerModalCancelBtnText.classList.remove('hidden');
-                playerModalCancelBtnX.onclick = cancelHandler;
-                playerModalCancelBtnText.onclick = cancelHandler;
-            }
-
-            // 3. Handle backdrop click (No cloning needed here, just reattach listener)
-             // Remove potential old listener by cloning the parent (modalElement) and replacing it
-             const newModalElement = modalElement.cloneNode(true); // Clone including content
-             modalElement.parentNode.replaceChild(newModalElement, modalElement);
-             // Re-get references to elements *within the new modal*
-             const currentModalContent = newModalElement.querySelector('.modal-content');
-
-             if (isInitialSetup) {
-                  newModalElement.onclick = (e) => { if (e.target === newModalElement) e.stopPropagation(); }; // No backdrop action
-             } else {
-                  newModalElement.onclick = (e) => { // Backdrop action only if not initial setup
-                      if (e.target === newModalElement) {
-                          closeModal('player-modal');
-                          reject('Player selection cancelled via backdrop.');
-                      }
-                  };
-             }
-             // Ensure clicks within content don't trigger backdrop close
-             currentModalContent.onclick = (e) => e.stopPropagation();
-
-
-            console.log(`Opening modal for ${role}`); // Debug log
-            openModal('player-modal');
+        // Validation for duplicate batters
+        if (role === 'striker' && state.nonStriker && selectedPlayerId === state.nonStriker.playerId) {
+            showAlert("The same player cannot be both striker and non-striker. Please select a different player.");
+            return;
         }
+        if (role === 'nonStriker' && state.striker && selectedPlayerId === state.striker.playerId) {
+            showAlert("The same player cannot be both striker and non-striker. Please select a different player.");
+            return;
+        }
+
+        const oldPlayerId = state[role] ? state[role].playerId : null;
+        if (!selectedPlayerId || !state[teamKey].playerStats[selectedPlayerId]) return;
+
+        const updatePlayerState = () => {
+            state[role] = { ...state[teamKey].playerStats[selectedPlayerId] };
+            closeModal('player-modal');
+            updateUI();
+            if (typeof onCompleteCallback === 'function') {
+                setTimeout(onCompleteCallback, 350);
+            }
+        };
+
+        const battingTeam = state[state.battingTeam];
+        if (role === 'striker' && oldPlayerId && selectedPlayerId !== oldPlayerId && battingTeam.inningsHistory.length > 0) {
+            // Automatically apply the correction for the entire current stint without asking the user.
+            shiftBatterContribution({ fromBatterId: oldPlayerId, toBatterId: selectedPlayerId, scope: 'currentStint' });
+            updatePlayerState();
+        } else {
+            updatePlayerState();
+        }
+    };
+
+    openModal('player-modal');
+}
 
         function triggerEventAnimation(text, colorClass) {
             const overlay = ui.eventAnimationOverlay;
@@ -3677,28 +3331,47 @@ function initiateRunOutFlow() {
                 return isNaN(runs) ? 0 : runs;
             }
 
-            // Simple number runs (0, 1, 2, 3, 4, 6)
+            // Existing logic...
             const simpleRuns = parseInt(e);
-            if (!isNaN(simpleRuns) && simpleRuns >= 0 && simpleRuns <= 6) {
+            // ... rest of parseBallEvent
+        }
+
+        // No direct changes needed inside processBall itself if parseBallEvent is correct.
+        // Example addition to parseBallEvent:
+        function parseBallEvent(event) {
+            if (!event) return 0;
+            const e = event.trim().toUpperCase();
+            if (e === '.' || e === 'W') return 0;
+
+            // NEW: Handle "X+RO" format specifically
+            if (e.includes('+RO')) {
+                const runsPart = e.split('+RO')[0];
+                return toInt(runsPart); // Use strict toInt
+            }
+
+            // Existing logic...
+            // Simple number runs (0, 1, 2, 3, 4, 6)
+            const simpleRuns = toInt(e); // Use strict toInt
+            if (simpleRuns >= 0 && simpleRuns <= 6 && e.length === 1) { // Added length check
                 return simpleRuns;
             }
 
             // Extras
             if (e.startsWith('WD')) {
-                const runs = parseInt(e.substring(2)) || 0;
+                const runs = toInt(e.substring(2)); // Use strict toInt
                 return 1 + runs;
             }
             if (e.startsWith('NB')) {
-                const runs = parseInt(e.substring(2)) || 0;
+                const runs = toInt(e.substring(2)); // Use strict toInt
                 return 1 + runs;
             }
             if (e.startsWith('B')) {
-                return parseInt(e.substring(1)) || 0;
+                return toInt(e.substring(1)); // Use strict toInt
             }
             if (e.startsWith('LB')) {
-                return parseInt(e.substring(2)) || 0;
+                return toInt(e.substring(2)); // Use strict toInt
             }
-
+            
             return 0; // Return 0 for any unrecognised format
         }
 
@@ -4021,22 +3694,15 @@ function updateHistoryButtons() {
             const bowlingTeam = state[bowlingTeamKey];
 
             const createTeamHTML = (team, isBatting) => {
-                 // Use helpers to ensure valid numbers
-                const score = toInt(team.score);
-                const wickets = toInt(team.wickets);
-                const oversNum = toInt(team.overs);
-                const ballsNum = toInt(team.balls);
-                const totalOvers = toInt(state.totalOvers);
-
-                const overs = `${oversNum}.${ballsNum}`; // Display remains the same format
+                const overs = `${team.overs}.${team.balls}`;
                 let scoreHTML;
 
                 if (!isBatting && state.innings === 1) {
                     scoreHTML = `<p class="text-sm font-semibold text-gray-500">Yet to bat</p>`;
                 } else {
                     scoreHTML = `
-                        <p class="text-xl font-bold text-gray-900">${score}/${wickets}</p>
-                        <p class="text-xs text-gray-500">(${overs} / ${totalOvers} ov)</p>
+                        <p class="text-xl font-bold text-gray-900">${team.score}/${team.wickets}</p>
+                        <p class="text-xs text-gray-500">(${overs} / ${state.totalOvers} ov)</p>
                     `;
                 }
 
@@ -4077,23 +3743,15 @@ function updateHistoryButtons() {
             }
 
             const battingTeam = state[state.battingTeam];
-             // Use helpers
-            const score = toInt(battingTeam.score);
-            const target = toInt(state.target);
-            const runsNeeded = target - score;
-
+            const runsNeeded = state.target - battingTeam.score;
 
             if (runsNeeded <= 0) {
                 ui.targetInfoContainer.classList.add('hidden');
                 return;
             }
 
-            const totalOvers = toInt(state.totalOvers);
-            const oversNum = toInt(battingTeam.overs);
-            const ballsNum = toInt(battingTeam.balls);
-
-            const totalBalls = totalOvers * 6;
-            const ballsBowled = oversNum * 6 + ballsNum;
+            const totalBalls = state.totalOvers * 6;
+            const ballsBowled = battingTeam.overs * 6 + battingTeam.balls;
             const ballsRemaining = totalBalls - ballsBowled;
 
             if (ballsRemaining <= 0 && runsNeeded > 0) {
@@ -4101,15 +3759,12 @@ function updateHistoryButtons() {
                 return;
             }
 
-             // Guard division by zero for RRR
-            const rrr = ballsRemaining > 0 ? formatNumber((runsNeeded / (ballsRemaining / 6)), 2) : '&infin;'; 
-            // CRR is implicitly handled by buildInningsCardHTML/updateScoreboard now, but good practice:
-            // const crr = ballsBowled > 0 ? formatNumber((score / (ballsBowled / 6)), 2) : '0.00';
-
+            const crr = ballsBowled > 0 ? (battingTeam.score / (ballsBowled / 6)).toFixed(2) : '0.00';
+            const rrr = ballsRemaining > 0 ? (runsNeeded / (ballsRemaining / 6)).toFixed(2) : '&infin;';
 
              ui.targetInfoContainer.innerHTML = `
                 <p class="text-xs font-semibold text-gray-800 truncate">
-                    <span>Target: <b class="font-black text-blue-700">${target}</b></span>
+                    <span>Target: <b class="font-black text-blue-700">${state.target}</b></span>
                     <span class="mx-2">|</span>
                     <span>Need <b class="font-black text-blue-700">${runsNeeded}</b> off <b>${ballsRemaining}</b> balls</span>
                     <span class="mx-2">|</span>
@@ -4117,7 +3772,7 @@ function updateHistoryButtons() {
                 </p>
             `;
             
-            ui.targetInfoContainer.className = 'bg-blue-100 border-t border-b border-blue-200 py-1 px-2 text-center'; // Keep existing class
+            ui.targetInfoContainer.className = 'bg-blue-100 border-t border-b border-blue-200 py-1 px-2 text-center';
         }
         
         function updateBattingTable() {
@@ -4165,12 +3820,10 @@ function updateHistoryButtons() {
 }
 
        function createBatsmanRow(batsman, isStriker) {
-            // Use helpers to ensure valid numbers and handle division by zero
+            // Use toInt to ensure runs/balls are numbers, then apply specified SR formula
             const runs = toInt(batsman.runs);
             const balls = toInt(batsman.balls);
-            const fours = toInt(batsman.fours);
-            const sixes = toInt(batsman.sixes);
-            const sr = balls > 0 ? formatNumber((runs / balls) * 100, 2) : '0.00'; // Guard division by zero
+            const sr = balls > 0 ? ((runs / balls) * 100).toFixed(2) : '0.00';
             
             const fallbackImg = `data:image/svg+xml;base64,${btoa('<svg class="w-full h-full text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>')}`;
             
@@ -4186,8 +3839,8 @@ function updateHistoryButtons() {
                     </td>
                     <td class="text-center p-2 font-bold text-base">${runs}</td>
                     <td class="text-center p-2 text-base">${balls}</td>
-                    <td class="text-center p-2 text-base">${fours}</td>
-                    <td class="text-center p-2 text-base">${sixes}</td>
+                    <td class="text-center p-2 text-base">${toInt(batsman.fours)}</td>
+                    <td class="text-center p-2 text-base">${toInt(batsman.sixes)}</td>
                     <td class="text-right p-2 text-base">${sr}</td>
                 </tr>
             `;
@@ -4204,17 +3857,19 @@ function updateHistoryButtons() {
             ui.bowlingTable.innerHTML = '';
             if (state.bowler) {
                 const bowler = state.bowler;
-                // Use helpers to ensure valid numbers
+                // Use toInt to ensure numbers
                 const ballsBowled = toInt(bowler.ballsBowled);
                 const runsConceded = toInt(bowler.runsConceded);
                 const maidens = toInt(bowler.maidens);
                 const wickets = toInt(bowler.wickets);
-                
+
                 const overs = Math.floor(ballsBowled / 6);
                 const balls = ballsBowled % 6;
                 const oversDisplay = `${overs}.${balls}`;
-                // Guard division by zero for economy
-                const econ = ballsBowled > 0 ? formatNumber((runsConceded / (ballsBowled / 6)), 2) : '0.00'; 
+                
+                // Specified Econ formula
+                const econ = ballsBowled > 0 ? (runsConceded * 6 / ballsBowled).toFixed(2) : '0.00';
+                
                 const fallbackImg = `data:image/svg+xml;base64,${btoa('<svg class="w-full h-full text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>')}`;
 
                 // This part creates the main row for the bowler's stats
@@ -4235,19 +3890,16 @@ function updateHistoryButtons() {
                 `;
 
                 // This new part adds the ball-by-ball display below the bowler
-                 if (state.currentOver && state.currentOver.length > 0) { // Check if currentOver exists
+                if (state.currentOver.length > 0) {
                     let legalBallCount = 0; // Initialize a new counter for legal balls
-                     // Sanitize runs in currentOver before mapping
-                    const sanitizedCurrentOver = state.currentOver.map(ball => ({...ball, runs: toInt(ball.runs)}));
-                    const overHistoryHTML = sanitizedCurrentOver.map((ball, index) => {
-                        let ballEventText = ball.event || ''; // Default to empty string if event is missing
+                    const overHistoryHTML = state.currentOver.map((ball, index) => {
+                        let ballEventText = ball.event;
                         let bgColor = 'bg-gray-300';
-                        // Visual styles based on event
-                        if (ballEventText === '0' || ballEventText === '.') { bgColor = 'bg-yellow-400 text-black'; } 
-                        else if (ballEventText === '1') { bgColor = 'bg-sky-400 text-white'; }
-                        else if (ballEventText === '4') { bgColor = 'bg-blue-500 text-white'; }
-                        else if (ballEventText === '6') { bgColor = 'bg-green-500 text-white'; }
-                        else if (ballEventText.includes('W')) { bgColor = 'bg-red-500 text-white'; }
+                        if (ballEventText === '0') { bgColor = 'bg-yellow-400 text-black'; }
+                        if (ballEventText === '1') { bgColor = 'bg-sky-400 text-white'; }
+                        if (ballEventText === '4') { bgColor = 'bg-blue-500 text-white'; }
+                        if (ballEventText === '6') { bgColor = 'bg-green-500 text-white'; }
+                        if (ballEventText.includes('W')) { bgColor = 'bg-red-500 text-white'; }
                         
                         const isIllegalDelivery = ballEventText.toLowerCase().includes('wd') || ballEventText.toLowerCase().includes('nb');
 
@@ -4258,23 +3910,16 @@ function updateHistoryButtons() {
                         }
                         
                         let ballEventHTML;
-                         // Handle complex extra strings like WD+1, NB+4+W
-                        if ((ballEventText.includes('+')) && (ballEventText.startsWith('WD') || ballEventText.startsWith('NB') || ballEventText.startsWith('B') || ballEventText.startsWith('LB'))) {
-                             const parts = ballEventText.split('+');
-                             const prefix = parts[0];
-                             const runsPart = parts[1]; // Can be just number or number + W
-                             const runsNum = toInt(runsPart.replace('W','')); // Extract number
-                             const wicketSuffix = runsPart.includes('W') ? '+W' : '';
-                             
-                            ballEventHTML = `<span style="font-size: 0.55rem; font-weight: 600; margin-right: -1px; letter-spacing: -0.5px;">${prefix}${wicketSuffix}</span><span style="font-size: 0.8rem; font-weight: 700;">${runsNum}</span>`;
-                         } else {
-                            ballEventHTML = ballEventText; // Simple event like '1', 'W', '4'
-                         }
+                        if ((ballEventText.includes('NB+') || ballEventText.includes('WD+')) && ballEventText.length > 2) {
+                            const prefix = ballEventText.substring(0, 3);
+                            const runs = ballEventText.substring(3);
+                            ballEventHTML = `<span style="font-size: 0.55rem; font-weight: 600; margin-right: -1px; letter-spacing: -0.5px;">${prefix}</span><span style="font-size: 0.8rem; font-weight: 700;">${runs}</span>`;
+                        } else {
+                            ballEventHTML = ballEventText;
+                        }
 
-                        // Use sanitized over numbers
-                        const currentOverNum = toInt(state[state.battingTeam].overs);
-                        const ballNumberLabel = `${currentOverNum}.${legalBallCount}`; 
-
+                        const ballNumberLabel = `${state[state.battingTeam].overs}.${legalBallCount}`; // Use the new counter
+                        
                         return `
                             <div class="flex flex-col items-center space-y-1">
                                 <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs ${bgColor}">${ballEventHTML}</div>
@@ -4304,7 +3949,6 @@ function updateHistoryButtons() {
             const modal = document.getElementById(modalId);
             if (!modal) return;
             modal.classList.remove('hidden');
-            document.body.classList.add('modal-open'); // Add class to body
             const modalContent = modal.querySelector('.modal-content');
             if (modalContent) {
                 modalContent.style.transform = '';
@@ -4321,29 +3965,13 @@ function updateHistoryButtons() {
         function closeModal(modalId) {
             const modal = document.getElementById(modalId);
             if (!modal) return;
-            
-            // Check if any *other* modals are still open before removing the body class
-             const otherModalsOpen = Array.from(document.querySelectorAll('.modal-overlay:not(.hidden)'))
-                                         .some(m => m.id !== modalId);
-            if (!otherModalsOpen) {
-                 document.body.classList.remove('modal-open'); // Remove class from body ONLY if this is the last modal
-            }
-
             modal.classList.add('bg-opacity-0');
             const modalContent = modal.querySelector('.modal-content');
             if (modalContent) {
                 modalContent.classList.add('scale-95');
-                 // Add specific closing animations if needed, e.g., for bottom sheets
-                 if (['wide-modal', 'noball-modal', 'byes-modal', 'legbyes-modal'].includes(modalId)) {
-                     modalContent.classList.add('translate-y-full');
-                 }
             }
             setTimeout(() => {
                 modal.classList.add('hidden');
-                // Reset transform after animation for re-opening
-                if (modalContent) {
-                     modalContent.classList.remove('translate-y-full'); 
-                }
             }, 300);
         }
         
@@ -4687,76 +4315,27 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
 
             // --- 4. Man of the Match Picker ---
             const momPickerList = document.getElementById('wm-mom-picker-list');
-            const momShowAll = document.getElementById('wm-mom-show-all');
-            const allRankedPlayers = calculateManOfTheMatch(); // Get all ranked players
-            const topPlayers = allRankedPlayers.slice(0, 3); // Initially show top 3
+            const rankedPlayers = calculateManOfTheMatch().slice(0, 5); // Get top 5
             
+            // --- FIX: Add a better fallback silhouette image for onerror ---
             const fallbackSvg = `data:image/svg+xml;base64,PHN2ZyBjbGFzcz0idy0xMCBoLTEwIHRleHQtZ3JheS00MDAiIGZpbGw9ImN1cnJlbnRDb2xvciIgdmlld0JveD0iMCAwIDIwIDIwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgZD0iTTEwIDlhMyAzIDAgMTAwLTYgMyAzIDAgMDAwIDZ6bS03IDlhNyA3IDAgMTExNCAwSDN6IiBjbGlwLXJ1bGU9ImV2ZW5vZGQiPjwvcGF0aD48L3N2Zz4=`;
 
-            // Function to generate compact performance string
-            const formatMomPerformance = (player) => {
-                let parts = [];
-                if (player.runs !== undefined && player.balls !== undefined && (player.runs > 0 || player.balls > 0 || player.isOut)) {
-                    parts.push(`${player.runs}${!player.isOut ? '*' : ''} (${player.balls || 0})`);
-                }
-                if (player.wickets !== undefined && player.runsConceded !== undefined && player.ballsBowled > 0) {
-                     parts.push(`${player.wickets || 0}/${player.runsConceded || 0}`);
-                }
-                // Only add fielding if significant and other stats are low/absent
-                 if (parts.length < 2 && player.fieldingInvolvements > 1) {
-                     if (player.catches > 0) parts.push(`${player.catches}C`);
-                     if (player.runouts > 0) parts.push(`${player.runouts}RO`);
-                     if (player.stumpings > 0) parts.push(`${player.stumpings}St`);
-                 }
-                return parts.join(' & ') || 'No notable performance';
-            };
-            
-            // Function to render the list
-            const renderMomList = (playersToShow) => {
-                 momPickerList.innerHTML = playersToShow.map((player, index) => {
+            if (rankedPlayers.length > 0) {
+                momPickerList.innerHTML = rankedPlayers.map((player, index) => {
+                    // Use player.image, which is (player.avatar || team.logo) from calculateManOfTheMatch
                     const imageSrc = player.image || fallbackSvg; 
-                    // Use the compact performance string
-                    const performanceText = formatMomPerformance(player); 
                     return `
                     <label>
-                        <input type="radio" name="mom-picker" value="${player.playerId}" ${index === 0 && playersToShow === topPlayers ? 'checked' : ''}>
-                        <img src="${imageSrc}" class="rounded-full object-cover border border-gray-600/50" onerror="this.src='${fallbackSvg}'">
-                        <div class="mom-picker-details">
-                            <p class="mom-picker-name">${player.name} <span class="font-normal">(${player.teamName})</span></p>
-                            <p class="mom-picker-perf">${performanceText}</p>
+                        <input type="radio" name="mom-picker" value="${player.playerId}" ${index === 0 ? 'checked' : ''}>
+                        <img src="${imageSrc}" class="w-8 h-8 rounded-full object-cover border border-gray-600" onerror="this.src='${fallbackSvg}'">
+                        <div>
+                            <p class="mom-picker-name">${player.name} <span class="text-xs text-gray-400">(${player.teamName})</span></p>
+                            <p class="mom-picker-perf">${player.performance || 'No notable performance'}</p>
                         </div>
                     </label>
                 `}).join('');
-            };
-
-            if (allRankedPlayers.length > 0) {
-                renderMomList(topPlayers); // Render top 3 initially
-                momPickerList.style.maxHeight = ''; // Reset max-height
-                momPickerList.dataset.expanded = 'false';
-
-                if (allRankedPlayers.length > 3) {
-                    momShowAll.classList.remove('hidden');
-                    momShowAll.textContent = `Show all ${allRankedPlayers.length} candidates`;
-                    momShowAll.onclick = () => {
-                         if (momPickerList.dataset.expanded === 'false') {
-                            renderMomList(allRankedPlayers);
-                            momPickerList.style.maxHeight = '200px'; // Expand height
-                            momShowAll.textContent = 'Show top 3';
-                            momPickerList.dataset.expanded = 'true';
-                         } else {
-                            renderMomList(topPlayers);
-                             momPickerList.style.maxHeight = ''; // Reset max-height
-                            momShowAll.textContent = `Show all ${allRankedPlayers.length} candidates`;
-                            momPickerList.dataset.expanded = 'false';
-                         }
-                    };
-                } else {
-                    momShowAll.classList.add('hidden');
-                }
-                 document.getElementById('wm-mom-picker-section').style.display = 'block';
             } else {
                  document.getElementById('wm-mom-picker-section').style.display = 'none';
-                 momShowAll.classList.add('hidden');
             }
 
             // --- 5. Meta Line ---
@@ -4765,28 +4344,15 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
             
             // --- 6. Final Setup & Button Handler ---
             const confirmBtn = document.getElementById('win-modal-confirm-btn');
-            // Ensure button text is updated
-            confirmBtn.textContent = 'View Full Summary'; 
             confirmBtn.onclick = () => {
                 const selectedRadio = document.querySelector('input[name="mom-picker"]:checked');
                 if (selectedRadio) {
                     const selectedPlayerId = selectedRadio.value;
-                     // Find chosen player from the *full* list of candidates
-                    const chosenPlayer = allRankedPlayers.find(p => p.playerId === selectedPlayerId); 
+                    const chosenPlayer = rankedPlayers.find(p => p.playerId === selectedPlayerId);
                     if (chosenPlayer) {
                         state.manOfTheMatch = chosenPlayer;
                         saveCompletedMatchSummary(); // Persist the MoM selection
-                    } else {
-                        // Fallback: If somehow not found in full list, try top players (shouldn't happen)
-                        const chosenFromTop = topPlayers.find(p => p.playerId === selectedPlayerId);
-                        if(chosenFromTop) state.manOfTheMatch = chosenFromTop;
-                         saveCompletedMatchSummary();
                     }
-                } else if (allRankedPlayers.length > 0 && !state.manOfTheMatch) {
-                    // If no radio is selected (e.g., user didn't interact) AND MoM not already set,
-                    // default to the top suggested player before closing.
-                    state.manOfTheMatch = allRankedPlayers[0];
-                     saveCompletedMatchSummary();
                 }
                 closeModal('win-modal');
                 showSummaryScreen();
@@ -5400,7 +4966,6 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
             const battingTeamKey = teamData.name === state.team1.name ? 'team1' : 'team2';
             const bowlingTeamKey = teamData.name === state.team1.name ? 'team2' : 'team1';
             
-            // Batting Table
             let battingHTML = `
                 <div class="summary-table-container">
                     <table class="summary-table">
@@ -5409,75 +4974,47 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
                         </thead>
                         <tbody>`;
 
-             // Use Object.values which might contain sanitized data already
-            const batsmen = Object.values(state[battingTeamKey].playerStats).filter(p => toInt(p.balls) > 0 || p.isOut); 
+            const batsmen = Object.values(state[battingTeamKey].playerStats).filter(p => p.balls > 0 || p.isOut);
             batsmen.forEach(p => {
-                 // Use helpers
-                const runs = toInt(p.runs);
-                const balls = toInt(p.balls);
-                const fours = toInt(p.fours);
-                const sixes = toInt(p.sixes);
-                const sr = balls > 0 ? formatNumber(((runs / balls) * 100), 2) : '0.00'; // Guard division by zero
+                const sr = p.balls > 0 ? ((p.runs / p.balls) * 100).toFixed(2) : '0.00';
                 battingHTML += `
                     <tr>
                         <td class="font-bold">${p.name}</td>
                         <td class="text-gray-500">${formatDismissalText(p.dismissalInfo)}</td>
-                        <td class="text-right font-bold">${runs}</td>
-                        <td class="text-right">${balls}</td>
-                        <td class="text-right">${fours}</td>
-                        <td class="text-right">${sixes}</td>
+                        <td class="text-right font-bold">${p.runs}</td>
+                        <td class="text-right">${p.balls}</td>
+                        <td class="text-right">${p.fours}</td>
+                        <td class="text-right">${p.sixes}</td>
                         <td class="text-right">${sr}</td>
                     </tr>`;
             });
 
-            // Extras and Total
             const extras = state[battingTeamKey].extras;
-             // Use helpers for extras display
-            const extrasString = `(B ${toInt(extras.b)}, LB ${toInt(extras.lb)}, WD ${toInt(extras.wd)}, NB ${toInt(extras.nb)})`;
-            const totalExtras = toInt(extras.total);
-             // Use helpers for total display
-            const totalScore = toInt(state[battingTeamKey].score);
-            const totalWickets = toInt(state[battingTeamKey].wickets);
-            const totalOvers = toInt(state[battingTeamKey].overs);
-            const totalBalls = toInt(state[battingTeamKey].balls);
+            const extrasString = `(B ${extras.b}, LB ${extras.lb}, WD ${extras.wd}, NB ${extras.nb})`;
             battingHTML += `
                     <tr class="summary-extras-row">
                         <td colspan="2">Extras</td>
-                        <td colspan="5" class="text-right">${totalExtras} ${extrasString}</td>
+                        <td colspan="5" class="text-right">${extras.total} ${extrasString}</td>
                     </tr>
                     <tr class="summary-total-row">
                         <td colspan="2">Total</td>
-                        <td colspan="5" class="text-right">${totalScore}/${totalWickets} (${totalOvers}.${totalBalls} Overs)</td>
+                        <td colspan="5" class="text-right">${state[battingTeamKey].score}/${state[battingTeamKey].wickets} (${state[battingTeamKey].overs}.${state[battingTeamKey].balls} Overs)</td>
                     </tr>
                 </tbody></table></div>`;
             
-            // Did Not Bat
-            // Get player *objects* from the 'players' array (which holds objects)
-            const allPlayingPlayers = state[battingTeamKey].players || []; // Add fallback for safety
-            // Filter out players who batted (present in the 'batsmen' array by ID)
-            const didNotBatPlayers = allPlayingPlayers.filter(playerObj => 
-                 playerObj && !batsmen.some(batsman => batsman.playerId === playerObj.id)
-            );
-            
+            const didNotBat = state[battingTeamKey].players.filter(pName => !batsmen.some(b => b.name === pName));
             let dnbHTML = '';
-            if (didNotBatPlayers.length > 0) {
-                 // Map the player objects to their names and join
-                const didNotBatNames = didNotBatPlayers.map(player => player.name).join(', ');
-                dnbHTML = `<div class="summary-dnb-section mt-4 px-2 sm:px-0"><h4 class="font-semibold text-sm">Did not bat:</h4><p class="text-gray-600 text-sm">${didNotBatNames}</p></div>`;
+            if (didNotBat.length > 0) {
+                dnbHTML = `<div class="summary-dnb-section mt-4 px-2 sm:px-0"><h4 class="font-semibold text-sm">Did not bat:</h4><p class="text-gray-600 text-sm">${didNotBat.join(', ')}</p></div>`;
             }
 
-            // Fall of Wickets
-            const fow = (state[battingTeamKey].inningsHistory || []) // Add fallback
-                .filter(ball => ball && ball.dismissalInfo) // Check ball exists
+            const fow = state[battingTeamKey].inningsHistory
+                .filter(ball => ball.dismissalInfo)
                 .map(ball => {
-                     // Ensure playerStats exists before accessing
-                    const playerStats = state[battingTeamKey].playerStats || {}; 
-                    const batsmanOut = Object.values(playerStats).find(p => p.dismissalInfo === ball.dismissalInfo);
-                    // Sanitize scoreAtFall
-                    const scoreAtFall = toInt(ball.dismissalInfo.scoreAtFall, '?'); // Use '?' if invalid
+                    const batsmanOut = Object.values(state[battingTeamKey].playerStats).find(p => p.dismissalInfo === ball.dismissalInfo);
                     return {
-                        score: scoreAtFall,
-                        over: ball.dismissalInfo.overAtFall || '?.?', // Default if missing
+                        score: ball.dismissalInfo.scoreAtFall,
+                        over: ball.dismissalInfo.overAtFall,
                         player: batsmanOut ? batsmanOut.name : 'Unknown'
                     };
                 })
@@ -5491,29 +5028,21 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
                 </div>`;
             }
 
-            // Bowling Table
             let bowlingHTML = `<div class="summary-table-container mt-6"><table class="summary-table">
                 <thead><tr><th>BOWLING</th><th class="text-right">O</th><th class="text-right">M</th><th class="text-right">R</th><th class="text-right">W</th><th class="text-right">ECON</th></tr></thead>
                 <tbody>`;
 
-             // Use Object.values which might contain sanitized data already
-            const bowlers = Object.values(state[bowlingTeamKey].playerStats || {}).filter(p => toInt(p.ballsBowled) > 0); 
+            const bowlers = Object.values(state[bowlingTeamKey].playerStats).filter(p => p.ballsBowled > 0);
             bowlers.forEach(p => {
-                 // Use helpers
-                const ballsBowled = toInt(p.ballsBowled);
-                const runsConceded = toInt(p.runsConceded);
-                const maidens = toInt(p.maidens);
-                const wickets = toInt(p.wickets);
-                const overs = `${Math.floor(ballsBowled / 6)}.${ballsBowled % 6}`;
-                 // Guard division by zero
-                const econ = ballsBowled > 0 ? formatNumber((runsConceded / (ballsBowled / 6)), 2) : '0.00'; 
+                const overs = `${Math.floor(p.ballsBowled / 6)}.${p.ballsBowled % 6}`;
+                const econ = p.ballsBowled > 0 ? (p.runsConceded / (p.ballsBowled / 6)).toFixed(2) : '0.00';
                 bowlingHTML += `
                     <tr>
                         <td class="font-bold">${p.name}</td>
                         <td class="text-right">${overs}</td>
-                        <td class="text-right">${maidens}</td>
-                        <td class="text-right">${runsConceded}</td>
-                        <td class="text-right font-bold">${wickets}</td>
+                        <td class="text-right">${p.maidens}</td>
+                        <td class="text-right">${p.runsConceded}</td>
+                        <td class="text-right font-bold">${p.wickets}</td>
                         <td class="text-right">${econ}</td>
                     </tr>`;
             });
@@ -6931,24 +6460,15 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
     document.getElementById('edit-team2-panel').classList.toggle('hidden', teamKeyToShow !== 'team2');
 }
 
-let originalOverOnEdit = []; // Store the original full-data over
 function openEditModal() {
+    // Per your instructions, we must pre-fill all fields from the live state.
     editInitialStriker = JSON.parse(JSON.stringify(state.striker));
     editInitialNonStriker = JSON.parse(JSON.stringify(state.nonStriker));
-    document.getElementById('edit-venue').value = state.venue;
-    document.getElementById('edit-total-overs').value = state.totalOvers;
-
-    // --- FIX: Load the FULL ball data from inningsHistory, not the simplified state.currentOver ---
-    const originalOverLength = state.currentOver.length;
-    const history = state[state.battingTeam].inningsHistory;
-    let historySlice = [];
-    if (originalOverLength > 0 && history.length >= originalOverLength) {
-         historySlice = history.slice(history.length - originalOverLength);
-    }
-    // Store both the original and the mutable version
-    originalOverOnEdit = JSON.parse(JSON.stringify(historySlice)); 
-    editedOver = JSON.parse(JSON.stringify(historySlice)); // This array now contains full ball objects
-    // --- END FIX ---
+    document.getElementById('edit-venue').value = state.venue || '';
+    document.getElementById('edit-total-overs').value = state.totalOvers || 0;
+    
+    // Deep copy the current over for editing
+    editedOver = JSON.parse(JSON.stringify(state.currentOver));
     
     // Setup Tab Listeners & Text
     document.getElementById('edit-team1-tab').textContent = state.team1.name;
@@ -6957,13 +6477,53 @@ function openEditModal() {
     document.getElementById('edit-team2-tab').onclick = () => switchEditTab('team2');
     
     const battingTeamKey = state.battingTeam;
-    // Calculation of scoreBeforeOver is now based on the full-data over
-    const initialOverRuns = editedOver.reduce((acc, ball) => acc + (ball.runs || 0), 0);
+    
+    // Calculate the score *before* the current over began
+    const initialOverRuns = state.currentOver.reduce((acc, ball) => acc + parseBallEvent(ball.event), 0);
     scoreBeforeOver = toInt(state[battingTeamKey].score) - toInt(initialOverRuns);
+    if (scoreBeforeOver < 0) scoreBeforeOver = 0; // Safety check
 
+    // This function will be called to live-recalculate totals in the modal
+    const liveRecalcModalTotals = () => {
+        const battingTeamScoreInput = document.getElementById(`edit-${battingTeamKey}-score`);
+        const battingTeamOversInput = document.getElementById(`edit-${battingTeamKey}-overs`);
+        const battingTeamBallsInput = document.getElementById(`edit-${battingTeamKey}-balls`);
+
+        // 1. Recalculate over runs from the *edited* over
+        let newOverRuns = editedOver.reduce((acc, ball) => acc + parseBallEvent(ball.event), 0);
+        battingTeamScoreInput.value = toInt(scoreBeforeOver) + toInt(newOverRuns);
+        
+        // 2. Recalculate balls
+        let legalBallsInEditedOver = editedOver.filter(ball => isLegalDelivery(ball.event)).length;
+        
+        // Find the base overs/balls *before* this over started
+        let originalLegalBallsInOver = state.currentOver.filter(ball => isLegalDelivery(ball.event)).length;
+        let baseTotalBalls = (toInt(state[battingTeamKey].overs) * 6) + toInt(state[battingTeamKey].balls) - originalLegalBallsInOver;
+        if (baseTotalBalls < 0) baseTotalBalls = 0; // Safety
+
+        let newTotalLegalBalls = baseTotalBalls + legalBallsInEditedOver;
+        
+        const newOversParts = formatOvers(newTotalLegalBalls); // Uses new helper
+        battingTeamOversInput.value = newOversParts.overs;
+        battingTeamBallsInput.value = newOversParts.balls;
+    };
+
+    // This function updates the over chips display
+    const renderOverChips = () => {
+        const chipsContainer = document.getElementById('edit-over-chips-display');
+        chipsContainer.innerHTML = editedOver.map((ball, index) => 
+            `<span class="over-chip" data-index="${index}">${ball.event}</span>`
+        ).join('');
+        chipsContainer.querySelectorAll('.over-chip').forEach(chip => {
+            // Re-bind click handler to open popover, which will trigger liveRecalcModalTotals on change
+            chip.onclick = () => openOverEditPopover(chip, chip.dataset.index, liveRecalcModalTotals, renderOverChips);
+        });
+    };
+
+    // --- Populate Modal Fields (Team 1 & 2) ---
     ['team1', 'team2'].forEach(teamKey => {
         const team = state[teamKey];
-        document.getElementById(`edit-${teamKey}-name`).value = team.name;
+        document.getElementById(`edit-${teamKey}-name`).value = team.name || '';
         document.getElementById(`edit-${teamKey}-score`).value = toInt(team.score);
         document.getElementById(`edit-${teamKey}-wickets`).value = toInt(team.wickets);
         document.getElementById(`edit-${teamKey}-overs`).value = toInt(team.overs);
@@ -6986,52 +6546,23 @@ function openEditModal() {
         };
 
         renderEditablePlayerList(teamKey);
+
+        // Add live-recalc listeners for non-batting team (batting team is handled by liveRecalcModalTotals)
+        if (teamKey !== battingTeamKey) {
+            document.getElementById(`edit-${teamKey}-score`).oninput = liveRecalcModalTotals;
+            document.getElementById(`edit-${teamKey}-wickets`).oninput = liveRecalcModalTotals;
+            document.getElementById(`edit-${teamKey}-overs`).oninput = liveRecalcModalTotals;
+            document.getElementById(`edit-${teamKey}-balls`).oninput = liveRecalcModalTotals;
+        }
     });
 
-    const chipsContainer = document.getElementById('edit-over-chips-display');
-    
-    const recalculateAndRender = () => {
-        const battingTeamScoreInput = document.getElementById(`edit-${battingTeamKey}-score`);
-        const battingTeamOversInput = document.getElementById(`edit-${battingTeamKey}-overs`);
-        const battingTeamBallsInput = document.getElementById(`edit-${battingTeamKey}-balls`);
-
-        // 1. Recalculate score (this logic remains correct)
-        let newOverRuns = editedOver.reduce((acc, ball) => acc + parseBallEvent(ball.event), 0);
-        battingTeamScoreInput.value = toInt(scoreBeforeOver + newOverRuns); 
-
-        // 2. Recalculate overs/balls (using the correct logic)
-        let newLegalBalls = editedOver.filter(ball => isLegalDelivery(ball.event)).length;
-        // --- FIX: Use the stored originalOverOnEdit, not state.currentOver ---
-        let originalLegalBalls = originalOverOnEdit.filter(ball => isLegalDelivery(ball.event)).length;
-
-        let baseOvers = toInt(state[battingTeamKey].overs);
-        let baseBalls = toInt(state[battingTeamKey].balls) - originalLegalBalls; 
-        
-        if (baseBalls < 0) {
-            baseOvers -= 1;
-            baseBalls += 6;
-        }
-        if (baseOvers < 0) baseOvers = 0; 
-        
-        let totalBalls = (baseOvers * 6) + baseBalls + newLegalBalls; 
-        battingTeamOversInput.value = Math.floor(totalBalls / 6);
-        battingTeamBallsInput.value = totalBalls % 6;
-        
-        // 3. Render chips (this logic remains correct)
-        chipsContainer.innerHTML = editedOver.map((ball, index) => 
-            `<span class="over-chip" data-index="${index}">${ball.event}</span>`
-        ).join('');
-        chipsContainer.querySelectorAll('.over-chip').forEach(chip => {
-            chip.onclick = () => openOverEditPopover(chip, chip.dataset.index);
-        });
-    };
-
-    recalculateAndRender();
+    renderOverChips(); // Initial render of over chips
+    liveRecalcModalTotals(); // Initial calculation of totals
     switchEditTab('team1'); // Set initial tab
     openModal('edit-match-modal');
 }
         
-        function openOverEditPopover(chipElement, ballIndex) {
+        function openOverEditPopover(chipElement, ballIndex, liveRecalcCallback, renderChipsCallback) {
             const popover = document.getElementById('over-edit-popover');
             const optionsContainer = document.getElementById('over-edit-options');
             
@@ -7048,200 +6579,101 @@ function openEditModal() {
             const options = ['0', '1', '2', '3', '4', '6', '.', 'W', 'WD', 'WD+1', 'WD+2', 'NB', 'NB+1', 'B1', 'LB1'];
             optionsContainer.innerHTML = options.map(opt => `<button data-event="${opt}">${opt}</button>`).join('');
 
-            // --- FIX: Accessing .event from a full ball object ---
-            let selectedEvent = editedOver[ballIndex] ? editedOver[ballIndex].event : '1'; // Default to '1' if ball somehow doesn't exist
+            // We will modify `editedOver` directly, and the callbacks will handle the UI
+            let selectedEvent = editedOver[ballIndex] ? editedOver[ballIndex].event : '0';
             
+            const saveHistory = () => editHistory.push(JSON.parse(JSON.stringify(editedOver)));
+
+            const runCallbacksAndClose = () => {
+                if (liveRecalcCallback) liveRecalcCallback();
+                if (renderChipsCallback) renderChipsCallback();
+                popover.style.display = 'none';
+            };
+
             // Event handlers for popover
             optionsContainer.querySelectorAll('button').forEach(btn => {
                 btn.onclick = () => {
                     selectedEvent = btn.dataset.event;
+                    // For single-action buttons, we can just replace directly
                     document.getElementById('popover-replace-btn').click();
                 };
             });
-            
-            const saveHistory = () => editHistory.push(JSON.parse(JSON.stringify(editedOver)));
 
-            const recalculateAndClose = () => {
-                const chipsContainer = document.getElementById('edit-over-chips-display');
-                const battingTeamKey = state.battingTeam;
-                const battingTeamScoreInput = document.getElementById(`edit-${battingTeamKey}-score`);
-                const battingTeamOversInput = document.getElementById(`edit-${battingTeamKey}-overs`);
-                const battingTeamBallsInput = document.getElementById(`edit-${battingTeamKey}-balls`);
-
-                let newOverRuns = editedOver.reduce((acc, ball) => acc + parseBallEvent(ball.event), 0);
-                battingTeamScoreInput.value = toInt(scoreBeforeOver + newOverRuns); // Use toInt
-
-                let legalBalls = editedOver.filter(ball => isLegalDelivery(ball.event)).length;
-                // --- FIX: Use originalOverOnEdit for the original ball count ---
-                let originalLegalBalls = originalOverOnEdit.filter(ball => isLegalDelivery(ball.event)).length;
-                
-                let baseOvers = toInt(state[battingTeamKey].overs);
-                let baseBalls = toInt(state[battingTeamKey].balls) - originalLegalBalls;
-                if (baseBalls < 0) { 
-                    baseOvers -= 1;
-                    baseBalls += 6;
-                }
-                
-                let totalBalls = (baseOvers * 6) + baseBalls + legalBalls;
-                battingTeamOversInput.value = Math.floor(totalBalls / 6);
-                battingTeamBallsInput.value = totalBalls % 6;
-
-                chipsContainer.innerHTML = editedOver.map((ball, i) => `<span class="over-chip" data-index="${i}">${ball.event}</span>`).join('');
-                chipsContainer.querySelectorAll('.over-chip').forEach(chip => {
-                    chip.onclick = () => openOverEditPopover(chip, chip.dataset.index);
-                });
-                popover.style.display = 'none';
-            };
-
-            // --- FIX: All buttons now handle full ball objects ---
             document.getElementById('popover-replace-btn').onclick = () => {
                 saveHistory();
                 const newRuns = parseBallEvent(selectedEvent);
-                // Update existing ball object
-                editedOver[ballIndex].event = selectedEvent;
-                editedOver[ballIndex].runs = newRuns;
-                // If event changed from Wicket to non-Wicket, clear dismissal info
-                if (!(selectedEvent || '').includes('W') && editedOver[ballIndex].dismissalInfo) {
-                    editedOver[ballIndex].dismissalInfo = null;
-                }
-                recalculateAndClose();
+                editedOver[ballIndex] = { event: selectedEvent, runs: newRuns };
+                runCallbacksAndClose();
             };
             document.getElementById('popover-insertBefore-btn').onclick = () => {
                 saveHistory();
                 const newRuns = parseBallEvent(selectedEvent);
-                const templateBall = editedOver[ballIndex]; // Get metadata from current ball
-                const newBall = {
-                    ...templateBall, // Clones batterId, bowlerId, etc.
-                    event: selectedEvent,
-                    runs: newRuns,
-                    dismissalInfo: null // New balls can't be wickets from this simple UI
-                };
-                editedOver.splice(ballIndex, 0, newBall);
-                recalculateAndClose();
+                editedOver.splice(ballIndex, 0, { event: selectedEvent, runs: newRuns });
+                runCallbacksAndClose();
             };
             document.getElementById('popover-insertAfter-btn').onclick = () => {
                 saveHistory();
                 const newRuns = parseBallEvent(selectedEvent);
-                const templateBall = editedOver[ballIndex]; // Get metadata from current ball
-                const newBall = {
-                    ...templateBall, // Clones batterId, bowlerId, etc.
-                    event: selectedEvent,
-                    runs: newRuns,
-                    dismissalInfo: null // New balls can't be wickets from this simple UI
-                };
-                editedOver.splice(parseInt(ballIndex) + 1, 0, newBall);
-                recalculateAndClose();
+                editedOver.splice(parseInt(ballIndex) + 1, 0, { event: selectedEvent, runs: newRuns });
+                runCallbacksAndClose();
             };
             document.getElementById('popover-delete-btn').onclick = () => {
                 saveHistory();
                 editedOver.splice(ballIndex, 1);
-                recalculateAndClose();
+                runCallbacksAndClose();
             };
         }
 
         function saveMatchEdits() {
-            // Log state before making major changes for undo history
-            // We save BEFORE applying edits, so undo reverts to the state before saveMatchEdits was called.
-            saveState(); 
+    saveState(); // Log state before making major changes for undo history
 
-            // --- 1. GATHER AND SANITIZE ALL NEW VALUES FROM THE FORM ---
-            const newVenue = document.getElementById('edit-venue').value.toUpperCase();
-            const newTotalOvers = toInt(document.getElementById('edit-total-overs').value, state.totalOvers);
+    // --- 1. GATHER ALL NEW VALUES FROM THE FORM (using toInt/toNum) ---
+    const patch = {
+        venue: document.getElementById('edit-venue').value.toUpperCase(),
+        totalOvers: toInt(document.getElementById('edit-total-overs').value),
+        team1: {
+            name: document.getElementById('edit-team1-name').value.toUpperCase(),
+            score: toInt(document.getElementById('edit-team1-score').value),
+            wickets: toInt(document.getElementById('edit-team1-wickets').value),
+            overs: toInt(document.getElementById('edit-team1-overs').value),
+            balls: toInt(document.getElementById('edit-team1-balls').value),
+            logo: document.getElementById('edit-team1-logo-preview').src
+        },
+        team2: {
+            name: document.getElementById('edit-team2-name').value.toUpperCase(),
+            score: toInt(document.getElementById('edit-team2-score').value),
+            wickets: toInt(document.getElementById('edit-team2-wickets').value),
+            overs: toInt(document.getElementById('edit-team2-overs').value),
+            balls: toInt(document.getElementById('edit-team2-balls').value),
+            logo: document.getElementById('edit-team2-logo-preview').src
+        }
+    };
 
-            // Validation function remains the same
-            const validateNumberInput = (id, fieldName) => {
-                const input = document.getElementById(id);
-                const value = input.value;
-                const parsedNum = toInt(value, NaN); 
-                
-                if (!Number.isFinite(parsedNum) || parsedNum < 0) {
-                     showAlert(`Invalid input for ${fieldName}. Please enter a valid non-negative number.`);
-                     input.focus(); 
-                     return null; 
-                }
-                return parsedNum;
-            };
+    // --- 2. APPLY PATCH TO THE MAIN STATE (Deep Merge style, as requested) ---
+    // This merges the patch values into the existing state, not replacing whole objects
+    state.venue = patch.venue;
+    state.totalOvers = patch.totalOvers;
 
-            const team1Score = validateNumberInput('edit-team1-score', 'Team 1 Score');
-            const team1Wickets = validateNumberInput('edit-team1-wickets', 'Team 1 Wickets');
-            const team1Overs = validateNumberInput('edit-team1-overs', 'Team 1 Overs');
-            const team1Balls = validateNumberInput('edit-team1-balls', 'Team 1 Balls');
-            const team2Score = validateNumberInput('edit-team2-score', 'Team 2 Score');
-            const team2Wickets = validateNumberInput('edit-team2-wickets', 'Team 2 Wickets');
-            const team2Overs = validateNumberInput('edit-team2-overs', 'Team 2 Overs');
-            const team2Balls = validateNumberInput('edit-team2-balls', 'Team 2 Balls');
+    // Merge team data without destroying playerStats, inningsHistory, etc.
+    Object.assign(state.team1, patch.team1);
+    Object.assign(state.team2, patch.team2);
+    
+    // Apply the edited over
+    state.currentOver = JSON.parse(JSON.stringify(editedOver));
 
-            // If any validation failed, stop the save process (do not modify state)
-            if ([team1Score, team1Wickets, team1Overs, team1Balls, team2Score, team2Wickets, team2Overs, team2Balls].includes(null)) {
-                return; 
-            }
-             if (team1Balls > 5 || team2Balls > 5) {
-                 showAlert('Invalid input for Balls. Must be between 0 and 5.');
-                 if(team1Balls > 5) document.getElementById('edit-team1-balls').focus();
-                 else document.getElementById('edit-team2-balls').focus();
-                 return;
-             }
-             const maxWickets = toInt(state.playersPerSide, 11) - 1;
-              if (team1Wickets > maxWickets || team2Wickets > maxWickets) {
-                 showAlert(`Invalid input for Wickets. Cannot exceed ${maxWickets} for a ${state.playersPerSide}-a-side game.`);
-                  if(team1Wickets > maxWickets) document.getElementById('edit-team1-wickets').focus();
-                 else document.getElementById('edit-team2-wickets').focus();
-                 return;
-             }
-             
-            // --- 2. APPLY VALIDATED CHANGES DIRECTLY TO THE STATE (Merge carefully) ---
-            state.venue = newVenue;
-            state.totalOvers = newTotalOvers;
+    // --- 3. RECALCULATE ALL PLAYER STATS FROM INNINGS HISTORY ---
+    // This is the most robust way to ensure stats are correct after any edit.
+    // This function will repopulate all player runs, balls, etc.
+    recalculateAllPlayerStats();
 
-            // Apply Team 1 updates (from manual input fields)
-            state.team1.name = document.getElementById('edit-team1-name').value.toUpperCase();
-            state.team1.score = team1Score; 
-            state.team1.wickets = team1Wickets; 
-            state.team1.overs = team1Overs; 
-            state.team1.balls = team1Balls; 
-            state.team1.logo = document.getElementById('edit-team1-logo-preview').src; 
+    // --- 4. FINALIZE ---
+    closeModal('edit-match-modal');
+    updateUI(); // Re-render everything with the fresh, correct state
+    debouncedSave();
 
-            // Apply Team 2 updates (from manual input fields)
-            state.team2.name = document.getElementById('edit-team2-name').value.toUpperCase();
-            state.team2.score = team2Score; 
-            state.team2.wickets = team2Wickets; 
-            state.team2.overs = team2Overs; 
-            state.team2.balls = team2Balls; 
-            state.team2.logo = document.getElementById('edit-team2-logo-preview').src; 
-            
-            // --- 3. RECONCILE EDITED OVER WITH INNINGS HISTORY ---
-            // originalOverOnEdit was set when the modal was opened (with full ball data)
-            const originalOverLength = originalOverOnEdit.length;
-            const battingTeamKey = state.battingTeam;
-            const history = state[battingTeamKey].inningsHistory;
-            
-            // newOver is the array of full ball objects that was just edited
-            const newOver = JSON.parse(JSON.stringify(editedOver)); 
-
-            if (originalOverLength > 0 && history.length >= originalOverLength) {
-                const historyStartIdx = history.length - originalOverLength;
-                // Splice the history: remove old balls, add new ones
-                history.splice(historyStartIdx, originalOverLength, ...newOver);
-            } else {
-                // Original over was empty, or history is shorter. Just append.
-                history.push(...newOver);
-            }
-            
-            // NOW apply the edited over to the simplified state.currentOver
-            state.currentOver = newOver.map(ball => ({ event: ball.event, runs: ball.runs }));
-
-            // --- 4. RECALCULATE PLAYER STATS ---
-            // This will now use the *updated* inningsHistory and fix all player stats (runs, 4s, 6s, SR, etc.)
-            // to match the ball-by-ball data, which aligns with the user's Acceptance Criteria.
-            recalculateAllPlayerStats(); 
-            
-            // --- 5. FINALIZE ---
-            closeModal('edit-match-modal');
-            updateUI(); // Re-render everything with the updated state
-            debouncedSave(); // Autosave the updated state
-
-            showAlert('Match state has been updated successfully.');
+    showAlert('Match state has been updated successfully.');
 }
+
 
         function previewDownload(format) {
              const { jsPDF } = window.jspdf;
@@ -7642,69 +7074,6 @@ function openEditModal() {
 
         // --- INITIALIZATION ---
 // --- INITIALIZATION ---
-        // --- NEW: Function to sanitize loaded state ---
-        function sanitizeState(loadedState) {
-            if (!loadedState) return loadedState;
-
-            ['team1', 'team2'].forEach(teamKey => {
-                const team = loadedState[teamKey];
-                if (team) {
-                    team.score = toInt(team.score);
-                    team.wickets = toInt(team.wickets);
-                    team.overs = toInt(team.overs);
-                    team.balls = toInt(team.balls);
-                    if (team.extras) {
-                         team.extras.b = toInt(team.extras.b);
-                         team.extras.lb = toInt(team.extras.lb);
-                         team.extras.wd = toInt(team.extras.wd);
-                         team.extras.nb = toInt(team.extras.nb);
-                         team.extras.total = toInt(team.extras.total);
-                    }
-                    if (team.playerStats) {
-                        Object.values(team.playerStats).forEach(p => {
-                            p.runs = toInt(p.runs);
-                            p.balls = toInt(p.balls);
-                            p.fours = toInt(p.fours);
-                            p.sixes = toInt(p.sixes);
-                            p.ballsBowled = toInt(p.ballsBowled);
-                            p.runsConceded = toInt(p.runsConceded);
-                            p.wickets = toInt(p.wickets);
-                            p.maidens = toInt(p.maidens);
-                            p.dots = toInt(p.dots);
-                            p.foursConceded = toInt(p.foursConceded);
-                            p.sixesConceded = toInt(p.sixesConceded);
-                            // Ensure dismissalInfo score/over are numbers if they exist
-                             if (p.dismissalInfo) {
-                                p.dismissalInfo.scoreAtFall = toInt(p.dismissalInfo.scoreAtFall, null); // Allow null if not set
-                                // overAtFall is string 'X.Y', leave as is
-                             }
-                        });
-                    }
-                     if (team.inningsHistory) {
-                         team.inningsHistory.forEach(ball => {
-                              if(ball) ball.runs = toInt(ball.runs); // Ensure runs in history are numbers, check if ball exists
-                         });
-                     }
-                }
-            });
-            loadedState.innings = toInt(loadedState.innings, 1);
-            loadedState.target = toInt(loadedState.target);
-            loadedState.totalOvers = toInt(loadedState.totalOvers, 20); // Default if invalid
-            loadedState.playersPerSide = toInt(loadedState.playersPerSide, 11); // Default if invalid
-            // Sanitize currentOver array runs
-             if (loadedState.currentOver && Array.isArray(loadedState.currentOver)) { // Check if it's an array
-                loadedState.currentOver.forEach(ball => {
-                     if(ball) ball.runs = toInt(ball.runs); // Check if ball exists
-                });
-            } else {
-                 loadedState.currentOver = []; // Default to empty array if invalid
-            }
-
-
-            return loadedState;
-        }
-
-
         function initializeApp() {
             // This function sets up all the button clicks and input handlers for the app.
             const initializeCommonEventListeners = () => {
@@ -7778,9 +7147,12 @@ function openEditModal() {
             if (savedStateJSON && savedStateJSON !== 'null') {
                 // An active match was found in storage.
                 try {
-                    let savedState = JSON.parse(savedStateJSON);
-                    savedState = sanitizeState(savedState); // Sanitize the loaded state
-                    Object.assign(state, savedState); 
+                    const savedState = JSON.parse(savedStateJSON);
+                    Object.assign(state, savedState);
+                    
+                    // --- SANITIZE LOADED STATE ---
+                    sanitizeState(state); 
+                    // --- END SANITIZE ---
 
                     window.addEventListener('beforeunload', beforeUnloadHandler);
 
@@ -7788,39 +7160,43 @@ function openEditModal() {
                     
                     if (lastPath === 'summary-screen') {
                         showScreen('summary-screen');
-                        showSummaryScreen(); // Call showSummaryScreen to render based on sanitized state
+                        showSummaryScreen();
                     } else {
                         // Default to the main scoring screen if a match is in progress.
                         showScreen('app');
-                        updateUI(); // Render based on sanitized state
+                        updateUI();
                     }
                 } catch (e) {
-                     // If loading the saved state fails, it's corrupt. Clear it and start over.
+                    // If loading the saved state fails, it's corrupt. Clear it and start over.
                     console.error("Failed to load saved state, starting fresh.", e);
                     localStorage.removeItem('matchState_v1');
                     localStorage.removeItem('lastVisitedPath');
                     showScreen('choice-screen');
                 }
-            } else { 
+            } else {
                 // No active match. Check if we are trying to view a completed match from history.
-                 const summaryToViewJSON = localStorage.getItem('summaryToView');
+                const summaryToViewJSON = localStorage.getItem('summaryToView');
                 if (summaryToViewJSON) {
                     localStorage.removeItem('summaryToView'); // Clear it after reading
                     try {
-                        let summaryData = JSON.parse(summaryToViewJSON);
-                         summaryData = sanitizeState(summaryData); // Sanitize summary data
+                        const summaryData = JSON.parse(summaryToViewJSON);
                         Object.assign(state, summaryData);
+                        
+                        // --- SANITIZE LOADED STATE ---
+                        sanitizeState(state);
+                        // --- END SANITIZE ---
+                        
                         showScreen('summary-screen');
-                        showSummaryScreen(); // Render based on sanitized state
+                        showSummaryScreen();
                     } catch (e) { 
                         console.error("Failed to parse summary data, starting fresh.", e); 
                         showScreen('choice-screen');
                     }
                 } else {
-                     // This is a fresh session. Show the main choice screen.
-                     showScreen('choice-screen');
+                    // This is a fresh session. Show the main choice screen.
+                    showScreen('choice-screen');
                 }
-             }
+            }
         }
 
         document.addEventListener('DOMContentLoaded', initializeApp);
