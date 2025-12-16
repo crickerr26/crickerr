@@ -3326,15 +3326,11 @@ function updateFreeHitIndicator() {
 }
         
    async function processWicket(type, playerOutId, fielderName = null, fielderId = null) {
-     // Reconfirm check: On a Free Hit, only Run Out dismissal is possible.
-     // The handleWicket function should prevent this, but double-check here.
     if (state.isFreeHit && type !== 'Run Out') {
-        console.warn(`processWicket called for ${type} during Free Hit. This shouldn't happen.`);
-        showAlert("Batsman cannot be out on a Free Hit (except for Run Out). No wicket recorded.");
+        showAlert("Batsman cannot be out on a Free Hit (except for Run Out).");
         closeAllModals();
-         // If a wicket button other than RO was pressed during FH, clear FH state and don't process wicket.
-         state.isFreeHit = false;
-         updateUI();
+        state.isFreeHit = false;
+        updateUI();
         return;
     }
 
@@ -3345,14 +3341,13 @@ function updateFreeHitIndicator() {
     const battingTeamKey = state.battingTeam;
     const battingTeam = state[battingTeamKey];
 
-    // Correctly identify the player object using the passed playerOutId
     if (state.striker && state.striker.playerId === playerOutId) {
         playerOutObject = state.striker;
     } else if (state.nonStriker && state.nonStriker.playerId === playerOutId) {
         playerOutObject = state.nonStriker;
     } else {
         console.error("Could not find player to dismiss with ID:", playerOutId);
-        return; // Exit if the player to be dismissed can't be found
+        return;
     }
 
     playerOutObject.consecutiveFours = 0;
@@ -3364,9 +3359,7 @@ function updateFreeHitIndicator() {
         state.bowler.wickets++;
     }
 
-    // A wicket ball is always a legal delivery for the batter in terms of balls faced.
     playerOutObject.balls++;
-
     playerOutObject.isOut = true;
 
     const dismissalInfo = { 
@@ -3380,37 +3373,33 @@ function updateFreeHitIndicator() {
     };
     playerOutObject.dismissalInfo = dismissalInfo;
 
-    // Save the dismissed player's stats immediately.
     savePlayerStats(playerOutObject, battingTeamKey); 
-
     generateRealCommentary('wicket', { wicketType: type, bowler: state.bowler, striker: playerOutObject, fielder: fielderName, playerOut: playerOutObject.name });
 
-    // Pass the dismissal info into the ball processing function
     processBall(0, 'W', null, dismissalInfo);
 
-    // Correctly nullify the active batter role using the correct ID
     if (state.striker && state.striker.playerId === playerOutId) state.striker = null;
     if (state.nonStriker && state.nonStriker.playerId === playerOutId) state.nonStriker = null;
 
     updateUI();
     await triggerEventAnimation('OUT', 'text-red-700');
-
     await showPlayerOutSummary(playerOutObject);
 
     if (checkInningsEnd()) return;
 
+    // DIRECTLY OPEN NEXT PLAYER MODAL (No Alert)
     state.isScoringLocked = true;
     const roleToFill = !state.striker ? 'striker' : 'nonStriker';
 
-    showAlert(`Please select the next ${roleToFill}.`, () => {
-        ui.playerModalCancelBtnX.classList.add('hidden');
-        ui.playerModalCancelBtnText.classList.add('hidden');
-        selectPlayer(roleToFill, () => {
-            ui.playerModalCancelBtnX.classList.remove('hidden');
-            ui.playerModalCancelBtnText.classList.remove('hidden');
-            state.isScoringLocked = false;
-            updateUI();
-        });
+    // Hide cancel buttons to force selection
+    ui.playerModalCancelBtnX.classList.add('hidden');
+    ui.playerModalCancelBtnText.classList.add('hidden');
+    
+    selectPlayer(roleToFill, () => {
+        ui.playerModalCancelBtnX.classList.remove('hidden');
+        ui.playerModalCancelBtnText.classList.remove('hidden');
+        state.isScoringLocked = false;
+        updateUI();
     });
 }
 function initiateRunOutFlow() {
@@ -3470,113 +3459,74 @@ function initiateRunOutFlow() {
             openModal('run-out-modal');
         }
         async function finalizeRunOutDismissal(playerOutId) {
-            closeModal('run-out-modal');
-            saveState(); // Save state before processing dismissal
+    closeModal('run-out-modal');
+    saveState(); 
 
-            const runsTakenInput = document.getElementById('run-out-selected-runs');
-            const runsTaken = parseInt(runsTakenInput.value) || 0; // Get runs from hidden input
+    const runsTakenInput = document.getElementById('run-out-selected-runs');
+    const runsTaken = parseInt(runsTakenInput.value) || 0; 
 
-            const battingTeamKey = state.battingTeam;
-            const battingTeam = state[battingTeamKey];
-            const playerOutObject = state[battingTeamKey].playerStats[playerOutId];
+    const battingTeamKey = state.battingTeam;
+    const battingTeam = state[battingTeamKey];
+    const playerOutObject = state[battingTeamKey].playerStats[playerOutId];
 
-            if (!playerOutObject) {
-                console.error("Could not find player to dismiss with ID:", playerOutId);
-                return;
-            }
+    if (!playerOutObject) return;
 
-            // 1. Add runs scored before the dismissal attempt
-            battingTeam.score += runsTaken;
-            // No runs added to bowler conceded for Run Out runs
+    battingTeam.score += runsTaken;
+    battingTeam.wickets++;
 
-            // 2. Increment team wickets
-            battingTeam.wickets++;
+    playerOutObject.isOut = true;
+    const dismissalInfo = {
+        type: 'Run Out',
+        bowlerId: null, 
+        bowlerName: null,
+        fielderId: null, 
+        fielderName: null,
+        scoreAtFall: battingTeam.score, 
+        overAtFall: `${battingTeam.overs}.${battingTeam.balls + 1}` 
+    };
+    playerOutObject.dismissalInfo = dismissalInfo;
 
-            // 3. Mark player as out
-            playerOutObject.isOut = true;
-            const dismissalInfo = {
-                type: 'Run Out',
-                bowlerId: null, // No bowler credit for run out
-                bowlerName: null,
-                fielderId: null, // Fielder info not captured in this flow currently
-                fielderName: null,
-                scoreAtFall: battingTeam.score, // Score *after* adding runsTaken
-                overAtFall: `${battingTeam.overs}.${battingTeam.balls + 1}` // Ball hasn't officially finished yet
-            };
-            playerOutObject.dismissalInfo = dismissalInfo;
+    if (!playerOutObject.balls) playerOutObject.balls = 0;
+    playerOutObject.balls++; 
 
-            // Add to batter's balls faced if they were run out (it's a legal delivery)
-             if (!playerOutObject.balls) playerOutObject.balls = 0; // Ensure balls property exists
-             playerOutObject.balls++; // Increment balls faced for the dismissed player
+    savePlayerStats(playerOutObject, battingTeamKey);
 
-            // Save the dismissed player's updated stats
-            savePlayerStats(playerOutObject, battingTeamKey);
+    const eventString = `${runsTaken}+W`;
+    processBall(runsTaken, eventString, null, dismissalInfo);
 
-            // 4. Create the event string (e.g., "1+W", "0+W")
-            const eventString = `${runsTaken}+W`;
+    if (state.isFreeHit) state.isFreeHit = false;
 
-            // 5. Call processBall - Pass runsTaken, eventString, and dismissalInfo
-            //    It's a legal delivery (Free Hit or not, run out ball counts).
-            processBall(runsTaken, eventString, null, dismissalInfo);
+    if (state.striker && state.striker.playerId === playerOutId) state.striker = null;
+    if (state.nonStriker && state.nonStriker.playerId === playerOutId) state.nonStriker = null;
 
-            // 6. Clear Free Hit status if it was active
-            if (state.isFreeHit) {
-                state.isFreeHit = false;
-            }
+    updateUI();
+    await triggerEventAnimation('OUT', 'text-red-700');
+    await showPlayerOutSummary(playerOutObject);
 
-            // 7. Nullify the correct player role
-            if (state.striker && state.striker.playerId === playerOutId) state.striker = null;
-            if (state.nonStriker && state.nonStriker.playerId === playerOutId) state.nonStriker = null;
+    if (runsTaken > 0 && runsTaken % 2 !== 0) {
+         const shouldBeStrikerId = (state.striker?.playerId === playerOutId) ? state.nonStriker?.playerId : state.striker?.playerId;
+         if (state.striker?.playerId !== shouldBeStrikerId && state.nonStriker?.playerId === shouldBeStrikerId) {
+              [state.striker, state.nonStriker] = [state.nonStriker, state.striker];
+         }
+    }
 
-            // 8. Update UI, trigger animations, show summary
-            updateUI();
-            await triggerEventAnimation('OUT', 'text-red-700');
-            await showPlayerOutSummary(playerOutObject);
+    if (checkInningsEnd()) return;
 
-             // 9. Handle strike rotation AFTER processing ball (processBall increments ball count)
-             // Standard run out strike rotation: If odd runs COMPLETED, swap.
-             // If wicket falls on 0, 2, 4 runs, the new batter takes the strike of the dismissed player.
-             // If wicket falls on 1, 3 runs, the remaining batter takes the strike.
-             if (runsTaken > 0 && runsTaken % 2 !== 0) {
-                 // Odd runs completed, remaining batter takes strike.
-                 // If striker was out, non-striker stays. If non-striker was out, striker stays.
-                 // We don't need to swap *if* the next batter takes the dismissed player's position.
-                 // However, the standard processBall might swap based on runs. Let's re-evaluate strike.
+    // DIRECTLY OPEN NEXT PLAYER MODAL (No Alert)
+    state.isScoringLocked = true;
+    const roleToFill = !state.striker ? 'striker' : 'nonStriker';
+    
+    // Hide cancel buttons to force selection
+    ui.playerModalCancelBtnX.classList.add('hidden');
+    ui.playerModalCancelBtnText.classList.add('hidden');
 
-                 // Determine who *should* be on strike based on completed odd run
-                 const shouldBeStrikerId = (state.striker?.playerId === playerOutId) ? state.nonStriker?.playerId : state.striker?.playerId;
-
-                 if (state.striker?.playerId !== shouldBeStrikerId && state.nonStriker?.playerId === shouldBeStrikerId) {
-                      console.log("Run Out: Swapping strike after odd runs completed.");
-                      [state.striker, state.nonStriker] = [state.nonStriker, state.striker];
-                 } else {
-                     console.log("Run Out: No strike swap needed after odd runs completed.");
-                 }
-
-             } else {
-                 // Even runs completed, new batter takes strike of dismissed player.
-                 // The remaining batter stays where they were.
-                 console.log("Run Out: Even runs completed, new batter takes strike of dismissed player.");
-             }
-
-
-            // 10. Check innings end
-            if (checkInningsEnd()) return;
-
-            // 11. Prompt for next batter
-            state.isScoringLocked = true;
-            const roleToFill = !state.striker ? 'striker' : 'nonStriker';
-            showAlert(`Please select the next ${roleToFill}.`, () => {
-                ui.playerModalCancelBtnX.classList.add('hidden');
-                ui.playerModalCancelBtnText.classList.add('hidden');
-                selectPlayer(roleToFill, () => {
-                    ui.playerModalCancelBtnX.classList.remove('hidden');
-                    ui.playerModalCancelBtnText.classList.remove('hidden');
-                    state.isScoringLocked = false;
-                    updateUI();
-                });
-            });
-        }
+    selectPlayer(roleToFill, () => {
+        ui.playerModalCancelBtnX.classList.remove('hidden');
+        ui.playerModalCancelBtnText.classList.remove('hidden');
+        state.isScoringLocked = false;
+        updateUI();
+    });
+}
         // Check within your parseBallEvent function if it handles '1+RO' correctly.
         // If not, you might need a small modification there.
         // Example addition to parseBallEvent:
