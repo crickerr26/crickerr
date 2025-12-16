@@ -7173,47 +7173,49 @@ function openEditModal() {
         }
 
         function finalizeTeamSelection(teamKey, originalTeamData, selectedSquadMembers) {
-            if (!teamKey) return;
+    if (!teamKey) return;
 
-            const nameInput = teamKey === 'team1' ? ui.team1NameInput : ui.team2NameInput;
-            const colorInput = teamKey === 'team1' ? ui.team1ColorInput : ui.team2ColorInput;
-            const logoInput = teamKey === 'team1' ? ui.team1LogoInput : ui.team2LogoInput;
+    const nameInput = teamKey === 'team1' ? ui.team1NameInput : ui.team2NameInput;
+    // Color input reference removed to prevent crash
+    const logoInput = teamKey === 'team1' ? ui.team1LogoInput : ui.team2LogoInput;
 
-            // Update Step 1 inputs
-            nameInput.value = originalTeamData.name;
-            colorInput.value = originalTeamData.color || (teamKey === 'team1' ? '#3b82f6' : '#64748b');
-            // Clear file input as logo is loaded
-            logoInput.value = '';
-            document.querySelector(`label[for='${logoInput.id}']`).textContent = `${originalTeamData.name} Logo`;
+    // Update Step 1 inputs
+    nameInput.value = originalTeamData.name;
+    // We set the color directly in state below instead of trying to put it in a missing input box
+    
+    // Clear file input as logo is loaded
+    logoInput.value = '';
+    document.querySelector(`label[for='${logoInput.id}']`).textContent = `${originalTeamData.name} Logo`;
 
 
-            // Update state
-            state[teamKey].name = originalTeamData.name;
-            state[teamKey].color = colorInput.value;
-            state[teamKey].logo = originalTeamData.logo || '';
-            state[teamKey].squad = originalTeamData.players.map(p => ({...p, id: p.id || generateUniqueId() })); // Store the full potential squad
-            state[teamKey].playing = selectedSquadMembers.map(p => p.id || state[teamKey].squad.find(sq => sq.name === p.name)?.id).filter(Boolean); // Store IDs of selected playing members
-            state[teamKey].isLoaded = true; // Flag that this team was loaded
+    // Update state
+    state[teamKey].name = originalTeamData.name;
+    // Use saved color or default blue/gray if missing
+    state[teamKey].color = originalTeamData.color || (teamKey === 'team1' ? '#3b82f6' : '#64748b'); 
+    state[teamKey].logo = originalTeamData.logo || '';
+    state[teamKey].squad = originalTeamData.players.map(p => ({...p, id: p.id || generateUniqueId() })); // Store the full potential squad
+    state[teamKey].playing = selectedSquadMembers.map(p => p.id || state[teamKey].squad.find(sq => sq.name === p.name)?.id).filter(Boolean); // Store IDs of selected playing members
+    state[teamKey].isLoaded = true; // Flag that this team was loaded
 
-            // Pre-generate playerStats ONLY for the selected playing members
-            const playerStats = {};
-            state[teamKey].playing.forEach(playerId => {
-                const player = state[teamKey].squad.find(p => p.id === playerId);
-                if (player) {
-                    playerStats[playerId] = {
-                        playerId: player.id,
-                        name: player.name.trim().toUpperCase(),
-                        image: player.image || '',
-                        runs: 0, balls: 0, fours: 0, sixes: 0, isOut: false, dismissalInfo: null,
-                        ballsBowled: 0, runsConceded: 0, wickets: 0, maidens: 0, dots: 0,
-                        foursConceded: 0, sixesConceded: 0, consecutiveFours: 0, consecutiveSixes: 0
-                    };
-                }
-            });
-            state[teamKey].playerStats = playerStats; // Store initial stats
-
-            console.log(`Finalized ${teamKey}: Loaded=${state[teamKey].isLoaded}, Playing IDs=${state[teamKey].playing.join(', ')}`);
+    // Pre-generate playerStats ONLY for the selected playing members
+    const playerStats = {};
+    state[teamKey].playing.forEach(playerId => {
+        const player = state[teamKey].squad.find(p => p.id === playerId);
+        if (player) {
+            playerStats[playerId] = {
+                playerId: player.id,
+                name: player.name.trim().toUpperCase(),
+                image: player.image || '',
+                runs: 0, balls: 0, fours: 0, sixes: 0, isOut: false, dismissalInfo: null,
+                ballsBowled: 0, runsConceded: 0, wickets: 0, maidens: 0, dots: 0,
+                foursConceded: 0, sixesConceded: 0, consecutiveFours: 0, consecutiveSixes: 0
+            };
         }
+    });
+    state[teamKey].playerStats = playerStats; // Store initial stats
+
+    console.log(`Finalized ${teamKey}: Loaded=${state[teamKey].isLoaded}, Playing IDs=${state[teamKey].playing.join(', ')}`);
+}
 
         function cancelSquadSelection() {
             if (currentTeamSelectionKey) {
