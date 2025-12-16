@@ -1001,65 +1001,77 @@
                          <p id="live-commentary" class="text-gray-800 font-medium border-t border-blue-200"></p>
                     </div>
                 </div>
-                <footer id="scoring-controls" class="bg-white shadow-md relative flex flex-col h-52 -mx-4 rounded-none lg:mx-0 lg:rounded-lg">
-                    <div id="bowler-prompt-overlay" class="absolute inset-0 bg-blue-50 bg-opacity-95 flex items-center justify-center hidden rounded-lg cursor-pointer">
-    <p class="font-bold text-blue-800 text-3xl tracking-tight">Choose the Next Bowler</p>
-</div>
+                <footer id="scoring-controls" class="bg-white shadow-md relative flex flex-col h-52 -mx-4 rounded-none lg:mx-0 lg:rounded-lg overflow-hidden">
+    
+    <div id="bowler-prompt-overlay" class="absolute inset-0 z-20 bg-blue-50 bg-opacity-95 flex items-center justify-center hidden cursor-pointer">
+        <p class="font-bold text-blue-800 text-3xl tracking-tight">Choose the Next Bowler</p>
+    </div>
 
-                <div class="scoring-grid">
-                    <button onclick="addRuns(0)" class="flex flex-col items-center justify-center bg-amber-400 text-black transition-transform active:scale-95">
-                    <span class="font-bold text-xl leading-none">0</span>
-                    <span class="text-xs font-semibold mt-1 opacity-75">Dot</span>
-                </button>
-                <button onclick="addRuns(1)" class="flex flex-col items-center justify-center bg-sky-400 text-white transition-transform active:scale-95">
-            <span class="font-bold text-xl leading-none">1</span>
-        <span class="text-xs font-semibold mt-1 opacity-75">Single</span>
-    </button>
-    <button onclick="addRuns(2)" class="flex flex-col items-center justify-center bg-slate-300 text-black transition-transform active:scale-95">
-        <span class="font-bold text-xl leading-none">2</span>
-        <span class="text-xs font-semibold mt-1 opacity-75">Double</span>
-    </button>
-   <div class="flex">
-        <button onclick="undoLastAction()" id="undo-btn-grid" class="flex-1 flex flex-col items-center justify-center bg-amber-500 text-white transition-transform active:scale-95 h-full p-2 disabled:opacity-50">
+    <div id="match-ended-overlay" class="absolute inset-0 z-10 bg-gray-100 bg-opacity-95 flex flex-col items-center justify-center hidden">
+        <p class="font-bold text-gray-800 text-xl mb-2">Match Completed</p>
+        <p class="text-gray-500 text-sm mb-4">Scorebook is disabled.</p>
+        <button onclick="undoLastAction()" class="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 shadow-lg transition-transform active:scale-95">
             <span class="text-xl">⟲</span>
-            <span class="text-sm font-semibold mt-1">Undo</span>
-        </button>
-        <button onclick="redoLastAction()" id="redo-btn-grid" class="flex-1 flex flex-col items-center justify-center bg-amber-300 text-amber-900 transition-transform active:scale-95 h-full p-2 disabled:opacity-50">
-            <span class="text-xl">⟳</span>
-            <span class="text-sm font-semibold mt-1">Redo</span>
+            <span>Undo End Match</span>
         </button>
     </div>
-    
-    <button onclick="addRuns(3)" class="flex flex-col items-center justify-center bg-slate-200 text-black transition-transform active:scale-95">
-        <span class="font-bold text-xl leading-none">3</span>
-        <span class="text-xs font-semibold mt-1 opacity-75">Triple</span>
-    </button>
-    <button onclick="addRuns(4)" class="flex flex-col items-center justify-center bg-blue-600 text-white transition-transform active:scale-95">
-        <span class="font-bold text-xl leading-none">4</span>
-        <span class="text-xs font-semibold mt-1 opacity-75">Four</span>
-    </button>
-    <button onclick="addRuns(6)" class="flex flex-col items-center justify-center bg-green-500 text-white transition-transform active:scale-95">
-        <span class="font-bold text-xl leading-none">6</span>
-        <span class="text-xs font-semibold mt-1 opacity-75">Six</span>
-    </button>
-    <button onclick="openWicketModal()" class="flex items-center justify-center bg-red-600 text-white font-bold text-xl transition-transform active:scale-95">
-        Wicket
-    </button>
-    
-    <button onclick="openModal('wide-modal')" class="flex items-center justify-center bg-slate-50 text-slate-700 font-bold text-xl transition-transform active:scale-95">
-        Wide
-    </button>
-    <button onclick="openModal('noball-modal')" class="flex items-center justify-center bg-slate-50 text-slate-700 font-bold text-xl transition-transform active:scale-95">
-        NB
-    </button>
-    <button onclick="openModal('byes-modal')" class="flex items-center justify-center bg-slate-50 text-slate-700 font-bold text-xl transition-transform active:scale-95">
-        Byes
-    </button>
-    <button onclick="openModal('legbyes-modal')" class="flex items-center justify-center bg-slate-50 text-slate-700 font-bold text-xl transition-transform active:scale-95">
-        LB
-    </button>
-</div>
-                </footer>
+
+    <div id="active-scoring-ui" class="w-full h-full">
+        <div class="scoring-grid">
+            <button onclick="addRuns(0)" class="flex flex-col items-center justify-center bg-amber-400 text-black transition-transform active:scale-95">
+                <span class="font-bold text-xl leading-none">0</span>
+                <span class="text-xs font-semibold mt-1 opacity-75">Dot</span>
+            </button>
+            <button onclick="addRuns(1)" class="flex flex-col items-center justify-center bg-sky-400 text-white transition-transform active:scale-95">
+                <span class="font-bold text-xl leading-none">1</span>
+                <span class="text-xs font-semibold mt-1 opacity-75">Single</span>
+            </button>
+            <button onclick="addRuns(2)" class="flex flex-col items-center justify-center bg-slate-300 text-black transition-transform active:scale-95">
+                <span class="font-bold text-xl leading-none">2</span>
+                <span class="text-xs font-semibold mt-1 opacity-75">Double</span>
+            </button>
+            <div class="flex">
+                <button onclick="undoLastAction()" id="undo-btn-grid" class="flex-1 flex flex-col items-center justify-center bg-amber-500 text-white transition-transform active:scale-95 h-full p-2 disabled:opacity-50">
+                    <span class="text-xl">⟲</span>
+                    <span class="text-sm font-semibold mt-1">Undo</span>
+                </button>
+                <button onclick="redoLastAction()" id="redo-btn-grid" class="flex-1 flex flex-col items-center justify-center bg-amber-300 text-amber-900 transition-transform active:scale-95 h-full p-2 disabled:opacity-50">
+                    <span class="text-xl">⟳</span>
+                    <span class="text-sm font-semibold mt-1">Redo</span>
+                </button>
+            </div>
+            
+            <button onclick="addRuns(3)" class="flex flex-col items-center justify-center bg-slate-200 text-black transition-transform active:scale-95">
+                <span class="font-bold text-xl leading-none">3</span>
+                <span class="text-xs font-semibold mt-1 opacity-75">Triple</span>
+            </button>
+            <button onclick="addRuns(4)" class="flex flex-col items-center justify-center bg-blue-600 text-white transition-transform active:scale-95">
+                <span class="font-bold text-xl leading-none">4</span>
+                <span class="text-xs font-semibold mt-1 opacity-75">Four</span>
+            </button>
+            <button onclick="addRuns(6)" class="flex flex-col items-center justify-center bg-green-500 text-white transition-transform active:scale-95">
+                <span class="font-bold text-xl leading-none">6</span>
+                <span class="text-xs font-semibold mt-1 opacity-75">Six</span>
+            </button>
+            <button onclick="openWicketModal()" class="flex items-center justify-center bg-red-600 text-white font-bold text-xl transition-transform active:scale-95">
+                Wicket
+            </button>
+            
+            <button onclick="openModal('wide-modal')" class="flex items-center justify-center bg-slate-50 text-slate-700 font-bold text-xl transition-transform active:scale-95">
+                Wide
+            </button>
+            <button onclick="openModal('noball-modal')" class="flex items-center justify-center bg-slate-50 text-slate-700 font-bold text-xl transition-transform active:scale-95">
+                NB
+            </button>
+            <button onclick="openModal('byes-modal')" class="flex items-center justify-center bg-slate-50 text-slate-700 font-bold text-xl transition-transform active:scale-95">
+                Byes
+            </button>
+            <button onclick="openModal('legbyes-modal')" class="flex items-center justify-center bg-slate-50 text-slate-700 font-bold text-xl transition-transform active:scale-95">
+                LB
+            </button>
+        </div>
+    </div>
+</footer>
             </div>
         </div> 
         <header class="bg-gray-100 p-1 border-t border-gray-300 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-20">
@@ -3676,68 +3688,68 @@ if (checkInningsEnd()) return;
         }
 
         function checkWinCondition() {
-            if (state.innings !== 2 || (state.result && state.result.status)) {
-                return;
-            }
+    if (state.innings !== 2 || (state.result && state.result.status)) {
+        return;
+    }
 
-            const battingTeam = state[state.battingTeam];
-            const bowlingTeam = state[state.bowlingTeam];
-            let matchOver = false;
-            
-            // Chasing team wins
-            if (battingTeam.score >= state.target) {
-                matchOver = true;
-                const wicketsRemaining = (state.playersPerSide - 1) - battingTeam.wickets;
-                state.result = {
-                    status: 'completed_normal',
-                    winnerSide: state.battingTeam,
-                    margin: wicketsRemaining,
-                    marginType: 'wickets'
-                };
-                state.winner = battingTeam.name;
-            } 
-            // Innings ends before target is reached
-            else if (battingTeam.overs === state.totalOvers || battingTeam.wickets >= state.playersPerSide - 1) {
-                matchOver = true;
-                // Defending team wins
-                if (battingTeam.score < state.target - 1) {
-                    const runsMargin = (state.target - 1) - battingTeam.score;
-                    state.result = {
-                        status: 'completed_normal',
-                        winnerSide: state.bowlingTeam,
-                        margin: runsMargin,
-                        marginType: 'runs'
-                    };
-                    state.winner = bowlingTeam.name;
-                }
-                // Match is tied
-                else if (battingTeam.score === state.target - 1) {
-                    state.result = { status: 'tie' };
-                    state.winner = 'Match Tied';
-                }
-            }
-            
-            if (matchOver) {
-                // Construct margin text for the win modal only
-                let marginText = '';
-                if(state.result.margin) {
-                    const margin = state.result.margin;
-                    const type = state.result.marginType;
-                    marginText = `by ${margin} ${type === 'runs' ? 'run' : 'wicket'}${margin !== 1 ? 's' : ''}`;
-                }
-
-                savePlayerStats(state.striker, state.battingTeam);
-                savePlayerStats(state.nonStriker, state.battingTeam);
-                savePlayerStats(state.bowler, state.bowlingTeam);
-                saveCompletedMatchSummary();
-                openWinModal(state.winner, marginText);
-                state.isScoringLocked = true;
-                ui.scoringControls.classList.add('hidden');
-                
-                // FIX: Update footer buttons immediately so Rematch becomes enabled
-                updateFooterButtons();
-            }
+    const battingTeam = state[state.battingTeam];
+    const bowlingTeam = state[state.bowlingTeam];
+    let matchOver = false;
+    
+    // Chasing team wins
+    if (battingTeam.score >= state.target) {
+        matchOver = true;
+        const wicketsRemaining = (state.playersPerSide - 1) - battingTeam.wickets;
+        state.result = {
+            status: 'completed_normal',
+            winnerSide: state.battingTeam,
+            margin: wicketsRemaining,
+            marginType: 'wickets'
+        };
+        state.winner = battingTeam.name;
+    } 
+    // Innings ends before target is reached
+    else if (battingTeam.overs === state.totalOvers || battingTeam.wickets >= state.playersPerSide - 1) {
+        matchOver = true;
+        // Defending team wins
+        if (battingTeam.score < state.target - 1) {
+            const runsMargin = (state.target - 1) - battingTeam.score;
+            state.result = {
+                status: 'completed_normal',
+                winnerSide: state.bowlingTeam,
+                margin: runsMargin,
+                marginType: 'runs'
+            };
+            state.winner = bowlingTeam.name;
         }
+        // Match is tied
+        else if (battingTeam.score === state.target - 1) {
+            state.result = { status: 'tie' };
+            state.winner = 'Match Tied';
+        }
+    }
+    
+    if (matchOver) {
+        let marginText = '';
+        if(state.result.margin) {
+            const margin = state.result.margin;
+            const type = state.result.marginType;
+            marginText = `by ${margin} ${type === 'runs' ? 'run' : 'wicket'}${margin !== 1 ? 's' : ''}`;
+        }
+
+        savePlayerStats(state.striker, state.battingTeam);
+        savePlayerStats(state.nonStriker, state.battingTeam);
+        savePlayerStats(state.bowler, state.bowlingTeam);
+        saveCompletedMatchSummary();
+        openWinModal(state.winner, marginText);
+        
+        state.isScoringLocked = true;
+        // ui.scoringControls.classList.add('hidden'); // REMOVED THIS LINE
+        
+        updateFooterButtons();
+        updateUI(); // Added to trigger the new footer overlay
+    }
+}
         
         function swapBatsmen() {
             if (state.striker) {
@@ -3805,7 +3817,21 @@ function updateUI() {
     updateBowlingTable();
     updateFooterButtons();
     updateFreeHitIndicator();
-    updateHistoryButtons(); // Add this line
+    updateHistoryButtons(); 
+
+    // NEW: Handle Footer State (Active vs Match Ended)
+    const activeUI = document.getElementById('active-scoring-ui');
+    const endedUI = document.getElementById('match-ended-overlay');
+    
+    if (state.winner) {
+        // If match is over: Hide buttons, show Undo message
+        if (activeUI) activeUI.classList.add('hidden');
+        if (endedUI) endedUI.classList.remove('hidden');
+    } else {
+        // If match is live: Show buttons, hide Undo message
+        if (activeUI) activeUI.classList.remove('hidden');
+        if (endedUI) endedUI.classList.add('hidden');
+    }
 }
 
 // NEW FUNCTION: Handles the water ripple effect on click
@@ -4465,6 +4491,8 @@ function endMatch() {
         return;
     }
 
+    saveState(); // ADDED: Save state so we can Undo the "End Match" action
+
     // Determine winner side ('team1', 'team2', or null)
     let winnerSide = null;
     if (resultDraft.winner === state.team1.name) {
@@ -4479,20 +4507,17 @@ function endMatch() {
         winnerSide: winnerSide,
         marginType: resultDraft.marginType,
         margin: resultDraft.marginValue,
-        reason: resultDraft.reason, // For No Result/Abandoned
-        superOver: resultDraft.superOver // For Tie
+        reason: resultDraft.reason,
+        superOver: resultDraft.superOver
     };
     
     state.winner = resultDraft.winner || (resultDraft.type === 'tie' ? 'Match Tied' : 'No Result');
     
-    // NEW: Generate the summary line *after* state.result is set
     const summaryLine = generateResultSummaryLine(state.result);
-    
-    // Deprecated but kept for compatibility with older modals if needed
     state.winMargin = summaryLine; 
 
     state.isScoringLocked = true;
-    ui.scoringControls.classList.add('hidden');
+    // ui.scoringControls.classList.add('hidden'); // REMOVED THIS LINE
 
     updateLiveCommentary(`<b>MATCH ENDED:</b> ${summaryLine}`);
 
