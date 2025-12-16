@@ -8,10 +8,6 @@
     <meta name="theme-color" content="#2563eb"/>
     <link rel="apple-touch-icon" href="icon-512.png">
 
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -165,9 +161,6 @@
         @keyframes splash-text-animation { from { opacity: 0; } to { opacity: 1; } }
 
         /* General Styles */
-        html, body { 
-            overscroll-behavior: none; /* Stops the pull-to-refresh action */
-        }
         select.placeholder { color: #9ca3af; font-size: 0.9em; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
@@ -960,24 +953,9 @@
                 </div>
                 
                 <div id="target-info-container" class="hidden bg-white rounded-lg p-2 shadow-md text-center"></div>
-
-                <div class="flex-grow min-h-0 flex flex-col gap-2">
     
-                <div class="flex-grow min-h-0 flex flex-col gap-2 overflow-y-auto">
-
-                    <div id="live-commentary-box" class="bg-blue-50 rounded-lg p-2 shadow-md hidden flex-shrink-0">
-                        <div class="flex justify-between items-center cursor-pointer" id="toggle-commentary-btn">
-                            <p class="text-xs font-semibold text-blue-800 uppercase tracking-wider">LIVE COMMENTARY</p>
-                            <svg id="commentary-chevron" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                            </svg>
-                        </div>
-                        <div id="live-commentary-content">
-                             <p id="live-commentary" class="text-gray-800 font-medium border-t border-blue-200"></p>
-                        </div>
-                    </div>
-
-                    <div class="flex-shrink-0 rounded-lg shadow-md bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200/75">
+                <div class="flex-grow min-h-0 flex flex-col gap-2">
+                    <div class="flex-grow min-h-0 rounded-lg shadow-md overflow-y-auto bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200/75">
                         <table class="table-fixed w-full text-left text-sm relative">
                             <thead class="bg-gray-100 border-b">
                                 <tr>
@@ -1012,7 +990,17 @@
                 </div>
             </div>
            <div class="lg:col-span-1 flex flex-col space-y-2">
-               
+                <div id="live-commentary-box" class="bg-blue-50 rounded-lg p-2 shadow-md hidden">
+                    <div class="flex justify-between items-center cursor-pointer" id="toggle-commentary-btn">
+                        <p class="text-xs font-semibold text-blue-800 uppercase tracking-wider">LIVE COMMENTARY</p>
+                        <svg id="commentary-chevron" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                    <div id="live-commentary-content">
+                         <p id="live-commentary" class="text-gray-800 font-medium border-t border-blue-200"></p>
+                    </div>
+                </div>
                 <footer id="scoring-controls" class="bg-white shadow-md relative flex flex-col h-52 -mx-4 rounded-none lg:mx-0 lg:rounded-lg">
                     <div id="bowler-prompt-overlay" class="absolute inset-0 bg-blue-50 bg-opacity-95 flex items-center justify-center hidden rounded-lg cursor-pointer">
     <p class="font-bold text-blue-800 text-3xl tracking-tight">Choose the Next Bowler</p>
@@ -1074,25 +1062,37 @@
                 </footer>
             </div>
         </div> 
-       <header class="bg-gray-100 text-black p-1 flex items-center justify-between shadow-inner w-full gap-1 overflow-x-auto whitespace-nowrap" style="min-height: 45px;">
-            
-            <div class="flex items-center gap-1">
-                <button onclick="openEditModal()" class="text-[10px] font-bold uppercase tracking-wider py-1.5 px-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Edit</button>
-                <button onclick="showSummaryScreen()" class="text-[10px] font-bold uppercase tracking-wider py-1.5 px-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Summary</button>
-                
-                <div class="flex items-center ml-1" title="Toggle Pitch Map">
-                     <button id="pitch-map-toggle" onclick="togglePitchMap()" class="relative inline-flex flex-shrink-0 h-4 w-7 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none bg-gray-400">
-                        <span id="pitch-map-toggle-knob" class="pointer-events-none inline-block h-3 w-3 rounded-full bg-white shadow-lg transform ring-0 transition ease-in-out duration-200 translate-x-0"></span>
-                    </button>
-                </div>
-            </div>
+        <header class="bg-gray-100 p-1 border-t border-gray-300 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-20">
+    <div class="flex flex-wrap justify-center items-center gap-2 w-full max-w-4xl mx-auto py-1">
+        
+        <button onclick="openEditModal()" class="text-[10px] font-bold uppercase tracking-wider py-1.5 px-2 bg-white border border-gray-300 rounded shadow-sm text-gray-700 hover:bg-gray-50 active:scale-95 transition-transform">
+            Edit
+        </button>
+        
+        <button onclick="showSummaryScreen()" class="text-[10px] font-bold uppercase tracking-wider py-1.5 px-2 bg-white border border-gray-300 rounded shadow-sm text-gray-700 hover:bg-gray-50 active:scale-95 transition-transform">
+            Summary
+        </button>
 
-            <div class="flex items-center gap-1" id="footer-actions">
-                <button onclick="openEndMatchModal()" class="text-[10px] font-bold uppercase tracking-wide py-1.5 px-2 bg-red-600 text-white rounded hover:bg-red-700 shadow-sm">End Match</button>
-                <button id="rematch-btn" onclick="startRematch()" class="text-[10px] font-bold uppercase tracking-wide py-1.5 px-2 bg-blue-600 text-white rounded hover:bg-blue-700 shadow-sm disabled:opacity-50 disabled:bg-gray-400" disabled>Rematch</button>
-                <button onclick="confirmStartNewMatch()" class="text-[10px] font-bold uppercase tracking-wide py-1.5 px-2 bg-green-600 text-white rounded hover:bg-green-700 shadow-sm">New Match</button>
-            </div>
-        </header>
+        <div class="flex items-center space-x-1 px-1 border-l border-r border-gray-300 mx-1" title="Shot Map">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2h14a2 2 0 002-2z"></path></svg>
+            <button id="pitch-map-toggle" onclick="togglePitchMap()" class="relative inline-flex flex-shrink-0 h-4 w-7 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none bg-gray-400">
+                <span id="pitch-map-toggle-knob" class="pointer-events-none inline-block h-3 w-3 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200 translate-x-0"></span>
+            </button>
+        </div>
+
+        <button onclick="openEndMatchModal()" class="text-[10px] font-bold uppercase tracking-wider py-1.5 px-2 bg-red-600 text-white rounded shadow-sm hover:bg-red-700 active:scale-95 transition-transform">
+            End Match
+        </button>
+        
+        <button id="rematch-btn" onclick="startRematch()" class="text-[10px] font-bold uppercase tracking-wider py-1.5 px-2 bg-blue-600 text-white rounded shadow-sm hover:bg-blue-700 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+            Rematch
+        </button>
+        
+        <button onclick="confirmStartNewMatch()" class="text-[10px] font-bold uppercase tracking-wider py-1.5 px-2 bg-green-600 text-white rounded shadow-sm hover:bg-green-700 active:scale-95 transition-transform">
+            New Match
+        </button>
+    </div>
+</header>
     </div>
 
     <div id="summary-screen" class="min-h-screen w-full flex-col hidden items-center bg-gray-100 p-2 sm:p-4">
@@ -4227,7 +4227,7 @@ function updateHistoryButtons() {
                         if ((ballEventText.includes('NB+') || ballEventText.includes('WD+')) && ballEventText.length > 2) {
                             const prefix = ballEventText.substring(0, 3);
                             const runs = ballEventText.substring(3);
-                            ballEventHTML = `<span style="font-size: 0.45rem; font-weight: 600; margin-right: -1px; letter-spacing: -0.5px;">${prefix}</span><span style="font-size: 0.6rem; font-weight: 700;">${runs}</span>`;
+                            ballEventHTML = `<span style="font-size: 0.5rem; font-weight: 600; margin-right: -1px; letter-spacing: -0.5px;">${prefix}</span><span style="font-size: 0.7rem; font-weight: 700;">${runs}</span>`;
                         } else {
                             ballEventHTML = ballEventText;
                         }
@@ -4236,8 +4236,8 @@ function updateHistoryButtons() {
                         
                         return `
                             <div class="flex flex-col items-center space-y-0.5">
-                                <div class="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold ${bgColor}">${ballEventHTML}</div>
-                                <p class="text-[8px] text-gray-400">${ballNumberLabel}</p>
+                                <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${bgColor}">${ballEventHTML}</div>
+                                <p class="text-[9px] text-gray-400">${ballNumberLabel}</p>
                             </div>
                         `;
                     }).join('');
@@ -4245,7 +4245,7 @@ function updateHistoryButtons() {
                     tableHTML += `
                         <tr>
                             <td colspan="6" class="py-0 px-1">
-                                <div class="flex items-start space-x-1.5 overflow-x-auto p-0.5 pt-1">
+                                <div class="flex items-start space-x-2 overflow-x-auto p-0.5 pt-1">
                                     ${overHistoryHTML}
                                 </div>
                             </td>
