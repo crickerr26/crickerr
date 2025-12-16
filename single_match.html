@@ -130,8 +130,8 @@
             
             /* --- NEW: Compact table layout on mobile --- */
             #batting-table th, #batting-table td, #bowling-table th, #bowling-table td {
-                padding: 6px 2px; /* Reduced padding for a tighter layout */
-                font-size: 0.8rem; /* Smaller font size for stats */
+                padding: 3px 1px; /* UPDATED: Made padding much smaller */
+                font-size: 0.75rem; /* UPDATED: Slightly smaller text */
             }
             #batting-table td:first-child, #bowling-table td:first-child {
                  font-size: 0.75rem; /* Make player names smaller to fit better */
@@ -4207,32 +4207,32 @@ function updateHistoryButtons() {
                         if (isIllegalDelivery) {
                             bgColor = 'bg-orange-400 text-white';
                         } else {
-                            legalBallCount++; // Only increment the counter if it's a legal delivery
+                            legalBallCount++; 
                         }
                         
                         let ballEventHTML;
                         if ((ballEventText.includes('NB+') || ballEventText.includes('WD+')) && ballEventText.length > 2) {
                             const prefix = ballEventText.substring(0, 3);
                             const runs = ballEventText.substring(3);
-                            ballEventHTML = `<span style="font-size: 0.55rem; font-weight: 600; margin-right: -1px; letter-spacing: -0.5px;">${prefix}</span><span style="font-size: 0.8rem; font-weight: 700;">${runs}</span>`;
+                            ballEventHTML = `<span style="font-size: 0.5rem; font-weight: 600; margin-right: -1px; letter-spacing: -0.5px;">${prefix}</span><span style="font-size: 0.7rem; font-weight: 700;">${runs}</span>`;
                         } else {
                             ballEventHTML = ballEventText;
                         }
 
-                        const ballNumberLabel = `${state[state.battingTeam].overs}.${legalBallCount}`; // Use the new counter
+                        const ballNumberLabel = `${state[state.battingTeam].overs}.${legalBallCount}`; 
                         
                         return `
-                            <div class="flex flex-col items-center space-y-1">
-                                <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs ${bgColor}">${ballEventHTML}</div>
-                                <p class="text-xs text-gray-500">${ballNumberLabel}</p>
+                            <div class="flex flex-col items-center space-y-0.5">
+                                <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${bgColor}">${ballEventHTML}</div>
+                                <p class="text-[9px] text-gray-400">${ballNumberLabel}</p>
                             </div>
                         `;
                     }).join('');
                     
                     tableHTML += `
                         <tr>
-                            <td colspan="6" class="pt-1 pb-2 px-2">
-                                <div class="flex items-start space-x-3 overflow-x-auto p-1">
+                            <td colspan="6" class="py-0 px-1">
+                                <div class="flex items-start space-x-2 overflow-x-auto p-0.5 pt-1">
                                     ${overHistoryHTML}
                                 </div>
                             </td>
