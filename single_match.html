@@ -1593,27 +1593,58 @@
     </div>
 </div>
 
-    <div id="player-out-summary-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center hidden z-[70]">
-        <div class="modal-content bg-white rounded-lg shadow-xl p-6 w-11/12 max-w-sm text-center transform scale-95 relative overflow-hidden">
-            <img id="summary-team-logo" src="" class="absolute top-3 right-3 w-12 h-12 rounded-full object-cover shadow-md" onerror="this.style.display='none'">
-            <div id="summary-player-image-container" class="w-24 h-24 mx-auto mb-2 rounded-full bg-gray-200 flex items-center justify-center border-4 border-white shadow-lg">
-                 <svg class="w-16 h-16 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>
+    <div id="player-out-summary-modal" class="modal-overlay fixed inset-0 bg-black/80 backdrop-blur-sm flex justify-center items-center hidden z-[70] p-4 font-sans">
+        <div class="modal-content bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden transform scale-95 relative border border-gray-200">
+
+            <div class="bg-gradient-to-r from-red-700 to-red-900 p-2 flex items-center justify-between shadow-md relative z-10">
+                <span class="text-[10px] font-black text-white uppercase tracking-[0.2em] px-2">Wicket</span>
+                <div class="h-0.5 flex-grow bg-white/20 mx-3 rounded-full"></div>
+                <img id="summary-team-logo" src="" class="w-8 h-8 rounded-full border-2 border-white bg-white object-cover" onerror="this.style.display='none'">
             </div>
-            <h2 id="summary-player-name" class="text-3xl font-bold text-gray-800">Player Name</h2>
-            <p id="summary-dismissal-info" class="text-sm text-gray-500 mb-4 font-medium"></p>
-            
-            <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-left mt-6 bg-gray-50 p-4 rounded-lg">
-                <div class="font-semibold text-gray-600">Runs</div>
-                <div class="font-bold text-xl text-gray-900 text-right" id="summary-player-runs"></div>
-                <div class="font-semibold text-gray-600">Balls Faced</div>
-                <div class="font-bold text-xl text-gray-900 text-right" id="summary-player-balls"></div>
-                <div class="font-semibold text-gray-600">Fours</div>
-                <div class="font-bold text-xl text-gray-900 text-right" id="summary-player-fours"></div>
-                <div class="font-semibold text-gray-600">Sixes</div>
-                <div class="font-bold text-xl text-gray-900 text-right" id="summary-player-sixes"></div>
+
+            <div class="relative pt-10 pb-6 px-6 text-center bg-white">
+                <div id="summary-dismissal-badge" class="absolute top-0 left-1/2 -translate-y-1/2 -translate-x-1/2 bg-gray-900 text-white text-[11px] font-black uppercase tracking-[0.15em] px-4 py-1.5 rounded shadow-lg border-2 border-white z-20">
+                    DISMISSAL
+                </div>
+
+                <div class="mt-2 mb-3 relative inline-block">
+                    <div id="summary-player-image-container" class="w-28 h-28 rounded-full bg-gray-100 border-4 border-white shadow-xl overflow-hidden mx-auto flex items-center justify-center relative z-0">
+                        </div>
+                </div>
+
+                <h2 id="summary-player-name" class="text-3xl font-black text-gray-900 uppercase tracking-tight leading-none mb-1">
+                    Player Name
+                </h2>
+
+                <div class="mb-6 h-8 flex items-center justify-center">
+                    <p id="summary-dismissal-subtext" class="text-lg font-bold text-gray-600 font-mono tracking-tight">
+                        </p>
+                </div>
+
+                <div class="grid grid-cols-3 gap-0 border-t border-b border-gray-100 bg-gray-50 mb-4 rounded-lg overflow-hidden">
+                    <div class="p-3 border-r border-gray-200">
+                        <div id="summary-player-runs" class="text-4xl font-black text-gray-800 leading-none">0</div>
+                        <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">Runs</div>
+                    </div>
+                    <div class="p-3 border-r border-gray-200">
+                        <div id="summary-player-balls" class="text-4xl font-black text-gray-800 leading-none">0</div>
+                        <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">Balls</div>
+                    </div>
+                    <div class="p-3">
+                        <div id="summary-player-sr" class="text-4xl font-black text-gray-800 leading-none">0.0</div>
+                        <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">S/Rate</div>
+                    </div>
+                </div>
+
+                <div class="flex justify-center gap-6 text-xs text-gray-500 font-bold uppercase tracking-wider">
+                    <span class="flex items-center gap-1">4s: <strong id="summary-player-fours" class="text-gray-900 text-sm bg-gray-100 px-2 py-0.5 rounded">0</strong></span>
+                    <span class="flex items-center gap-1">6s: <strong id="summary-player-sixes" class="text-gray-900 text-sm bg-gray-100 px-2 py-0.5 rounded">0</strong></span>
+                </div>
             </div>
-            
-            <button id="summary-ok-btn" class="mt-6 w-full px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors">OK</button>
+
+            <button id="summary-ok-btn" class="w-full py-4 bg-gray-900 hover:bg-black text-white font-bold uppercase tracking-[0.15em] text-xs transition-colors border-t border-gray-800 active:bg-gray-800">
+                Continue Match
+            </button>
         </div>
     </div>
     
@@ -3458,7 +3489,8 @@ function initiateRunOutFlow() {
 
             openModal('run-out-modal');
         }
-        async function finalizeRunOutDismissal(playerOutId) {
+        /* UPDATED finalizeRunOutDismissal - Fixes 0 runs bug */
+async function finalizeRunOutDismissal(playerOutId) {
     closeModal('run-out-modal');
     saveState(); 
 
@@ -3467,10 +3499,26 @@ function initiateRunOutFlow() {
 
     const battingTeamKey = state.battingTeam;
     const battingTeam = state[battingTeamKey];
+
+    // --- FIX START: FORCE SAVE ACTIVE STATS ---
+    // This ensures that if the striker has 40 runs in memory, it gets saved to the database
+    // BEFORE we fetch it for the summary.
+    if (state.striker && state.striker.playerId === playerOutId) {
+        savePlayerStats(state.striker, battingTeamKey);
+    } else if (state.nonStriker && state.nonStriker.playerId === playerOutId) {
+        savePlayerStats(state.nonStriker, battingTeamKey);
+    }
+    // --- FIX END ---
+
+    // Now this fetches the CORRECT, updated stats (e.g., 40 runs)
     const playerOutObject = state[battingTeamKey].playerStats[playerOutId];
 
     if (!playerOutObject) return;
 
+    // Add the runs completed during the run-out to the player's total
+    playerOutObject.runs += runsTaken; 
+    
+    // Update Team Score
     battingTeam.score += runsTaken;
     battingTeam.wickets++;
 
@@ -4779,34 +4827,94 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
 
         async function showPlayerOutSummary(playerOutObject) {
             return new Promise(resolve => {
-                const teamKey = state.team1.players.includes(playerOutObject.name) ? 'team1' : 'team2';
+                // Determine Team
+                const teamKey = state.team1.players.some(p => p.id === playerOutObject.playerId) ? 'team1' : 'team2';
                 const team = state[teamKey];
                 
+                // 1. Setup Player Image
                 const imageContainer = document.getElementById('summary-player-image-container');
                 imageContainer.innerHTML = '';
-
                 if (playerOutObject.image) {
                     const img = document.createElement('img');
                     img.src = playerOutObject.image;
-                    img.className = 'w-full h-full rounded-full object-cover';
+                    img.className = 'w-full h-full object-cover';
                     imageContainer.appendChild(img);
                 } else {
-                    imageContainer.innerHTML = `<svg class="w-16 h-16 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>`;
+                    imageContainer.innerHTML = `<svg class="w-12 h-12 text-gray-300" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>`;
                 }
+                
+                // 2. Setup Team Logo
+                const logoImg = document.getElementById('summary-team-logo');
+                logoImg.src = team.logo || `https://placehold.co/60x60/transparent/transparent`; 
+                logoImg.style.backgroundColor = team.color;
+
+                // 3. Setup Stats (Runs, Balls, SR)
+                const runs = playerOutObject.runs;
+                const balls = playerOutObject.balls;
+                const sr = balls > 0 ? ((runs / balls) * 100).toFixed(1) : '0.0';
 
                 document.getElementById('summary-player-name').textContent = formatPlayerName(playerOutObject.name);
-                document.getElementById('summary-dismissal-info').textContent = formatDismissalText(playerOutObject.dismissalInfo);
-                document.getElementById('summary-player-runs').textContent = playerOutObject.runs;
-                document.getElementById('summary-player-balls').textContent = playerOutObject.balls;
+                document.getElementById('summary-player-runs').textContent = runs;
+                document.getElementById('summary-player-balls').textContent = balls;
+                document.getElementById('summary-player-sr').textContent = sr;
                 document.getElementById('summary-player-fours').textContent = playerOutObject.fours;
                 document.getElementById('summary-player-sixes').textContent = playerOutObject.sixes;
-                document.getElementById('summary-team-logo').src = team.logo || `https://placehold.co/60x60/${team.color.substring(1)}/FFFFFF?text=${team.name.charAt(0)}`;
 
-                const modalContent = document.getElementById('player-out-summary-modal').querySelector('.modal-content');
-                modalContent.classList.add('summary-pop-in-animation');
+                // 4. Construct Professional Dismissal Text
+                const d = playerOutObject.dismissalInfo;
+                const badge = document.getElementById('summary-dismissal-badge');
+                const subtext = document.getElementById('summary-dismissal-subtext');
 
+                let badgeText = "OUT";
+                let detailText = "";
+
+                if (d) {
+                    badgeText = d.type.toUpperCase(); // e.g., "CATCH" or "BOWLED"
+                    
+                    const bowlerName = d.bowlerName ? formatPlayerName(d.bowlerName) : "";
+                    const fielderName = d.fielderName ? formatPlayerName(d.fielderName) : "";
+
+                    switch (d.type) {
+                        case 'Catch':
+                            badgeText = "CAUGHT";
+                            detailText = `c ${fielderName} b ${bowlerName}`;
+                            break;
+                        case 'Bowled':
+                            badgeText = "BOWLED";
+                            detailText = `b ${bowlerName}`;
+                            break;
+                        case 'Stump Out':
+                            badgeText = "STUMPED";
+                            detailText = `st ${fielderName} b ${bowlerName}`;
+                            break;
+                        case 'LBW':
+                            badgeText = "LBW";
+                            detailText = `lbw b ${bowlerName}`;
+                            break;
+                        case 'Run Out':
+                            badgeText = "RUN OUT";
+                            detailText = `Run Out (${fielderName || 'Direct Hit'})`;
+                            break;
+                        case 'Hit Wicket':
+                            badgeText = "HIT WICKET";
+                            detailText = `Hit Wicket b ${bowlerName}`;
+                            break;
+                        default:
+                            detailText = d.type; 
+                            break;
+                    }
+                }
+
+                badge.textContent = badgeText;
+                subtext.textContent = detailText;
+
+                // 5. Open Modal
+                const modal = document.getElementById('player-out-summary-modal');
+                const modalContent = modal.querySelector('.modal-content');
+                
+                // Setup OK Button
                 const okBtn = document.getElementById('summary-ok-btn');
-                const newOkBtn = okBtn.cloneNode(true);
+                const newOkBtn = okBtn.cloneNode(true); 
                 okBtn.parentNode.replaceChild(newOkBtn, okBtn);
 
                 newOkBtn.onclick = () => {
@@ -4814,7 +4922,8 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
                     closeModal('player-out-summary-modal');
                     resolve();
                 };
-                
+
+                modalContent.classList.add('summary-pop-in-animation');
                 openModal('player-out-summary-modal');
             });
         }
