@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cricker - Manage Teams</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <style>
@@ -13,300 +17,413 @@
         .setup-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3), 0 4px 6px -2px rgba(37, 99, 235, 0.15); }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #888; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="bg-gray-100 antialiased">
-    <div class="min-h-screen flex flex-col items-center justify-center p-4">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col team-management-card">
-            <div id="team-list-view">
-                <div class="flex justify-between items-center p-4 border-b">
-                    <h3 class="text-xl font-bold">Manage Teams</h3>
-                    <a href="index.html" class="text-sm font-semibold py-2 px-3 rounded-md text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-colors">Back to Home</a>
-                </div>
-                <div id="manage-teams-list" class="p-4 overflow-y-auto" style="max-height: 70vh;"></div>
-                <div class="p-4 border-t bg-gray-50 text-right">
-                    <button onclick="openTeamEditor()" class="px-6 py-2 text-white font-bold rounded-lg setup-btn">Create New Team</button>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center py-6 px-4">
+
+    <div class="team-management-card bg-white w-full max-w-md rounded-2xl shadow-xl border border-gray-200 overflow-hidden flex flex-col relative" style="height: 85vh; max-height: 800px;">
+        
+        <div id="team-list-view" class="h-full flex flex-col relative">
+            <div class="bg-blue-600 p-4 text-white flex justify-between items-center shadow-md z-10 relative">
+                <h1 class="text-xl font-bold flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                    Manage Teams
+                </h1>
+                <button onclick="window.history.back()" class="text-blue-100 hover:text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto bg-gray-50 relative">
+                <div class="p-4 space-y-4 pb-24">
+                    <div id="saved-teams-container" class="space-y-3">
+                        </div>
                 </div>
             </div>
-            <div id="team-editor-view" class="hidden">
-                <div class="flex justify-between items-center p-4 border-b">
-                    <h3 id="team-editor-title" class="text-xl font-bold">Create New Team</h3>
-                    <a href="index.html" class="text-sm font-semibold py-2 px-3 rounded-md text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-colors">Back to Home</a>
-                </div>
-                <div class="p-4 overflow-y-auto space-y-4" style="max-height: 70vh;">
-                    <input type="hidden" id="editing-team-name">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="space-y-2 md:col-span-2">
-                            <label for="editor-team-name" class="block font-medium text-gray-700">Team Name</label>
-                            <input type="text" id="editor-team-name" oninput="this.value = this.value.toUpperCase()" placeholder="Enter Team Name" class="w-full p-2 border-gray-300 border rounded-md">
-                        </div>
-                        <div class="space-y-2">
-                            <label for="editor-team-color" class="block font-medium text-gray-700">Team Color</label>
-                            <input type="color" id="editor-team-color" value="#3b82f6" class="w-full h-10 p-1 border-gray-300 border rounded-md">
-                        </div>
-                    </div>
-                    <div class="space-y-2">
-                        <label for="editor-team-logo" class="block font-medium text-gray-700">Team Logo</label>
-                        <input type="file" id="editor-team-logo" accept="image/png, image/jpeg" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                        <img id="editor-team-logo-preview" src="" class="w-16 h-16 rounded-full object-cover hidden mt-2">
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="space-y-2">
-                            <label for="editor-captain-select" class="block font-medium text-gray-700">Captain</label>
-                            <select id="editor-captain-select" class="w-full p-2 border-gray-300 border rounded-md"></select>
-                        </div>
-                        <div class="space-y-2">
-                            <label for="editor-wicket-keeper-select" class="block font-medium text-gray-700">Wicket Keeper</label>
-                            <select id="editor-wicket-keeper-select" class="w-full p-2 border-gray-300 border rounded-md"></select>
-                        </div>
-                    </div>
-                    <div class="border-t pt-4">
-                        <label class="block font-medium text-gray-700 mb-2">Player Roster (20 Players)</label>
-                        <div id="editor-player-inputs" class="space-y-3"></div>
-                    </div>
-                </div>
-                <div class="p-4 border-t bg-gray-50 flex justify-end gap-3">
-                    <button onclick="showTeamListView()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancel</button>
-                    <button onclick="saveTeamFromEditor()" class="px-6 py-2 text-white font-bold rounded-lg setup-btn">Save Team</button>
-                </div>
+
+            <div class="absolute bottom-6 right-6 z-20">
+                <button id="create-new-team-btn" class="setup-btn h-14 w-14 rounded-full text-white shadow-lg flex items-center justify-center text-2xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                </button>
             </div>
         </div>
-    </div>
-    <script>
-        const ui = {
-            teamListView: document.getElementById('team-list-view'),
-            teamEditorView: document.getElementById('team-editor-view'),
-            manageTeamsList: document.getElementById('manage-teams-list'),
-            teamEditorTitle: document.getElementById('team-editor-title'),
-            editingTeamNameInput: document.getElementById('editing-team-name'),
-            editorTeamNameInput: document.getElementById('editor-team-name'),
-            editorTeamColorInput: document.getElementById('editor-team-color'),
-            editorTeamLogoInput: document.getElementById('editor-team-logo'),
-            editorTeamLogoPreview: document.getElementById('editor-team-logo-preview'),
-            editorPlayerInputs: document.getElementById('editor-player-inputs'),
-            captainSelect: document.getElementById('editor-captain-select'),
-            wicketKeeperSelect: document.getElementById('editor-wicket-keeper-select')
-        };
-        let savedTeams = {};
-        let focusedPlayerOriginalName = ''; // To track the name being edited
 
-        function loadSavedTeams() {
-            const teams = localStorage.getItem('savedTeams');
-            savedTeams = teams ? JSON.parse(teams) : {};
-        }
+        <div id="team-editor-view" class="hidden h-full flex flex-col bg-white absolute inset-0 z-30">
+            <div class="bg-white border-b border-gray-200 p-4 flex items-center gap-3 sticky top-0 z-10 shadow-sm">
+                <button id="back-to-list-btn" class="text-gray-500 hover:text-gray-800 p-1 rounded-full hover:bg-gray-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                </button>
+                <h2 class="text-lg font-bold text-gray-800">Team Editor</h2>
+            </div>
 
-        function renderSavedTeamsList() {
-            ui.manageTeamsList.innerHTML = '';
-            const teamNames = Object.keys(savedTeams).sort();
-            if (teamNames.length === 0) {
-                ui.manageTeamsList.innerHTML = '<p class="text-center text-gray-500 py-8">No teams saved yet. Click "Create New Team" to start!</p>';
-                return;
-            }
-            teamNames.forEach(name => {
-                const team = savedTeams[name];
-                const teamCard = document.createElement('div');
-                teamCard.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg mb-3';
-                teamCard.innerHTML = `
-                    <div class="flex items-center gap-4">
-                        <img src="${team.logo || `https://placehold.co/40x40/${team.color.substring(1)}/FFFFFF?text=${team.name.charAt(0)}`}" alt="Team Logo" class="w-10 h-10 rounded-full object-cover" style="background-color: ${team.color};">
-                        <div>
-                            <span class="font-bold text-gray-800">${team.name}</span>
-                            <div class="text-xs text-gray-500 mt-1">
-                                ${team.captain ? `<span>(C) ${team.captain}</span>` : ''}
-                                ${team.wicketKeeper ? `<span class="ml-2">(WK) ${team.wicketKeeper}</span>` : ''}
+            <div class="flex-1 overflow-y-auto p-4">
+                <form id="team-setup-form" class="space-y-6 pb-10">
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-4">
+                            <div class="relative group">
+                                <div class="h-16 w-16 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden cursor-pointer hover:border-blue-500 transition-colors">
+                                    <img id="editor-team-logo-preview" class="h-full w-full object-cover hidden">
+                                    <span class="text-gray-400 text-xs text-center px-1">Upload Logo</span>
+                                    <input type="file" id="editor-team-logo-upload" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
+                                </div>
+                            </div>
+                            <div class="flex-1 space-y-2">
+                                <input type="text" id="editor-team-name" placeholder="Team Name (e.g. Mumbai Indians)" class="w-full text-lg font-bold border-b-2 border-gray-200 focus:border-blue-600 outline-none py-1 transition-colors" required>
+                                <div class="flex items-center gap-2">
+                                    <label class="text-xs text-gray-500 font-semibold uppercase">Color:</label>
+                                    <input type="color" id="editor-team-color" class="h-8 w-16 border-0 p-0 rounded cursor-pointer" value="#3b82f6">
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="editTeam('${name}')" class="text-sm font-semibold py-1 px-3 rounded-md text-blue-600 hover:bg-blue-100 transition-colors">Edit</button>
-                        <button onclick="deleteTeam('${name}')" class="text-sm font-semibold py-1 px-3 rounded-md text-red-600 hover:bg-red-100 transition-colors">Delete</button>
+
+                    <hr class="border-gray-100">
+
+                    <div>
+                        <div class="flex justify-between items-end mb-3">
+                            <h3 class="font-bold text-gray-800">Squad List</h3>
+                            <span class="text-xs text-gray-500">Order implies batting order</span>
+                        </div>
+                        
+                        <div id="player-inputs-container" class="space-y-1">
+                            </div>
+
+                        <button type="button" id="add-player-btn" class="mt-3 text-sm text-blue-600 font-medium hover:text-blue-800 flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                            Add Another Player
+                        </button>
                     </div>
+
+                    <hr class="border-gray-100">
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Select Captain</label>
+                        <select id="captain-select" class="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                            <option value="" disabled selected>Select Captain</option>
+                        </select>
+                    </div>
+
+                    <div class="pt-4 sticky bottom-0 bg-white pb-4 border-t border-gray-100">
+                        <button type="submit" class="setup-btn w-full py-3.5 rounded-xl text-white font-bold shadow-lg text-lg flex justify-center items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                            Save Team
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- FIREBASE CONFIGURATION ---
+        // TODO: PASTE YOUR FIREBASE KEYS HERE
+        // Go to Firebase Console > Project Settings > General > Your Apps
+        const firebaseConfig = {
+            apiKey: "PASTE_YOUR_API_KEY_HERE",
+            authDomain: "PASTE_YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "PASTE_YOUR_PROJECT_ID",
+            storageBucket: "PASTE_YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "PASTE_SENDER_ID",
+            appId: "PASTE_APP_ID"
+        };
+
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+        let globalTeamsList = [];
+
+        // --- UI REFERENCES ---
+        const ui = {
+            teamListView: document.getElementById('team-list-view'),
+            teamEditorView: document.getElementById('team-editor-view'),
+            setupForm: document.getElementById('team-setup-form'),
+            captainSelect: document.getElementById('captain-select'),
+            addPlayerBtn: document.getElementById('add-player-btn'),
+            playerInputsContainer: document.getElementById('player-inputs-container'),
+            editorTeamNameInput: document.getElementById('editor-team-name'),
+            editorTeamColorInput: document.getElementById('editor-team-color'),
+            editorTeamLogoInput: document.getElementById('editor-team-logo-upload'),
+            editorTeamLogoPreview: document.getElementById('editor-team-logo-preview'),
+            savedTeamsContainer: document.getElementById('saved-teams-container'),
+            createNewBtn: document.getElementById('create-new-team-btn'),
+            backBtn: document.getElementById('back-to-list-btn')
+        };
+
+        let state = {
+            players: ['', '', '', '', '', '', '', '', '', '', ''],
+            editMode: false,
+            editingTeamId: null,
+            currentCaptain: null
+        };
+
+        // --- HELPER FUNCTIONS ---
+
+        function generatePlayerInputs() {
+            ui.playerInputsContainer.innerHTML = '';
+            
+            // Re-populate captain options based on current input values
+            ui.captainSelect.innerHTML = '<option value="" disabled selected>Select Captain</option>';
+            const availablePlayers = [];
+
+            state.players.forEach((playerName, index) => {
+                const div = document.createElement('div');
+                div.className = "player-input-group flex items-center gap-2 mb-2 animate-fade-in";
+                div.innerHTML = `
+                    <span class="text-xs font-bold text-gray-400 w-6">${index + 1}.</span>
+                    <input type="text" 
+                        value="${playerName}" 
+                        placeholder="Player Name" 
+                        class="flex-1 border-b-2 border-gray-200 focus:border-blue-600 outline-none py-1 text-sm bg-transparent transition-colors"
+                        oninput="updatePlayerName(${index}, this.value)"
+                        required>
+                    ${index > 1 ? `<button type="button" onclick="removePlayerInput(${index})" class="text-gray-400 hover:text-red-500"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></button>` : ''}
                 `;
-                ui.manageTeamsList.appendChild(teamCard);
+                ui.playerInputsContainer.appendChild(div);
+
+                if (playerName.trim()) availablePlayers.push(playerName);
             });
-        }
-        
-        function highlightPlayerRoles() {
-            const captainName = ui.captainSelect.value;
-            document.querySelectorAll('.player-input-row').forEach(row => {
-                const nameInput = row.querySelector('input[type="text"]');
-                let roleIndicator = row.querySelector('.role-indicator');
-                if (!roleIndicator) {
-                    roleIndicator = document.createElement('span');
-                    roleIndicator.className = 'role-indicator text-blue-600 font-bold w-6 text-center flex-shrink-0';
-                    nameInput.after(roleIndicator);
-                }
-                
-                if (nameInput.value && nameInput.value === captainName) {
-                    roleIndicator.textContent = '(C)';
-                } else {
-                    roleIndicator.textContent = '';
-                }
-            });
-        }
 
-        function updateRoleDropdowns(originalName, updatedName) {
-            let currentCaptain = ui.captainSelect.value;
-            let currentWicketKeeper = ui.wicketKeeperSelect.value;
-
-            // If the name being edited was the selected captain/WK, update the selection to the new name
-            if (originalName && updatedName && currentCaptain === originalName) {
-                currentCaptain = updatedName;
-            }
-            if (originalName && updatedName && currentWicketKeeper === originalName) {
-                currentWicketKeeper = updatedName;
-            }
-
-            ui.captainSelect.innerHTML = '<option value="">Select Captain...</option>';
-            ui.wicketKeeperSelect.innerHTML = '<option value="">Select Wicket Keeper...</option>';
-            
-            const playerRows = ui.editorPlayerInputs.querySelectorAll('.player-input-row');
-            const playerNames = Array.from(playerRows).map(row => row.querySelector('input[type="text"]').value.trim()).filter(name => name);
-
-            playerNames.forEach(name => {
+            // Update dropdown options
+            availablePlayers.forEach(p => {
                 const option = document.createElement('option');
-                option.value = name;
-                option.textContent = name;
-                ui.captainSelect.appendChild(option.cloneNode(true));
-                ui.wicketKeeperSelect.appendChild(option.cloneNode(true));
+                option.value = p;
+                option.textContent = p;
+                if (p === state.currentCaptain) option.selected = true;
+                ui.captainSelect.appendChild(option);
             });
-
-            // Restore the (potentially updated) selections
-            ui.captainSelect.value = currentCaptain;
-            ui.wicketKeeperSelect.value = currentWicketKeeper;
-            highlightPlayerRoles();
         }
 
-        function generatePlayerInputs(players = [], captainName = '', wicketKeeperName = '') {
-            ui.editorPlayerInputs.innerHTML = '';
-            for (let i = 1; i <= 20; i++) {
-                const player = players[i - 1] || { name: '', image: '' };
-                const playerRow = document.createElement('div');
-                playerRow.className = 'flex items-center gap-3 player-input-row';
-                
-                const imagePreview = document.createElement('img');
-                const placeholderSvg = `data:image/svg+xml;base64,${btoa('<svg class="w-10 h-10 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>')}`;
-                imagePreview.src = player.image || placeholderSvg;
-                imagePreview.className = 'w-10 h-10 rounded-full object-cover bg-gray-200 cursor-pointer hover:opacity-80 transition flex-shrink-0';
-                
-                const fileInput = document.createElement('input');
-                fileInput.type = 'file';
-                fileInput.className = 'hidden';
-                fileInput.accept = 'image/*';
-
-                const nameInput = document.createElement('input');
-                nameInput.type = 'text';
-                nameInput.placeholder = `Player ${i}`;
-                nameInput.value = player.name;
-                if(player.image) nameInput.dataset.imageSrc = player.image;
-                nameInput.className = 'w-full p-2 border-gray-300 border rounded-md';
-                
-                nameInput.onfocus = function() {
-                    focusedPlayerOriginalName = this.value.trim();
-                };
-                
-                nameInput.oninput = function() { 
-                    const newName = this.value.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
-                    this.value = newName;
-                    updateRoleDropdowns(focusedPlayerOriginalName, newName.trim());
-                    focusedPlayerOriginalName = newName.trim(); // Update for subsequent keystrokes in the same field
-                };
-                
-                fileInput.onchange = () => { if (fileInput.files && fileInput.files[0]) { const reader = new FileReader(); reader.onload = (e) => { imagePreview.src = e.target.result; nameInput.dataset.imageSrc = e.target.result; }; reader.readAsDataURL(fileInput.files[0]); } };
-                imagePreview.onclick = () => fileInput.click();
-                
-                playerRow.appendChild(imagePreview);
-                playerRow.appendChild(fileInput);
-                playerRow.appendChild(nameInput);
-                ui.editorPlayerInputs.appendChild(playerRow);
-            }
-            // Initial population of dropdowns when editing a team
-            updateRoleDropdowns(); // First, populate with all names
-            ui.captainSelect.value = captainName; // Then, set the correct captain
-            ui.wicketKeeperSelect.value = wicketKeeperName; // And wicket keeper
-            highlightPlayerRoles();
+        function updatePlayerName(index, value) {
+            state.players[index] = value;
+            // Debounce or simple update for captain list could go here if needed
+            // For now, let's keep it simple: captain list updates on next render or we can update live
+            // To update live without re-rendering everything:
+            const opts = ui.captainSelect.options;
+            // This is complex to sync perfectly live, simpler to just re-render captain list if critical
         }
 
-        function saveTeamFromEditor() {
-            const teamName = ui.editorTeamNameInput.value.trim();
-            const originalName = ui.editingTeamNameInput.value;
-            if (!teamName) { alert('Team name is required.'); return; }
-            if (teamName !== originalName && savedTeams[teamName]) { alert('A team with this name already exists.'); return; }
-            
-            const playerRows = ui.editorPlayerInputs.querySelectorAll('.player-input-row');
-            const players = Array.from(playerRows).map((row, i) => { 
-                const nameInput = row.querySelector('input[type="text"]');
-                return { name: nameInput.value.trim() || `Player ${i + 1}`, image: nameInput.dataset.imageSrc || '' }; 
+        // Just refreshes the captain dropdown list from current state
+        function refreshCaptainList() {
+            const currentSelection = ui.captainSelect.value;
+            ui.captainSelect.innerHTML = '<option value="" disabled selected>Select Captain</option>';
+            state.players.forEach(p => {
+                if (p.trim()) {
+                    const option = document.createElement('option');
+                    option.value = p;
+                    option.textContent = p;
+                    if (p === currentSelection) option.selected = true;
+                    ui.captainSelect.appendChild(option);
+                }
             });
-
-            const captainName = ui.captainSelect.value;
-            const wicketKeeperName = ui.wicketKeeperSelect.value;
-            
-            const teamData = { 
-                name: teamName, 
-                color: ui.editorTeamColorInput.value, 
-                logo: ui.editorTeamLogoPreview.dataset.logoSrc || '', 
-                players: players, 
-                captain: captainName || null, 
-                wicketKeeper: wicketKeeperName || null 
-            };
-            
-            if (originalName && originalName !== teamName) { delete savedTeams[originalName]; }
-            
-            savedTeams[teamName] = teamData;
-            localStorage.setItem('savedTeams', JSON.stringify(savedTeams));
-            showTeamListView();
         }
         
-        function editTeam(teamName) {
-            const team = savedTeams[teamName]; if (!team) return;
-            ui.teamEditorTitle.textContent = 'Edit Team';
-            ui.editingTeamNameInput.value = team.name;
+        // Listen for blur events to update captain list cleanly
+        ui.playerInputsContainer.addEventListener('focusout', refreshCaptainList);
+
+
+        window.removePlayerInput = function(index) {
+            state.players.splice(index, 1);
+            generatePlayerInputs();
+        };
+
+        window.updatePlayerName = function(index, value) {
+            state.players[index] = value;
+        };
+
+
+        // --- CLOUD FUNCTIONS (SAVE & LOAD) ---
+
+        // SAVE (Create or Update)
+        ui.setupForm.onsubmit = (e) => {
+            e.preventDefault();
+
+            const teamName = ui.editorTeamNameInput.value.trim();
+            const teamColor = ui.editorTeamColorInput.value;
+            const teamLogo = ui.editorTeamLogoPreview.dataset.logoSrc || ''; 
+            
+            // Clean up empty names
+            const validPlayers = state.players.filter(n => n && n.trim() !== '');
+            
+            if (!teamName || validPlayers.length < 2) {
+                alert("Please enter a Team Name and at least 2 Players.");
+                return;
+            }
+
+            const teamData = {
+                name: teamName,
+                color: teamColor,
+                logo: teamLogo,
+                players: validPlayers,
+                captain: ui.captainSelect.value,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            const submitBtn = ui.setupForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.textContent = "Saving...";
+            submitBtn.disabled = true;
+
+            if (state.editMode && state.editingTeamId) {
+                // Update
+                db.collection("teams").doc(state.editingTeamId).update(teamData)
+                    .then(() => {
+                        alert("Team updated!");
+                        resetForm();
+                        showTeamListView();
+                    })
+                    .catch((err) => {
+                        console.error(err);
+                        alert("Error updating team.");
+                    })
+                    .finally(() => {
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.disabled = false;
+                    });
+            } else {
+                // Create
+                db.collection("teams").add(teamData)
+                    .then(() => {
+                        alert("Team saved to cloud!");
+                        resetForm();
+                        showTeamListView();
+                    })
+                    .catch((err) => {
+                        console.error(err);
+                        alert("Error saving team.");
+                    })
+                    .finally(() => {
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.disabled = false;
+                    });
+            }
+        };
+
+        // LOAD (Real-time Listener)
+        function loadSavedTeams() {
+            ui.savedTeamsContainer.innerHTML = '<div class="text-center p-4 text-gray-500">Connecting to cloud...</div>';
+
+            db.collection("teams").orderBy("updatedAt", "desc").onSnapshot((snapshot) => {
+                globalTeamsList = [];
+                ui.savedTeamsContainer.innerHTML = '';
+
+                if (snapshot.empty) {
+                    ui.savedTeamsContainer.innerHTML = `
+                        <div class="text-center py-10 text-gray-400">
+                            <p class="mb-2">No teams found.</p>
+                            <p class="text-sm">Create a new team to get started!</p>
+                        </div>`;
+                    return;
+                }
+
+                snapshot.forEach((doc) => {
+                    const team = doc.data();
+                    team.id = doc.id;
+                    globalTeamsList.push(team);
+
+                    const card = document.createElement('div');
+                    card.className = "bg-white p-4 rounded-lg shadow border-l-4 border-blue-500 flex justify-between items-center";
+                    card.style.borderLeftColor = team.color;
+                    
+                    card.innerHTML = `
+                        <div class="flex items-center gap-3 overflow-hidden">
+                            <div class="h-10 w-10 rounded-full bg-gray-100 flex-shrink-0 flex items-center justify-center overflow-hidden border border-gray-200">
+                                ${team.logo 
+                                    ? `<img src="${team.logo}" class="h-full w-full object-cover" />` 
+                                    : `<span class="text-lg font-bold" style="color:${team.color}">${team.name.charAt(0)}</span>`
+                                }
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800 truncate">${team.name}</h3>
+                                <p class="text-xs text-gray-500">${team.players.length} Players</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="editTeam('${team.id}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
+                            </button>
+                            <button onclick="deleteTeam('${team.id}')" class="p-2 text-red-600 hover:bg-red-50 rounded-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                            </button>
+                        </div>
+                    `;
+                    ui.savedTeamsContainer.appendChild(card);
+                });
+            });
+        }
+
+        window.editTeam = function(id) {
+            const team = globalTeamsList.find(t => t.id === id);
+            if (!team) return;
+
+            state.editMode = true;
+            state.editingTeamId = id;
+            
             ui.editorTeamNameInput.value = team.name;
             ui.editorTeamColorInput.value = team.color;
-            if (team.logo) { ui.editorTeamLogoPreview.src = team.logo; ui.editorTeamLogoPreview.dataset.logoSrc = team.logo; ui.editorTeamLogoPreview.classList.remove('hidden'); }
-            else { ui.editorTeamLogoPreview.classList.add('hidden'); ui.editorTeamLogoPreview.src = ''; ui.editorTeamLogoPreview.dataset.logoSrc = ''; }
-            generatePlayerInputs(team.players, team.captain, team.wicketKeeper);
-            ui.teamListView.classList.add('hidden');
-            ui.teamEditorView.classList.remove('hidden');
-        }
-
-        function deleteTeam(teamName) {
-            if (confirm(`Are you sure you want to delete the team "${teamName}"?`)) {
-                delete savedTeams[teamName];
-                localStorage.setItem('savedTeams', JSON.stringify(savedTeams));
-                renderSavedTeamsList();
+            
+            if (team.logo) {
+                ui.editorTeamLogoPreview.src = team.logo;
+                ui.editorTeamLogoPreview.dataset.logoSrc = team.logo;
+                ui.editorTeamLogoPreview.classList.remove('hidden');
+            } else {
+                ui.editorTeamLogoPreview.src = '';
+                ui.editorTeamLogoPreview.classList.add('hidden');
             }
-        }
 
-        function openTeamEditor() {
-            ui.teamEditorTitle.textContent = 'Create New Team';
-            ui.editingTeamNameInput.value = '';
+            state.players = [...team.players];
+            state.currentCaptain = team.captain;
+            // Pad to 11 if needed
+            while(state.players.length < 11) state.players.push('');
+
+            generatePlayerInputs();
+            showEditorView();
+        };
+
+        window.deleteTeam = function(id) {
+            if (confirm("Are you sure? This will delete the team from the Cloud forever.")) {
+                db.collection("teams").doc(id).delete()
+                    .then(() => console.log("Deleted"))
+                    .catch(err => alert("Error deleting: " + err));
+            }
+        };
+
+
+        // --- VIEW MANAGEMENT ---
+        function resetForm() {
+            state = { players: ['', '', '', '', '', '', '', '', '', '', ''], editMode: false, editingTeamId: null, currentCaptain: null };
             ui.editorTeamNameInput.value = '';
             ui.editorTeamColorInput.value = '#3b82f6';
             ui.editorTeamLogoInput.value = '';
             ui.editorTeamLogoPreview.src = '';
             ui.editorTeamLogoPreview.dataset.logoSrc = '';
             ui.editorTeamLogoPreview.classList.add('hidden');
+            
             generatePlayerInputs();
+        }
+
+        function showEditorView() {
             ui.teamListView.classList.add('hidden');
             ui.teamEditorView.classList.remove('hidden');
         }
 
         function showTeamListView() {
-            renderSavedTeamsList();
             ui.teamEditorView.classList.add('hidden');
             ui.teamListView.classList.remove('hidden');
         }
 
+        // --- INIT ---
         document.addEventListener('DOMContentLoaded', () => {
-            loadSavedTeams();
+            loadSavedTeams(); // Start listening
             showTeamListView();
             
-            ui.captainSelect.addEventListener('change', highlightPlayerRoles);
-
             ui.editorTeamLogoInput.onchange = (e) => {
                 if (e.target.files && e.target.files[0]) {
                     const reader = new FileReader();
@@ -318,7 +435,15 @@
                     reader.readAsDataURL(e.target.files[0]);
                 }
             };
+
+            ui.createNewBtn.onclick = () => { resetForm(); showEditorView(); };
+            ui.backBtn.onclick = showTeamListView;
+            ui.addPlayerBtn.onclick = () => {
+                state.players.push('');
+                generatePlayerInputs();
+            };
         });
+
     </script>
 </body>
 </html>
