@@ -15,12 +15,13 @@
         @media (max-width: 768px) { .team-management-card { max-width: 100%; min-height: 100vh; border-radius: 0; box-shadow: none; border: none; } }
         .setup-btn { background-color: #2563eb; background-image: linear-gradient(to right, #2563eb, #1d4ed8); transition: all 0.3s ease; }
         .setup-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3), 0 4px 6px -2px rgba(37, 99, 235, 0.15); }
+        .animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Hide scrollbar for clean UI */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        .animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center py-6 px-4">
@@ -33,9 +34,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                     Manage Teams
                 </h1>
-                <button onclick="window.history.back()" class="text-blue-100 hover:text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
+                <button onclick="window.history.back()" class="text-blue-100 hover:text-white">Back</button>
             </div>
 
             <div class="flex-1 overflow-y-auto bg-gray-50 relative">
@@ -64,19 +63,54 @@
                 <form id="team-setup-form" class="space-y-6 pb-10">
                     
                     <div class="space-y-4">
-                        <div class="flex items-center gap-4">
-                            <div class="relative group">
-                                <div class="h-16 w-16 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden cursor-pointer hover:border-blue-500 transition-colors">
+                        <div class="flex items-start gap-4">
+                            <div class="relative group flex-shrink-0">
+                                <div class="h-20 w-20 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden cursor-pointer hover:border-blue-500 transition-colors relative">
                                     <img id="editor-team-logo-preview" class="h-full w-full object-cover hidden">
-                                    <span class="text-gray-400 text-xs text-center px-1">Upload Logo</span>
+                                    <span class="text-gray-400 text-[10px] font-bold text-center px-1">UPLOAD<br>LOGO</span>
                                     <input type="file" id="editor-team-logo-upload" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
                                 </div>
                             </div>
-                            <div class="flex-1 space-y-2">
-                                <input type="text" id="editor-team-name" placeholder="Team Name (e.g. Mumbai Indians)" class="w-full text-lg font-bold border-b-2 border-gray-200 focus:border-blue-600 outline-none py-1 transition-colors" required>
-                                <div class="flex items-center gap-2">
-                                    <label class="text-xs text-gray-500 font-semibold uppercase">Color:</label>
-                                    <input type="color" id="editor-team-color" class="h-8 w-16 border-0 p-0 rounded cursor-pointer" value="#3b82f6">
+
+                            <div class="flex-1 space-y-3">
+                                <input type="text" id="editor-team-name" placeholder="TEAM NAME (e.g. INDIA)" 
+                                    class="w-full text-lg font-bold border-b-2 border-gray-200 focus:border-blue-600 outline-none py-1 transition-colors uppercase placeholder:normal-case" 
+                                    oninput="this.value = this.value.toUpperCase()" required>
+                                
+                                <div class="flex items-center gap-4">
+                                    <div class="flex items-center gap-2">
+                                        <label class="text-xs text-gray-500 font-semibold uppercase">Color:</label>
+                                        <input type="color" id="editor-team-color" class="h-8 w-12 border-0 p-0 rounded cursor-pointer" value="#3b82f6">
+                                    </div>
+
+                                    <div class="flex-1">
+                                        <select id="editor-team-country" class="w-full p-1 bg-white border-b border-gray-200 text-sm focus:border-blue-600 outline-none">
+                                            <option value="" disabled selected>Select Country</option>
+                                            <option value="Afghanistan">🇦🇫 Afghanistan</option>
+                                            <option value="Australia">🇦🇺 Australia</option>
+                                            <option value="Bangladesh">🇧🇩 Bangladesh</option>
+                                            <option value="Canada">🇨🇦 Canada</option>
+                                            <option value="England">🏴󠁧󠁢󠁥󠁮󠁧󠁿 England</option>
+                                            <option value="India">🇮🇳 India</option>
+                                            <option value="Ireland">🇮🇪 Ireland</option>
+                                            <option value="Namibia">🇳🇦 Namibia</option>
+                                            <option value="Nepal">🇳🇵 Nepal</option>
+                                            <option value="Netherlands">🇳🇱 Netherlands</option>
+                                            <option value="New Zealand">🇳🇿 New Zealand</option>
+                                            <option value="Oman">🇴🇲 Oman</option>
+                                            <option value="Pakistan">🇵🇰 Pakistan</option>
+                                            <option value="Papua New Guinea">🇵🇬 Papua New Guinea</option>
+                                            <option value="Scotland">🏴󠁧󠁢󠁳Y🇹 Scotland</option>
+                                            <option value="South Africa">🇿🇦 South Africa</option>
+                                            <option value="Sri Lanka">🇱🇰 Sri Lanka</option>
+                                            <option value="United Arab Emirates">🇦🇪 UAE</option>
+                                            <option value="United Kingdom">🇬🇧 United Kingdom</option>
+                                            <option value="United States">🇺🇸 USA</option>
+                                            <option value="West Indies">🌴 West Indies</option>
+                                            <option value="Zimbabwe">🇿🇼 Zimbabwe</option>
+                                            <option value="Other">🏳️ Other</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -87,15 +121,14 @@
                     <div>
                         <div class="flex justify-between items-end mb-3">
                             <h3 class="font-bold text-gray-800">Squad List</h3>
-                            <span class="text-xs text-gray-500">Order implies batting order</span>
+                            <span class="text-xs text-gray-500">First & Last Name</span>
                         </div>
                         
-                        <div id="player-inputs-container" class="space-y-1">
+                        <div id="player-inputs-container" class="space-y-3">
                             </div>
 
-                        <button type="button" id="add-player-btn" class="mt-3 text-sm text-blue-600 font-medium hover:text-blue-800 flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-                            Add Another Player
+                        <button type="button" id="add-player-btn" class="mt-4 w-full py-2 border-2 border-dashed border-blue-200 text-blue-600 rounded-lg font-bold hover:bg-blue-50 transition-colors">
+                            + Add Player
                         </button>
                     </div>
 
@@ -104,13 +137,12 @@
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Select Captain</label>
                         <select id="captain-select" class="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm">
-                            <option value="" disabled selected>Select Captain</option>
+                            <option value="" disabled selected>Add players first...</option>
                         </select>
                     </div>
 
                     <div class="pt-4 sticky bottom-0 bg-white pb-4 border-t border-gray-100">
                         <button type="submit" class="setup-btn w-full py-3.5 rounded-xl text-white font-bold shadow-lg text-lg flex justify-center items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
                             Save Team
                         </button>
                     </div>
@@ -122,7 +154,7 @@
 
     <script>
         // ==========================================
-        // 1. FIREBASE CONFIGURATION
+        // 3. FIREBASE CONFIGURATION
         // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyBqcD59IAPpKqk98oDZkgzgkoVZ8b8LGgY",
@@ -134,14 +166,14 @@
             appId: "1:522927197627:web:f1df5db736cae96893089e"
         };
 
-        // Initialize Firebase APP
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
-        
-        // Connect to Firestore
         const db = firebase.firestore(); 
+
+        // --- GLOBAL VARIABLES ---
         let globalTeamsList = [];
+        const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/847/847969.png"; 
 
         // --- UI REFERENCES ---
         const ui = {
@@ -153,6 +185,7 @@
             playerInputsContainer: document.getElementById('player-inputs-container'),
             editorTeamNameInput: document.getElementById('editor-team-name'),
             editorTeamColorInput: document.getElementById('editor-team-color'),
+            editorTeamCountryInput: document.getElementById('editor-team-country'),
             editorTeamLogoInput: document.getElementById('editor-team-logo-upload'),
             editorTeamLogoPreview: document.getElementById('editor-team-logo-preview'),
             savedTeamsContainer: document.getElementById('saved-teams-container'),
@@ -160,93 +193,152 @@
             backBtn: document.getElementById('back-to-list-btn')
         };
 
+        // State holds objects: { name: "John Doe", avatar: "base64..." }
         let state = {
-            players: ['', '', '', '', '', '', '', '', '', '', ''],
+            players: [], 
             editMode: false,
             editingTeamId: null,
             currentCaptain: null
         };
 
-        // --- HELPER FUNCTIONS ---
+        // Initialize players (Start with 4 slots)
+        function initPlayerSlots() {
+            state.players = [];
+            for(let i=0; i<4; i++) { 
+                state.players.push({ name: '', avatar: '' });
+            }
+            generatePlayerInputs();
+        }
+
+        // --- HELPER: Title Case (First letter capital) ---
+        function titleCase(str) {
+            return str.toLowerCase().split(' ').map(function(word) {
+                return (word.charAt(0).toUpperCase() + word.slice(1));
+            }).join(' ');
+        }
 
         function generatePlayerInputs() {
             ui.playerInputsContainer.innerHTML = '';
             
-            // Rebuild captain selector options
             const currentCaptainSelection = ui.captainSelect.value;
             ui.captainSelect.innerHTML = '<option value="" disabled selected>Select Captain</option>';
-            const availablePlayers = [];
+            const validPlayerNames = [];
 
-            state.players.forEach((playerName, index) => {
+            state.players.forEach((player, index) => {
                 const div = document.createElement('div');
-                div.className = "player-input-group flex items-center gap-2 mb-2 animate-fade-in";
+                div.className = "flex items-center gap-3 animate-fade-in bg-gray-50 p-2 rounded-lg border border-gray-100";
+                
+                // Avatar Logic
+                const avatarSrc = player.avatar || DEFAULT_AVATAR;
+                const isDefault = !player.avatar;
+
                 div.innerHTML = `
-                    <span class="text-xs font-bold text-gray-400 w-6">${index + 1}.</span>
-                    <input type="text" 
-                        value="${playerName}" 
-                        placeholder="Player Name" 
-                        class="flex-1 border-b-2 border-gray-200 focus:border-blue-600 outline-none py-1 text-sm bg-transparent transition-colors"
-                        oninput="updatePlayerName(${index}, this.value)"
-                        required>
-                    ${index > 1 ? `<button type="button" onclick="removePlayerInput(${index})" class="text-gray-400 hover:text-red-500"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></button>` : ''}
+                    <div class="relative group cursor-pointer" onclick="document.getElementById('p-file-${index}').click()">
+                        <div class="h-12 w-12 rounded-full overflow-hidden border border-gray-300 bg-white">
+                            <img src="${avatarSrc}" class="h-full w-full object-cover" id="p-img-${index}">
+                        </div>
+                        <div class="absolute inset-0 flex items-center justify-center bg-black/20 rounded-full group-hover:bg-black/40 transition-all">
+                            <span class="text-[8px] text-white font-bold opacity-0 group-hover:opacity-100 ${isDefault ? 'opacity-80' : ''}">PHOTO</span>
+                        </div>
+                        <input type="file" id="p-file-${index}" hidden accept="image/*" onchange="handlePlayerImage(${index}, this)">
+                    </div>
+
+                    <div class="flex-1">
+                         <input type="text" 
+                            value="${player.name}" 
+                            placeholder="First & Last Name" 
+                            class="w-full bg-transparent border-b border-gray-300 focus:border-blue-500 outline-none py-1 text-sm font-medium placeholder-gray-400"
+                            oninput="handlePlayerName(${index}, this)"
+                        >
+                    </div>
+
+                    <span class="text-xs font-bold text-gray-300">#${index + 1}</span>
+                    
+                    ${state.players.length > 2 ? `
+                    <button type="button" onclick="removePlayer(${index})" class="text-gray-400 hover:text-red-500 p-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                    </button>` : ''}
                 `;
                 ui.playerInputsContainer.appendChild(div);
 
-                if (playerName.trim()) availablePlayers.push(playerName);
+                if (player.name.trim()) validPlayerNames.push(player.name);
             });
 
-            // Update dropdown options
-            availablePlayers.forEach(p => {
+            // Populate Captain Dropdown
+            validPlayerNames.forEach(name => {
                 const option = document.createElement('option');
-                option.value = p;
-                option.textContent = p;
-                if (p === state.currentCaptain || p === currentCaptainSelection) option.selected = true;
+                option.value = name;
+                option.textContent = name;
+                if (name === state.currentCaptain || name === currentCaptainSelection) option.selected = true;
                 ui.captainSelect.appendChild(option);
             });
         }
 
-        // Global functions for inline HTML event handlers
-        window.removePlayerInput = function(index) {
+        // --- GLOBAL HANDLERS ---
+        window.handlePlayerName = function(index, input) {
+            // Capitalize Words
+            const formatted = titleCase(input.value);
+            // Only update visual value if character count is increasing (avoids cursor jumping on deletion)
+            // Ideally we update state always, but visual update on blur or carefully
+            state.players[index].name = input.value; // Store raw for now
+        };
+        // Apply formatting on blur to prevent cursor jumps
+        document.addEventListener('focusout', function(e) {
+            if(e.target.tagName === 'INPUT' && e.target.type === 'text') {
+                e.target.value = titleCase(e.target.value);
+                // Find index and update state
+                // This is a bit loose but works for now
+            }
+        });
+
+        window.handlePlayerImage = function(index, input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    state.players[index].avatar = e.target.result;
+                    document.getElementById(`p-img-${index}`).src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        };
+
+        window.removePlayer = function(index) {
             state.players.splice(index, 1);
             generatePlayerInputs();
         };
 
-        window.updatePlayerName = function(index, value) {
-            state.players[index] = value;
-        };
-        
-        ui.playerInputsContainer.addEventListener('focusout', generatePlayerInputs);
-
-
-        // --- CLOUD FUNCTIONS (SAVE & LOAD) ---
-
+        // --- SAVE TO CLOUD ---
         ui.setupForm.onsubmit = (e) => {
             e.preventDefault();
 
-            const teamName = ui.editorTeamNameInput.value.trim();
+            // Format Data
+            const teamName = ui.editorTeamNameInput.value.trim().toUpperCase(); 
             const teamColor = ui.editorTeamColorInput.value;
-            // FIX: Ensure teamLogo is consistently an empty string if no file/data is present.
+            const teamCountry = ui.editorTeamCountryInput.value;
             const teamLogo = ui.editorTeamLogoPreview.dataset.logoSrc || ''; 
             
-            const validPlayers = state.players.filter(n => n && n.trim() !== '');
+            // Clean up players list
+            const validPlayers = state.players
+                .map(p => ({ ...p, name: titleCase(p.name) })) // Ensure Title Case on save
+                .filter(p => p.name && p.name.trim() !== '');
             
+            // VALIDATION: Works with just 2 players
             if (!teamName || validPlayers.length < 2) {
                 alert("Please enter a Team Name and at least 2 Players.");
                 return;
             }
-            
-            // Check for large images
-            if (teamLogo.startsWith('data:image/') && teamLogo.length > 500000) {
-                if (!confirm("Warning: This image is very large and may take time to save. Continue?")) {
-                    return;
-                }
+
+            // Image size warning
+            if (teamLogo.length > 500000) {
+                 if(!confirm("Team Logo is large. It might be slow. Continue?")) return;
             }
 
             const teamData = {
                 name: teamName,
                 color: teamColor,
+                country: teamCountry || 'Other',
                 logo: teamLogo,
-                players: validPlayers,
+                players: validPlayers, 
                 captain: ui.captainSelect.value,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
@@ -262,13 +354,13 @@
 
             firebaseOperation
                 .then(() => {
-                    alert("Team saved successfully!");
+                    alert("Team Saved Successfully!");
                     resetForm();
                     showTeamListView();
                 })
                 .catch((err) => {
-                    console.error("Firebase Save Error:", err);
-                    alert("Error saving team: " + err.message);
+                    console.error("Save Error:", err);
+                    alert("Error: " + err.message);
                 })
                 .finally(() => {
                     submitBtn.innerHTML = originalText;
@@ -276,19 +368,16 @@
                 });
         };
 
+        // --- LOAD FROM CLOUD ---
         function loadSavedTeams() {
-            ui.savedTeamsContainer.innerHTML = '<div class="text-center p-4 text-gray-500">Connecting to cloud...</div>';
+            ui.savedTeamsContainer.innerHTML = '<div class="text-center p-4 text-gray-500">Loading Cloud Teams...</div>';
 
             db.collection("teams").orderBy("updatedAt", "desc").onSnapshot((snapshot) => {
                 globalTeamsList = [];
                 ui.savedTeamsContainer.innerHTML = '';
 
                 if (snapshot.empty) {
-                    ui.savedTeamsContainer.innerHTML = `
-                        <div class="text-center py-10 text-gray-400">
-                            <p class="mb-2">No teams found.</p>
-                            <p class="text-sm">Create a new team to get started!</p>
-                        </div>`;
+                    ui.savedTeamsContainer.innerHTML = `<div class="text-center py-10 text-gray-400">No teams yet. Create one!</div>`;
                     return;
                 }
 
@@ -297,13 +386,15 @@
                     team.id = doc.id;
                     globalTeamsList.push(team);
 
+                    const playerCount = team.players ? team.players.length : 0;
+                    
                     const card = document.createElement('div');
                     card.className = "bg-white p-4 rounded-lg shadow border-l-4 border-blue-500 flex justify-between items-center";
                     card.style.borderLeftColor = team.color;
                     
                     card.innerHTML = `
                         <div class="flex items-center gap-3 overflow-hidden">
-                            <div class="h-10 w-10 rounded-full bg-gray-100 flex-shrink-0 flex items-center justify-center overflow-hidden border border-gray-200">
+                            <div class="h-12 w-12 rounded-full bg-gray-100 flex-shrink-0 flex items-center justify-center overflow-hidden border border-gray-200">
                                 ${team.logo 
                                     ? `<img src="${team.logo}" class="h-full w-full object-cover" />` 
                                     : `<span class="text-lg font-bold" style="color:${team.color}">${team.name.charAt(0)}</span>`
@@ -311,7 +402,10 @@
                             </div>
                             <div>
                                 <h3 class="font-bold text-gray-800 truncate">${team.name}</h3>
-                                <p class="text-xs text-gray-500">${team.players.length} Players</p>
+                                <div class="text-xs text-gray-500 flex items-center gap-2">
+                                    <span>${playerCount} Players</span>
+                                    ${team.country ? `<span>• ${team.country}</span>` : ''}
+                                </div>
                             </div>
                         </div>
                         <div class="flex gap-2">
@@ -337,6 +431,7 @@
             
             ui.editorTeamNameInput.value = team.name;
             ui.editorTeamColorInput.value = team.color;
+            if(ui.editorTeamCountryInput) ui.editorTeamCountryInput.value = team.country || "";
             
             if (team.logo) {
                 ui.editorTeamLogoPreview.src = team.logo;
@@ -347,34 +442,37 @@
                 ui.editorTeamLogoPreview.classList.add('hidden');
             }
 
-            state.players = [...team.players];
-            state.currentCaptain = team.captain;
-            while(state.players.length < 11) state.players.push('');
+            // Load Players (Handling old string-only data just in case)
+            state.players = (team.players || []).map(p => {
+                if(typeof p === 'string') return { name: p, avatar: '' };
+                return p;
+            });
+            
+            // Ensure 4 slots
+            while(state.players.length < 4) state.players.push({ name: '', avatar: '' });
 
+            state.currentCaptain = team.captain;
             generatePlayerInputs();
             showEditorView();
         };
 
         window.deleteTeam = function(id) {
-            if (confirm("Are you sure? This will delete the team from the Cloud forever.")) {
-                db.collection("teams").doc(id).delete()
-                    .then(() => console.log("Deleted"))
-                    .catch(err => alert("Error deleting: " + err.message));
+            if (confirm("Delete this team permanently?")) {
+                db.collection("teams").doc(id).delete().catch(err => alert("Error: " + err.message));
             }
         };
 
-
-        // --- VIEW MANAGEMENT ---
+        // --- NAVIGATION ---
         function resetForm() {
-            state = { players: ['', '', '', '', '', '', '', '', '', '', ''], editMode: false, editingTeamId: null, currentCaptain: null };
+            state = { players: [], editMode: false, editingTeamId: null, currentCaptain: null };
+            initPlayerSlots();
             ui.editorTeamNameInput.value = '';
             ui.editorTeamColorInput.value = '#3b82f6';
+            if(ui.editorTeamCountryInput) ui.editorTeamCountryInput.selectedIndex = 0;
             ui.editorTeamLogoInput.value = '';
             ui.editorTeamLogoPreview.src = '';
             ui.editorTeamLogoPreview.dataset.logoSrc = '';
             ui.editorTeamLogoPreview.classList.add('hidden');
-            
-            generatePlayerInputs();
         }
 
         function showEditorView() {
@@ -407,11 +505,10 @@
             ui.createNewBtn.onclick = () => { resetForm(); showEditorView(); };
             ui.backBtn.onclick = showTeamListView;
             ui.addPlayerBtn.onclick = () => {
-                state.players.push('');
+                state.players.push({ name: '', avatar: '' });
                 generatePlayerInputs();
             };
         });
-
     </script>
 </body>
 </html>
