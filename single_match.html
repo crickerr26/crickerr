@@ -8,6 +8,9 @@
     <meta name="theme-color" content="#2563eb"/>
     <link rel="apple-touch-icon" href="icon-512.png">
 
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -7173,29 +7176,67 @@ function openEditModal() {
         }
         
         // --- TEAM MANAGEMENT LOGIC ---
+        
+        // 1. Initialize Firebase with your config
+        const firebaseConfig = {
+            apiKey: "AIzaSyBqcD59IAPpKqk98oDZkgzgkoVZ8b8LGgY",
+            authDomain: "livecricketscoring-92087.firebaseapp.com",
+            databaseURL: "https://livecricketscoring-92087-default-rtdb.firebaseio.com",
+            projectId: "livecricketscoring-92087",
+            storageBucket: "livecricketscoring-92087.firebasestorage.app",
+            messagingSenderId: "522927197627",
+            appId: "1:522927197627:web:f1df5db736cae96893089e"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+
+        // 2. Updated Loader to fetch from Cloud
         function loadSavedTeams() {
-            try {
-                const teamsJSON = localStorage.getItem('savedTeams');
-                if (teamsJSON && teamsJSON !== '{}') { // Added check for empty object string
-                    console.log("Found savedTeams data in localStorage:", teamsJSON); // Debug log
-                    const teamsObject = JSON.parse(teamsJSON);
-                    savedTeamsData = Object.values(teamsObject);
-                    if (savedTeamsData.length === 0) {
-                        console.warn("Parsed savedTeams data, but it resulted in an empty array."); // Warning
-                    }
-                    populateTeamDropdowns();
-                } else {
-                    console.warn("No valid savedTeams data found in localStorage."); // More explicit warning
-                    showAlert("No saved teams found in local storage. Please create teams in 'Manage Teams' first."); // User Alert
-                    savedTeamsData = []; // Ensure it's empty
-                    populateTeamDropdowns(); // Populate with no options
-                }
-            } catch (e) {
-                console.error("Could not load or parse saved teams:", e);
-                showAlert(`Error loading saved teams: ${e.message}`); // Show error to user
+            // Add temporary loading state to dropdowns
+            const loadingOption = new Option("Loading from Cloud...", "");
+            if(ui.team1Select) { ui.team1Select.add(loadingOption); ui.team1Select.disabled = true; }
+            if(ui.team2Select) { ui.team2Select.add(loadingOption.cloneNode(true)); ui.team2Select.disabled = true; }
+
+            db.collection("teams").orderBy("updatedAt", "desc").get().then((querySnapshot) => {
                 savedTeamsData = [];
+                
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    
+                    // CONVERSION FIX: Manage Teams saves players as simple strings ["Name1", "Name2"]
+                    // But 18.html expects objects [{name: "Name1", image: ""}, ...].
+                    // We convert them here so the rest of your code works without crashing.
+                    const formattedPlayers = (data.players || []).map(p => {
+                        return typeof p === 'string' ? { name: p, image: '' } : p;
+                    });
+
+                    savedTeamsData.push({
+                        id: doc.id,
+                        name: data.name,
+                        logo: data.logo || '',
+                        color: data.color || '#2563eb',
+                        players: formattedPlayers,
+                        captain: data.captain
+                    });
+                });
+                
+                // Clear loading state and populate
+                if(ui.team1Select) { ui.team1Select.innerHTML = '<option value="">Search saved teams...</option>'; ui.team1Select.disabled = false; }
+                if(ui.team2Select) { ui.team2Select.innerHTML = '<option value="">Search saved teams...</option>'; ui.team2Select.disabled = false; }
+                
                 populateTeamDropdowns();
-            }
+                
+                if (savedTeamsData.length === 0) {
+                    console.log("No teams found in Cloud.");
+                }
+            }).catch((error) => {
+                console.error("Error getting teams:", error);
+                if(ui.team1Select) ui.team1Select.disabled = false;
+                if(ui.team2Select) ui.team2Select.disabled = false;
+            });
         }
         function populateTeamDropdowns() {
             [ui.team1Select, ui.team2Select].forEach(select => {
