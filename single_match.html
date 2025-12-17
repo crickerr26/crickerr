@@ -3433,102 +3433,137 @@ function updateFreeHitIndicator() {
         updateUI();
     });
 }
+/* UPDATED initiateRunOutFlow */
 function initiateRunOutFlow() {
-            const modalTitle = document.getElementById('run-out-modal-title');
-            const runsSection = document.getElementById('run-out-runs-section');
-            const runsPrompt = document.getElementById('run-out-runs-prompt');
-            const runsChipsContainer = document.getElementById('run-out-runs-chips');
-            const runsInput = document.getElementById('run-out-runs-input');
-            const selectedRunsInput = document.getElementById('run-out-selected-runs');
-            const runOutOptionsContainer = document.getElementById('run-out-options');
+    const modalTitle = document.getElementById('run-out-modal-title');
+    const runsSection = document.getElementById('run-out-runs-section');
+    const runsPrompt = document.getElementById('run-out-runs-prompt');
+    const runsChipsContainer = document.getElementById('run-out-runs-chips');
+    const runsInput = document.getElementById('run-out-runs-input');
+    const selectedRunsInput = document.getElementById('run-out-selected-runs');
+    const runOutOptionsContainer = document.getElementById('run-out-options');
 
-            // Set modal title based on whether it's a Free Hit
-            modalTitle.textContent = state.isFreeHit ? "Run Out on Free Hit" : "Who was Run Out?";
-            runsPrompt.textContent = "Runs completed before run-out:";
-            runsSection.classList.remove('hidden'); // Ensure runs section is visible
-            runsInput.classList.add('hidden'); // Hide numeric input initially
-            selectedRunsInput.value = '0'; // Default to 0 runs
+    modalTitle.textContent = state.isFreeHit ? "Run Out on Free Hit" : "Who was Run Out?";
+    runsPrompt.textContent = "Runs completed before run-out:";
+    runsSection.classList.remove('hidden'); 
+    runsInput.classList.add('hidden'); 
+    selectedRunsInput.value = '0'; 
 
-            // --- Setup Run Chip Listeners ---
-            runsChipsContainer.querySelectorAll('.run-chip').forEach(chip => {
-                chip.onclick = () => {
-                    runsChipsContainer.querySelectorAll('.run-chip').forEach(c => c.classList.remove('bg-blue-600', 'text-white', '!bg-gray-200')); // Reset styles more robustly
-                    chip.classList.add('bg-blue-600', 'text-white'); // Style selected chip
-                    chip.classList.remove('bg-gray-200');
+    runsChipsContainer.querySelectorAll('.run-chip').forEach(chip => {
+        chip.onclick = () => {
+            runsChipsContainer.querySelectorAll('.run-chip').forEach(c => c.classList.remove('bg-blue-600', 'text-white', '!bg-gray-200'));
+            chip.classList.add('bg-blue-600', 'text-white'); 
+            chip.classList.remove('bg-gray-200');
 
-                    const runsValue = chip.dataset.runs;
-                    if (runsValue === '4+') {
-                        runsInput.classList.remove('hidden');
-                        runsInput.focus();
-                        selectedRunsInput.value = runsInput.value || '4'; // Use input value or default to 4
-                    } else {
-                        runsInput.classList.add('hidden');
-                        selectedRunsInput.value = runsValue; // Use chip value
-                    }
-                };
-            });
-            runsInput.oninput = () => {
-                selectedRunsInput.value = runsInput.value || '4'; // Store numeric value, default to 4 if empty
-            };
-            // Default select '0' runs visually
-             runsChipsContainer.querySelector('[data-runs="0"]').click();
+            const runsValue = chip.dataset.runs;
+            if (runsValue === '4+') {
+                runsInput.classList.remove('hidden');
+                runsInput.focus();
+                selectedRunsInput.value = runsInput.value || '4'; 
+            } else {
+                runsInput.classList.add('hidden');
+                selectedRunsInput.value = runsValue; 
+            }
+        };
+    });
+    runsInput.oninput = () => {
+        selectedRunsInput.value = runsInput.value || '4'; 
+    };
+    runsChipsContainer.querySelector('[data-runs="0"]').click();
 
+    // UPDATED: Now calls promptRunOutFielder instead of finalizing immediately
+    runOutOptionsContainer.innerHTML = `
+        <label class="flex items-center p-3 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200">
+            <input type="radio" name="runOutPlayer" value="${state.striker.playerId}" class="mr-3 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" onclick="promptRunOutFielder('${state.striker.playerId}')">
+            <span class="font-medium">${formatPlayerName(state.striker.name)} (Striker)</span>
+        </label>
+        <label class="flex items-center p-3 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200">
+            <input type="radio" name="runOutPlayer" value="${state.nonStriker.playerId}" class="mr-3 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" onclick="promptRunOutFielder('${state.nonStriker.playerId}')">
+            <span class="font-medium">${formatPlayerName(state.nonStriker.name)} (Non-Striker)</span>
+        </label>
+    `;
 
-            // --- Setup Player Radio Buttons ---
-            // These now call the generic finalizeRunOutDismissal
-            runOutOptionsContainer.innerHTML = `
-                <label class="flex items-center p-3 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200">
-                    <input type="radio" name="runOutPlayer" value="${state.striker.playerId}" class="mr-3 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" onclick="finalizeRunOutDismissal('${state.striker.playerId}')">
-                    <span class="font-medium">${formatPlayerName(state.striker.name)} (Striker)</span>
-                </label>
-                <label class="flex items-center p-3 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200">
-                    <input type="radio" name="runOutPlayer" value="${state.nonStriker.playerId}" class="mr-3 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" onclick="finalizeRunOutDismissal('${state.nonStriker.playerId}')">
-                    <span class="font-medium">${formatPlayerName(state.nonStriker.name)} (Non-Striker)</span>
-                </label>
-            `;
-
-            openModal('run-out-modal');
-        }
-        /* UPDATED finalizeRunOutDismissal - Fixes 0 runs bug */
-async function finalizeRunOutDismissal(playerOutId) {
-    closeModal('run-out-modal');
-    saveState(); 
-
+    openModal('run-out-modal');
+}
+    /* NEW HELPER: Asks who did the run out */
+function promptRunOutFielder(playerOutId) {
+    // 1. Capture the runs before closing the run-out modal
     const runsTakenInput = document.getElementById('run-out-selected-runs');
-    const runsTaken = parseInt(runsTakenInput.value) || 0; 
+    const runsTaken = parseInt(runsTakenInput.value) || 0;
+    
+    closeModal('run-out-modal');
+
+    // 2. Prepare the Fielder Modal
+    const fielderSelect = document.getElementById('fielder-select');
+    const fieldingTeamKey = state.bowlingTeam;
+    
+    // Use existing helper to fill dropdown with fielders
+    populatePlayerOptions(fielderSelect, fieldingTeamKey, { 
+        addBlankOption: true, 
+        blankOptionText: 'Direct Hit / Unknown' 
+    });
+
+    const title = document.getElementById('fielder-modal-title');
+    if(title) title.textContent = "Who did the Run Out?";
+
+    // 3. Setup Confirm Button to trigger the FINAL step
+    const confirmBtn = document.getElementById('fielder-save-btn');
+    
+    // Remove old listeners to prevent bugs
+    const newConfirmBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+    newConfirmBtn.onclick = () => {
+        const selectedFielderId = fielderSelect.value;
+        let fielderName = "Direct Hit"; // Default text
+        
+        if (selectedFielderId && state[fieldingTeamKey].playerStats[selectedFielderId]) {
+            fielderName = state[fieldingTeamKey].playerStats[selectedFielderId].name;
+        }
+
+        closeModal('fielder-modal');
+        // Pass all data to the finalizer
+        finalizeRunOutDismissal(playerOutId, runsTaken, selectedFielderId, fielderName);
+    };
+
+    openModal('fielder-modal');
+}
+
+/* UPDATED FINALIZER: Now accepts Fielder Details */
+async function finalizeRunOutDismissal(playerOutId, runsTaken, fielderId, fielderName) {
+    saveState(); 
 
     const battingTeamKey = state.battingTeam;
     const battingTeam = state[battingTeamKey];
 
-    // --- FIX START: FORCE SAVE ACTIVE STATS ---
-    // This ensures that if the striker has 40 runs in memory, it gets saved to the database
-    // BEFORE we fetch it for the summary.
+    // Force save active stats before fetching
     if (state.striker && state.striker.playerId === playerOutId) {
         savePlayerStats(state.striker, battingTeamKey);
     } else if (state.nonStriker && state.nonStriker.playerId === playerOutId) {
         savePlayerStats(state.nonStriker, battingTeamKey);
     }
-    // --- FIX END ---
 
-    // Now this fetches the CORRECT, updated stats (e.g., 40 runs)
     const playerOutObject = state[battingTeamKey].playerStats[playerOutId];
-
     if (!playerOutObject) return;
 
-    // Add the runs completed during the run-out to the player's total
+    // Add runs to player stats
     playerOutObject.runs += runsTaken; 
     
-    // Update Team Score
+    // Add to Team Score
     battingTeam.score += runsTaken;
     battingTeam.wickets++;
 
     playerOutObject.isOut = true;
+    
+    // --- UPDATED DISMISSAL INFO ---
+    // We now store the Fielder Name in 'via', which reflects on the scorecard
     const dismissalInfo = {
         type: 'Run Out',
         bowlerId: null, 
         bowlerName: null,
-        fielderId: null, 
-        fielderName: null,
+        fielderId: fielderId || null, 
+        fielderName: fielderName || 'Direct Hit',
+        via: fielderName || 'Direct Hit', // This ensures it says "Run Out (Jadeja)"
         scoreAtFall: battingTeam.score, 
         overAtFall: `${battingTeam.overs}.${battingTeam.balls + 1}` 
     };
@@ -3560,11 +3595,9 @@ async function finalizeRunOutDismissal(playerOutId) {
 
     if (checkInningsEnd()) return;
 
-    // DIRECTLY OPEN NEXT PLAYER MODAL (No Alert)
     state.isScoringLocked = true;
     const roleToFill = !state.striker ? 'striker' : 'nonStriker';
     
-    // Hide cancel buttons to force selection
     ui.playerModalCancelBtnX.classList.add('hidden');
     ui.playerModalCancelBtnText.classList.add('hidden');
 
