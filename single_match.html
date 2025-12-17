@@ -1074,32 +1074,31 @@
             </div>
         </div> 
         <header class="bg-gray-100 p-1 border-t border-gray-300 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-20">
-    <div class="flex flex-wrap justify-center items-center gap-2 w-full max-w-4xl mx-auto py-1">
+    <div class="flex flex-wrap justify-center items-center gap-1 w-full max-w-4xl mx-auto py-1">
         
-        <button onclick="openEditModal()" class="text-[10px] font-bold uppercase tracking-wider py-1.5 px-2 bg-white border border-gray-300 rounded shadow-sm text-gray-700 hover:bg-gray-50 active:scale-95 transition-transform">
-            Edit
+        <button onclick="openEditModal()" class="p-1.5 bg-white border border-gray-300 rounded shadow-sm text-gray-700 hover:bg-gray-50 active:scale-95 transition-transform" title="Edit Score">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z" />
+            </svg>
         </button>
         
-        <button onclick="showSummaryScreen()" class="text-[10px] font-bold uppercase tracking-wider py-1.5 px-2 bg-white border border-gray-300 rounded shadow-sm text-gray-700 hover:bg-gray-50 active:scale-95 transition-transform">
+        <button onclick="showSummaryScreen()" class="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider py-1.5 px-2 bg-white border border-gray-300 rounded shadow-sm text-gray-700 hover:bg-gray-50 active:scale-95 transition-transform">
             Summary
         </button>
 
-        <div class="flex items-center space-x-1 px-1 border-l border-r border-gray-300 mx-1" title="Shot Map">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2h14a2 2 0 002-2z"></path></svg>
-            <button id="pitch-map-toggle" onclick="togglePitchMap()" class="relative inline-flex flex-shrink-0 h-4 w-7 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none bg-gray-400">
-                <span id="pitch-map-toggle-knob" class="pointer-events-none inline-block h-3 w-3 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200 translate-x-0"></span>
-            </button>
-        </div>
+        <button id="finish-match-btn" onclick="handleFinishMatchClick()" class="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider py-1.5 px-2 bg-orange-500 text-white rounded shadow-sm hover:bg-orange-600 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+            Finish Match
+        </button>
 
-        <button onclick="openEndMatchModal()" class="text-[10px] font-bold uppercase tracking-wider py-1.5 px-2 bg-red-600 text-white rounded shadow-sm hover:bg-red-700 active:scale-95 transition-transform">
-            End Match
+        <button onclick="openEndMatchModal()" class="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider py-1.5 px-2 bg-red-600 text-white rounded shadow-sm hover:bg-red-700 active:scale-95 transition-transform">
+            Conclude Match
         </button>
         
-        <button id="rematch-btn" onclick="startRematch()" class="text-[10px] font-bold uppercase tracking-wider py-1.5 px-2 bg-blue-600 text-white rounded shadow-sm hover:bg-blue-700 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+        <button id="rematch-btn" onclick="startRematch()" class="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider py-1.5 px-2 bg-blue-600 text-white rounded shadow-sm hover:bg-blue-700 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled>
             Rematch
         </button>
         
-        <button onclick="confirmStartNewMatch()" class="text-[10px] font-bold uppercase tracking-wider py-1.5 px-2 bg-green-600 text-white rounded shadow-sm hover:bg-green-700 active:scale-95 transition-transform">
+        <button onclick="confirmStartNewMatch()" class="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider py-1.5 px-2 bg-green-600 text-white rounded shadow-sm hover:bg-green-700 active:scale-95 transition-transform">
             New Match
         </button>
     </div>
@@ -3949,14 +3948,30 @@ function updateHistoryButtons() {
 }
 
         function updateFooterButtons() {
-            if (EXPERIMENT_ENABLE__FOOTER_REMATCH) {
-                const rematchBtn = document.getElementById('rematch-btn');
-                if (rematchBtn) {
-                    // Enable the rematch button only when a winner is decided
-                    rematchBtn.disabled = !state.winner;
-                }
-            }
-        }
+    // Check if we have a winner (Game is over)
+    const isMatchFinished = !!state.winner;
+
+    // 1. Rematch Button
+    const rematchBtn = document.getElementById('rematch-btn');
+    if (rematchBtn) {
+        rematchBtn.disabled = !isMatchFinished;
+    }
+
+    // 2. Finish Match Button (Orange)
+    const finishBtn = document.getElementById('finish-match-btn');
+    if (finishBtn) {
+        // Stays grey while playing, turns Orange when game is done
+        finishBtn.disabled = !isMatchFinished;
+    }
+}
+
+// 3. What happens when you click the Orange Button
+function handleFinishMatchClick() {
+    if (state.winner) {
+        // This opens the celebration screen with Winner Name, Score, and Margin
+        openWinModal(state.winner, state.winMargin);
+    }
+}
 
         function startRematch() {
             if (!state.winner) return;
