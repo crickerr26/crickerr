@@ -292,14 +292,50 @@
         });
 
         window.handlePlayerImage = function(index, input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    state.players[index].avatar = e.target.result;
-                    document.getElementById(`p-img-${index}`).src = e.target.result;
-                };
-                reader.readAsDataURL(input.files[0]);
+            const file = input.files[0];
+            if (!file) return;
+
+            // 1. LIMIT CHECK: Warn if file is larger than 5MB
+            if (file.size > 5 * 1024 * 1024) {
+                alert("⚠️ This photo is too large! Please choose a photo smaller than 5MB.");
+                input.value = ''; 
+                return;
             }
+
+            // 2. SMART CROP & COMPRESS
+            const reader = new FileReader();
+            reader.onload = (readerEvent) => {
+                const tempImg = new Image();
+                tempImg.onload = () => {
+                    const MAX_SIZE = 300;
+                    const canvas = document.createElement('canvas');
+                    canvas.width = MAX_SIZE;
+                    canvas.height = MAX_SIZE;
+                    const ctx = canvas.getContext('2d');
+
+                    // Crop to square (center focus)
+                    let sWidth, sHeight, sx, sy;
+                    if (tempImg.width > tempImg.height) {
+                        sHeight = tempImg.height;
+                        sWidth = tempImg.height;
+                        sx = (tempImg.width - tempImg.height) / 2;
+                        sy = 0;
+                    } else {
+                        sWidth = tempImg.width;
+                        sHeight = tempImg.width;
+                        sx = 0;
+                        sy = (tempImg.height - tempImg.width) / 2;
+                    }
+
+                    ctx.drawImage(tempImg, sx, sy, sWidth, sHeight, 0, 0, MAX_SIZE, MAX_SIZE);
+                    const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+
+                    state.players[index].avatar = compressedDataUrl;
+                    document.getElementById(`p-img-${index}`).src = compressedDataUrl;
+                };
+                tempImg.src = readerEvent.target.result;
+            };
+            reader.readAsDataURL(file);
         };
 
         window.removePlayer = function(index) {
@@ -491,15 +527,51 @@
             showTeamListView();
             
             ui.editorTeamLogoInput.onchange = (e) => {
-                if (e.target.files && e.target.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        ui.editorTeamLogoPreview.src = event.target.result;
-                        ui.editorTeamLogoPreview.dataset.logoSrc = event.target.result;
+                const file = e.target.files[0];
+                if (!file) return;
+
+                // 1. LIMIT CHECK: Warn if file is larger than 5MB
+                if (file.size > 5 * 1024 * 1024) {
+                    alert("⚠️ This logo is too large! Please choose an image smaller than 5MB.");
+                    e.target.value = '';
+                    return;
+                }
+
+                // 2. SMART CROP & COMPRESS
+                const reader = new FileReader();
+                reader.onload = (readerEvent) => {
+                    const tempImg = new Image();
+                    tempImg.onload = () => {
+                        const MAX_SIZE = 300;
+                        const canvas = document.createElement('canvas');
+                        canvas.width = MAX_SIZE;
+                        canvas.height = MAX_SIZE;
+                        const ctx = canvas.getContext('2d');
+
+                        // Crop to square
+                        let sWidth, sHeight, sx, sy;
+                        if (tempImg.width > tempImg.height) {
+                            sHeight = tempImg.height;
+                            sWidth = tempImg.height;
+                            sx = (tempImg.width - tempImg.height) / 2;
+                            sy = 0;
+                        } else {
+                            sWidth = tempImg.width;
+                            sHeight = tempImg.width;
+                            sx = 0;
+                            sy = (tempImg.height - tempImg.width) / 2;
+                        }
+
+                        ctx.drawImage(tempImg, sx, sy, sWidth, sHeight, 0, 0, MAX_SIZE, MAX_SIZE);
+                        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+
+                        ui.editorTeamLogoPreview.src = compressedDataUrl;
+                        ui.editorTeamLogoPreview.dataset.logoSrc = compressedDataUrl;
                         ui.editorTeamLogoPreview.classList.remove('hidden');
                     };
-                    reader.readAsDataURL(e.target.files[0]);
-                }
+                    tempImg.src = readerEvent.target.result;
+                };
+                reader.readAsDataURL(file);
             };
 
             ui.createNewBtn.onclick = () => { resetForm(); showEditorView(); };
