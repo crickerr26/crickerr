@@ -4234,34 +4234,32 @@ function handleFinishMatchClick() {
     ui.battingTable.innerHTML = fullTableHTML;
 }
 
-       // --- FIX: LOOK UP THE LATEST IMAGE FOR BOWLER ---
-                let bowlerImg = bowler.image;
-                if (!bowlerImg && state.team1 && state.team2) {
-                    const allPlayers = [...(state.team1.players || []), ...(state.team2.players || [])];
-                    const found = allPlayers.find(p => p.name === bowler.name);
-                    if (found) bowlerImg = found.image;
-                }
-                const fallbackImg = `data:image/svg+xml;base64,${btoa('<svg class="w-full h-full text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>')}`;
-                const finalBowlerImg = bowlerImg || fallbackImg;
-
-                let tableHTML = `
-                    <tr class="border-t align-middle">
-                        <td class="p-2 font-semibold text-gray-800 flex items-center justify-between text-sm">
-                            <div class="flex items-center gap-2 overflow-hidden">
-                                <img src="${finalBowlerImg}" class="w-10 h-10 rounded-full object-cover border border-gray-200 flex-shrink-0 bg-gray-50" onerror="this.src='${fallbackImg}'">
-                                <span class="truncate">${bowler.name}</span>
-                            </div>
-                            <button onclick="editPlayer('bowler')" class="ml-2 text-gray-400 hover:text-gray-700">
+       function createBatsmanRow(batsman, isStriker) {
+            // Use toInt to ensure runs/balls are numbers, then apply specified SR formula
+            const runs = toInt(batsman.runs);
+            const balls = toInt(batsman.balls);
+            const sr = balls > 0 ? ((runs / balls) * 100).toFixed(2) : '0.00';
+            
+            const fallbackImg = `data:image/svg+xml;base64,${btoa('<svg class="w-full h-full text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>')}`;
+            
+            return `
+                <tr class="border-t align-middle">
+                    <td class="p-2 font-semibold text-gray-800 flex items-center justify-between text-sm">
+                        <span class="truncate">${batsman.name} ${isStriker ? '<span class="text-red-500 ml-1 text-xs">*</span>' : ''}</span>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="editPlayer('${isStriker ? 'striker' : 'nonStriker'}')" title="Edit Player" class="text-gray-400 hover:text-gray-700">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z" /></svg>
                             </button>
-                        </td>
-                        <td class="text-center p-2 text-base">${oversDisplay}</td>
-                        <td class="text-center p-2 text-base">${maidens}</td>
-                        <td class="text-center p-2 text-base">${runsConceded}</td>
-                        <td class="text-center p-2 text-base">${wickets}</td>
-                        <td class="text-right p-2 text-base">${econ}</td>
-                    </tr>
-                `;
+                        </div>
+                    </td>
+                    <td class="text-center p-2 font-bold text-base">${runs}</td>
+                    <td class="text-center p-2 text-base">${balls}</td>
+                    <td class="text-center p-2 text-base">${toInt(batsman.fours)}</td>
+                    <td class="text-center p-2 text-base">${toInt(batsman.sixes)}</td>
+                    <td class="text-right p-2 text-base">${sr}</td>
+                </tr>
+            `;
+        }
 
         function editPlayer(role) {
             savePlayerStats(state.striker, state.battingTeam);
@@ -4290,15 +4288,10 @@ function handleFinishMatchClick() {
                 const fallbackImg = `data:image/svg+xml;base64,${btoa('<svg class="w-full h-full text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>')}`;
 
                 // This part creates the main row for the bowler's stats
-                const playerImg = bowler.image || fallbackImg;
-                
                 let tableHTML = `
                     <tr class="border-t align-middle">
-                        <td class="p-2 font-semibold text-gray-800 flex items-center justify-between text-sm">
-                            <div class="flex items-center gap-2 overflow-hidden">
-                                <img src="${playerImg}" class="w-8 h-8 rounded-full object-cover border border-gray-200 flex-shrink-0" onerror="this.src='${fallbackImg}'">
-                                <span class="truncate">${bowler.name}</span>
-                            </div>
+                        <td class="p-2 font-semibold text-gray-800 flex items-center text-sm">
+                            <span class="flex-grow truncate">${bowler.name}</span>
                             <button onclick="editPlayer('bowler')" class="ml-2 text-gray-400 hover:text-gray-700">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z" /></svg>
                             </button>
@@ -6832,57 +6825,20 @@ document.getElementById('end-match-confirm-btn').onclick = endMatch;
             fileInput.type = 'file';
             fileInput.accept = 'image/*';
             fileInput.onchange = (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-
-                // 1. LIMIT CHECK
-                if (file.size > 5 * 1024 * 1024) {
-                    alert("⚠️ Image too large! Please use an image smaller than 5MB.");
-                    return;
-                }
-
-                // 2. RESIZE & SYNC
-                const reader = new FileReader();
-                reader.onload = (readerEvent) => {
-                    const tempImg = new Image();
-                    tempImg.onload = () => {
-                        // Resize to 300x300 square
-                        const MAX_SIZE = 300;
-                        const canvas = document.createElement('canvas');
-                        canvas.width = MAX_SIZE;
-                        canvas.height = MAX_SIZE;
-                        const ctx = canvas.getContext('2d');
-
-                        let sWidth, sHeight, sx, sy;
-                        if (tempImg.width > tempImg.height) {
-                            sHeight = tempImg.height; sWidth = tempImg.height; sx = (tempImg.width - tempImg.height) / 2; sy = 0;
-                        } else {
-                            sWidth = tempImg.width; sHeight = tempImg.width; sx = 0; sy = (tempImg.height - tempImg.width) / 2;
-                        }
-                        ctx.drawImage(tempImg, sx, sy, sWidth, sHeight, 0, 0, MAX_SIZE, MAX_SIZE);
-                        
-                        const newImageUrl = canvas.toDataURL('image/jpeg', 0.7);
-
-                        // Update Visuals
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const newImageUrl = event.target.result;
                         img.src = newImageUrl;
                         player.image = newImageUrl;
-
-                        // Update Team Stats
-                        if (state[teamKey].playerStats[player.id]) {
+                        if(state[teamKey].playerStats[player.id]) {
                             state[teamKey].playerStats[player.id].image = newImageUrl;
                         }
-
-                        // --- CRITICAL FIX: Update Active Players Instantly ---
-                        if (state.striker && state.striker.playerId === player.id) state.striker.image = newImageUrl;
-                        if (state.nonStriker && state.nonStriker.playerId === player.id) state.nonStriker.image = newImageUrl;
-                        if (state.bowler && state.bowler.playerId === player.id) state.bowler.image = newImageUrl;
-
                         updateUI();
                         debouncedSave();
                     };
-                    tempImg.src = readerEvent.target.result;
-                };
-                reader.readAsDataURL(file);
+                    reader.readAsDataURL(e.target.files[0]);
+                }
             };
             
             uploaderDiv.appendChild(img);
