@@ -709,6 +709,44 @@
             .summary-dnb-section h4, .summary-fow-section h4 { font-size: 0.8rem; }
             .summary-dnb-section p, .summary-fow-list { font-size: 0.75rem; line-height: 1.4; }
         }
+        /* --- Squad Modal Additions --- */
+        .squad-add-row {
+            display: flex;
+            gap: 8px;
+            padding: 10px;
+            background-color: #eff6ff;
+            border-top: 1px solid #dbeafe;
+            margin-top: 10px;
+            border-radius: 6px;
+        }
+        .squad-add-input {
+            flex-grow: 1;
+            padding: 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        .squad-add-btn {
+            background-color: #3b82f6;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        .squad-save-cloud-btn {
+            background-color: #10b981;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-right: auto;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .squad-save-cloud-btn:hover { background-color: #059669; }
     </style>
 </head>
 <body class="bg-gray-100 antialiased">
@@ -2407,11 +2445,13 @@ function updateFreeHitIndicator() {
             playerRow.className = 'flex items-center gap-3 player-input-row';
             playerRow.dataset.playerId = player.id;
 
+            // 1. Checkbox
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.checked = isSelected;
             checkbox.className = 'h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer flex-shrink-0';
 
+            // 2. Image Uploader
             const imageContainer = document.createElement('div');
             imageContainer.className = 'w-10 h-10 flex-shrink-0';
             const imagePreview = document.createElement('img');
@@ -2425,14 +2465,24 @@ function updateFreeHitIndicator() {
             fileInput.className = 'hidden';
             fileInput.accept = 'image/*';
 
+            // 3. Name Input Container (Wrapper for Input + Pencil)
+            const inputWrapper = document.createElement('div');
+            inputWrapper.className = 'relative w-full flex items-center';
+
             const nameInput = document.createElement('input');
             nameInput.type = 'text';
             nameInput.placeholder = placeholder;
-            nameInput.value = player.name || ''; // Use player.name which is now normalized
-            nameInput.className = 'w-full p-2 border-gray-300 border rounded-md focus:ring-blue-500 focus:border-blue-500 transition';
+            nameInput.value = player.name || ''; 
+            nameInput.className = 'w-full p-2 pr-8 border-gray-300 border rounded-md focus:ring-blue-500 focus:border-blue-500 transition';
             nameInput.style.textTransform = 'uppercase';
             nameInput.dataset.imageSrc = player.image || '';
 
+            // The Pencil Icon
+            const pencilIcon = document.createElement('div');
+            pencilIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z" /></svg>`;
+            pencilIcon.className = 'absolute right-2 pointer-events-none'; // Positioned inside the box
+
+            // --- LOGIC: Image Upload ---
             fileInput.onchange = () => {
                 if (fileInput.files && fileInput.files[0]) {
                     const reader = new FileReader();
@@ -2443,14 +2493,62 @@ function updateFreeHitIndicator() {
                     reader.readAsDataURL(fileInput.files[0]);
                 }
             };
-
             imagePreview.onclick = () => fileInput.click();
 
+            // --- LOGIC: Duplicate Name Checker ---
+            const checkDuplicates = () => {
+                // Find all text inputs in this specific team list
+                const allInputs = container.querySelectorAll('input[type="text"]');
+                const nameCounts = {};
+
+                // Count how many times each name appears
+                allInputs.forEach(inp => {
+                    const val = inp.value.trim().toUpperCase();
+                    if (val) {
+                        nameCounts[val] = (nameCounts[val] || 0) + 1;
+                    }
+                });
+
+                // Apply Red Border if count > 1
+                allInputs.forEach(inp => {
+                    const val = inp.value.trim().toUpperCase();
+                    if (val && nameCounts[val] > 1) {
+                        // It is a duplicate! Make it RED.
+                        inp.style.borderColor = '#ef4444'; // Red color
+                        inp.style.borderWidth = '2px';
+                        inp.style.backgroundColor = '#fef2f2'; // Light red bg
+                    } else {
+                        // It is unique. Make it Normal.
+                        inp.style.borderColor = ''; // Reset to CSS default
+                        inp.style.borderWidth = '';
+                        inp.style.backgroundColor = '';
+                    }
+                });
+            };
+
+            // Run check every time you type
+            nameInput.addEventListener('input', () => {
+                // Update Logo Label (Existing logic)
+                const teamLabel = container.id.includes('team1') ? 'team1-logo-input' : 'team2-logo-input';
+                const teamNameInput = container.id.includes('team1') ? 'team1-name-input' : 'team2-name-input';
+                // (Optional: You can add logic here to update header names if needed, but we focus on duplicates)
+                
+                checkDuplicates();
+            });
+
+            // Also run check immediately in case loading saved data has dupes
+            setTimeout(checkDuplicates, 100);
+
+            // Assemble the row
             playerRow.appendChild(checkbox);
             imageContainer.appendChild(imagePreview);
             imageContainer.appendChild(fileInput);
             playerRow.appendChild(imageContainer);
-            playerRow.appendChild(nameInput);
+            
+            inputWrapper.appendChild(nameInput);
+            inputWrapper.appendChild(pencilIcon);
+            playerRow.appendChild(inputWrapper);
+
             container.appendChild(playerRow);
         }
         
@@ -7284,52 +7382,100 @@ function openEditModal() {
             const counterEl = document.getElementById('squad-selection-counter');
             const confirmBtn = document.getElementById('squad-confirm-btn');
 
-            // --- NEW RULES ---
-            const optionalBench = 2;
+            // --- Rules ---
+            const optionalBench = 10; // Increased to allow more bench players
             const minRequired = playersPerSide;
             const maxAllowed = playersPerSide + optionalBench;
-            // --- END NEW RULES ---
 
-            // --- NEW: Handle persistence ---
+            // --- Check previous selection ---
             let previouslySelectedNames = [];
             if (currentTeamSelectionKey && state[currentTeamSelectionKey].isLoaded && state[currentTeamSelectionKey].name === teamData.name) {
-                 previouslySelectedNames = state[currentTeamSelectionKey].playing
+                previouslySelectedNames = state[currentTeamSelectionKey].playing
                     .map(id => state[currentTeamSelectionKey].playerStats[id]?.name)
                     .filter(Boolean);
             }
-            // --- END NEW ---
 
             titleEl.textContent = `Select Squad for ${teamData.name}`;
-            squadListContainer.innerHTML = '';
 
-            if (!teamData.players || teamData.players.length === 0) {
-                squadListContainer.innerHTML = '<p class="text-gray-500">This saved team has no players in its roster.</p>';
-            } else {
-                teamData.players.forEach(player => {
-                    // NEW: Check if this player was previously selected
-                    const isChecked = previouslySelectedNames.includes(player.name);
-                    const checkboxId = `player-${player.name.replace(/\s+/g, '-')}-${Math.random().toString(36).substr(2, 9)}`; // Ensure unique ID
+            // --- HELPER: Render the list ---
+            const renderList = () => {
+                squadListContainer.innerHTML = '';
 
-                    const playerDiv = document.createElement('div');
-                    playerDiv.className = 'flex items-center bg-gray-50 p-2 rounded-md hover:bg-gray-100';
-                    playerDiv.innerHTML = `
+                // 1. Show existing players
+                if (!teamData.players || teamData.players.length === 0) {
+                    squadListContainer.innerHTML = '<p class="text-gray-500 p-2">No players found. Add some below!</p>';
+                } else {
+                    teamData.players.forEach(player => {
+                        const isChecked = previouslySelectedNames.includes(player.name);
+                        const checkboxId = `player-${player.name.replace(/\s+/g, '-')}-${Math.random().toString(36).substr(2, 9)}`;
+
+                        const playerDiv = document.createElement('div');
+                        playerDiv.className = 'flex items-center bg-gray-50 p-2 rounded-md hover:bg-gray-100 mb-2';
+                        playerDiv.innerHTML = `
                         <input type="checkbox" id="${checkboxId}" value="${player.name}" class="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-3 cursor-pointer" ${isChecked ? 'checked' : ''}>
                         <img src="${player.image || `data:image/svg+xml;base64,${btoa('<svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>')}`}" class="w-8 h-8 rounded-full object-cover mr-3 bg-gray-200">
-                        <label for="${checkboxId}" class="font-medium text-gray-800 flex-grow cursor-pointer">${player.name}</label>
+                        <label for="${checkboxId}" class="font-medium text-gray-800 flex-grow cursor-pointer select-none">${player.name}</label>
                     `;
-                    squadListContainer.appendChild(playerDiv);
+                        squadListContainer.appendChild(playerDiv);
+                    });
+                }
+
+                // 2. Add the "Add Player" Input Area
+                const addRow = document.createElement('div');
+                addRow.className = 'squad-add-row';
+                addRow.innerHTML = `
+                    <input type="text" id="squad-new-player-name" class="squad-add-input" placeholder="Enter new player name..." style="text-transform:uppercase">
+                    <button id="squad-add-btn" class="squad-add-btn">+ Add</button>
+                `;
+                squadListContainer.appendChild(addRow);
+
+                // Logic for the Add Button
+                const addBtn = addRow.querySelector('#squad-add-btn');
+                const addInput = addRow.querySelector('#squad-new-player-name');
+
+                addBtn.onclick = () => {
+                    const newName = addInput.value.trim().toUpperCase();
+                    if (!newName) return;
+
+                    // Add to the local teamData object
+                    teamData.players.push({
+                        name: newName,
+                        image: '',
+                        id: generateUniqueId()
+                    });
+                    
+                    // Auto-select the new player
+                    previouslySelectedNames.push(newName);
+
+                    // Re-render the list immediately
+                    renderList();
+                    updateCounter();
+                    
+                    // Show the "Save to Cloud" button if it was hidden
+                    const saveCloudBtn = document.getElementById('squad-save-cloud-btn');
+                    if(saveCloudBtn) saveCloudBtn.style.display = 'flex';
+                };
+
+                // Re-attach checkbox listeners
+                squadListContainer.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.addEventListener('change', (e) => {
+                        // Update our tracking array so we don't lose selection on re-render
+                        if(e.target.checked) {
+                            if(!previouslySelectedNames.includes(e.target.value)) previouslySelectedNames.push(e.target.value);
+                        } else {
+                            previouslySelectedNames = previouslySelectedNames.filter(n => n !== e.target.value);
+                        }
+                        updateCounter();
+                    });
                 });
-            }
+            };
 
+            // --- Counter & Validation Logic ---
             const updateCounter = () => {
-                const allCheckboxes = squadListContainer.querySelectorAll('input[type="checkbox"]');
                 const selectedCount = squadListContainer.querySelectorAll('input[type="checkbox"]:checked').length;
-                
-                // Update counter text
-                counterEl.textContent = `${selectedCount} / ${maxAllowed} selected`;
+                counterEl.textContent = `${selectedCount} / ${playersPerSide} (Min) selected`;
 
-                // Update button state
-                if (selectedCount >= minRequired && selectedCount <= maxAllowed) {
+                if (selectedCount >= minRequired) {
                     counterEl.classList.add('text-green-600', 'font-semibold');
                     counterEl.classList.remove('text-gray-600');
                     confirmBtn.disabled = false;
@@ -7340,47 +7486,75 @@ function openEditModal() {
                     confirmBtn.disabled = true;
                     confirmBtn.classList.add('opacity-50', 'cursor-not-allowed');
                 }
-
-                // Update checkbox disabled state
-                if (selectedCount >= maxAllowed) {
-                    allCheckboxes.forEach(cb => {
-                        if (!cb.checked) {
-                            cb.disabled = true;
-                            cb.parentElement.classList.add('opacity-50'); // Grey out the row
-                        }
-                    });
-                } else {
-                    allCheckboxes.forEach(cb => {
-                        cb.disabled = false;
-                        cb.parentElement.classList.remove('opacity-50');
-                    });
-                }
             };
-            
-            squadListContainer.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-                checkbox.addEventListener('change', updateCounter);
-            });
 
+            // --- INJECT CUSTOM FOOTER BUTTONS ---
+            // We need to inject the "Save to Cloud" button into the modal footer
+            const modalFooter = document.querySelector('#squad-selection-modal .border-t');
+            
+            // Clear any old "Save to Cloud" buttons to prevent duplicates
+            const oldCloudBtn = document.getElementById('squad-save-cloud-btn');
+            if(oldCloudBtn) oldCloudBtn.remove();
+
+            // Create new "Save to Cloud" button
+            const saveCloudBtn = document.createElement('button');
+            saveCloudBtn.id = 'squad-save-cloud-btn';
+            saveCloudBtn.className = 'squad-save-cloud-btn';
+            saveCloudBtn.innerHTML = `<span>☁️ Save to Team</span>`;
+            saveCloudBtn.title = "Save new players to Manage Teams permanently";
+            
+            // Insert it as the first item in the footer
+            modalFooter.insertBefore(saveCloudBtn, modalFooter.firstChild);
+
+            // Logic for Saving to Firebase
+            saveCloudBtn.onclick = () => {
+                if(!teamData.id) {
+                    alert("Cannot save to cloud: Team ID missing.");
+                    return;
+                }
+                
+                const originalText = saveCloudBtn.innerHTML;
+                saveCloudBtn.textContent = "Saving...";
+                saveCloudBtn.disabled = true;
+
+                // Update Firestore
+                db.collection("teams").doc(teamData.id).update({
+                    players: teamData.players.map(p => ({ name: p.name, image: p.image || '' }))
+                }).then(() => {
+                    saveCloudBtn.innerHTML = "✅ Saved!";
+                    saveCloudBtn.style.backgroundColor = "#059669";
+                    setTimeout(() => {
+                        saveCloudBtn.innerHTML = originalText;
+                        saveCloudBtn.style.backgroundColor = "";
+                        saveCloudBtn.disabled = false;
+                    }, 2000);
+                }).catch((err) => {
+                    alert("Error saving: " + err.message);
+                    saveCloudBtn.textContent = "Error";
+                    saveCloudBtn.disabled = false;
+                });
+            };
+
+            // Confirm Selection Button Logic
             confirmBtn.onclick = () => {
                 const selectedPlayers = [];
                 const selectedCheckboxes = squadListContainer.querySelectorAll('input[type="checkbox"]:checked');
-                
+
                 selectedCheckboxes.forEach(checkbox => {
                     const playerName = checkbox.value;
-                    // Find the player in the original teamData (from saved storage)
                     const playerObject = teamData.players.find(p => p.name === playerName);
                     if (playerObject) {
                         selectedPlayers.push(playerObject);
                     }
                 });
 
-                // FinalizeTeamSelection will create new IDs if they don't exist
-                // and store the selected player IDs in state[teamKey].playing
                 finalizeTeamSelection(currentTeamSelectionKey, teamData, selectedPlayers);
                 closeModal('squad-selection-modal');
             };
-            
-            updateCounter(); // Run once on open
+
+            // Initial Render
+            renderList();
+            updateCounter();
             openModal('squad-selection-modal');
         }
 
