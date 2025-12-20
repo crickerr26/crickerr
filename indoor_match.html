@@ -288,14 +288,14 @@
                 
                 <div class="bg-white rounded-lg shadow border border-gray-100 overflow-hidden">
                     <table class="w-full text-left text-xs">
-                        <thead class="bg-gray-100 text-gray-600 border-b">
-                            <tr>
-                                <th class="p-1 pl-2 w-1/2">Bowling</th>
-                                <th class="p-1 text-center">O</th>
-                                <th class="p-1 text-center">M</th>
-                                <th class="p-1 text-center">R</th>
-                                <th class="p-1 text-center">W</th>
-                                <th class="p-1 text-right pr-2">Econ</th>
+                        <thead class="bg-gray-100 text-gray-500 border-b">
+                            <tr class="text-[10px] uppercase tracking-wider">
+                                <th class="py-1 px-2 w-1/2">Bowling</th>
+                                <th class="py-1 text-center">O</th>
+                                <th class="py-1 text-center">M</th>
+                                <th class="py-1 text-center">R</th>
+                                <th class="py-1 text-center">W</th>
+                                <th class="py-1 text-right pr-2">Eco</th>
                             </tr>
                         </thead>
                         <tbody id="bowling-table" class="divide-y divide-gray-50"></tbody>
@@ -324,7 +324,7 @@
                 </div>
 
                 <div class="p-2 bg-gray-50 flex justify-around border-t">
-                    <button onclick="location.reload()" class="text-xs font-bold uppercase tracking-wider text-red-600">Exit Match</button>
+                    <button onclick="confirmExit()" class="text-xs font-bold uppercase tracking-wider text-red-600">Exit Match</button>
                 </div>
             </div>
         </div>
@@ -1320,7 +1320,60 @@
             initInnings();
         }
 
+        function confirmExit() {
+            if(confirm("⚠️ Are you sure you want to EXIT?\n\nCurrent match data will be lost.")) {
+                location.reload();
+            }
+        }
+
         function updateUI() {
+            updateScoreboard(); 
+            
+            // Batting Table
+            const batTable = document.getElementById('batting-table');
+            batTable.innerHTML = '';
+            const createRow = (p, isStriker) => {
+                const sr = p.balls > 0 ? ((p.runs / p.balls) * 100).toFixed(2) : '0.00';
+                return `<tr class="border-t ${isStriker ? 'bg-blue-50' : ''}"><td class="p-2 font-bold text-gray-800 flex items-center justify-between"><span>${p.name} ${isStriker ? '<span class="text-red-500">*</span>' : ''}</span></td><td class="text-center p-2 font-bold ${p.runs < 0 ? 'text-red-600' : ''}">${p.runs}</td><td class="text-center p-2 text-gray-600">${p.balls}</td><td class="text-center p-2 text-gray-400">-</td><td class="text-center p-2 text-gray-400">-</td><td class="text-right p-2 text-gray-500 text-xs">${sr}</td></tr>`;
+            };
+            if(state.striker) batTable.innerHTML += createRow(state.striker, true);
+            if(state.nonStriker) batTable.innerHTML += createRow(state.nonStriker, false);
+        
+            // Bowling Table (ULTRA COMPACT VERSION)
+            if(state.bowler) {
+                const ballsHTML = state.currentOver.map(b => {
+                    let c = 'ball-0';
+                    let fontSize = 'text-[9px]'; // Even smaller font
+                    
+                    if(b.runs === 4) c = 'ball-4';
+                    else if(b.runs === 6) c = 'ball-6';
+                    else if(b.event.includes('W') && !b.event.includes('WD')) c = 'ball-w';
+                    else if(b.event.includes('WD') || b.event.includes('NB')) {
+                        c = 'ball-wd';
+                        if (b.event.length > 2) fontSize = 'text-[6px] leading-tight';
+                    }
+                    
+                    return `<span class="ball-chip ${c} ${fontSize}">${b.event}</span>`;
+                }).join('');
+
+                const overs = Math.floor(state.bowler.ballsBowled / 6) + '.' + (state.bowler.ballsBowled % 6);
+                const econ = state.bowler.ballsBowled > 0 ? (state.bowler.runsConceded / (state.bowler.ballsBowled/6)).toFixed(2) : '0.00';
+
+                // Tighter row padding (p-0.5) and smaller text (text-[10px])
+                document.getElementById('bowling-table').innerHTML = `
+                <tr class="border-t">
+                    <td class="py-1 px-2 align-middle">
+                        <div class="font-bold text-gray-800 text-[11px] leading-tight">${state.bowler.name}</div>
+                        <div class="mt-0.5 flex items-center overflow-x-auto gap-0.5 h-4">${ballsHTML}</div>
+                    </td>
+                    <td class="text-center py-1 font-medium text-gray-700 text-[10px] align-middle">${overs}</td>
+                    <td class="text-center py-1 text-gray-400 text-[10px] align-middle">0</td>
+                    <td class="text-center py-1 font-medium text-gray-800 text-[10px] align-middle">${state.bowler.runsConceded}</td>
+                    <td class="text-center py-1 font-bold text-red-600 text-[10px] align-middle">${state.bowler.wickets}</td>
+                    <td class="text-right py-1 pr-2 text-gray-500 text-[9px] align-middle">${econ}</td>
+                </tr>`;
+            }
+        }
             updateScoreboard(); // Keep header scoreboard in sync
             
             // Batting Table
@@ -1364,7 +1417,6 @@
                     <td class="text-right p-1 pr-2 text-[10px] text-gray-500">${econ}</td>
                 </tr>`;
             }
-        }
     </script>
 </body>
 </html>
