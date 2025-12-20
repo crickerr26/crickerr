@@ -26,7 +26,6 @@
         #app { overflow: hidden; }
         #app > .flex-grow { padding: 8px; display: flex; flex-direction: column; }
         #match-header h1 { font-size: 1.25rem; }
-        .scoring-grid button { padding-top: 8px; padding-bottom: 8px; font-size: 0.875rem; }
         #scoreboard { padding: 0; }
         #batting-table th, #batting-table td, #bowling-table th, #bowling-table td { padding: 4px 2px; font-size: 0.75rem; }
     }
@@ -43,10 +42,70 @@
     .toss-3d-button { border-radius: 0.75rem; background-color: #f9fafb; border: 1px solid #d1d5db; transition: all 0.15s ease-out; }
     .toss-3d-button.selected { background-color: #eff6ff; border-color: #2563eb; box-shadow: 0 0 0 2px #2563eb; }
     
-    /* Scoring Grid */
-    .scoring-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: 1fr 1fr 0.7fr; flex-grow: 1; }
-    .scoring-grid button { border-bottom: 1px solid #e0e0e0; border-right: 1px solid #e0e0e0; }
-    .scoring-grid button:nth-child(4n) { border-right: none; }
+    /* --- NEW: Scoring Grid - Apple Watery Theme --- */
+    .scoring-grid { 
+        display: grid; 
+        grid-template-columns: repeat(4, 1fr); 
+        grid-template-rows: 1fr 1fr 0.7fr; 
+        flex-grow: 1; 
+        gap: 6px; 
+        padding: 6px;
+        background: #f0f2f5;
+    }
+
+    .watery-btn {
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        font-family: 'Inter', sans-serif;
+        transition: transform 0.1s active, filter 0.2s;
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .watery-btn:active { transform: scale(0.96); }
+
+    /* Gradients */
+    .btn-grey { 
+        background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%); 
+        color: #374151; 
+    }
+    .btn-dark-grey { 
+        background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%); 
+        color: #ffffff; 
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    .btn-sky { 
+        background: linear-gradient(135deg, #7dd3fc 0%, #0ea5e9 100%); 
+        color: #ffffff; 
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    .btn-green { 
+        background: linear-gradient(135deg, #86efac 0%, #16a34a 100%); 
+        color: #ffffff; 
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    .btn-red { 
+        background: linear-gradient(135deg, #fca5a5 0%, #dc2626 100%); 
+        color: #ffffff; 
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    .btn-yellow { 
+        background: linear-gradient(135deg, #fde047 0%, #eab308 100%); 
+        color: #713f12; 
+    }
+
+    /* Animation Classes */
+    @keyframes popIn {
+        0% { transform: scale(0); opacity: 0; }
+        50% { transform: scale(1.3); opacity: 1; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-pop { animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
     
     /* Modals */
     .modal-overlay { transition: opacity 0.3s ease-in-out; }
@@ -67,7 +126,7 @@
     .roster-input { width: 100%; font-weight: 600; color: #374151; background: transparent; border: none; outline: none; text-transform: uppercase; font-size: 0.85rem; }
     .roster-input:focus { border-bottom: 2px solid #3b82f6; }
     
-    /* Ball Chips (Updated: Smaller Size) */
+    /* Ball Chips (Smaller Size) */
     .ball-chip {
         display: inline-flex; justify-content: center; align-items: center;
         width: 1.2rem; height: 1.2rem; font-size: 0.6rem; font-weight: bold;
@@ -96,8 +155,8 @@
         <h1 class="text-xl font-bold text-blue-700">INDOOR CRICKET</h1>
     </div>
 
-    <div id="event-animation-overlay" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 pointer-events-none hidden z-50">
-        <h1 id="event-animation-text" class="text-8xl font-black uppercase drop-shadow-lg text-center"></h1>
+    <div id="event-animation-overlay" class="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm pointer-events-none hidden z-50 transition-opacity duration-300">
+        <h1 id="event-animation-text" class="text-8xl font-black uppercase drop-shadow-2xl text-center"></h1>
     </div>
 
     <div id="setup-screen" class="min-h-screen w-full flex flex-col items-center justify-center setup-bg">
@@ -239,20 +298,20 @@
                 <div id="live-commentary-box" class="bg-blue-50 p-2 border-b border-blue-100 text-xs text-blue-900 h-12 overflow-y-auto custom-scroll"><p id="live-commentary" class="font-medium">Match starting...</p></div>
 
                 <div class="scoring-grid h-64 lg:h-auto lg:flex-grow">
-                    <button onclick="addRuns(0)" class="bg-gray-100 font-bold text-xl text-gray-600">0</button>
-                    <button onclick="addRuns(1)" class="bg-blue-100 font-bold text-xl text-blue-700">1</button>
-                    <button onclick="addRuns(2)" class="bg-blue-100 font-bold text-xl text-blue-700">2</button>
-                    <button onclick="addRuns(3)" class="bg-blue-100 font-bold text-xl text-blue-700">3</button>
+                    <button onclick="addRuns(0)" class="watery-btn btn-grey font-bold text-xl">0</button>
+                    <button onclick="addRuns(1)" class="watery-btn btn-grey font-bold text-xl">1</button>
+                    <button onclick="addRuns(2)" class="watery-btn btn-grey font-bold text-xl">2</button>
+                    <button onclick="addRuns(3)" class="watery-btn btn-grey font-bold text-xl">3</button>
 
-                    <button onclick="undoLastAction()" id="undo-btn" class="bg-yellow-100 text-yellow-700 font-bold">Undo</button>
-                    <button onclick="addRuns(4)" class="bg-green-100 font-bold text-xl text-green-700">4</button>
-                    <button onclick="addRuns(6)" class="bg-green-100 font-bold text-xl text-green-700">6</button>
-                    <button onclick="addRuns(5)" class="bg-green-100 font-bold text-xl text-green-700">5</button>
+                    <button onclick="undoLastAction()" id="undo-btn" class="watery-btn btn-yellow font-bold text-sm">UNDO</button>
+                    <button onclick="addRuns(4)" class="watery-btn btn-sky font-bold text-2xl">4</button>
+                    <button onclick="addRuns(6)" class="watery-btn btn-green font-bold text-2xl">6</button>
+                    <button onclick="addRuns(5)" class="watery-btn btn-grey font-bold text-xl">5</button>
 
-                    <button id="btn-wicket" onclick="openWicketModal()" class="bg-red-600 text-white font-bold text-lg col-span-1">WKT</button>
-                    <button onclick="openModal('wide-modal')" class="bg-gray-50 font-bold text-sm text-gray-700">WD</button>
-                    <button onclick="openModal('noball-modal')" class="bg-gray-50 font-bold text-sm text-gray-700">NB</button>
-                    <button onclick="openModal('extras-modal')" class="bg-gray-50 font-bold text-sm text-gray-700">EXT</button>
+                    <button id="btn-wicket" onclick="openWicketModal()" class="watery-btn btn-red font-bold text-lg col-span-1">WKT</button>
+                    <button onclick="openModal('wide-modal')" class="watery-btn btn-dark-grey font-bold text-sm">WD</button>
+                    <button onclick="openModal('noball-modal')" class="watery-btn btn-dark-grey font-bold text-sm">NB</button>
+                    <button onclick="openModal('extras-modal')" class="watery-btn btn-dark-grey font-bold text-sm">EXT</button>
                 </div>
 
                 <div class="p-2 bg-gray-50 flex justify-around border-t">
@@ -764,7 +823,7 @@
             document.getElementById(`toss-choice-${c}`).classList.add('selected');
         }
 
-        // --- GAME ENGINE (Updated Start Match for Wide/NB buttons) ---
+        // --- GAME ENGINE ---
         function startMatch() {
             state.totalOvers = parseInt(ui.totalOversInput.value);
             state.playersPerSide = parseInt(ui.playersPerSideInput.value);
@@ -780,7 +839,7 @@
                 state.battingTeam = 'team2'; state.bowlingTeam = 'team1';
             }
 
-            // Update UI Rules (This will now show "WKT (-3)" automatically)
+            // Update UI Rules
             state.rules.wicketRuns = parseInt(document.getElementById('rule-wicket').value); // Ensure we grab the latest value
             
             document.getElementById('btn-wicket').textContent = `WKT (-${state.rules.wicketRuns})`;
@@ -789,14 +848,14 @@
             const wVal = state.rules.wideRuns;
             const nbVal = state.rules.noBallRuns;
 
-            // --- UPDATED WIDE OPTIONS (Std, +3, +4, +5, +6) ---
+            // --- UPDATED WIDE OPTIONS ---
             let wButtons = `<button onclick="addExtra('wd', ${wVal})" class="col-span-3 p-4 bg-blue-100 text-blue-900 font-bold rounded-xl mb-1">Standard (+${wVal})</button>`;
             [3, 4, 5, 6].forEach(r => {
                 if (r !== wVal) wButtons += `<button onclick="addExtra('wd', ${r})" class="p-4 bg-gray-100 font-bold rounded-xl">+${r}</button>`;
             });
             document.getElementById('wide-options').innerHTML = wButtons;
 
-            // --- UPDATED NO BALL OPTIONS (Std, +3, +4, +5, +6) ---
+            // --- UPDATED NO BALL OPTIONS ---
             let nbButtons = `<button onclick="addExtra('nb', ${nbVal})" class="col-span-3 p-4 bg-blue-100 text-blue-900 font-bold rounded-xl mb-1">Standard (+${nbVal})</button>`;
             [3, 4, 5, 6].forEach(r => {
                 if (r !== nbVal) nbButtons += `<button onclick="addExtra('nb', ${r})" class="p-4 bg-gray-100 font-bold rounded-xl">+${r}</button>`;
@@ -826,7 +885,6 @@
             document.getElementById('match-header').innerHTML = headerHTML;
         }
 
-        // --- UPDATED SCOREBOARD (No Undefined) ---
         function updateScoreboard() {
             const battingTeamKey = state.battingTeam;
             const bowlingTeamKey = state.bowlingTeam;
@@ -993,6 +1051,10 @@
             if (str) { str.runs += runs; str.balls++; }
             if (bwl) { bwl.runsConceded += runs; bwl.ballsBowled++; }
 
+            // --- ANIMATION TRIGGERS ---
+            if (runs === 4) showEventPopup("4", "text-blue-500");
+            if (runs === 6) showEventPopup("6", "text-green-500");
+
             processBall(runs, `${runs}`);
             if(runs % 2 !== 0) swapStrikers();
             updateUI();
@@ -1016,18 +1078,30 @@
             
             if (bwl) { bwl.wickets++; bwl.ballsBowled++; }
 
-            const overlay = document.getElementById('event-animation-overlay');
-            const text = document.getElementById('event-animation-text');
-            text.textContent = `-${penalty}`;
-            text.className = "text-9xl font-black text-red-600 animate-ping";
-            overlay.classList.remove('hidden');
-            setTimeout(() => overlay.classList.add('hidden'), 1000);
+            // --- ANIMATION TRIGGER (RED OUT) ---
+            showEventPopup("OUT", "text-red-600");
 
             processBall(0, 'W');
             updateUI();
             
             // Note: In Indoor cricket, we continue playing even if wickets fall.
-            // The innings only ends when overs are completed.
+        }
+
+        function showEventPopup(text, colorClass) {
+            const overlay = document.getElementById('event-animation-overlay');
+            const textEl = document.getElementById('event-animation-text');
+            
+            // Set Text and Color
+            textEl.textContent = text;
+            textEl.className = `text-9xl font-black drop-shadow-2xl animate-pop ${colorClass}`;
+            
+            // Show Overlay
+            overlay.classList.remove('hidden');
+            
+            // Hide after 1.2 seconds
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 1200);
         }
 
         function addExtra(type, runs) {
