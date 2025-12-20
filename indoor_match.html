@@ -42,7 +42,7 @@
     .toss-3d-button { border-radius: 0.75rem; background-color: #f9fafb; border: 1px solid #d1d5db; transition: all 0.15s ease-out; }
     .toss-3d-button.selected { background-color: #eff6ff; border-color: #2563eb; box-shadow: 0 0 0 2px #2563eb; }
     
-    /* --- NEW: Scoring Grid - Apple Watery Theme --- */
+    /* --- Scoring Grid - Apple Watery Theme --- */
     .scoring-grid { 
         display: grid; 
         grid-template-columns: repeat(4, 1fr); 
@@ -184,7 +184,7 @@
                             </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-bold mb-1">Overs (4-15)</label>
+                                    <label class="block text-sm font-bold mb-1">Overs (3-15)</label>
                                     <select id="total-overs" class="w-full p-2 border rounded">
                                     </select>
                                 </div>
@@ -288,7 +288,16 @@
                 
                 <div class="bg-white rounded-lg shadow border border-gray-100 overflow-hidden">
                     <table class="w-full text-left text-xs">
-                        <thead class="bg-gray-100 text-gray-600 border-b"><tr><th class="p-2 w-1/2">Bowling</th><th class="p-2 text-center">O</th><th class="p-2 text-center">M</th><th class="p-2 text-center">R</th><th class="p-2 text-center">W</th><th class="p-2 text-right">Econ</th></tr></thead>
+                        <thead class="bg-gray-100 text-gray-600 border-b">
+                            <tr>
+                                <th class="p-1 pl-2 w-1/2">Bowling</th>
+                                <th class="p-1 text-center">O</th>
+                                <th class="p-1 text-center">M</th>
+                                <th class="p-1 text-center">R</th>
+                                <th class="p-1 text-center">W</th>
+                                <th class="p-1 text-right pr-2">Econ</th>
+                            </tr>
+                        </thead>
                         <tbody id="bowling-table" class="divide-y divide-gray-50"></tbody>
                     </table>
                 </div>
@@ -1055,12 +1064,12 @@
             if (runs === 4) showEventPopup("4", "text-blue-500");
             if (runs === 6) showEventPopup("6", "text-green-500");
 
-            processBall(runs, `${runs}`);
+            // TRUE = Legal Ball (Counts towards over)
+            processBall(runs, `${runs}`, true);
             if(runs % 2 !== 0) swapStrikers();
             updateUI();
         }
 
-        // --- UPDATED WICKET LOGIC (ALL OUT CHECK) ---
         function processIndoorWicket(type) {
             addToHistory();
             closeModal('wicket-type-modal');
@@ -1081,7 +1090,8 @@
             // --- ANIMATION TRIGGER (RED OUT) ---
             showEventPopup("OUT", "text-red-600");
 
-            processBall(0, 'W');
+            // TRUE = Legal Ball (Counts towards over)
+            processBall(0, 'W', true);
             updateUI();
             
             // Note: In Indoor cricket, we continue playing even if wickets fall.
@@ -1111,23 +1121,34 @@
             const bwl = state[state.bowler];
             
             bt.score += runs;
-            if(bwl) { bwl.runsConceded += runs; bwl.ballsBowled++; }
+            if(bwl) { bwl.runsConceded += runs; }
             
-            processBall(runs, type.toUpperCase()); 
+            // --- FIX LABEL: "WD+4" Logic ---
+            let label = type.toUpperCase();
+            if (type === 'wd' || type === 'nb') {
+                if (runs > 1) {
+                    // Example: 5 runs total = 1 Wide + 4 runs. Label: "WD+4"
+                    label = `${type.toUpperCase()}+${runs - 1}`;
+                }
+            }
+
+            // FALSE = Illegal Ball (Does NOT count towards over)
+            processBall(runs, label, false); 
             updateUI();
         }
 
-        // --- UPDATED BALL PROCESSING (0 OVERS FIX) ---
-        function processBall(runs, eventLabel) {
+        function processBall(runs, eventLabel, isLegal) {
             const bt = state[state.battingTeam];
             
-            // Ensure numbers exist to prevent 'NaN' errors
-            bt.balls = (bt.balls || 0) + 1;
+            // --- FIX: Only increment legal balls count if isLegal is true ---
+            if (isLegal) {
+                bt.balls = (bt.balls || 0) + 1;
+            }
             
-            state.currentOver.push({ event: eventLabel, runs: runs });
+            state.currentOver.push({ event: eventLabel, runs: runs, isLegal: isLegal });
 
+            // Check for Over Completion (6 LEGAL balls)
             if(bt.balls === 6) {
-                // --- FIX: Ensure overs is treated as a number ---
                 bt.overs = (bt.overs || 0) + 1;
                 bt.balls = 0;
                 
@@ -1316,23 +1337,31 @@
             if(state.bowler) {
                 const ballsHTML = state.currentOver.map(b => {
                     let c = 'ball-0';
+                    let fontSize = 'text-[10px]'; // Default tiny font
+                    
                     if(b.runs === 4) c = 'ball-4';
                     else if(b.runs === 6) c = 'ball-6';
-                    else if(b.event.includes('W')) c = 'ball-w';
-                    else if(b.event.includes('WD') || b.event.includes('NB')) c = 'ball-wd';
-                    return `<span class="ball-chip ${c}">${b.event}</span>`;
+                    else if(b.event.includes('W') && !b.event.includes('WD')) c = 'ball-w';
+                    else if(b.event.includes('WD') || b.event.includes('NB')) {
+                        c = 'ball-wd';
+                        // Fix for WD+4 tiny font
+                        if (b.event.length > 2) fontSize = 'text-[7px] leading-tight';
+                    }
+                    
+                    return `<span class="ball-chip ${c} ${fontSize}">${b.event}</span>`;
                 }).join('');
 
                 const overs = Math.floor(state.bowler.ballsBowled / 6) + '.' + (state.bowler.ballsBowled % 6);
                 const econ = state.bowler.ballsBowled > 0 ? (state.bowler.runsConceded / (state.bowler.ballsBowled/6)).toFixed(2) : '0.00';
 
+                // Tighter row padding
                 document.getElementById('bowling-table').innerHTML = `
                 <tr class="border-t">
-                    <td class="p-2"><div class="font-bold text-gray-800">${state.bowler.name}</div><div class="mt-1 flex items-center overflow-x-auto gap-1 h-6">${ballsHTML}</div></td>
-                    <td class="text-center p-2">${overs}</td><td class="text-center p-2">0</td>
-                    <td class="text-center p-2">${state.bowler.runsConceded}</td>
-                    <td class="text-center p-2 font-bold text-red-600">${state.bowler.wickets}</td>
-                    <td class="text-right p-2 text-xs">${econ}</td>
+                    <td class="p-1 pl-2"><div class="font-bold text-gray-800 text-xs">${state.bowler.name}</div><div class="mt-1 flex items-center overflow-x-auto gap-1 h-5">${ballsHTML}</div></td>
+                    <td class="text-center p-1 text-xs">${overs}</td><td class="text-center p-1 text-xs">0</td>
+                    <td class="text-center p-1 text-xs">${state.bowler.runsConceded}</td>
+                    <td class="text-center p-1 font-bold text-red-600 text-xs">${state.bowler.wickets}</td>
+                    <td class="text-right p-1 pr-2 text-[10px] text-gray-500">${econ}</td>
                 </tr>`;
             }
         }
