@@ -70,34 +70,12 @@
     .watery-btn:active { transform: scale(0.96); }
 
     /* Gradients */
-    .btn-grey { 
-        background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%); 
-        color: #374151; 
-    }
-    .btn-dark-grey { 
-        background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%); 
-        color: #ffffff; 
-        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-    }
-    .btn-sky { 
-        background: linear-gradient(135deg, #7dd3fc 0%, #0ea5e9 100%); 
-        color: #ffffff; 
-        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-    }
-    .btn-green { 
-        background: linear-gradient(135deg, #86efac 0%, #16a34a 100%); 
-        color: #ffffff; 
-        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-    }
-    .btn-red { 
-        background: linear-gradient(135deg, #fca5a5 0%, #dc2626 100%); 
-        color: #ffffff; 
-        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-    }
-    .btn-yellow { 
-        background: linear-gradient(135deg, #fde047 0%, #eab308 100%); 
-        color: #713f12; 
-    }
+    .btn-grey { background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%); color: #374151; }
+    .btn-dark-grey { background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%); color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+    .btn-sky { background: linear-gradient(135deg, #7dd3fc 0%, #0ea5e9 100%); color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+    .btn-green { background: linear-gradient(135deg, #86efac 0%, #16a34a 100%); color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+    .btn-red { background: linear-gradient(135deg, #fca5a5 0%, #dc2626 100%); color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+    .btn-yellow { background: linear-gradient(135deg, #fde047 0%, #eab308 100%); color: #713f12; }
 
     /* Animation Classes */
     @keyframes popIn {
@@ -203,7 +181,7 @@
                                     <label class="block text-xs font-bold mb-1">Wicket Penalty <span class="text-red-500 text-lg">*</span></label>
                                     <select id="rule-wicket" class="w-full p-2 border rounded text-sm text-red-600 font-bold border-red-300 focus:ring-2 focus:ring-red-500 outline-none">
                                         <option value="" selected disabled>Select...</option>
-                                        </select>
+                                    </select>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold mb-1">Wide <span class="text-red-500 text-lg">*</span></label>
@@ -281,7 +259,19 @@
 
                 <div class="bg-white rounded-lg shadow border border-gray-100 overflow-hidden">
                     <table class="w-full text-left text-xs">
-                        <thead class="bg-gray-100 text-gray-600 border-b"><tr><th class="p-2 w-1/2">Batting</th><th class="p-2 text-center">R</th><th class="p-2 text-center">B</th><th class="p-2 text-center">4s</th><th class="p-2 text-center">6s</th><th class="p-2 text-right">SR</th></tr></thead>
+                        <thead class="bg-gray-100 text-gray-600 border-b">
+                            <tr>
+                                <th class="p-2 w-1/2 flex items-center justify-between">
+                                    <span>Batting</span>
+                                    <button onclick="manualSwap()" class="bg-blue-100 hover:bg-blue-200 text-blue-700 text-[10px] px-2 py-1 rounded border border-blue-300 font-bold shadow-sm transition-transform active:scale-95">⇄ Swap</button>
+                                </th>
+                                <th class="p-2 text-center">R</th>
+                                <th class="p-2 text-center">B</th>
+                                <th class="p-2 text-center">4s</th>
+                                <th class="p-2 text-center">6s</th>
+                                <th class="p-2 text-right">SR</th>
+                            </tr>
+                        </thead>
                         <tbody id="batting-table" class="divide-y divide-gray-50"></tbody>
                     </table>
                 </div>
@@ -365,6 +355,17 @@
                 <button onclick="processIndoorWicket('Stumped')" class="p-3 bg-gray-100 rounded-lg">Stumped</button>
             </div>
             <button onclick="closeModal('wicket-type-modal')" class="mt-4 text-gray-400 text-sm">Cancel</button>
+        </div>
+    </div>
+
+    <div id="runout-modal" class="modal-overlay fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center">
+        <div class="modal-content bg-white rounded-2xl p-6 w-80 shadow-2xl text-center">
+            <h3 class="text-xl font-bold text-red-600 mb-4">Who is Out?</h3>
+            <div class="grid grid-cols-1 gap-3">
+                <button id="btn-ro-striker" onclick="finalizeRunOut('striker')" class="p-4 bg-gray-100 font-bold rounded-xl text-md hover:bg-red-50 border border-gray-200 text-gray-800">Striker</button>
+                <button id="btn-ro-nonstriker" onclick="finalizeRunOut('nonstriker')" class="p-4 bg-gray-100 font-bold rounded-xl text-md hover:bg-red-50 border border-gray-200 text-gray-800">Non-Striker</button>
+            </div>
+            <button onclick="closeModal('runout-modal')" class="mt-4 text-gray-400 text-sm">Cancel</button>
         </div>
     </div>
 
@@ -1046,6 +1047,7 @@
             closeModal('wide-modal');
             closeModal('noball-modal');
             closeModal('extras-modal');
+            closeModal('runout-modal'); // Close new modal just in case
             updateScoreboard();
             updateUI();
         }
@@ -1070,48 +1072,65 @@
             updateUI();
         }
 
+        // --- NEW: WICKET & RUN OUT LOGIC ---
         function processIndoorWicket(type) {
-            addToHistory();
             closeModal('wicket-type-modal');
+            
+            if (type === 'Run Out') {
+                // Ask user who is out
+                if(state.striker) document.getElementById('btn-ro-striker').textContent = `${state.striker.name} (Striker)`;
+                if(state.nonStriker) document.getElementById('btn-ro-nonstriker').textContent = `${state.nonStriker.name} (Non-Striker)`;
+                openModal('runout-modal');
+            } else {
+                // Standard wickets (Bowled, Catch, etc) are always the Striker
+                applyWicketPenalty('striker', type);
+            }
+        }
+
+        function finalizeRunOut(who) {
+            closeModal('runout-modal');
+            applyWicketPenalty(who, 'Run Out');
+        }
+
+        function applyWicketPenalty(who, type) {
+            addToHistory();
             const penalty = state.rules.wicketRuns;
             const bt = state[state.battingTeam];
-            const str = state.striker;
             const bwl = state[state.bowler];
-
-            // Apply Penalty
-            bt.score -= penalty; 
-            if (str) { str.runs -= penalty; str.balls++; }
             
-            // Increment Wickets
+            // Determine who gets the penalty
+            const victim = who === 'striker' ? state.striker : state.nonStriker;
+
+            // 1. Team Score Penalty
+            bt.score -= penalty;
+            
+            // 2. Player Stats Penalty (Victim gets minus runs)
+            if (victim) { victim.runs -= penalty; }
+            
+            // 3. Ball Faced (Striker always gets credit for facing the legal ball)
+            if (state.striker) { state.striker.balls++; }
+
+            // 4. Increment Wickets
             bt.wickets = (bt.wickets || 0) + 1;
             
+            // 5. Bowler Stats
             if (bwl) { bwl.wickets++; bwl.ballsBowled++; }
 
-            // --- ANIMATION TRIGGER (RED OUT) ---
+            // Animation
             showEventPopup("OUT", "text-red-600");
 
-            // TRUE = Legal Ball (Counts towards over)
+            // Register Ball (Legal)
             processBall(0, 'W', true);
             updateUI();
-            
-            // Note: In Indoor cricket, we continue playing even if wickets fall.
         }
 
         function showEventPopup(text, colorClass) {
             const overlay = document.getElementById('event-animation-overlay');
             const textEl = document.getElementById('event-animation-text');
-            
-            // Set Text and Color
             textEl.textContent = text;
             textEl.className = `text-9xl font-black drop-shadow-2xl animate-pop ${colorClass}`;
-            
-            // Show Overlay
             overlay.classList.remove('hidden');
-            
-            // Hide after 1.2 seconds
-            setTimeout(() => {
-                overlay.classList.add('hidden');
-            }, 1200);
+            setTimeout(() => { overlay.classList.add('hidden'); }, 1200);
         }
 
         function addExtra(type, runs) {
@@ -1320,6 +1339,13 @@
             initInnings();
         }
 
+        // --- NEW: Manual Swap Function ---
+        function manualSwap() {
+            addToHistory();
+            swapStrikers();
+            updateUI();
+        }
+
         function confirmExit() {
             if(confirm("⚠️ Are you sure you want to EXIT?\n\nCurrent match data will be lost.")) {
                 location.reload();
@@ -1374,49 +1400,6 @@
                 </tr>`;
             }
         }
-            updateScoreboard(); // Keep header scoreboard in sync
-            
-            // Batting Table
-            const batTable = document.getElementById('batting-table');
-            batTable.innerHTML = '';
-            const createRow = (p, isStriker) => {
-                const sr = p.balls > 0 ? ((p.runs / p.balls) * 100).toFixed(2) : '0.00';
-                return `<tr class="border-t ${isStriker ? 'bg-blue-50' : ''}"><td class="p-2 font-bold text-gray-800 flex items-center justify-between"><span>${p.name} ${isStriker ? '<span class="text-red-500">*</span>' : ''}</span></td><td class="text-center p-2 font-bold ${p.runs < 0 ? 'text-red-600' : ''}">${p.runs}</td><td class="text-center p-2 text-gray-600">${p.balls}</td><td class="text-center p-2 text-gray-400">-</td><td class="text-center p-2 text-gray-400">-</td><td class="text-right p-2 text-gray-500 text-xs">${sr}</td></tr>`;
-            };
-            if(state.striker) batTable.innerHTML += createRow(state.striker, true);
-            if(state.nonStriker) batTable.innerHTML += createRow(state.nonStriker, false);
-        
-            // Bowling Table
-            if(state.bowler) {
-                const ballsHTML = state.currentOver.map(b => {
-                    let c = 'ball-0';
-                    let fontSize = 'text-[10px]'; // Default tiny font
-                    
-                    if(b.runs === 4) c = 'ball-4';
-                    else if(b.runs === 6) c = 'ball-6';
-                    else if(b.event.includes('W') && !b.event.includes('WD')) c = 'ball-w';
-                    else if(b.event.includes('WD') || b.event.includes('NB')) {
-                        c = 'ball-wd';
-                        // Fix for WD+4 tiny font
-                        if (b.event.length > 2) fontSize = 'text-[7px] leading-tight';
-                    }
-                    
-                    return `<span class="ball-chip ${c} ${fontSize}">${b.event}</span>`;
-                }).join('');
-
-                const overs = Math.floor(state.bowler.ballsBowled / 6) + '.' + (state.bowler.ballsBowled % 6);
-                const econ = state.bowler.ballsBowled > 0 ? (state.bowler.runsConceded / (state.bowler.ballsBowled/6)).toFixed(2) : '0.00';
-
-                // Tighter row padding
-                document.getElementById('bowling-table').innerHTML = `
-                <tr class="border-t">
-                    <td class="p-1 pl-2"><div class="font-bold text-gray-800 text-xs">${state.bowler.name}</div><div class="mt-1 flex items-center overflow-x-auto gap-1 h-5">${ballsHTML}</div></td>
-                    <td class="text-center p-1 text-xs">${overs}</td><td class="text-center p-1 text-xs">0</td>
-                    <td class="text-center p-1 text-xs">${state.bowler.runsConceded}</td>
-                    <td class="text-center p-1 font-bold text-red-600 text-xs">${state.bowler.wickets}</td>
-                    <td class="text-right p-1 pr-2 text-[10px] text-gray-500">${econ}</td>
-                </tr>`;
-            }
     </script>
 </body>
 </html>
