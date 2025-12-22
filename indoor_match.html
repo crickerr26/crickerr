@@ -305,7 +305,6 @@
             </div>
 
             <div class="flex-shrink-0 lg:w-96 bg-white border-t lg:border-l border-gray-200 flex flex-col z-20">
-                <div id="live-commentary-box" class="bg-blue-50 p-2 border-b border-blue-100 text-xs text-blue-900 h-12 overflow-y-auto custom-scroll"><p id="live-commentary" class="font-medium">Match starting...</p></div>
 
                 <div class="scoring-grid h-64 lg:h-auto lg:flex-grow">
                     <button onclick="addRuns(0)" class="watery-btn btn-grey font-bold text-xl">0</button>
@@ -503,14 +502,17 @@
                 </div>
             </div>
 
-            <div class="p-4 bg-slate-900 border-t border-slate-700 flex gap-3">
-                <button onclick="closeModal('match-summary-modal')" class="flex-1 py-4 bg-gray-700 hover:bg-gray-600 text-white font-bold uppercase tracking-wider rounded-xl shadow-lg transition-all active:scale-95 text-xs">
-                    Show Full Scorecard
-                </button>
-                <button onclick="location.reload()" class="flex-1 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase tracking-wider rounded-xl shadow-lg transition-all active:scale-95 text-xs">
-                    Start New Match
-                </button>
-            </div>
+            <div class="p-4 bg-slate-900 border-t border-slate-700 grid grid-cols-2 gap-3">
+    <button onclick="broadcastMatchResult()" class="col-span-2 py-4 bg-yellow-500 hover:bg-yellow-400 text-black font-black uppercase tracking-wider rounded-xl shadow-lg transition-all active:scale-95 text-sm animate-pulse">
+        📡 Broadcast Result to Screen
+    </button>
+    <button onclick="closeModal('match-summary-modal')" class="py-3 bg-gray-700 hover:bg-gray-600 text-white font-bold uppercase rounded-lg text-xs">
+        Close
+    </button>
+    <button onclick="location.reload()" class="py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase rounded-lg text-xs">
+        New Match
+    </button>
+</div>
         </div>
     </div>
 
@@ -576,16 +578,26 @@
             
             // Populate Range Options (Strict)
             const oversSelect = document.getElementById('total-overs');
+            
+            // Add default empty option
+            const defOvers = document.createElement('option'); defOvers.value = ""; defOvers.text = "Select Overs..."; defOvers.selected = true; defOvers.disabled = true;
+            oversSelect.appendChild(defOvers);
+
             for(let i=3; i<=15; i++) {
                 const opt = document.createElement('option'); opt.value = i; opt.text = i + ' Overs';
-                if(i===8) opt.selected = true; 
+                // removed auto-select logic
                 oversSelect.appendChild(opt);
             }
 
             const playersSelect = document.getElementById('players-per-side');
+            
+            // Add default empty option
+            const defPlayers = document.createElement('option'); defPlayers.value = ""; defPlayers.text = "Select Players..."; defPlayers.selected = true; defPlayers.disabled = true;
+            playersSelect.appendChild(defPlayers);
+
             for(let i=4; i<=11; i++) {
                 const opt = document.createElement('option'); opt.value = i; opt.text = i + ' Players';
-                if(i===8) opt.selected = true;
+                // removed auto-select logic
                 playersSelect.appendChild(opt);
             }
             
@@ -668,11 +680,20 @@
         function goToStep(step) {
             // --- VALIDATION FOR STEP 2 ---
             if (step === 2) {
+                // Get values
+                const overs = document.getElementById('total-overs').value;
+                const players = document.getElementById('players-per-side').value;
                 const w = document.getElementById('rule-wicket').value;
                 const wd = document.getElementById('rule-wide').value;
                 const nb = document.getElementById('rule-noball').value;
 
-                // Check if any value is empty
+                // Validate Overs and Players
+                if (!overs || !players) {
+                    alert("⚠️ MANDATORY: Please select Overs and Players per Side.");
+                    return;
+                }
+
+                // Check if any rule value is empty
                 if (!w || !wd || !nb) {
                     alert("⚠️ MANDATORY: Please select Wicket Penalty, Wide, and No Ball rules to proceed.");
                     return; // STOP here
@@ -891,10 +912,11 @@ function syncToLiveDB(lastAction = null) {
         wickets: bt.wickets || 0,
         overs: bt.overs || 0,
         balls: bt.balls || 0,
-        
-        // --- THIS WAS MISSING ---
         target: state.target || 0, 
-        // ------------------------
+        
+        // --- ADDED THIS LINE (Crucial for Balls Remaining) ---
+        totalOvers: state.totalOvers || 0,
+        // -----------------------------------------------------
 
         striker: { name: striker.name, runs: striker.runs, balls: striker.balls },
         nonStriker: { name: nonStriker.name, runs: nonStriker.runs, balls: nonStriker.balls },
@@ -1093,42 +1115,137 @@ function startMatch() {
             closeModal('opening-pair-modal');
             if (state.pairSelectionCallback) state.pairSelectionCallback();
         }
+// --- PLAYER SELECTION & LOGIC FIXES ---
+let pendingSelection = null; 
 
-        function initInnings() {
-            // New logic: Select pair first, then bowler
-            selectOpeningPair(() => {
-                selectPlayer('bowler', updateUI);
-            });
+// 1. Function to populate and open the player dropdown
+function selectPlayer(role, callback) {
+    pendingSelection = { role, callback };
+    
+    const select = document.getElementById('player-select');
+    const title = document.getElementById('modal-title');
+    select.innerHTML = ''; 
+
+    let teamKey;
+    let excludeIds = [];
+
+    if (role === 'bowler') {
+        teamKey = state.bowlingTeam;
+        title.textContent = "Select Next Bowler";
+        // Optional: Exclude current bowler if you want
+        // if (state.bowler) excludeIds.push(state.bowler.id);
+    } else {
+        teamKey = state.battingTeam;
+        title.textContent = "Select New Batter";
+        
+        // Exclude the player currently at the other end
+        if (role === 'striker' && state.nonStriker) excludeIds.push(state.nonStriker.id);
+        if (role === 'nonStriker' && state.striker) excludeIds.push(state.striker.id);
+    }
+
+    const roster = state[teamKey].playerStats;
+    let count = 0;
+    Object.values(roster).forEach(player => {
+        if (!excludeIds.includes(player.id)) {
+            const opt = document.createElement('option');
+            opt.value = player.id;
+            opt.textContent = player.name;
+            select.appendChild(opt);
+            count++;
         }
+    });
 
-        function selectPlayer(role, cb) {
-            const team = role === 'bowler' ? state.bowlingTeam : state.battingTeam;
-            const select = document.getElementById('player-select');
-            select.innerHTML = `<option value="">Select ${role}...</option>`;
-            
-            Object.keys(state[team].playerStats).forEach(pid => {
-                const p = state[team].playerStats[pid];
-                const opt = document.createElement('option');
-                opt.value = p.id;
-                opt.textContent = p.name;
-                select.appendChild(opt);
-            });
+    if (count === 0) {
+        // Fallback if no players left (rare)
+        const opt = document.createElement('option');
+        opt.textContent = "No players available";
+        select.appendChild(opt);
+    }
 
-            document.getElementById('modal-title').textContent = `Select ${role}`;
-            
-            const btn = document.getElementById('player-save-btn');
-            const newBtn = btn.cloneNode(true);
-            btn.parentNode.replaceChild(newBtn, btn);
-            newBtn.onclick = () => {
-                const pid = select.value;
-                if(!pid) return;
-                state[role] = state[team].playerStats[pid];
-                closeModal('player-modal');
-                if(cb) cb();
-            };
-            openModal('player-modal');
-        }
+    openModal('player-modal');
+}
 
+// 2. Logic when you click "Confirm" in the player dropdown
+document.getElementById('player-save-btn').onclick = function() {
+    if (!pendingSelection) return;
+
+    const selectedId = document.getElementById('player-select').value;
+    if (!selectedId || selectedId === "No players available") {
+        closeModal('player-modal');
+        return; 
+    }
+
+    const role = pendingSelection.role;
+    const teamKey = (role === 'bowler') ? state.bowlingTeam : state.battingTeam;
+    const playerObj = state[teamKey].playerStats[selectedId];
+
+    if (role === 'bowler') {
+        state.bowler = playerObj;
+    } else if (role === 'striker') {
+        state.striker = playerObj;
+    } else if (role === 'nonStriker') {
+        state.nonStriker = playerObj;
+    }
+
+    closeModal('player-modal');
+    if (pendingSelection.callback) pendingSelection.callback();
+    
+    pendingSelection = null;
+    updateUI(); 
+};
+
+// 3. Initialize Innings Sequence
+function initInnings() {
+    selectOpeningPair(() => {
+        selectPlayer('bowler', updateUI);
+    });
+}
+
+// 4. Wicket Logic (With Delay for Popup)
+function applyWicketPenalty(who, type) {
+    addToHistory();
+    const penalty = state.rules.wicketRuns;
+    const bt = state[state.battingTeam];
+    const bwl = state.bowler; // <--- Fixed: Directly use the bowler
+    
+    const roleKey = (who === 'nonstriker' || who === 'nonStriker') ? 'nonStriker' : 'striker';
+    const victim = state[roleKey];
+
+    // Stats Updates
+    bt.score -= penalty;
+    if (victim) { victim.runs -= penalty; }
+    if (state.striker) { state.striker.balls++; }
+    bt.wickets = (bt.wickets || 0) + 1;
+    if (bwl) { bwl.wickets++; bwl.ballsBowled++; }
+
+    // Animation & Data Sync
+    showEventPopup("OUT", "text-red-600");
+    processBall(0, 'W', true);
+    updateUI();
+
+    // The Magic Delay: Wait 1.2s then show popup
+    setTimeout(() => {
+        selectPlayer(roleKey, updateUI); 
+    }, 1200);
+}
+
+// 5. Wicket Type Handlers
+function processIndoorWicket(type) {
+    closeModal('wicket-type-modal');
+    
+    if (type === 'Run Out') {
+        if(state.striker) document.getElementById('btn-ro-striker').textContent = `${state.striker.name} (Striker)`;
+        if(state.nonStriker) document.getElementById('btn-ro-nonstriker').textContent = `${state.nonStriker.name} (Non-Striker)`;
+        openModal('runout-modal');
+    } else {
+        applyWicketPenalty('striker', type);
+    }
+}
+
+function finalizeRunOut(who) {
+    closeModal('runout-modal');
+    applyWicketPenalty(who, 'Run Out');
+}
         // --- SCORING & UNDO ---
         function addToHistory() {
             // Store deep copy of state
@@ -1156,11 +1273,13 @@ function startMatch() {
             addToHistory();
             const bt = state[state.battingTeam];
             const str = state.striker;
-            const bwl = state[state.bowler];
+            const bwl = state.bowler; // <--- Fixed: Directly use the bowler
 
             bt.score = (bt.score || 0) + runs;
             if (str) { str.runs += runs; str.balls++; }
             if (bwl) { bwl.runsConceded += runs; bwl.ballsBowled++; }
+
+            // --- ANIMATION TRIGGERS ---
 
             // --- ANIMATION TRIGGERS ---
             if (runs === 4) showEventPopup("4", "text-blue-500");
@@ -1169,58 +1288,6 @@ function startMatch() {
             // TRUE = Legal Ball (Counts towards over)
             processBall(runs, `${runs}`, true);
             if(runs % 2 !== 0) swapStrikers();
-            updateUI();
-        }
-
-        // --- NEW: WICKET & RUN OUT LOGIC ---
-        function processIndoorWicket(type) {
-            closeModal('wicket-type-modal');
-            
-            if (type === 'Run Out') {
-                // Ask user who is out
-                if(state.striker) document.getElementById('btn-ro-striker').textContent = `${state.striker.name} (Striker)`;
-                if(state.nonStriker) document.getElementById('btn-ro-nonstriker').textContent = `${state.nonStriker.name} (Non-Striker)`;
-                openModal('runout-modal');
-            } else {
-                // Standard wickets (Bowled, Catch, etc) are always the Striker
-                applyWicketPenalty('striker', type);
-            }
-        }
-
-        function finalizeRunOut(who) {
-            closeModal('runout-modal');
-            applyWicketPenalty(who, 'Run Out');
-        }
-
-        function applyWicketPenalty(who, type) {
-            addToHistory();
-            const penalty = state.rules.wicketRuns;
-            const bt = state[state.battingTeam];
-            const bwl = state[state.bowler];
-            
-            // Determine who gets the penalty
-            const victim = who === 'striker' ? state.striker : state.nonStriker;
-
-            // 1. Team Score Penalty
-            bt.score -= penalty;
-            
-            // 2. Player Stats Penalty (Victim gets minus runs)
-            if (victim) { victim.runs -= penalty; }
-            
-            // 3. Ball Faced (Striker always gets credit for facing the legal ball)
-            if (state.striker) { state.striker.balls++; }
-
-            // 4. Increment Wickets
-            bt.wickets = (bt.wickets || 0) + 1;
-            
-            // 5. Bowler Stats
-            if (bwl) { bwl.wickets++; bwl.ballsBowled++; }
-
-            // Animation
-            showEventPopup("OUT", "text-red-600");
-
-            // Register Ball (Legal)
-            processBall(0, 'W', true);
             updateUI();
         }
 
@@ -1247,10 +1314,12 @@ function showEventPopup(text, colorClass) {
             addToHistory();
             closeModal('wide-modal'); closeModal('noball-modal'); closeModal('extras-modal');
             const bt = state[state.battingTeam];
-            const bwl = state[state.bowler];
+            const bwl = state.bowler; // <--- Fixed: Directly use the bowler
             
             bt.score += runs;
             if(bwl) { bwl.runsConceded += runs; }
+            
+            // --- FIX LABEL: "WD+4" Logic ---
             
             // --- FIX LABEL: "WD+4" Logic ---
             let label = type.toUpperCase();
@@ -1479,40 +1548,86 @@ function updateUI() {
             if(state.nonStriker) batTable.innerHTML += createRow(state.nonStriker, false);
         
             // Bowling Table (ULTRA COMPACT VERSION)
-            if(state.bowler) {
-                const ballsHTML = state.currentOver.map(b => {
-                    let c = 'ball-0';
-                    let fontSize = 'text-[9px]'; // Even smaller font
-                    
-                    if(b.runs === 4) c = 'ball-4';
-                    else if(b.runs === 6) c = 'ball-6';
-                    else if(b.event.includes('W') && !b.event.includes('WD')) c = 'ball-w';
-                    else if(b.event.includes('WD') || b.event.includes('NB')) {
-                        c = 'ball-wd';
-                        if (b.event.length > 2) fontSize = 'text-[6px] leading-tight';
-                    }
-                    
-                    return `<span class="ball-chip ${c} ${fontSize}">${b.event}</span>`;
-                }).join('');
+        if(state.bowler) {
+            const ballsHTML = state.currentOver.map(b => {
+                let c = 'ball-0';
+                let fontSize = 'text-[9px]'; 
+                
+                if(b.runs === 4) c = 'ball-4';
+                else if(b.runs === 6) c = 'ball-6';
+                else if(b.event.includes('W') && !b.event.includes('WD')) c = 'ball-w';
+                else if(b.event.includes('WD') || b.event.includes('NB')) {
+                    c = 'ball-wd';
+                    if (b.event.length > 2) fontSize = 'text-[6px] leading-tight';
+                }
+                
+                return `<span class="ball-chip ${c} ${fontSize}">${b.event}</span>`;
+            }).join('');
 
-                const overs = Math.floor(state.bowler.ballsBowled / 6) + '.' + (state.bowler.ballsBowled % 6);
-                const econ = state.bowler.ballsBowled > 0 ? (state.bowler.runsConceded / (state.bowler.ballsBowled/6)).toFixed(2) : '0.00';
+            const overs = Math.floor(state.bowler.ballsBowled / 6) + '.' + (state.bowler.ballsBowled % 6);
+            const econ = state.bowler.ballsBowled > 0 ? (state.bowler.runsConceded / (state.bowler.ballsBowled/6)).toFixed(2) : '0.00';
 
-                // Tighter row padding (p-0.5) and smaller text (text-[10px])
-                document.getElementById('bowling-table').innerHTML = `
-                <tr class="border-t">
-                    <td class="py-1 px-2 align-middle">
-                        <div class="font-bold text-gray-800 text-[11px] leading-tight">${state.bowler.name}</div>
-                        <div class="mt-0.5 flex items-center overflow-x-auto gap-0.5 h-4">${ballsHTML}</div>
-                    </td>
-                    <td class="text-center py-1 font-medium text-gray-700 text-[10px] align-middle">${overs}</td>
-                    <td class="text-center py-1 text-gray-400 text-[10px] align-middle">0</td>
-                    <td class="text-center py-1 font-medium text-gray-800 text-[10px] align-middle">${state.bowler.runsConceded}</td>
-                    <td class="text-center py-1 font-bold text-red-600 text-[10px] align-middle">${state.bowler.wickets}</td>
-                    <td class="text-right py-1 pr-2 text-gray-500 text-[9px] align-middle">${econ}</td>
-                </tr>`;
-            }
+            // FIX IS HERE: Changed 'h-4' to 'min-h-[1.4rem]' and added 'py-1' to allow full circle visibility
+            document.getElementById('bowling-table').innerHTML = `
+            <tr class="border-t">
+                <td class="py-1 px-2 align-middle">
+                    <div class="font-bold text-gray-800 text-[11px] leading-tight">${state.bowler.name}</div>
+                    <div class="mt-0.5 flex items-center overflow-x-auto gap-0.5 min-h-[1.4rem] w-full no-scrollbar">${ballsHTML}</div>
+                </td>
+                <td class="text-center py-1 font-medium text-gray-700 text-[10px] align-middle">${overs}</td>
+                <td class="text-center py-1 text-gray-400 text-[10px] align-middle">0</td>
+                <td class="text-center py-1 font-medium text-gray-800 text-[10px] align-middle">${state.bowler.runsConceded}</td>
+                <td class="text-center py-1 font-bold text-red-600 text-[10px] align-middle">${state.bowler.wickets}</td>
+                <td class="text-right py-1 pr-2 text-gray-500 text-[9px] align-middle">${econ}</td>
+            </tr>`;
         }
+        }
+        function broadcastMatchResult() {
+    // 1. Get Selected POM
+    const selectedPomId = document.querySelector('input[name="pom"]:checked').value;
+    let pomName = "";
+    let pomStats = "";
+    
+    // Find player details
+    ['team1', 'team2'].forEach(tk => {
+        if(state[tk].playerStats[selectedPomId]) {
+            const p = state[tk].playerStats[selectedPomId];
+            pomName = p.name;
+            // Create a short stat string (e.g., "50(20) & 2/15")
+            let stats = [];
+            if(p.runs > 0) stats.push(`${p.runs}(${p.balls})`);
+            if(p.wickets > 0) stats.push(`${p.wickets}/${p.runsConceded}`);
+            pomStats = stats.join(" & ");
+        }
+    });
+
+    // 2. Determine Winner Text
+    let winnerText = "MATCH TIED";
+    let marginText = "";
+    const t1 = state.team1; const t2 = state.team2;
+
+    if (t1.score > t2.score) {
+        winnerText = t1.name;
+        marginText = `WON BY ${t1.score - t2.score} RUNS`;
+    } else if (t2.score > t1.score) {
+        winnerText = t2.name;
+        const wicketsLeft = (state.playersPerSide - 1) - (t2.wickets || 0);
+        marginText = `WON BY ${wicketsLeft > 0 ? wicketsLeft : 1} WICKETS`;
+    }
+
+    // 3. Send to Database
+    const payload = {
+        matchStatus: "COMPLETE",
+        winner: winnerText,
+        margin: marginText,
+        pom: { name: pomName, stats: pomStats },
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    db.collection("live_matches").doc(broadcastId).set(payload, { merge: true })
+        .then(() => alert("✅ Result Broadcasted to Screen!"))
+        .catch(err => console.error(err));
+}
     </script>
 </body>
 </html>
