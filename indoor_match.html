@@ -242,7 +242,18 @@
                         </button>
                     </div>
                     <div id="toss-decision-container" class="hidden mb-8"><p class="mb-3 font-semibold text-gray-600">Decision?</p><div class="flex justify-center gap-4"><button id="toss-choice-bat" onclick="selectTossChoice('bat')" class="toss-3d-button px-8 py-3 font-bold">Bat 🏏</button><button id="toss-choice-bowl" onclick="selectTossChoice('bowl')" class="toss-3d-button px-8 py-3 font-bold">Bowl ⚾</button></div></div>
-                    <button id="start-match-btn" disabled class="w-full py-4 bg-gray-300 text-white font-bold rounded-xl text-lg opacity-50 cursor-not-allowed" onclick="startMatch()">Start Match</button>
+
+<div class="mb-4 bg-blue-50 border border-blue-200 p-4 rounded-xl text-center">
+    <button onclick="generateBroadcastCode()" class="flex items-center justify-center gap-2 w-full text-blue-700 font-bold uppercase text-xs tracking-wider hover:text-blue-900 transition">
+        <span>📡 Enable Live Broadcast</span>
+    </button>
+    <div id="broadcast-display" class="hidden mt-3 animate-pop">
+        <p class="text-xs text-gray-500 mb-1">ENTER THIS CODE IN CAMERA APP:</p>
+        <div id="match-code-box" class="text-4xl font-black text-gray-800 tracking-[0.2em] font-mono bg-white border-2 border-dashed border-gray-300 rounded-lg py-2 select-all cursor-pointer" onclick="copyBroadcastLink()">0000</div>
+        <p id="copy-feedback" class="text-[10px] text-green-600 font-bold mt-1 hidden">Code Copied!</p>
+    </div>
+</div>
+<button id="start-match-btn" disabled class="w-full py-4 bg-gray-300 text-white font-bold rounded-xl text-lg opacity-50 cursor-not-allowed" onclick="startMatch()">Start Match</button>
                 </div>
             </div>
         </div>
@@ -834,8 +845,93 @@
         }
 
         // --- GAME ENGINE ---
-        function startMatch() {
-            state.totalOvers = parseInt(ui.totalOversInput.value);
+        // NEW CODE (Replace the start of GAME ENGINE section)
+
+// --- BROADCAST LOGIC ---
+let broadcastId = null;
+
+function generateBroadcastCode() {
+    // 1. Generate random 4-digit code
+    broadcastId = Math.floor(1000 + Math.random() * 9000).toString();
+    
+    // 2. Show it in UI
+    const display = document.getElementById('broadcast-display');
+    const codeBox = document.getElementById('match-code-box');
+    display.classList.remove('hidden');
+    codeBox.textContent = broadcastId;
+    
+    // 3. Initial Sync
+    syncToLiveDB();
+}
+
+function copyBroadcastLink() {
+    const code = document.getElementById('match-code-box').textContent;
+    navigator.clipboard.writeText(code).then(() => {
+        const fb = document.getElementById('copy-feedback');
+        fb.classList.remove('hidden');
+        setTimeout(() => fb.classList.add('hidden'), 2000);
+    });
+}
+
+function syncToLiveDB(lastAction = null) {
+    if (!broadcastId) return;
+
+    const bt = state[state.battingTeam];
+    const bl = state[state.bowlingTeam];
+    const striker = state.striker || { name: "", runs: 0, balls: 0 };
+    const nonStriker = state.nonStriker || { name: "", runs: 0, balls: 0 };
+    const bowler = state.bowler || { name: "", wickets: 0, runsConceded: 0, ballsBowled: 0 };
+
+    const payload = {
+        t1: bt.name,
+        t1Logo: bt.logo || null,
+        t2: bl.name,
+        t2Logo: bl.logo || null,
+        score: bt.score || 0,
+        wickets: bt.wickets || 0,
+        overs: bt.overs || 0,
+        balls: bt.balls || 0,
+        striker: { name: striker.name, runs: striker.runs, balls: striker.balls },
+        nonStriker: { name: nonStriker.name, runs: nonStriker.runs, balls: nonStriker.balls },
+        bowler: { 
+            name: bowler.name, 
+            wkts: bowler.wickets, 
+            runs: bowler.runsConceded,
+            balls: bowler.ballsBowled // <--- THIS WAS MISSING
+        }, 
+        // Send exact event text (WD, NB, W, 4, 6)
+        currentOver: state.currentOver.map(b => b.event), 
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    if (lastAction) {
+        payload.lastAction = { id: Date.now(), type: lastAction };
+    }
+
+    db.collection("live_matches").doc(broadcastId).set(payload, { merge: true })
+        .catch(err => console.error("Sync Error:", err));
+}
+
+// --- GAME ENGINE ---
+function startMatch() {
+    state.totalOvers = parseInt(ui.totalOversInput.value);
+    state.playersPerSide = parseInt(ui.playersPerSideInput.value);
+    state.venue = ui.venueInput.value;
+
+    // --- FIX: Initialize scores to 0 to prevent "NaN" errors on first ball ---
+    state.team1.score = 0; state.team1.wickets = 0; state.team1.overs = 0; state.team1.balls = 0;
+    state.team2.score = 0; state.team2.wickets = 0; state.team2.overs = 0; state.team2.balls = 0;
+
+    if ((tossWinner === 'team1' && tossDecision === 'bat') || (tossWinner === 'team2' && tossDecision === 'bowl')) {
+        state.battingTeam = 'team1'; state.bowlingTeam = 'team2';
+    } else {
+        state.battingTeam = 'team2'; state.bowlingTeam = 'team1';
+    }
+
+    // Sync Initial State immediately on start
+    syncToLiveDB();
+
+    // ... (Rest of startMatch function continues as normal below) ...
             state.playersPerSide = parseInt(ui.playersPerSideInput.value);
             state.venue = ui.venueInput.value;
 
@@ -1124,8 +1220,18 @@
             updateUI();
         }
 
-        function showEventPopup(text, colorClass) {
-            const overlay = document.getElementById('event-animation-overlay');
+        // NEW CODE
+function showEventPopup(text, colorClass) {
+    // Trigger Broadcast Animation
+    let animType = null;
+    if (text === "4") animType = "4";
+    if (text === "6") animType = "6";
+    if (text === "OUT") animType = "W";
+    
+    if (animType) syncToLiveDB(animType); // Send animation event
+
+    const overlay = document.getElementById('event-animation-overlay');
+    // ... (rest of function remains same)
             const textEl = document.getElementById('event-animation-text');
             textEl.textContent = text;
             textEl.className = `text-9xl font-black drop-shadow-2xl animate-pop ${colorClass}`;
@@ -1352,8 +1458,11 @@
             }
         }
 
-        function updateUI() {
-            updateScoreboard(); 
+        // NEW CODE (Add the sync call at the top)
+function updateUI() {
+    syncToLiveDB(); // <--- ADD THIS LINE
+    updateScoreboard(); 
+    // ... rest of function
             
             // Batting Table
             const batTable = document.getElementById('batting-table');
