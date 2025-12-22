@@ -891,15 +891,19 @@ function syncToLiveDB(lastAction = null) {
         wickets: bt.wickets || 0,
         overs: bt.overs || 0,
         balls: bt.balls || 0,
+        
+        // --- THIS WAS MISSING ---
+        target: state.target || 0, 
+        // ------------------------
+
         striker: { name: striker.name, runs: striker.runs, balls: striker.balls },
         nonStriker: { name: nonStriker.name, runs: nonStriker.runs, balls: nonStriker.balls },
         bowler: { 
             name: bowler.name, 
             wkts: bowler.wickets, 
             runs: bowler.runsConceded,
-            balls: bowler.ballsBowled // <--- THIS WAS MISSING
+            balls: bowler.ballsBowled 
         }, 
-        // Send exact event text (WD, NB, W, 4, 6)
         currentOver: state.currentOver.map(b => b.event), 
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
     };
