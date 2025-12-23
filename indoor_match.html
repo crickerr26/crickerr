@@ -325,7 +325,7 @@
 
                 <div class="p-2 bg-gray-50 flex justify-around border-t">
                     <button onclick="confirmExit()" class="text-xs font-bold uppercase tracking-wider text-red-600">Exit Match</button>
-                </div>
+<button onclick="openViewControlModal()" class="text-xs font-bold uppercase tracking-wider text-white bg-indigo-600 px-4 py-2 rounded-full border border-indigo-700 shadow-lg hover:bg-indigo-700">📺 BROADCAST VIEWS</button>                </div>
             </div>
         </div>
     </div>
@@ -359,9 +359,10 @@
         <div class="modal-content bg-white rounded-2xl p-6 w-80 shadow-2xl text-center">
             <h3 id="wicket-modal-title" class="text-xl font-bold text-red-600 mb-2">WICKET!</h3>
             <div class="grid grid-cols-2 gap-3">
-                <button onclick="processIndoorWicket('Bowled')" class="p-3 bg-gray-100 rounded-lg">Bowled</button>
-                <button onclick="processIndoorWicket('Catch')" class="p-3 bg-gray-100 rounded-lg">Caught</button>
                 <button onclick="processIndoorWicket('Run Out')" class="p-3 bg-gray-100 rounded-lg">Run Out</button>
+                <button onclick="processIndoorWicket('Catch')" class="p-3 bg-gray-100 rounded-lg">Catch</button>
+<button onclick="processIndoorWicket('LBW')" class="p-3 bg-gray-100 rounded-lg">LBW</button>
+<button onclick="processIndoorWicket('Bowled')" class="p-3 bg-gray-100 rounded-lg">Bowled</button>
                 <button onclick="processIndoorWicket('Stumped')" class="p-3 bg-gray-100 rounded-lg">Stumped</button>
             </div>
             <button onclick="closeModal('wicket-type-modal')" class="mt-4 text-gray-400 text-sm">Cancel</button>
@@ -376,6 +377,31 @@
                 <button id="btn-ro-nonstriker" onclick="finalizeRunOut('nonstriker')" class="p-4 bg-gray-100 font-bold rounded-xl text-md hover:bg-red-50 border border-gray-200 text-gray-800">Non-Striker</button>
             </div>
             <button onclick="closeModal('runout-modal')" class="mt-4 text-gray-400 text-sm">Cancel</button>
+        </div>
+    </div>
+
+    <div id="broadcast-control-modal" class="modal-overlay fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[100] flex items-center justify-center">
+        <div class="bg-white rounded-2xl p-6 w-80 shadow-2xl text-center border-4 border-indigo-100">
+            <h3 class="text-xl font-black text-indigo-900 mb-2">📺 TV OVERLAY CONTROL</h3>
+            <p class="text-xs text-gray-500 mb-6 font-bold">SELECT A VIEW TO SHOW ON STREAM</p>
+            
+            <div class="space-y-3">
+                <button onclick="activateView('BATTING')" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md flex items-center justify-center gap-2 transition-transform active:scale-95">
+                    <span>🏏 SHOW BATTING CARD</span>
+                </button>
+                
+                <button onclick="activateView('BOWLING')" class="w-full py-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl shadow-md flex items-center justify-center gap-2 transition-transform active:scale-95">
+                    <span>⚾ SHOW BOWLING CARD</span>
+                </button>
+
+                <hr class="border-gray-200 my-4">
+
+                <button onclick="turnOffView()" class="w-full py-4 bg-red-600 hover:bg-red-700 text-white font-black rounded-xl shadow-md border-2 border-red-800 transition-transform active:scale-95">
+                    ❌ TURN OFF / UNLOCK
+                </button>
+            </div>
+            
+            <button onclick="closeModal('broadcast-control-modal')" class="mt-6 text-gray-400 text-xs font-bold uppercase tracking-widest hover:text-gray-600">Close Menu</button>
         </div>
     </div>
 
@@ -1001,21 +1027,28 @@ function startMatch() {
         }
 
         function updateMatchHeader() {
-            const t1 = state.team1.name;
-            const t2 = state.team2.name;
-            const venue = (state.venue || 'Unknown Venue').toUpperCase();
-            const dateObj = state.matchDate ? new Date(state.matchDate) : new Date();
-            const dateStr = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-            const subTitle = `${venue} | ${dateStr} | ${state.totalOvers} Overs | ${state.playersPerSide}-a-side`;
+    const t1 = state.team1.name;
+    const t2 = state.team2.name;
+    const venue = (state.venue || 'Unknown Venue').toUpperCase();
+    const dateObj = state.matchDate ? new Date(state.matchDate) : new Date();
+    const dateStr = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    const subTitle = `${venue} | ${dateStr} | ${state.totalOvers} Overs | ${state.playersPerSide}-a-side`;
 
-            const headerHTML = `
-                <div class="py-2">
-                    <h1 class="text-xl sm:text-2xl font-black text-gray-900 uppercase tracking-tight leading-tight">${t1} <span class="text-gray-400 font-medium text-lg px-1">vs</span> ${t2}</h1>
-                    <p class="text-xs sm:text-sm text-gray-500 font-medium mt-1 tracking-wide">${subTitle}</p>
-                </div>
-            `;
-            document.getElementById('match-header').innerHTML = headerHTML;
-        }
+    // --- NEW: Generate the Small Code Badge ---
+    let codeDisplay = "";
+    // Check if we have a broadcast ID generated
+    if (typeof broadcastId !== 'undefined' && broadcastId) {
+        codeDisplay = `<div class="absolute top-0 left-0 bg-blue-600 text-white text-[10px] font-bold px-2 py-1 rounded-br-lg shadow-sm z-50">📡 CODE: ${broadcastId}</div>`;
+    }
+
+    const headerHTML = `
+        <div class="py-2 relative">
+            ${codeDisplay} <h1 class="text-xl sm:text-2xl font-black text-gray-900 uppercase tracking-tight leading-tight">${t1} <span class="text-gray-400 font-medium text-lg px-1">vs</span> ${t2}</h1>
+            <p class="text-xs sm:text-sm text-gray-500 font-medium mt-1 tracking-wide">${subTitle}</p>
+        </div>
+    `;
+    document.getElementById('match-header').innerHTML = headerHTML;
+}
 
         function updateScoreboard() {
             const battingTeamKey = state.battingTeam;
@@ -1132,31 +1165,39 @@ function selectPlayer(role, callback) {
     if (role === 'bowler') {
         teamKey = state.bowlingTeam;
         title.textContent = "Select Next Bowler";
-        // Optional: Exclude current bowler if you want
-        // if (state.bowler) excludeIds.push(state.bowler.id);
     } else {
         teamKey = state.battingTeam;
         title.textContent = "Select New Batter";
         
-        // Exclude the player currently at the other end
+        // Exclude the player currently at the other end (Partner)
         if (role === 'striker' && state.nonStriker) excludeIds.push(state.nonStriker.id);
         if (role === 'nonStriker' && state.striker) excludeIds.push(state.striker.id);
     }
 
     const roster = state[teamKey].playerStats;
     let count = 0;
+    
     Object.values(roster).forEach(player => {
         if (!excludeIds.includes(player.id)) {
             const opt = document.createElement('option');
             opt.value = player.id;
             opt.textContent = player.name;
+
+            // --- NEW LOGIC: Grey out players who are OUT ---
+            // If we are selecting a Batter AND they are already dismissed
+            if ((role === 'striker' || role === 'nonStriker') && player.dismissal) {
+                opt.disabled = true; // Make it unclickable
+                opt.textContent += " (OUT)"; // Show text label
+                opt.style.color = "#9ca3af"; // Grey text color
+                opt.style.backgroundColor = "#f3f4f6"; // Light grey background
+            }
+            
             select.appendChild(opt);
             count++;
         }
     });
 
     if (count === 0) {
-        // Fallback if no players left (rare)
         const opt = document.createElement('option');
         opt.textContent = "No players available";
         select.appendChild(opt);
@@ -1201,29 +1242,66 @@ function initInnings() {
     });
 }
 
-// 4. Wicket Logic (With Delay for Popup)
+// --- REPLACE THIS ENTIRE FUNCTION IN 29.html ---
 function applyWicketPenalty(who, type) {
     addToHistory();
     const penalty = state.rules.wicketRuns;
     const bt = state[state.battingTeam];
-    const bwl = state.bowler; // <--- Fixed: Directly use the bowler
+    const bwl = state.bowler; 
     
     const roleKey = (who === 'nonstriker' || who === 'nonStriker') ? 'nonStriker' : 'striker';
     const victim = state[roleKey];
 
-    // Stats Updates
+    // 1. Record Dismissal Details
+    let dismissalText = type; 
+    if (victim) {
+        if (type !== 'Run Out' && bwl) {
+            dismissalText += ` b. ${bwl.name}`;
+        }
+        victim.dismissal = dismissalText; 
+        victim.runs -= penalty; 
+    }
+
+    // 2. Stats Updates
     bt.score -= penalty;
-    if (victim) { victim.runs -= penalty; }
     if (state.striker) { state.striker.balls++; }
     bt.wickets = (bt.wickets || 0) + 1;
     if (bwl) { bwl.wickets++; bwl.ballsBowled++; }
 
-    // Animation & Data Sync
+    // 3. SHOW "OUT" ANIMATION
     showEventPopup("OUT", "text-red-600");
     processBall(0, 'W', true);
     updateUI();
 
-    // The Magic Delay: Wait 1.2s then show popup
+    // 4. TRIGGER THE BROADCAST CARD (The 7-Second Magic)
+    if (victim && broadcastId) {
+        // Wait 1.5 seconds for the "OUT" animation to finish, then show card
+        setTimeout(() => {
+            const cardData = {
+                name: victim.name,
+                score: victim.runs,
+                balls: victim.balls,
+                howOut: dismissalText.toUpperCase(),
+                teamLogo: state[state.battingTeam].logo
+            };
+
+            // Turn Card ON
+            db.collection("live_matches").doc(broadcastId).set({
+                showDismissalCard: true,
+                dismissalData: cardData
+            }, { merge: true });
+
+            // Turn Card OFF after 7 seconds
+            setTimeout(() => {
+                db.collection("live_matches").doc(broadcastId).set({
+                    showDismissalCard: false
+                }, { merge: true });
+            }, 7000);
+
+        }, 1500); // 1.5s delay before card appears
+    }
+
+    // 5. Select New Player Popup
     setTimeout(() => {
         selectPlayer(roleKey, updateUI); 
     }, 1200);
@@ -1627,6 +1705,101 @@ function updateUI() {
     db.collection("live_matches").doc(broadcastId).set(payload, { merge: true })
         .then(() => alert("✅ Result Broadcasted to Screen!"))
         .catch(err => console.error(err));
+}
+// --- NEW BROADCAST CONTROL & LOCKING LOGIC ---
+
+function openViewControlModal() {
+    if (!broadcastId) {
+        alert("⚠️ Please Enable Live Broadcast first!");
+        return;
+    }
+    openModal('broadcast-control-modal');
+}
+
+function activateView(type) {
+    // 1. Lock the Scoring Grid (Visual + Functional)
+    const grid = document.querySelector('.scoring-grid');
+    grid.classList.add('opacity-50', 'pointer-events-none', 'grayscale');
+    
+    // 2. Prepare Data
+    let payload = { showSummaryOverlay: true };
+
+    if (type === "BATTING") {
+        const teamKey = state.battingTeam;
+        const currentTeam = state[teamKey];
+        
+        let battingList = [];
+        Object.values(currentTeam.playerStats).forEach(p => {
+            const isStriker = state.striker && state.striker.id === p.id;
+            const isNonStriker = state.nonStriker && state.nonStriker.id === p.id;
+            
+            if (p.balls > 0 || isStriker || isNonStriker) {
+                let status = "Did not bat";
+                if (isStriker) status = "NOT OUT"; 
+                else if (isNonStriker) status = "NOT OUT"; 
+                else if (p.dismissal) status = p.dismissal.toUpperCase();
+                else status = "OUT";
+
+                battingList.push({ name: p.name, runs: p.runs, balls: p.balls, status: status });
+            }
+        });
+
+        payload.summaryType = "BATTING";
+        payload.battingCard = battingList;
+        payload.t1 = currentTeam.name;
+        payload.t1Logo = currentTeam.logo;
+        payload.extras = currentTeam.extras || 0;
+        payload.score = currentTeam.score;
+        payload.wickets = currentTeam.wickets;
+        payload.overs = currentTeam.overs;
+        payload.balls = currentTeam.balls;
+    } 
+    
+    else if (type === "BOWLING") {
+        const teamKey = state.bowlingTeam;
+        const currentTeam = state[teamKey];
+        
+        let bowlingList = [];
+        Object.values(currentTeam.playerStats).forEach(p => {
+            if (p.ballsBowled > 0) {
+                const oversBowled = Math.floor(p.ballsBowled / 6) + "." + (p.ballsBowled % 6);
+                const totalOvers = p.ballsBowled / 6;
+                const econ = totalOvers > 0 ? (p.runsConceded / totalOvers).toFixed(1) : "0.0";
+                bowlingList.push({ name: p.name, o: oversBowled, m: 0, r: p.runsConceded, w: p.wickets, e: econ });
+            }
+        });
+
+        payload.summaryType = "BOWLING";
+        payload.bowlingCard = bowlingList;
+        payload.t1 = currentTeam.name;
+        payload.t1Logo = currentTeam.logo;
+        // Footer stats (Batting team)
+        payload.score = state[state.battingTeam].score;
+        payload.wickets = state[state.battingTeam].wickets;
+        payload.overs = state[state.battingTeam].overs;
+        payload.balls = state[state.battingTeam].balls;
+        payload.extras = state[state.battingTeam].extras || 0;
+    }
+
+    // 3. Send to Firebase
+    db.collection("live_matches").doc(broadcastId).set(payload, { merge: true })
+        .then(() => {
+            closeModal('broadcast-control-modal');
+            alert(`✅ ${type} CARD IS LIVE!\nScoring is LOCKED until you turn it off.`);
+        });
+}
+
+function turnOffView() {
+    // 1. Unlock Scoring
+    const grid = document.querySelector('.scoring-grid');
+    grid.classList.remove('opacity-50', 'pointer-events-none', 'grayscale');
+
+    // 2. Hide Overlay
+    db.collection("live_matches").doc(broadcastId).set({ 
+        showSummaryOverlay: false 
+    }, { merge: true });
+
+    closeModal('broadcast-control-modal');
 }
     </script>
 </body>
