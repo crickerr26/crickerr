@@ -360,18 +360,37 @@
 </div>
 
     <div id="wicket-type-modal" class="modal-overlay fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center">
-        <div class="modal-content bg-white rounded-2xl p-6 w-80 shadow-2xl text-center">
-            <h3 id="wicket-modal-title" class="text-xl font-bold text-red-600 mb-2">WICKET!</h3>
-            <div class="grid grid-cols-2 gap-3">
-                <button onclick="processIndoorWicket('Run Out')" class="p-3 bg-gray-100 rounded-lg">Run Out</button>
-                <button onclick="processIndoorWicket('Catch')" class="p-3 bg-gray-100 rounded-lg">Catch</button>
-<button onclick="processIndoorWicket('LBW')" class="p-3 bg-gray-100 rounded-lg">LBW</button>
-<button onclick="processIndoorWicket('Bowled')" class="p-3 bg-gray-100 rounded-lg">Bowled</button>
-                <button onclick="processIndoorWicket('Stumped')" class="p-3 bg-gray-100 rounded-lg">Stumped</button>
-            </div>
-            <button onclick="closeModal('wicket-type-modal')" class="mt-4 text-gray-400 text-sm">Cancel</button>
+    <div class="modal-content bg-white rounded-2xl p-6 w-80 shadow-2xl text-center max-h-[90vh] overflow-y-auto">
+        <h3 id="wicket-modal-title" class="text-xl font-black text-red-600 mb-4 uppercase tracking-wider">Wicket Type</h3>
+        
+        <div class="grid grid-cols-2 gap-3 text-sm">
+            <button onclick="processIndoorWicket('Bowled')" class="p-4 bg-red-50 hover:bg-red-100 text-red-900 font-bold rounded-xl border border-red-200">BOWLED</button>
+            <button onclick="setupFielderSelect('Catch')" class="p-4 bg-blue-50 hover:bg-blue-100 text-blue-900 font-bold rounded-xl border border-blue-200">CATCH</button>
+            
+            <button onclick="processIndoorWicket('LBW')" class="p-3 bg-gray-50 hover:bg-gray-100 font-bold rounded-xl border border-gray-200">LBW</button>
+            <button onclick="processIndoorWicket('Run Out')" class="p-3 bg-orange-50 hover:bg-orange-100 text-orange-900 font-bold rounded-xl border border-orange-200">RUN OUT</button>
+            
+            <button onclick="setupFielderSelect('Stumped')" class="p-3 bg-purple-50 hover:bg-purple-100 text-purple-900 font-bold rounded-xl border border-purple-200">STUMPED</button>
+            <button onclick="processIndoorWicket('Hit Wicket')" class="p-3 bg-gray-50 hover:bg-gray-100 font-bold rounded-xl border border-gray-200">HIT WKT</button>
+            
+            <button onclick="processIndoorWicket('Retired Out')" class="p-3 bg-gray-50 hover:bg-gray-100 font-bold rounded-xl border border-gray-200">Retired</button>
+            <button onclick="processIndoorWicket('Other')" class="p-3 bg-gray-50 hover:bg-gray-100 font-bold rounded-xl border border-gray-200">Other</button>
         </div>
+        
+        <button onclick="closeModal('wicket-type-modal')" class="mt-5 text-gray-400 text-xs font-bold uppercase tracking-widest hover:text-gray-600">Cancel</button>
     </div>
+</div>
+
+<div id="fielder-modal" class="modal-overlay fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-[60] flex items-center justify-center">
+    <div class="modal-content bg-white rounded-2xl p-6 w-80 shadow-2xl relative">
+        <button onclick="closeModal('fielder-modal')" class="absolute top-3 right-4 text-gray-400 hover:text-gray-600 font-bold text-xl">✕</button>
+        
+        <h3 id="fielder-modal-title" class="text-lg font-bold mb-4 text-center text-blue-900">Select Fielder</h3>
+        <select id="fielder-select" class="w-full p-3 bg-gray-50 border rounded-xl mb-4 text-lg outline-none focus:ring-2 focus:ring-blue-500"></select>
+        
+        <button onclick="confirmFielder()" class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg active:scale-95 transition-transform">Confirm</button>
+    </div>
+</div>
 
     <div id="runout-modal" class="modal-overlay fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center">
         <div class="modal-content bg-white rounded-2xl p-6 w-80 shadow-2xl text-center">
@@ -1348,8 +1367,65 @@ function initInnings() {
     });
 }
 
-// --- REPLACE THIS ENTIRE FUNCTION IN 29.html ---
-function applyWicketPenalty(who, type) {
+// --- NEW WICKET LOGIC START ---
+let tempWicketType = null;
+
+function processIndoorWicket(type) {
+    closeModal('wicket-type-modal');
+    
+    if (type === 'Run Out') {
+        // Populate Run Out Names
+        const btnS = document.getElementById('btn-ro-striker');
+        const btnNS = document.getElementById('btn-ro-nonstriker');
+        
+        btnS.textContent = state.striker ? `${state.striker.name} (Striker)` : "Striker";
+        btnNS.textContent = state.nonStriker ? `${state.nonStriker.name} (Non-Striker)` : "Non-Striker";
+        
+        openModal('runout-modal');
+    } else {
+        // Direct dismissals (Bowled, LBW, etc)
+        applyWicketPenalty('striker', type);
+    }
+}
+
+function setupFielderSelect(type) {
+    closeModal('wicket-type-modal');
+    tempWicketType = type; // Store "Catch" or "Stumped"
+    
+    // Populate Fielder Modal with Bowling Team
+    const select = document.getElementById('fielder-select');
+    select.innerHTML = '';
+    const title = document.getElementById('fielder-modal-title');
+    
+    title.textContent = (type === 'Catch') ? "Who took the Catch?" : "Who is the Keeper?";
+    
+    const roster = state[state.bowlingTeam].playerStats;
+    Object.values(roster).forEach(player => {
+        const opt = document.createElement('option');
+        opt.value = player.name; // Just need the name for the text
+        opt.textContent = player.name;
+        select.appendChild(opt);
+    });
+    
+    openModal('fielder-modal');
+}
+
+function confirmFielder() {
+    const fielderName = document.getElementById('fielder-select').value;
+    if(!fielderName) return;
+    
+    closeModal('fielder-modal');
+    // Pass the fielder name to the penalty function
+    applyWicketPenalty('striker', tempWicketType, fielderName);
+}
+
+function finalizeRunOut(who) {
+    closeModal('runout-modal');
+    applyWicketPenalty(who, 'Run Out');
+}
+
+// Updated main function to handle new types
+function applyWicketPenalty(who, type, fielder = null) {
     addToHistory();
     const penalty = state.rules.wicketRuns;
     const bt = state[state.battingTeam];
@@ -1358,30 +1434,49 @@ function applyWicketPenalty(who, type) {
     const roleKey = (who === 'nonstriker' || who === 'nonStriker') ? 'nonStriker' : 'striker';
     const victim = state[roleKey];
 
-    // 1. Record Dismissal Details
+    // 1. Construct Dismissal Text
     let dismissalText = type; 
+    
     if (victim) {
-        if (type !== 'Run Out' && bwl) {
-            dismissalText += ` b. ${bwl.name}`;
+        if (type === 'Bowled' && bwl) {
+            dismissalText = `b. ${bwl.name}`;
+        } else if (type === 'LBW' && bwl) {
+            dismissalText = `lbw b. ${bwl.name}`;
+        } else if (type === 'Catch' && bwl) {
+            dismissalText = `c. ${fielder || 'Sub'} b. ${bwl.name}`;
+        } else if (type === 'Stumped' && bwl) {
+            dismissalText = `st. ${fielder || 'Keeper'} b. ${bwl.name}`;
+        } else if (type === 'Hit Wicket' && bwl) {
+            dismissalText = `hit wkt b. ${bwl.name}`;
         }
+        
+        // Save to player stats
         victim.dismissal = dismissalText; 
         victim.runs -= penalty; 
     }
 
     // 2. Stats Updates
     bt.score -= penalty;
+    // Only add ball to striker if they faced it (Run Out might not count ball? 
+    // Usually penalty runs happen on a ball. Let's keep logic simple: Striker faces ball)
     if (state.striker) { state.striker.balls++; }
+    
     bt.wickets = (bt.wickets || 0) + 1;
-    if (bwl) { bwl.wickets++; bwl.ballsBowled++; }
+    
+    // Bowler Stats: Run Out/Retired usually doesn't credit bowler
+    if (bwl && type !== 'Run Out' && type !== 'Retired Out' && type !== 'Other') { 
+        bwl.wickets++; 
+    }
+    // Always count the ball for the bowler
+    if (bwl) { bwl.ballsBowled++; }
 
-    // 3. SHOW "OUT" ANIMATION
+    // 3. Animation & Sync
     showEventPopup("OUT", "text-red-600");
     processBall(0, 'W', true);
     updateUI();
 
-    // 4. TRIGGER THE BROADCAST CARD (The 7-Second Magic)
+    // 4. Broadcast Card Logic
     if (victim && broadcastId) {
-        // Wait 1.5 seconds for the "OUT" animation to finish, then show card
         setTimeout(() => {
             const cardData = {
                 name: victim.name,
@@ -1390,46 +1485,23 @@ function applyWicketPenalty(who, type) {
                 howOut: dismissalText.toUpperCase(),
                 teamLogo: state[state.battingTeam].logo
             };
-
-            // Turn Card ON
             db.collection("live_matches").doc(broadcastId).set({
-                showDismissalCard: true,
-                dismissalData: cardData
+                showDismissalCard: true, dismissalData: cardData
             }, { merge: true });
-
-            // Turn Card OFF after 7 seconds
             setTimeout(() => {
                 db.collection("live_matches").doc(broadcastId).set({
                     showDismissalCard: false
                 }, { merge: true });
             }, 7000);
-
-        }, 1500); // 1.5s delay before card appears
+        }, 1500);
     }
 
-    // 5. Select New Player Popup
+    // 5. Select New Player
     setTimeout(() => {
         selectPlayer(roleKey, updateUI); 
     }, 1200);
 }
-
-// 5. Wicket Type Handlers
-function processIndoorWicket(type) {
-    closeModal('wicket-type-modal');
-    
-    if (type === 'Run Out') {
-        if(state.striker) document.getElementById('btn-ro-striker').textContent = `${state.striker.name} (Striker)`;
-        if(state.nonStriker) document.getElementById('btn-ro-nonstriker').textContent = `${state.nonStriker.name} (Non-Striker)`;
-        openModal('runout-modal');
-    } else {
-        applyWicketPenalty('striker', type);
-    }
-}
-
-function finalizeRunOut(who) {
-    closeModal('runout-modal');
-    applyWicketPenalty(who, 'Run Out');
-}
+// --- NEW WICKET LOGIC END ---
         // --- SCORING & UNDO ---
         function addToHistory() {
             // Store deep copy of state
