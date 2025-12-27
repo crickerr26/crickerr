@@ -19,10 +19,30 @@
     /* --- Base Styles --- */
     body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
     
+    /* --- MOBILE SPECIFIC FIXES --- */
     @media (max-width: 768px) {
         body { font-size: 14px; }
-        #setup-screen, #choice-screen { padding: 0; }
-        .setup-card, .choice-card { max-width: 100%; min-height: 100vh; border-radius: 0; box-shadow: none; border: none; }
+        
+        /* Stop floating behavior on mobile */
+        #setup-screen {
+            align-items: flex-start !important; /* Start from top */
+            justify-content: flex-start !important;
+            padding: 0 !important;
+            background-color: white !important; /* Seamless look */
+        }
+        
+        /* Make card full screen on mobile */
+        .setup-card { 
+            width: 100% !important;
+            height: 100% !important;
+            min-height: 100vh !important;
+            max-width: 100% !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            padding-top: 1rem !important; /* Safe area */
+        }
+
         #app { overflow: hidden; }
         #app > .flex-grow { padding: 8px; display: flex; flex-direction: column; }
         #match-header h1 { font-size: 1.25rem; }
@@ -108,45 +128,17 @@
     .ios-toggle:checked { background-color: #34c759; }
     .ios-toggle:checked::after { transform: translateX(20px); }
 
-    /* --- NEW EDIT MODAL STYLES --- */
-    .ball-edit-row { 
-        display: flex; align-items: stretch; margin-bottom: 0.75rem; 
-        cursor: pointer; transition: transform 0.1s ease-in-out; 
-    }
+    /* --- EDIT MODAL STYLES --- */
+    .ball-edit-row { display: flex; align-items: stretch; margin-bottom: 0.75rem; cursor: pointer; transition: transform 0.1s ease-in-out; }
     .ball-edit-row:active { transform: scale(0.98); }
-
-    /* The "BALL 1" Label Box */
-    .ball-label { 
-        width: 4.5rem; display: flex; align-items: center; justify-content: center; 
-        background-color: #f1f5f9; color: #64748b; font-size: 0.65rem; font-weight: 900; 
-        text-transform: uppercase; border-top-left-radius: 0.75rem; border-bottom-left-radius: 0.75rem; 
-        border: 1px solid #e2e8f0; border-right: none; letter-spacing: 0.05em;
-    }
-
-    /* The Value Display Box */
-    .ball-value { 
-        flex-grow: 1; display: flex; align-items: center; justify-content: space-between; 
-        background-color: white; padding: 0 1.25rem; height: 3.5rem;
-        border: 1px solid #e2e8f0; border-top-right-radius: 0.75rem; border-bottom-right-radius: 0.75rem;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    }
-
-    /* The Powerful Scoring Grid (Matches Main Grid) */
-    .mini-score-grid { 
-        display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; 
-        background: #f1f5f9; padding: 8px; border-radius: 12px; border: 1px solid #cbd5e1; margin-bottom: 10px;
-    }
-    .mini-score-grid .watery-btn {
-        height: 3.5rem; font-size: 1.1rem; font-weight: 800; border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.4);
-    }
+    .ball-label { width: 4.5rem; display: flex; align-items: center; justify-content: center; background-color: #f1f5f9; color: #64748b; font-size: 0.65rem; font-weight: 900; text-transform: uppercase; border-top-left-radius: 0.75rem; border-bottom-left-radius: 0.75rem; border: 1px solid #e2e8f0; border-right: none; letter-spacing: 0.05em; }
+    .ball-value { flex-grow: 1; display: flex; align-items: center; justify-content: space-between; background-color: white; padding: 0 1.25rem; height: 3.5rem; border: 1px solid #e2e8f0; border-top-right-radius: 0.75rem; border-bottom-right-radius: 0.75rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    
+    /* Powerful Scoring Grid */
+    .mini-score-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; background: #f1f5f9; padding: 8px; border-radius: 12px; border: 1px solid #cbd5e1; margin-bottom: 10px; }
+    .mini-score-grid .watery-btn { height: 3.5rem; font-size: 1.1rem; font-weight: 800; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.4); }
     .mini-score-grid .watery-btn:active { transform: scale(0.95); }
-
-    /* Extras Edit Grid */
-    .extras-edit-grid {
-        display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px;
-        padding: 8px; background: #f8fafc; border-radius: 12px;
-    }
+    .extras-edit-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; padding: 8px; background: #f8fafc; border-radius: 12px; }
 </style>
 </head>
 <body class="bg-gray-100 antialiased text-gray-800">
@@ -160,8 +152,8 @@
         <h1 id="event-animation-text" class="text-8xl font-black uppercase drop-shadow-2xl text-center"></h1>
     </div>
 
-    <div id="setup-screen" class="min-h-screen w-full flex flex-col items-center justify-center setup-bg">
-        <div class="w-full max-w-6xl shadow-xl rounded-2xl p-4 md:p-8 setup-card overflow-hidden">
+    <div id="setup-screen" class="min-h-screen w-full flex flex-col md:items-center md:justify-center setup-bg">
+        <div class="w-full md:max-w-6xl md:shadow-xl md:rounded-2xl p-4 md:p-8 setup-card overflow-hidden min-h-screen md:min-h-0 bg-white">
             <div id="progress-container" class="mb-8 max-w-2xl mx-auto">
                 <div class="w-full h-2 bg-gray-200 rounded-full">
                     <div id="progress-bar" class="progress-bar-fill h-2 rounded-full" style="width: 33%;"></div>
@@ -241,7 +233,6 @@
                                 <input type="file" id="team2-logo-input" class="mt-2 text-xs">
                              </div>
                         </div>
-
                     </div>
                     <div class="mt-4 text-right"><button onclick="goToStep(2)" class="px-6 py-3 bg-blue-600 text-white font-bold rounded-lg shadow">Next Step →</button></div>
                 </div>
@@ -1985,7 +1976,7 @@
                 
                 // Remove Old Runs
                 let oldBatterRuns = oldRuns;
-                if(ball.event.includes('WD')) oldBatterRuns = 0; // Wides usually don't count to batter runs
+                if(ball.event.includes('WD')) oldBatterRuns = 0; 
                 
                 // Add New Runs
                 let newBatterRuns = newRuns;
