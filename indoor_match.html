@@ -695,6 +695,89 @@
 </div>
 
     <script>
+        // --- ADD THIS FUNCTION TO YOUR CONTROLLER SCRIPT (51 - .html) ---
+
+function broadcastMatchResult() {
+    if (!broadcastId) {
+        alert("Broadcast not active! Generate a code first.");
+        return;
+    }
+
+    const t1 = state.team1;
+    const t2 = state.team2;
+    let resultMain = "MATCH TIED";
+    let resultSub = "Scores Level";
+
+    // 1. Calculate Winner Text
+    if (t1.score > t2.score) {
+        resultMain = `${t1.name} WINS`;
+        resultSub = `WON BY ${t1.score - t2.score} RUNS`;
+    } else if (t2.score > t1.score) {
+        resultMain = `${t2.name} WINS`;
+        const wicketsLeft = (state.playersPerSide - 1) - (t2.wickets || 0); 
+        resultSub = `WON BY ${Math.max(1, wicketsLeft)} WICKETS`;
+    }
+
+    // 2. Get Man of the Match from Radio Button
+    const pomId = document.querySelector('input[name="pom"]:checked')?.value;
+    let pomData = null;
+    if (pomId) {
+        let p = state.team1.playerStats[pomId] || state.team2.playerStats[pomId];
+        if (p) {
+            pomData = { 
+                name: p.name, 
+                stats: `${p.runs} Runs • ${p.wickets} Wickets` 
+            };
+        }
+    }
+
+    // 3. Prepare Top Stats Lists
+    const allPlayers = [];
+    ['team1', 'team2'].forEach(tk => {
+        Object.values(state[tk].playerStats).forEach(p => {
+            p.teamName = state[tk].name;
+            allPlayers.push(p);
+        });
+    });
+
+    const topBatters = [...allPlayers].sort((a,b) => b.runs - a.runs).slice(0, 3).map(p => ({
+        name: p.name, team: p.teamName, runs: p.runs, balls: p.balls
+    }));
+
+    const topBowlers = [...allPlayers].sort((a,b) => (b.wickets - a.wickets) || (a.runsConceded - b.runsConceded)).slice(0, 3).map(p => ({
+        name: p.name, team: p.teamName, wickets: p.wickets, runs: p.runsConceded, balls: p.ballsBowled
+    }));
+
+    // 4. Send to Firebase
+    db.collection("live_matches").doc(broadcastId).set({
+        matchStatus: "COMPLETE",
+        showSquad: false,
+        showBattingCard: false,
+        showBowlingCard: false,
+        showRunRate: false,
+        resultMain: resultMain,
+        resultSub: resultSub,
+        
+        // --- ADDED SCORE DATA ---
+        resultT1: { 
+            name: t1.name, 
+            score: `${t1.score}/${t1.wickets}`, 
+            overs: `${t1.overs}.${t1.balls}` 
+        },
+        resultT2: { 
+            name: t2.name, 
+            score: `${t2.score}/${t2.wickets}`, 
+            overs: `${t2.overs}.${t2.balls}` 
+        },
+        // ------------------------
+
+        pom: pomData,
+        topBatters: topBatters,
+        topBowlers: topBowlers
+    }, { merge: true }).then(() => {
+        alert("Result Broadcasted to Screen!");
+    }).catch(err => console.error("Broadcast Error", err));
+}
         // --- FIREBASE CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyBqcD59IAPpKqk98oDZkgzgkoVZ8b8LGgY",
