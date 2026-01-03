@@ -1830,14 +1830,25 @@ function broadcastMatchResult() {
         }
 
         function processBall(runs, eventLabel, isLegal) {
-            const bt = state[state.battingTeam];
-            if (isLegal) { bt.balls = (bt.balls || 0) + 1; }
-            
-            // Store Striker ID to fix stats later
-            const currentStrikerId = state.striker ? state.striker.id : null;
-            state.currentOver.push({ event: eventLabel, runs: runs, isLegal: isLegal, strikerId: currentStrikerId });
+    const bt = state[state.battingTeam];
+    if (isLegal) { bt.balls = (bt.balls || 0) + 1; }
+    
+    // --- UPDATED: SAVE NAMES ---
+    const currentStrikerId = state.striker ? state.striker.id : null;
+    const bowlerName = state.bowler ? state.bowler.name : "Bowler";
+    const batterName = state.striker ? state.striker.name : "Batter";
 
-            if(bt.balls === 6) {
+    state.currentOver.push({ 
+        event: eventLabel, 
+        runs: runs, 
+        isLegal: isLegal, 
+        strikerId: currentStrikerId,
+        bowler: bowlerName, // Saving Bowler Name
+        batter: batterName  // Saving Batter Name
+    });
+    // ---------------------------
+
+    if(bt.balls === 6) {
                 bt.overs = (bt.overs || 0) + 1;
                 bt.balls = 0;
                 
