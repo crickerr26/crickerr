@@ -23,15 +23,13 @@
     @media (max-width: 768px) {
         body { font-size: 14px; }
         
-        /* Stop floating behavior on mobile */
         #setup-screen {
-            align-items: flex-start !important; /* Start from top */
+            align-items: flex-start !important;
             justify-content: flex-start !important;
             padding: 0 !important;
-            background-color: white !important; /* Seamless look */
+            background-color: white !important;
         }
         
-        /* Make card full screen on mobile */
         .setup-card { 
             width: 100% !important;
             height: 100% !important;
@@ -40,7 +38,7 @@
             border: none !important;
             border-radius: 0 !important;
             box-shadow: none !important;
-            padding-top: 1rem !important; /* Safe area */
+            padding-top: 1rem !important;
         }
 
         #app { overflow: hidden; }
@@ -134,7 +132,6 @@
     .ball-label { width: 4.5rem; display: flex; align-items: center; justify-content: center; background-color: #f1f5f9; color: #64748b; font-size: 0.65rem; font-weight: 900; text-transform: uppercase; border-top-left-radius: 0.75rem; border-bottom-left-radius: 0.75rem; border: 1px solid #e2e8f0; border-right: none; letter-spacing: 0.05em; }
     .ball-value { flex-grow: 1; display: flex; align-items: center; justify-content: space-between; background-color: white; padding: 0 1.25rem; height: 3.5rem; border: 1px solid #e2e8f0; border-top-right-radius: 0.75rem; border-bottom-right-radius: 0.75rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
     
-    /* Powerful Scoring Grid */
     .mini-score-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; background: #f1f5f9; padding: 8px; border-radius: 12px; border: 1px solid #cbd5e1; margin-bottom: 10px; }
     .mini-score-grid .watery-btn { height: 3.5rem; font-size: 1.1rem; font-weight: 800; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.4); }
     .mini-score-grid .watery-btn:active { transform: scale(0.95); }
@@ -221,17 +218,19 @@
 
                         <div class="grid grid-cols-2 gap-4">
                              <div class="p-3 bg-green-50 rounded-xl border border-green-200">
-                                <label class="block text-xs font-bold mb-1 text-green-800">Home Team</label>
-                                <select id="team1-select" class="w-full p-2 mb-2 border rounded text-sm"><option value="">+ Load Saved Team</option></select>
-                                <input type="text" id="team1-name-input" placeholder="Home Team Name" class="w-full p-2 border rounded font-bold uppercase">
-                                <input type="file" id="team1-logo-input" class="mt-2 text-xs">
-                             </div>
-                             <div class="p-3 bg-blue-50 rounded-xl border border-blue-200">
-                                <label class="block text-xs font-bold mb-1 text-blue-800">Away Team</label>
-                                <select id="team2-select" class="w-full p-2 mb-2 border rounded text-sm"><option value="">+ Load Saved Team</option></select>
-                                <input type="text" id="team2-name-input" placeholder="Away Team Name" class="w-full p-2 border rounded font-bold uppercase">
-                                <input type="file" id="team2-logo-input" class="mt-2 text-xs">
-                             </div>
+   <label class="block text-xs font-bold mb-1 text-green-800">Home Team</label>
+   <select id="team1-select" class="w-full p-2 mb-2 border rounded text-sm"><option value="">+ Load Saved Team</option></select>
+   <input type="text" id="team1-name-input" placeholder="Home Team Name" class="w-full p-2 border rounded font-bold uppercase">
+   <input type="file" id="team1-logo-input" class="mt-2 text-xs" onchange="handleLogoUpload(this.files[0], 'team1')">
+   <img id="team1-logo-preview" class="hidden mt-2 w-16 h-16 object-cover rounded-full border-2 border-green-500 shadow-sm">
+</div>
+<div class="p-3 bg-blue-50 rounded-xl border border-blue-200">
+   <label class="block text-xs font-bold mb-1 text-blue-800">Away Team</label>
+   <select id="team2-select" class="w-full p-2 mb-2 border rounded text-sm"><option value="">+ Load Saved Team</option></select>
+   <input type="text" id="team2-name-input" placeholder="Away Team Name" class="w-full p-2 border rounded font-bold uppercase">
+   <input type="file" id="team2-logo-input" class="mt-2 text-xs" onchange="handleLogoUpload(this.files[0], 'team2')">
+   <img id="team2-logo-preview" class="hidden mt-2 w-16 h-16 object-cover rounded-full border-2 border-blue-500 shadow-sm">
+</div>
                         </div>
                     </div>
                     <div class="mt-4 text-right"><button onclick="goToStep(2)" class="px-6 py-3 bg-blue-600 text-white font-bold rounded-lg shadow">Next Step →</button></div>
@@ -321,42 +320,6 @@
                     <button id="start-match-btn" disabled class="w-full py-6 bg-gray-200 text-gray-400 font-black rounded-3xl text-xl shadow-none transition-all duration-300 cursor-not-allowed uppercase tracking-widest mb-12" onclick="startMatch()">
                         Start Match
                     </button>
-
-                    <style>
-                        /* Selected Team Card */
-                        .toss-card-btn.selected { 
-                            border-color: #3b82f6 !important; 
-                            background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%) !important;
-                            box-shadow: 0 20px 40px -10px rgba(59, 130, 246, 0.25) !important;
-                        }
-                        .toss-card-btn.selected .check-icon { opacity: 1; transform: scale(1); }
-                        .toss-card-btn.selected #toss-team1-name, .toss-card-btn.selected #toss-team2-name { color: #1d4ed8; }
-
-                        /* Selected Decision Buttons */
-                        #toss-choice-bat.selected {
-                            background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%) !important;
-                            border-color: #f97316 !important;
-                            box-shadow: 0 10px 20px -5px rgba(249, 115, 22, 0.3) !important;
-                        }
-                        #toss-choice-bat.selected span { color: #c2410c !important; }
-
-                        #toss-choice-bowl.selected {
-                            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
-                            border-color: #2563eb !important;
-                            box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.3) !important;
-                        }
-                        #toss-choice-bowl.selected span { color: #1e40af !important; }
-
-                        /* Active Start Button */
-                        #start-match-btn:not([disabled]) { 
-                            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important; 
-                            color: white !important; 
-                            box-shadow: 0 20px 40px -10px rgba(124, 58, 237, 0.5) !important; 
-                            cursor: pointer; 
-                            transform: translateY(-2px);
-                        }
-                        #start-match-btn:not([disabled]):active { transform: scale(0.98); }
-                    </style>
                 </div>
             </div>
         </div>
@@ -541,14 +504,19 @@
                 </div>
                 
                 <div class="flex items-center justify-between border-t border-gray-200 pt-4">
-                    <span class="text-sm font-bold text-gray-700">Batting Card</span>
-                    <input type="checkbox" class="ios-toggle" id="toggle-batting" onchange="toggleView('BATTING', this)">
-                </div>
+    <span class="text-sm font-bold text-gray-700">Batting Card</span>
+    <input type="checkbox" class="ios-toggle" id="toggle-batting" onchange="toggleView('BATTING', this)">
+</div>
 
-                <div class="flex items-center justify-between border-t border-gray-200 pt-4">
-                    <span class="text-sm font-bold text-gray-700">Bowling Card</span>
-                    <input type="checkbox" class="ios-toggle" id="toggle-bowling" onchange="toggleView('BOWLING', this)">
-                </div>
+<div class="flex items-center justify-between border-t border-gray-200 pt-4">
+    <span class="text-sm font-bold text-gray-700">Bowling Card</span>
+    <input type="checkbox" class="ios-toggle" id="toggle-bowling" onchange="toggleView('BOWLING', this)">
+</div>
+
+<div class="flex items-center justify-between border-t border-gray-200 pt-4">
+    <span class="text-sm font-bold text-gray-700">Run Rate (CRR/RRR)</span>
+    <input type="checkbox" class="ios-toggle" id="toggle-runrate" onchange="toggleView('RUN_RATE', this)">
+</div>
             </div>
             
             <button onclick="closeModal('broadcast-control-modal')" class="mt-6 w-full py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-xl text-sm transition-colors">Close Menu</button>
@@ -826,13 +794,13 @@
         function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
         function closeModal(id) { 
             document.getElementById(id).classList.add('hidden'); 
-            // Reset edit mode when closing modals to prevent getting stuck
             if(id !== 'bowler-edit-modal' && id !== 'player-modal' && editingBallIndex === null) {
                 // Keep editingBallIndex active if inside the bowler edit flow
             }
         }
         
         function openWicketModal() { openModal('wicket-type-modal'); }
+        function openViewControlModal() { openModal('broadcast-control-modal'); } // ADDED MISSING FUNCTION
 
         function generateUniqueId() { return 'p_' + Math.random().toString(36).substr(2, 9); }
 
@@ -869,22 +837,42 @@
             });
         }
         function handleTeamSelection(teamName, teamKey) {
-            if(!teamName) return;
-            const teamData = savedTeamsData.find(t => t.name === teamName);
-            if(!teamData) return;
-            document.getElementById(`${teamKey}-name-input`).value = teamData.name;
-            state[teamKey].name = teamData.name;
-            state[teamKey].logo = teamData.logo || '';
-            state[teamKey].squad = teamData.players.map(p => ({...p, id: generateUniqueId()}));
-            state[teamKey].isLoaded = true;
-        }
+    if(!teamName) return;
+    const teamData = savedTeamsData.find(t => t.name === teamName);
+    if(!teamData) return;
+    
+    // Set Input Value
+    document.getElementById(`${teamKey}-name-input`).value = teamData.name;
+    
+    // Update State
+    state[teamKey].name = teamData.name;
+    state[teamKey].logo = teamData.logo || '';
+    state[teamKey].squad = teamData.players.map(p => ({...p, id: generateUniqueId()}));
+    state[teamKey].isLoaded = true;
+
+    // NEW: Show Logo Preview
+    const previewEl = document.getElementById(`${teamKey}-logo-preview`);
+    if (state[teamKey].logo) {
+        previewEl.src = state[teamKey].logo;
+        previewEl.classList.remove('hidden');
+    } else {
+        previewEl.classList.add('hidden');
+    }
+}
         function handleLogoUpload(file, teamKey) {
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => { state[teamKey].logo = e.target.result; };
-                reader.readAsDataURL(file);
-            }
-        }
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => { 
+            state[teamKey].logo = e.target.result;
+            
+            // NEW: Update Preview Immediately
+            const previewEl = document.getElementById(`${teamKey}-logo-preview`);
+            previewEl.src = e.target.result;
+            previewEl.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+}
 
         function goToStep(step) {
             if (step === 2) {
@@ -1149,6 +1137,20 @@
             });
         }
 
+        // --- ADDED MISSING TOGGLE FUNCTION ---
+        function toggleView(viewName, toggleEl) {
+    if(!broadcastId) return;
+    let updateData = {};
+    
+    // Simple toggle logic:
+    if(viewName === 'SQUAD') updateData = { showSquad: toggleEl.checked };
+    else if(viewName === 'BATTING') updateData = { showBattingCard: toggleEl.checked };
+    else if(viewName === 'BOWLING') updateData = { showBowlingCard: toggleEl.checked };
+    else if(viewName === 'RUN_RATE') updateData = { showRunRate: toggleEl.checked }; // <--- ADDED THIS LINE
+
+    db.collection("live_matches").doc(broadcastId).set(updateData, { merge: true });
+}
+
         function syncToLiveDB(lastAction = null) {
             if (!broadcastId) return;
 
@@ -1163,12 +1165,76 @@
             const t1CapPlayer = t1Obj.squad.find(p => p.id === t1Obj.captainId);
             const t2CapPlayer = t2Obj.squad.find(p => p.id === t2Obj.captainId);
 
+            // --- GENERATE SQUAD LISTS ---
+            const getSquadList = (teamObj) => {
+                return teamObj.playing.map(pid => {
+                    const p = teamObj.squad.find(s => s.id === pid);
+                    return p ? p.name : "";
+                }).filter(n => n !== "");
+            };
+
+            // --- GENERATE BATTING CARD ---
+            const getBattingCard = () => {
+                const team = state[state.battingTeam];
+                let list = [];
+                // Loop through all playing members to find those with stats
+                team.playing.forEach(pid => {
+                    const p = team.playerStats[pid];
+                    // Include if: has faced balls OR has runs OR is out OR is currently at crease
+                    if (p && (p.balls > 0 || p.runs > 0 || p.dismissal || (state.striker && p.id === state.striker.id) || (state.nonStriker && p.id === state.nonStriker.id))) {
+                        let status = "not out";
+                        if (p.dismissal) status = p.dismissal.toUpperCase();
+                        else if (state.striker && p.id === state.striker.id) status = "BATTING *";
+                        else if (state.nonStriker && p.id === state.nonStriker.id) status = "BATTING";
+                        
+                        list.push({
+                            name: p.name,
+                            runs: p.runs,
+                            balls: p.balls,
+                            status: status
+                        });
+                    }
+                });
+                return list;
+            };
+
+            // --- GENERATE BOWLING CARD ---
+            const getBowlingCard = () => {
+                const team = state[state.bowlingTeam];
+                let list = [];
+                team.playing.forEach(pid => {
+                    const p = team.playerStats[pid];
+                    if (p && p.ballsBowled > 0) {
+                        const overs = Math.floor(p.ballsBowled / 6) + '.' + (p.ballsBowled % 6);
+                        const econ = (p.runsConceded / (p.ballsBowled/6 || 1)).toFixed(1);
+                        list.push({
+                            name: p.name,
+                            o: overs,
+                            m: 0, // Maidens not currently tracked in simple state, defaulting to 0
+                            r: p.runsConceded,
+                            w: p.wickets,
+                            e: econ
+                        });
+                    }
+                });
+                return list;
+            };
+
             const payload = {
                 venue: state.venue || document.getElementById('venue').value || "Unknown Ground",
                 matchDate: document.getElementById('match-date-input').value || new Date().toDateString(),
                 t1: t1Obj.name,
                 t1Logo: t1Obj.logo || null,
                 t1CaptainImg: t1CapPlayer ? t1CapPlayer.image : null, 
+                
+                squad1: getSquadList(t1Obj),
+                squad2: getSquadList(t2Obj),
+
+                // --- NEW: SEND CARDS TO DATABASE ---
+                battingCard: getBattingCard(),
+                bowlingCard: getBowlingCard(),
+                // -----------------------------------
+
                 t2: t2Obj.name,
                 t2Logo: t2Obj.logo || null,
                 t2CaptainImg: t2CapPlayer ? t2CapPlayer.image : null,
@@ -1178,6 +1244,7 @@
                 balls: bt.balls || 0,
                 target: state.target || 0, 
                 totalOvers: state.totalOvers || 0,
+                playersPerSide: state.playersPerSide || 0,
                 striker: { name: striker.name, runs: striker.runs, balls: striker.balls },
                 nonStriker: { name: nonStriker.name, runs: nonStriker.runs, balls: nonStriker.balls },
                 bowler: { name: bowler.name, wkts: bowler.wickets, runs: bowler.runsConceded, balls: bowler.ballsBowled }, 
@@ -1960,7 +2027,7 @@
         function applyBallCorrection(index, newRuns, newEvent) {
             const ball = state.currentOver[index];
             const oldRuns = ball.runs;
-            const batterId = ball.strikerId;
+            const batterId = ball.strikerId; // Retrieve the ID of who played this ball
 
             // 1. Update Team Score
             state[state.battingTeam].score += (newRuns - oldRuns);
@@ -1970,34 +2037,37 @@
                 state.bowler.runsConceded += (newRuns - oldRuns);
             }
 
-            // 3. Update Batter Stats (If legal delivery and NOT Wide)
-            if (batterId && state[state.battingTeam].playerStats[batterId]) {
+            // 3. Update Batter Stats (Corrected Logic)
+            if (batterId) {
+                // Fetch the specific player object from the team roster
                 const batter = state[state.battingTeam].playerStats[batterId];
                 
-                // Remove Old Runs
-                let oldBatterRuns = oldRuns;
-                if(ball.event.includes('WD')) oldBatterRuns = 0; 
-                
-                // Add New Runs
-                let newBatterRuns = newRuns;
-                if(newEvent.includes('WD')) newBatterRuns = 0;
+                if (batter) {
+                    // Remove Old Runs
+                    let oldBatterRuns = oldRuns;
+                    if(ball.event.includes('WD')) oldBatterRuns = 0; 
+                    
+                    // Add New Runs
+                    let newBatterRuns = newRuns;
+                    if(newEvent.includes('WD')) newBatterRuns = 0;
 
-                batter.runs += (newBatterRuns - oldBatterRuns);
+                    batter.runs += (newBatterRuns - oldBatterRuns);
+                    
+                    // Force refresh current striker reference if it matches this batter
+                    if (state.striker && state.striker.id === batterId) {
+                        state.striker = batter;
+                    }
+                }
             }
 
             // --- FIX: AUTO-ROTATE STRIKE ON EDIT ---
-            // Check if the "Odd/Even" nature of the runs has changed.
-            // Example: Changing 2 (Even) to 3 (Odd) require a swap.
-            // Example: Changing 1 (Odd) to 3 (Odd) requires NO swap.
+            // If the odd/even nature changed, we must swap the CURRENT strikers to realign 
+            // with the sequence of events.
             const oldIsOdd = (oldRuns % 2 !== 0);
             const newIsOdd = (newRuns % 2 !== 0);
-
-            // If the parity changed (e.g. Even -> Odd OR Odd -> Even), we swap the CURRENT pair
-            // to align them correctly with the corrected history.
             if (oldIsOdd !== newIsOdd) {
                 swapStrikers();
             }
-            // ---------------------------------------
 
             // 4. Update the Ball Object
             ball.runs = newRuns;
@@ -2018,6 +2088,17 @@
         }
 
         function updateUI() {
+            // --- STATE RESYNC ---
+            // Force re-fetch the striker/nonStriker objects from the central team stats
+            // to ensure UI displays the latest edits immediately.
+            const btStats = state[state.battingTeam].playerStats;
+            if (state.striker && btStats[state.striker.id]) {
+                state.striker = btStats[state.striker.id];
+            }
+            if (state.nonStriker && btStats[state.nonStriker.id]) {
+                state.nonStriker = btStats[state.nonStriker.id];
+            }
+
             syncToLiveDB(); 
             updateScoreboard(); 
             
@@ -2082,13 +2163,6 @@
                     <td class="text-right py-1 pr-2 text-gray-500 text-[9px] align-middle">${econ}</td>
                 </tr>`;
             }
-        }
-
-        // DEPRECATED FUNCTIONS REPLACED BY TOGGLE LOGIC, KEEPING FOR SAFETY
-        function activateView(type) { toggleView(type, {checked: true}); }
-        function turnOffView() { 
-            document.querySelectorAll('.ios-toggle').forEach(el => el.checked = false);
-            toggleView('OFF', {checked: false});
         }
     </script>
 </body>
