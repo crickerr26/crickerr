@@ -7,6 +7,7 @@
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -53,7 +54,7 @@
         /* TEAM LOGO BORDER */
         .team-logo { border: 2px solid rgba(255,255,255,0.15); padding: 1px; background: #000; }
 
-        /* APPLE STYLE TABS (Segmented Control) */
+        /* APPLE STYLE TABS */
         .tab-container {
             background-color: #1f1f1f; padding: 4px; border-radius: 8px; display: flex; position: relative;
         }
@@ -62,6 +63,16 @@
             border-radius: 6px; transition: all 0.2s ease; text-transform: uppercase; letter-spacing: 0.5px;
         }
         .tab-btn.active { background-color: #3b3b3b; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+
+        /* ACCORDION STYLE */
+        details > summary { list-style: none; cursor: pointer; outline: none; }
+        details > summary::-webkit-details-marker { display: none; }
+        .scorecard-header {
+            background-color: #1a1a1a; color: #e0e0e0; padding: 12px 16px; 
+            border-bottom: 1px solid #333; font-weight: bold; font-size: 12px; 
+            text-transform: uppercase; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .scorecard-header:hover { background-color: #252525; }
 
         /* IMPACT ANIMATION CSS */
         #impact-overlay { pointer-events: none; }
@@ -85,8 +96,7 @@
 
     <div id="impact-overlay" class="fixed inset-0 z-[100] flex items-center justify-center hidden">
         <div class="absolute inset-0 bg-black/40" id="impact-bg"></div>
-        <div id="impact-content" class="relative z-10 flex flex-col items-center justify-center">
-            </div>
+        <div id="impact-content" class="relative z-10 flex flex-col items-center justify-center"></div>
     </div>
 
     <nav class="bg-[#121212] border-b border-gray-800 p-3 sticky top-0 z-50 backdrop-blur-md bg-opacity-90">
@@ -95,14 +105,9 @@
                 <img src="my-logo.png" onerror="this.src='https://placehold.co/40x40/black/white?text=C'" class="h-9 w-9 object-contain logo-anim">
                 <h1 class="font-oswald text-xl uppercase tracking-wider text-white">CRiCKERR Scorebook</h1>
             </div>
-            
             <div class="flex items-center gap-3">
-                <button id="share-btn" onclick="shareMatch()" class="hidden flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-full shadow-lg transition-colors">
-                    <span>Share 🔗</span>
-                </button>
-                <button id="back-btn" onclick="showHome()" class="hidden text-xs font-bold text-gray-400 hover:text-white uppercase tracking-wider bg-gray-800 px-3 py-2 rounded-lg">
-                    Back
-                </button>
+                <button id="share-btn" onclick="shareMatch()" class="hidden flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-full shadow-lg transition-colors"><span>Share 🔗</span></button>
+                <button id="back-btn" onclick="showHome()" class="hidden text-xs font-bold text-gray-400 hover:text-white uppercase tracking-wider bg-gray-800 px-3 py-2 rounded-lg">Back</button>
             </div>
         </div>
     </nav>
@@ -126,10 +131,7 @@
         
         <div class="bg-[#121212] p-4 pb-0 border-b border-gray-800">
             <div class="flex justify-between text-[10px] text-gray-500 uppercase tracking-wider font-bold mb-4">
-                <div>
-                    <span id="d-match-type" class="text-blue-400 mr-2">Single Match</span> • 
-                    <span id="d-venue" class="ml-2">Loading...</span>
-                </div>
+                <div><span id="d-match-type" class="text-blue-400 mr-2">Single Match</span> • <span id="d-venue" class="ml-2">Loading...</span></div>
                 <span id="d-date"></span>
             </div>
 
@@ -139,14 +141,10 @@
                     <div class="text-[10px] font-bold text-gray-400 leading-tight uppercase tracking-wider" id="d-t1-name">TEAM 1</div>
                     <div class="text-3xl font-bold text-white mt-0.5 tracking-tight flex items-center" id="d-t1-score"></div>
                 </div>
-
                 <div class="text-center w-[20%]">
                     <div class="text-xl font-bold text-gray-700">VS</div>
-                    <div id="d-status" class="mt-2 inline-block px-2 py-0.5 bg-red-900/30 text-red-500 text-[9px] font-bold rounded-full uppercase tracking-wide border border-red-800">
-                        LIVE
-                    </div>
+                    <div id="d-status" class="mt-2 inline-block px-2 py-0.5 bg-red-900/30 text-red-500 text-[9px] font-bold rounded-full uppercase tracking-wide border border-red-800">LIVE</div>
                 </div>
-
                 <div class="flex flex-col items-end w-[40%] text-right">
                     <img id="d-t2-logo" class="w-14 h-14 object-cover rounded-full team-logo mb-2">
                     <div class="text-[10px] font-bold text-gray-400 leading-tight uppercase tracking-wider" id="d-t2-name">TEAM 2</div>
@@ -163,6 +161,7 @@
             <div class="tab-container mt-4 mb-2">
                 <button onclick="switchTab('summary')" id="tab-summary" class="tab-btn active">Summary</button>
                 <button onclick="switchTab('scorecard')" id="tab-scorecard" class="tab-btn">Scorecard</button>
+                <button onclick="switchTab('stats')" id="tab-stats" class="tab-btn">Stats</button>
                 <button onclick="switchTab('commentary')" id="tab-commentary" class="tab-btn">Ball by Ball</button>
             </div>
         </div>
@@ -177,41 +176,27 @@
             </div>
             <div id="pom-card" class="hidden bg-[#1a1a1a] p-4 rounded-lg border border-gray-800">
                 <h3 class="text-[9px] text-yellow-500 font-bold uppercase tracking-widest mb-1">Player of the Match</h3>
-                <div class="flex items-center justify-between">
-                    <span id="pom-name" class="text-lg font-bold text-white"></span>
-                    <span id="pom-stats" class="text-xs text-gray-400"></span>
-                </div>
+                <div class="flex items-center justify-between"><span id="pom-name" class="text-lg font-bold text-white"></span><span id="pom-stats" class="text-xs text-gray-400"></span></div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-[#1a1a1a] rounded-lg border border-gray-800 p-4">
-                    <h3 class="text-[9px] text-gray-500 font-bold uppercase tracking-widest mb-4">Top Batters</h3>
-                    <div id="summary-batters" class="space-y-3"></div>
-                </div>
-                <div class="bg-[#1a1a1a] rounded-lg border border-gray-800 p-4">
-                    <h3 class="text-[9px] text-gray-500 font-bold uppercase tracking-widest mb-4">Top Bowlers</h3>
-                    <div id="summary-bowlers" class="space-y-3"></div>
-                </div>
+                <div class="bg-[#1a1a1a] rounded-lg border border-gray-800 p-4"><h3 class="text-[9px] text-gray-500 font-bold uppercase tracking-widest mb-4">Top Batters</h3><div id="summary-batters" class="space-y-3"></div></div>
+                <div class="bg-[#1a1a1a] rounded-lg border border-gray-800 p-4"><h3 class="text-[9px] text-gray-500 font-bold uppercase tracking-widest mb-4">Top Bowlers</h3><div id="summary-bowlers" class="space-y-3"></div></div>
             </div>
         </div>
 
-        <div id="view-scorecard" class="hidden p-4 space-y-6">
-            <div class="bg-[#1a1a1a] rounded-lg overflow-hidden border border-gray-800">
-                <div class="bg-[#222] p-3 text-xs font-bold text-white uppercase tracking-wider border-b border-gray-800">Batting</div>
-                <table class="w-full text-left text-xs">
-                    <thead class="text-[10px] text-gray-500 bg-[#121212] border-b border-gray-800 uppercase">
-                        <tr><th class="p-3">Batter</th><th class="p-3 text-right">R</th><th class="p-3 text-right">B</th><th class="p-3 text-right hidden sm:table-cell">4s</th><th class="p-3 text-right hidden sm:table-cell">6s</th><th class="p-3 text-right">SR</th></tr>
-                    </thead>
-                    <tbody id="full-batting-table" class="divide-y divide-gray-800 text-gray-300"></tbody>
-                </table>
+        <div id="view-scorecard" class="hidden p-4 space-y-4">
+            <div id="scorecard-inn1"></div>
+            <div id="scorecard-inn2"></div>
+        </div>
+
+        <div id="view-stats" class="hidden p-4 space-y-6">
+            <div class="bg-[#1a1a1a] rounded-lg border border-gray-800 p-4">
+                <h3 class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-4">WORM GRAPH</h3>
+                <div class="w-full h-64"><canvas id="wormChart"></canvas></div>
             </div>
-            <div class="bg-[#1a1a1a] rounded-lg overflow-hidden border border-gray-800">
-                <div class="bg-[#222] p-3 text-xs font-bold text-white uppercase tracking-wider border-b border-gray-800">Bowling</div>
-                <table class="w-full text-left text-xs">
-                    <thead class="text-[10px] text-gray-500 bg-[#121212] border-b border-gray-800 uppercase">
-                        <tr><th class="p-3">Bowler</th><th class="p-3 text-right">O</th><th class="p-3 text-right">R</th><th class="p-3 text-right">W</th><th class="p-3 text-right">Econ</th></tr>
-                    </thead>
-                    <tbody id="full-bowling-table" class="divide-y divide-gray-800 text-gray-300"></tbody>
-                </table>
+            <div class="bg-[#1a1a1a] rounded-lg border border-gray-800 p-4">
+                <h3 class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-4">RUN RATE PER OVER</h3>
+                <div class="w-full h-64"><canvas id="runRateChart"></canvas></div>
             </div>
         </div>
 
@@ -225,14 +210,15 @@
     </div>
 
     <script>
-        // --- CONFIGURATION ---
         const firebaseConfig = { apiKey: "AIzaSyBqcD59IAPpKqk98oDZkgzgkoVZ8b8LGgY", authDomain: "livecricketscoring-92087.firebaseapp.com", databaseURL: "https://livecricketscoring-92087-default-rtdb.firebaseio.com", projectId: "livecricketscoring-92087", storageBucket: "livecricketscoring-92087.firebasestorage.app", messagingSenderId: "522927197627", appId: "1:522927197627:web:f1df5db736cae96893089e" };
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
         let activeListener = null;
         let currentMatchId = null;
-        let lastActionId = 0; 
+        let lastActionId = 0;
+        let wormChartInstance = null;
+        let rrChartInstance = null;
 
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -250,11 +236,8 @@
             if (!currentMatchId) return;
             const shareUrl = `${window.location.origin}${window.location.pathname}?id=${currentMatchId}`;
             const shareData = { title: 'CRiCKERR Scorebook', text: 'Follow live score:', url: shareUrl };
-            if (navigator.share) {
-                try { await navigator.share(shareData); } catch (err) {}
-            } else {
-                try { await navigator.clipboard.writeText(shareUrl); alert("Link Copied!"); } catch (err) { prompt("Copy link:", shareUrl); }
-            }
+            if (navigator.share) { try { await navigator.share(shareData); } catch (err) {} }
+            else { try { await navigator.clipboard.writeText(shareUrl); alert("Link Copied!"); } catch (err) { prompt("Copy link:", shareUrl); } }
         }
 
         function triggerImpact(type) {
@@ -262,12 +245,10 @@
             const overlay = document.getElementById('impact-overlay');
             const content = document.getElementById('impact-content');
             const bg = document.getElementById('impact-bg');
-            
             let colorClass = ""; let text = ""; let subtext = "";
             if (type === '4') { colorClass = "text-blue-500 border-blue-500 bg-blue-900/40"; text = "4"; subtext = "BOUNDARY"; } 
             else if (type === '6') { colorClass = "text-green-500 border-green-500 bg-green-900/40"; text = "6"; subtext = "MAXIMUM"; } 
             else if (type === 'W') { colorClass = "text-red-500 border-red-500 bg-red-900/40"; text = "OUT"; subtext = "WICKET"; }
-
             content.innerHTML = `<div class="animate-impact flex flex-col items-center justify-center p-8 rounded-full border-4 ${colorClass} shadow-2xl backdrop-blur-sm relative overflow-hidden w-64 h-64"><div class="text-[120px] font-oswald font-black leading-none tracking-tighter drop-shadow-lg">${text}</div><div class="text-xl font-bold uppercase tracking-widest text-white mt-2">${subtext}</div></div>`;
             overlay.classList.remove('hidden'); bg.classList.add('animate-flash');
             setTimeout(() => { overlay.classList.add('hidden'); bg.classList.remove('animate-flash'); content.innerHTML = ""; }, 2600);
@@ -278,33 +259,36 @@
             const completedContainer = document.getElementById('completed-list');
             liveContainer.innerHTML = '<div class="text-gray-500 text-sm italic col-span-2">Loading matches...</div>';
             completedContainer.innerHTML = '';
-
             const now = new Date();
             const twoDaysAgo = new Date(now.getTime() - (48 * 60 * 60 * 1000));
             const halfDayAgo = new Date(now.getTime() - (12 * 60 * 60 * 1000));
 
             db.collection('live_matches').get().then(snapshot => {
                 liveContainer.innerHTML = '';
-                let liveCount = 0;
-                let completedCount = 0;
-
+                let liveCount = 0; let completedCount = 0;
                 snapshot.forEach(doc => {
                     const m = doc.data();
                     const id = doc.id;
                     const isComplete = m.matchStatus === "COMPLETE";
                     let isRelevant = true;
                     const lastUpdate = m.timestamp ? m.timestamp.toDate() : new Date(0); 
+                    if (isComplete) { if (lastUpdate < twoDaysAgo) isRelevant = false; } else { if (lastUpdate < halfDayAgo) isRelevant = false; }
 
-                    if (isComplete) { if (lastUpdate < twoDaysAgo) isRelevant = false; } 
-                    else { if (lastUpdate < halfDayAgo) isRelevant = false; }
+                    let t1Score = "0/0"; let t2Score = "Yet to Bat";
+                    if (m.scorecard) {
+                        if(m.scorecard.innings1) t1Score = m.scorecard.innings1.score;
+                        if(m.scorecard.innings2) t2Score = m.scorecard.innings2.score;
+                    } else if (m.resultT1) {
+                        t1Score = m.resultT1.score; t2Score = m.resultT2.score;
+                    } else if (m.score) {
+                        t1Score = `${m.score}/${m.wickets}`;
+                    }
 
                     if (isRelevant) {
-                        const card = createMatchCard(id, m);
-                        if (isComplete) { completedContainer.innerHTML += card; completedCount++; } 
-                        else { liveContainer.innerHTML += card; liveCount++; }
+                        const card = createMatchCard(id, m, t1Score, t2Score);
+                        if (isComplete) { completedContainer.innerHTML += card; completedCount++; } else { liveContainer.innerHTML += card; liveCount++; }
                     }
                 });
-
                 if (liveCount === 0) liveContainer.innerHTML = '<div class="text-gray-600 text-sm italic col-span-2 p-4 text-center border border-gray-800 rounded">No live matches found.</div>';
                 if (completedCount === 0) completedContainer.innerHTML = '<div class="text-gray-600 text-sm italic col-span-2 p-4 text-center">No recent results found.</div>';
             });
@@ -315,76 +299,31 @@
             const code = prompt("Enter Admin Code to DELETE:");
             if (code === "2626") {
                 if(confirm("Permanently delete match?")) {
-                    db.collection('live_matches').doc(id).delete().then(() => {
-                        alert("Deleted."); loadMatchList();
-                    }).catch(error => alert("Error: " + error.message));
+                    db.collection('live_matches').doc(id).delete().then(() => { alert("Deleted."); loadMatchList(); }).catch(error => alert("Error: " + error.message));
                 }
             } else if (code !== null) alert("Incorrect Code!");
         }
 
-        function createMatchCard(id, m) {
-            let statusBadge = "LIVE";
-            let statusColor = "bg-red-900/30 text-red-500 border-red-800";
+        function createMatchCard(id, m, t1Score, t2Score) {
+            let statusBadge = "LIVE"; let statusColor = "bg-red-900/30 text-red-500 border-red-800";
+            if (m.matchStatus === "COMPLETE") { statusBadge = "RESULT"; statusColor = "bg-gray-800 text-gray-300 border-gray-700"; } 
+            else if (['RAIN', 'BAD LIGHT', 'STOPPED', 'ABANDONED'].includes(m.matchStatus)) { statusBadge = m.matchStatus; statusColor = "bg-yellow-900/30 text-yellow-500 border-yellow-800"; }
             
-            if (m.matchStatus === "COMPLETE") {
-                statusBadge = "RESULT";
-                statusColor = "bg-gray-800 text-gray-300 border-gray-700";
-            } else if (['RAIN', 'BAD LIGHT', 'STOPPED', 'ABANDONED'].includes(m.matchStatus)) {
-                statusBadge = m.matchStatus;
-                statusColor = "bg-yellow-900/30 text-yellow-500 border-yellow-800";
-            }
-
-            let t1ScoreDisplay = '-';
-            let t2ScoreDisplay = '-';
-            
-            if (m.matchStatus === 'COMPLETE') {
-                if(m.resultT1) t1ScoreDisplay = m.resultT1.score;
-                if(m.resultT2) t2ScoreDisplay = m.resultT2.score;
-            } else {
-                const currentScore = `${m.score}/${m.wickets}`;
-                if (m.target > 0) {
-                   t1ScoreDisplay = `Target ${m.target}`;
-                   t2ScoreDisplay = currentScore;
-                } else {
-                   t1ScoreDisplay = currentScore;
-                   t2ScoreDisplay = '<span class="text-xs font-medium text-gray-500 uppercase tracking-wider">Yet to bat</span>';
-                }
-            }
-
+            if(!t1Score) t1Score = m.score ? `${m.score}/${m.wickets}` : "-";
+            if(!t2Score) t2Score = "-";
             const matchType = m.matchType || "Single Match";
 
             return `
             <div onclick="openMatch('${id}')" class="match-card cursor-pointer p-5 rounded-xl pb-10">
                 <div class="flex justify-between items-start mb-4">
-                    <div class="flex flex-col">
-                        <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">${m.venue || 'Unknown Ground'}</span>
-                        <span class="text-[9px] font-bold text-blue-500 uppercase tracking-wider mt-0.5">${matchType}</span>
-                    </div>
-                    <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border ${statusColor}">
-                        ${m.matchStatus === 'COMPLETE' ? '' : '<span class="mr-1 animate-pulse">●</span>'}${statusBadge}
-                    </span>
+                    <div class="flex flex-col"><span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">${m.venue || 'Unknown Ground'}</span><span class="text-[9px] font-bold text-blue-500 uppercase tracking-wider mt-0.5">${matchType}</span></div>
+                    <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border ${statusColor}">${m.matchStatus === 'COMPLETE' ? '' : '<span class="mr-1 animate-pulse">●</span>'}${statusBadge}</span>
                 </div>
                 <div class="flex justify-between items-center mb-3">
-                    <div class="flex items-center gap-3 w-1/2">
-                        <img src="${m.t1Logo || 'https://placehold.co/40x40/333/888?text=T1'}" class="w-10 h-10 rounded-full object-cover team-logo">
-                        <div class="flex flex-col">
-                            <span class="font-bold text-gray-400 text-xs uppercase tracking-wider">${formatTeamName(m.t1)}</span>
-                            <span class="font-bold text-white text-xl tracking-tight">${t1ScoreDisplay}</span>
-                        </div>
-                    </div>
+                    <div class="flex items-center gap-3 w-1/2"><img src="${m.t1Logo || 'https://placehold.co/40x40/333/888?text=T1'}" class="w-10 h-10 rounded-full object-cover team-logo"><div class="flex flex-col"><span class="font-bold text-gray-400 text-xs uppercase tracking-wider">${formatTeamName(m.t1)}</span><span class="font-bold text-white text-xl tracking-tight">${t1Score}</span></div></div>
                 </div>
-                <div class="flex justify-between items-center">
-                    <div class="flex items-center gap-3 w-1/2">
-                        <img src="${m.t2Logo || 'https://placehold.co/40x40/333/888?text=T2'}" class="w-10 h-10 rounded-full object-cover team-logo">
-                        <div class="flex flex-col">
-                            <span class="font-bold text-gray-400 text-xs uppercase tracking-wider">${formatTeamName(m.t2)}</span>
-                            <span class="font-bold text-white text-xl tracking-tight">${t2ScoreDisplay}</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="text-xs text-blue-400 mt-4 border-t border-gray-800 pt-2 uppercase tracking-wide">
-                    ${m.matchStatus === "COMPLETE" ? (m.resultMain || "Match Ended") : (m.target > 0 ? "2nd Innings - Chase On" : "1st Innings - Batting")}
-                </div>
+                <div class="flex justify-between items-center"><div class="flex items-center gap-3 w-1/2"><img src="${m.t2Logo || 'https://placehold.co/40x40/333/888?text=T2'}" class="w-10 h-10 rounded-full object-cover team-logo"><div class="flex flex-col"><span class="font-bold text-gray-400 text-xs uppercase tracking-wider">${formatTeamName(m.t2)}</span><span class="font-bold text-white text-xl tracking-tight">${t2Score}</span></div></div></div>
+                <div class="text-xs text-blue-400 mt-4 border-t border-gray-800 pt-2 uppercase tracking-wide">${m.matchStatus === "COMPLETE" ? (m.resultMain || "Match Ended") : (m.target > 0 ? "2nd Innings - Chase On" : "1st Innings - Batting")}</div>
                 <div class="delete-btn" onclick="deleteMatch('${id}', event)">🗑️</div>
             </div>`;
         }
@@ -405,6 +344,9 @@
                         lastActionId = data.lastAction.id;
                         triggerImpact(data.lastAction.type);
                     }
+                    if(document.getElementById('view-stats').classList.contains('hidden') === false) {
+                        renderStats(data);
+                    }
                 }
             });
         }
@@ -420,13 +362,20 @@
         }
 
         function renderMatchDetails(data) {
+            let i1 = { name: data.t1, score: "0/0", overs: "0.0" };
+            let i2 = { name: data.t2, score: "Yet to Bat", overs: "0.0" };
+            if(data.scorecard) {
+                if(data.scorecard.innings1) i1 = data.scorecard.innings1;
+                if(data.scorecard.innings2) i2 = data.scorecard.innings2;
+            } else if (data.resultT1) { i1 = data.resultT1; i2 = data.resultT2; } 
+            else if (data.score) { i1 = { name: data.t1, score: `${data.score}/${data.wickets}`, overs: `${data.overs}.${data.balls}` }; }
+
             document.getElementById('d-venue').innerText = data.venue || "Indoor Arena";
             document.getElementById('d-date').innerText = data.matchDate || "";
             document.getElementById('d-match-type').innerText = (data.matchType || "Single Match").toUpperCase();
-            
-            document.getElementById('d-t1-name').innerText = formatTeamName(data.t1);
+            document.getElementById('d-t1-name').innerText = formatTeamName(i1.name);
             document.getElementById('d-t1-logo').src = data.t1Logo || "";
-            document.getElementById('d-t2-name').innerText = formatTeamName(data.t2);
+            document.getElementById('d-t2-name').innerText = formatTeamName(i2.name);
             document.getElementById('d-t2-logo').src = data.t2Logo || "";
 
             const statusEl = document.getElementById('d-status');
@@ -434,239 +383,255 @@
             stopReasonEl.classList.add('hidden');
 
             if (data.matchStatus === "COMPLETE") {
-                statusEl.innerText = "RESULT";
-                statusEl.className = "mt-2 inline-block px-3 py-1 bg-gray-800 text-gray-300 text-xs font-bold rounded-full uppercase tracking-wide border border-gray-700";
+                statusEl.innerText = "RESULT"; statusEl.className = "mt-2 inline-block px-3 py-1 bg-gray-800 text-gray-300 text-xs font-bold rounded-full uppercase tracking-wide border border-gray-700";
             } else if (['RAIN', 'BAD LIGHT', 'STOPPED', 'ABANDONED'].includes(data.matchStatus)) {
-                statusEl.innerText = data.matchStatus;
-                statusEl.className = "mt-2 inline-block px-3 py-1 bg-yellow-900/30 text-yellow-500 text-xs font-bold rounded-full uppercase tracking-wide border border-yellow-800";
-                stopReasonEl.innerText = `MATCH STOPPED: ${data.matchStatus}`;
-                stopReasonEl.classList.remove('hidden');
+                statusEl.innerText = data.matchStatus; statusEl.className = "mt-2 inline-block px-3 py-1 bg-yellow-900/30 text-yellow-500 text-xs font-bold rounded-full uppercase tracking-wide border border-yellow-800";
+                stopReasonEl.innerText = `MATCH STOPPED: ${data.matchStatus}`; stopReasonEl.classList.remove('hidden');
             } else {
-                statusEl.innerText = "LIVE";
-                statusEl.className = "mt-2 inline-block px-3 py-1 bg-red-900/30 text-red-500 text-xs font-bold rounded-full uppercase tracking-wide border border-red-800";
+                statusEl.innerText = "LIVE"; statusEl.className = "mt-2 inline-block px-3 py-1 bg-red-900/30 text-red-500 text-xs font-bold rounded-full uppercase tracking-wide border border-red-800";
             }
 
             const tossEl = document.getElementById('toss-info');
-            if (data.tossWinner && data.tossChoice) {
-                tossEl.innerText = `${formatTeamName(data.tossWinner)} won the toss and elected to ${data.tossChoice}`;
-                tossEl.className = "text-xs text-white font-medium";
-            } else {
-                tossEl.innerText = "Toss information not yet available";
-                tossEl.className = "text-xs text-gray-500 italic";
-            }
+            if (data.tossWinner && data.tossChoice) { tossEl.innerText = `${formatTeamName(data.tossWinner)} won the toss and elected to ${data.tossChoice}`; tossEl.className = "text-xs text-white font-medium"; } 
+            else { tossEl.innerText = "Toss information not yet available"; tossEl.className = "text-xs text-gray-500 italic"; }
 
-            let t1Text = "0/0"; let t2Text = "0/0";
-            
+            document.getElementById('d-t1-score').innerHTML = i1.score;
+            document.getElementById('d-t2-score').innerHTML = i2.score;
+
             if (data.matchStatus === "COMPLETE") {
-                if(data.resultT1) t1Text = `${data.resultT1.score} <span class="text-sm font-normal text-gray-500">(${data.resultT1.overs})</span>`;
-                if(data.resultT2) t2Text = `${data.resultT2.score} <span class="text-sm font-normal text-gray-500">(${data.resultT2.overs})</span>`;
                 document.getElementById('d-result-text').classList.remove('hidden');
                 document.getElementById('d-result-text').innerText = data.resultMain || "Match Complete";
                 document.getElementById('d-req-text').innerText = data.resultSub || "";
-                if (data.pom) {
-                    document.getElementById('pom-card').classList.remove('hidden');
-                    document.getElementById('pom-name').innerText = data.pom.name;
-                    document.getElementById('pom-stats').innerText = data.pom.stats;
-                }
+                if (data.pom) { document.getElementById('pom-card').classList.remove('hidden'); document.getElementById('pom-name').innerText = data.pom.name; document.getElementById('pom-stats').innerText = data.pom.stats; }
             } else {
                 document.getElementById('d-result-text').classList.add('hidden');
-                const currentScore = `${data.score}/${data.wickets} <span class="text-sm font-normal text-gray-500">(${data.overs}.${data.balls})</span>`;
                 if (data.target > 0) {
-                    t1Text = `Target: ${data.target}`; t2Text = currentScore;
                     const needed = data.target - data.score;
                     const ballsRem = (data.totalOvers * 6) - ((data.overs * 6) + data.balls);
                     document.getElementById('d-req-text').innerText = `Need ${needed} runs in ${ballsRem} balls`;
-                } else {
-                    t1Text = currentScore; 
-                    t2Text = '<span class="text-lg font-medium text-gray-500 uppercase tracking-wider">Yet to bat</span>';
-                    document.getElementById('d-req-text').innerText = `Current Run Rate: ${(data.score / Math.max(1, (data.overs + data.balls/6))).toFixed(2)}`;
-                }
+                } else { document.getElementById('d-req-text').innerText = `Current Run Rate: ${(data.score / Math.max(1, (data.overs + data.balls/6))).toFixed(2)}`; }
             }
 
-            document.getElementById('d-t1-score').innerHTML = t1Text;
-            document.getElementById('d-t2-score').innerHTML = t2Text;
-
-            // ... (Tables Logic) ...
-            const batters = data.battingCard || [];
-            const bowlers = data.bowlingCard || [];
+            // --- SCORECARD TAB: Always show 2 sections ---
+            const inn1Data = (data.scorecard && data.scorecard.innings1) ? data.scorecard.innings1 : ((!data.scorecard && !data.target) ? i1 : { name: i1.name, score: i1.score, overs: i1.overs, batting: data.battingCard, bowling: data.bowlingCard });
+            const inn2Data = (data.scorecard && data.scorecard.innings2) ? data.scorecard.innings2 : (data.target > 0 && !data.scorecard ? { name: i2.name, score: i2.score, overs: i2.overs, batting: data.battingCard, bowling: data.bowlingCard } : { name: i2.name, score: i2.score, overs: i2.overs });
             
-            const sortedBatters = [...batters].sort((a,b) => b.runs - a.runs).slice(0, 3);
-            document.getElementById('summary-batters').innerHTML = sortedBatters.map(p => `
-                <div class="flex justify-between items-center text-xs border-b border-gray-800 pb-2 mb-2 last:border-0">
-                    <div><div class="font-bold text-white">${p.name}</div><div class="text-[10px] text-gray-500">${p.status}</div></div>
-                    <div class="text-right"><span class="font-bold text-white">${p.runs}</span> <span class="text-[10px] text-gray-500">(${p.balls})</span></div>
-                </div>`).join('');
+            // Adjust names/Logos for fallback
+            if(!inn1Data.name) inn1Data.name = data.t1;
+            if(!inn2Data.name) inn2Data.name = data.t2;
+            
+            // Assign Logos based on team name matching
+            inn1Data.logo = (inn1Data.name === data.t1) ? data.t1Logo : data.t2Logo;
+            inn2Data.logo = (inn2Data.name === data.t1) ? data.t1Logo : data.t2Logo;
 
-            const sortedBowlers = [...bowlers].sort((a,b) => b.w - a.w).slice(0, 3);
-            document.getElementById('summary-bowlers').innerHTML = sortedBowlers.map(p => `
-                <div class="flex justify-between items-center text-xs border-b border-gray-800 pb-2 mb-2 last:border-0">
-                    <div class="font-bold text-white">${p.name}</div>
-                    <div class="text-right"><span class="font-bold text-white">${p.w}</span><span class="text-gray-500">/${p.r}</span> <span class="text-[10px] text-gray-500">(${p.o})</span></div>
-                </div>`).join('');
+            renderInningsBlock(document.getElementById('scorecard-inn1'), "Innings 1", inn1Data, "border-blue-500");
+            renderInningsBlock(document.getElementById('scorecard-inn2'), "Innings 2", inn2Data, "border-orange-500");
 
-            document.getElementById('full-batting-table').innerHTML = batters.map(p => `
-                <tr>
-                    <td class="p-3 border-b border-gray-800 font-medium text-white">${p.name} <div class="text-[10px] text-gray-500 uppercase">${p.status}</div></td>
-                    <td class="p-3 border-b border-gray-800 text-right font-bold text-white">${p.runs}</td>
-                    <td class="p-3 border-b border-gray-800 text-right text-gray-400">${p.balls}</td>
-                    <td class="p-3 border-b border-gray-800 text-right hidden sm:table-cell text-gray-500">-</td>
-                    <td class="p-3 border-b border-gray-800 text-right hidden sm:table-cell text-gray-500">-</td>
-                    <td class="p-3 border-b border-gray-800 text-right text-gray-500">${(p.runs*100/Math.max(1,p.balls)).toFixed(1)}</td>
-                </tr>
-            `).join('');
-
-            document.getElementById('full-bowling-table').innerHTML = bowlers.map(p => `
-                <tr>
-                    <td class="p-3 border-b border-gray-800 font-medium text-white">${p.name}</td>
-                    <td class="p-3 border-b border-gray-800 text-right text-gray-400">${p.o}</td>
-                    <td class="p-3 border-b border-gray-800 text-right text-gray-400">${p.r}</td>
-                    <td class="p-3 border-b border-gray-800 text-right font-bold text-white">${p.w}</td>
-                    <td class="p-3 border-b border-gray-800 text-right text-gray-500">${p.e}</td>
-                </tr>
-            `).join('');
-
-            // --- FULL BALL-BY-BALL COMMENTARY (UPDATED) ---
+            // --- COMMENTARY ---
             const commList = document.getElementById('comm-history-list');
-            const commHeader = document.getElementById('comm-header');
-            
-            // Header
-            commHeader.innerText = `CURRENT OVER - ${data.bowler ? data.bowler.name : 'BOWLER'}`;
-
-            // List Logic
-            let historyHtml = "";
-            
-            // Check if we have the new Timeline (History) data
+            document.getElementById('comm-header').innerText = `CURRENT OVER - ${data.bowler ? data.bowler.name : 'BOWLER'}`;
             const sourceData = (data.timeline && Array.isArray(data.timeline)) ? data.timeline : data.currentOver;
             
             if (sourceData && sourceData.length > 0) {
-                // Reverse to show newest ball first
                 const history = [...sourceData].reverse();
-                
-                historyHtml = history.map((b, i) => {
-                    let html = "";
-                    
-                    // --- 1. SETUP DATA ---
+                commList.innerHTML = history.map((b, i) => {
                     let event = (typeof b === 'object') ? b.event : b;
                     let desc = (b.bowler && b.batter) ? `${b.bowler} to ${b.batter}` : "Bowler to Batter";
-                    
                     let overNum = (b.over !== undefined) ? b.over : data.overs;
                     let ballNum = (b.ball !== undefined) ? b.ball : (data.currentOver.length - i);
                     
-                    // --- 2. TEXT FORMATTING (Name to Name, X runs) ---
-                    let runText = "runs";
-                    if(event == "1") runText = "run";
-                    if(event == "4") runText = "FOUR runs";
-                    if(event == "6") runText = "SIX runs";
-                    if(event.includes('W') && !event.includes('WD')) runText = "WICKET";
-                    
-                    // Construct formatted string: "Bowler to Batter, 6 runs"
-                    let fullDesc = `${desc}, ${event} ${runText}`;
-                    if(event == "4" || event == "6") fullDesc = `${desc}, ${runText}`; // Use specific text for 4/6
+                    let runText = "runs"; if(event == "1") runText = "run"; if(event == "4") runText = "FOUR runs"; if(event == "6") runText = "SIX runs"; if(event.includes('W')) runText = "WICKET";
+                    let fullDesc = `${desc}, ${event} ${runText}`; if(event == "4" || event == "6") fullDesc = `${desc}, ${runText}`; 
 
-                    // --- 3. INNINGS BREAK & OVER DIVIDER LOGIC ---
-                    let showDivider = false;
-                    let showInningsBreak = false;
-                    
+                    let showDivider = false; let showInningsBreak = false;
                     if (i < history.length - 1) {
                         const nextItem = history[i + 1];
-                        // Divider Check (Newest item is Over 0, Older item is Over 15 -> Innings Break)
-                        // Note: Because list is reversed, 'nextItem' is chronologically 'previous'
-                        // If current over (e.g., 0) is LESS than previous over (e.g., 15), it's a new innings
-                        if (nextItem.over !== undefined && overNum < nextItem.over) {
-                            showInningsBreak = true;
-                        } else if (nextItem.over !== undefined && nextItem.over !== overNum) {
-                            showDivider = true;
-                        }
+                        if (nextItem.over !== undefined && overNum < nextItem.over) showInningsBreak = true;
+                        else if (nextItem.over !== undefined && nextItem.over !== overNum) showDivider = true;
                     }
 
-                    // --- 4. COLORS ---
                     let bgClass = "bg-gray-700 text-gray-200";
-                    let detailHtml = ""; // Optional extra line if needed
-                    
-                    if(event == "4") {
-                        bgClass = "bg-blue-600 text-white shadow-lg shadow-blue-900/50";
-                    }
-                    else if(event == "6") {
-                        bgClass = "bg-green-600 text-white shadow-lg shadow-green-900/50";
-                    }
-                    else if(event.includes('W') && !event.includes('WD')) {
-                        bgClass = "bg-red-600 text-white shadow-lg shadow-red-900/50";
-                    }
-
-                    // --- 5. HTML ROW ---
-                    const rowHtml = `
-                    <div class="flex items-center gap-4 border-b border-gray-800 py-3 px-2 hover:bg-white/5 transition-colors">
-                        <div class="font-mono text-gray-500 text-xs w-8 text-right">${overNum}.${ballNum}</div>
-                        <div class="flex-grow">
-                             <div class="text-sm text-gray-300">${fullDesc}</div>
-                        </div>
-                        <div class="flex items-center justify-center w-8 h-8 rounded-full ${bgClass} text-xs font-bold ring-1 ring-white/10 shrink-0">
-                            ${event}
-                        </div>
-                    </div>`;
+                    if(event == "4") bgClass = "bg-blue-600 text-white shadow-lg shadow-blue-900/50";
+                    else if(event == "6") bgClass = "bg-green-600 text-white shadow-lg shadow-green-900/50";
+                    else if(event.includes('W') && !event.includes('WD')) bgClass = "bg-red-600 text-white shadow-lg shadow-red-900/50";
 
                     let extraHtml = "";
-                    if (showInningsBreak) {
-                        extraHtml = `
-                        <div class="bg-blue-900/40 border-y border-blue-800 py-3 text-center my-2 relative overflow-hidden">
-                            <div class="relative z-10">
-                                <div class="text-blue-300 font-bold uppercase tracking-widest text-xs mb-1">End of First Innings</div>
-                                <div class="text-white font-black text-xl uppercase tracking-wider">Target: ${data.target}</div>
-                            </div>
-                        </div>`;
-                    } else if (showDivider) {
-                        // Calculate runs for this over
+                    if (showInningsBreak) extraHtml = `<div class="bg-blue-900/40 border-y border-blue-800 py-3 text-center my-2"><div class="text-blue-300 font-bold uppercase text-xs">End of First Innings</div><div class="text-white font-black text-xl">Target: ${data.target}</div></div>`;
+                    else if (showDivider) {
                         const thisOverBalls = history.filter(h => (h.over !== undefined ? h.over : data.overs) === overNum);
-                        const totalRunsInOver = thisOverBalls.reduce((acc, curr) => {
-                            let r = 0;
-                            if (curr.runs !== undefined) r = parseInt(curr.runs);
-                            else {
-                                // Fallback logic
-                                let e = (typeof curr === 'object' ? curr.event : curr) || "";
-                                if(e == "4") r = 4; else if(e == "6") r = 6; else if(e == "1") r = 1; else if(e == "2") r = 2; else if(e == "3") r = 3; else if(e.includes("wd") || e.includes("nb")) r = 1;
-                            }
-                            return acc + r;
-                        }, 0);
-
-                        extraHtml = `
-                        <div class="my-4 p-3 bg-gray-100 rounded-xl flex justify-between items-center shadow-sm">
-                            <span class="text-gray-500 text-[10px] font-bold uppercase tracking-widest">END OF OVER ${overNum + 1}</span>
-                            <span class="text-black font-bold text-sm">${totalRunsInOver} Runs</span>
-                        </div>`;
+                        const runs = thisOverBalls.reduce((acc, c) => acc + (parseInt(c.runs)||0), 0);
+                        extraHtml = `<div class="my-4 p-3 bg-gray-100 rounded-xl flex justify-between items-center shadow-sm"><span class="text-gray-500 text-[10px] font-bold uppercase tracking-widest">END OF OVER ${overNum + 1}</span><span class="text-black font-bold text-sm">${runs} Runs</span></div>`;
                     }
 
-                    return rowHtml + extraHtml;
-
+                    return `<div class="flex items-center gap-4 border-b border-gray-800 py-3 px-2 hover:bg-white/5 transition-colors"><div class="font-mono text-gray-500 text-xs w-8 text-right">${overNum}.${ballNum}</div><div class="flex-grow"><div class="text-sm text-gray-300">${fullDesc}</div></div><div class="flex items-center justify-center w-8 h-8 rounded-full ${bgClass} text-xs font-bold ring-1 ring-white/10 shrink-0">${event}</div></div>` + extraHtml;
                 }).join('');
-            } else {
-                historyHtml = `<div class="text-center p-6 text-gray-600 text-xs italic">Match hasn't started yet.</div>`;
-            }
+            } else { commList.innerHTML = `<div class="text-center p-6 text-gray-600 text-xs italic">Match hasn't started yet.</div>`; }
 
-            commList.innerHTML = historyHtml;
-            
-            // Current Over Strip
             const commOver = document.getElementById('comm-current-over');
-            if (data.currentOver && data.currentOver.length > 0) {
-                commOver.innerHTML = data.currentOver.map(b => {
-                    let val = (typeof b === 'object') ? b.event : b;
-                    let c = "bg-gray-200";
-                    if(val === "4") c = "bg-4";
-                    if(val === "6") c = "bg-6";
-                    if(val.includes("W") && !val.includes("WD")) c = "bg-w";
-                    return `<div class="ball-circle ${c}">${val}</div>`;
-                }).join('');
-            } else {
-                commOver.innerHTML = "<span class='text-gray-600 text-xs italic'>No balls in current over</span>";
+            if (data.currentOver && data.currentOver.length > 0) { commOver.innerHTML = data.currentOver.map(b => { let val = (typeof b === 'object') ? b.event : b; let c = "bg-gray-200"; if(val==="4")c="bg-4"; if(val==="6")c="bg-6"; if(val.includes("W")&&!val.includes("WD"))c="bg-w"; return `<div class="ball-circle ${c}">${val}</div>`; }).join(''); } 
+            else { commOver.innerHTML = "<span class='text-gray-600 text-xs italic'>No balls in current over</span>"; }
+        }
+
+        function renderInningsBlock(container, title, data, borderColorClass) {
+            container.innerHTML = "";
+            const section = document.createElement('details');
+            section.open = true;
+            // ADDED: Border Left Color for differentiation
+            section.className = `bg-[#1a1a1a] rounded-lg overflow-hidden border border-gray-800 mb-4 border-l-4 ${borderColorClass}`;
+            
+            // ADDED: Team Logo logic in Header
+            const logoSrc = data.logo || 'https://placehold.co/40x40/333/888?text=T';
+            const summaryHTML = `
+                <summary class="scorecard-header">
+                    <div class="flex items-center gap-3">
+                        <img src="${logoSrc}" class="w-8 h-8 rounded-full object-cover border border-gray-600">
+                        <span class="uppercase tracking-widest text-sm">${title} - ${formatTeamName(data.name)}</span>
+                    </div>
+                    <span class="text-blue-400 text-lg">${data.score} <span class="text-gray-500 text-[10px] font-normal">(${data.overs} ov)</span></span>
+                </summary>
+            `;
+            
+            let battingHtml = "";
+            if (data.batting && data.batting.length > 0) {
+                 battingHtml = `
+                <table class="w-full text-left text-xs mb-2 mt-2">
+                    <thead class="text-[10px] text-gray-500 bg-[#121212] border-b border-gray-800 uppercase">
+                        <tr><th class="p-3">Batter</th><th class="p-3 text-right">R</th><th class="p-3 text-right">B</th><th class="p-3 text-right hidden sm:table-cell">4s</th><th class="p-3 text-right hidden sm:table-cell">6s</th><th class="p-3 text-right">SR</th></tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-800 text-gray-300">
+                        ${data.batting.map(p => `<tr><td class="p-3 font-medium text-white">${p.name}<div class="text-[10px] text-gray-500 uppercase">${p.dismissal || p.status || 'not out'}</div></td><td class="p-3 text-right font-bold text-white">${p.runs}</td><td class="p-3 text-right text-gray-400">${p.balls}</td><td class="p-3 text-right hidden sm:table-cell text-gray-500">${p.fours || '-'}</td><td class="p-3 text-right hidden sm:table-cell text-gray-500">${p.sixes || '-'}</td><td class="p-3 text-right text-gray-500">${p.sr || (p.runs*100/Math.max(1,p.balls)).toFixed(1)}</td></tr>`).join('')}
+                    </tbody>
+                </table>`;
+            } else { battingHtml = '<div class="p-6 text-xs text-gray-500 italic text-center">Yet to bat or No Data</div>'; }
+
+            let bowlingHtml = "";
+             if (data.bowling && data.bowling.length > 0) {
+                 bowlingHtml = `
+                <div class="bg-[#222] p-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider border-y border-gray-800">Bowling</div>
+                <table class="w-full text-left text-xs">
+                    <thead class="text-[10px] text-gray-500 bg-[#121212] border-b border-gray-800 uppercase">
+                        <tr><th class="p-3">Bowler</th><th class="p-3 text-right">O</th><th class="p-3 text-right">R</th><th class="p-3 text-right">W</th><th class="p-3 text-right">Econ</th></tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-800 text-gray-300">
+                         ${data.bowling.map(p => `<tr><td class="p-3 font-medium text-white">${p.name}</td><td class="p-3 text-right text-gray-400">${p.o}</td><td class="p-3 text-right text-gray-400">${p.r}</td><td class="p-3 text-right font-bold text-white">${p.w}</td><td class="p-3 text-right text-gray-500">${p.e || p.econ}</td></tr>`).join('')}
+                    </tbody>
+                </table>`;
             }
+
+            section.innerHTML = summaryHTML + battingHtml + bowlingHtml;
+            container.appendChild(section);
+        }
+
+        function renderStats(data) {
+            if (!data.timeline) return;
+
+            // Process Data for Charts
+            let inn1Runs = [], inn2Runs = [];
+            let inn1Overs = [], inn2Overs = [];
+            let rr1 = [], rr2 = [];
+            
+            let currentScore = 0;
+            let currentOverRuns = 0;
+            let lastOver = -1;
+            let isSecondInnings = false;
+            let switchIndex = -1;
+
+            // Determine if innings switch happened in timeline
+            for(let i=0; i<data.timeline.length-1; i++) {
+                if (data.timeline[i].over > data.timeline[i+1].over) { switchIndex = i; break; }
+            }
+
+            const processBall = (b, inningArr, overArr, rrArr) => {
+                currentScore += parseInt(b.runs || 0);
+                // Check if over changed
+                if (b.over > lastOver) {
+                    if (lastOver !== -1) {
+                        inningArr.push(currentScore);
+                        overArr.push(lastOver + 1);
+                        rrArr.push(currentOverRuns);
+                    }
+                    currentOverRuns = 0;
+                    lastOver = b.over;
+                }
+                currentOverRuns += parseInt(b.runs || 0);
+            };
+
+            // Reset logic
+            currentScore = 0; lastOver = -1; currentOverRuns = 0;
+            const timeline = data.timeline;
+            
+            // Innings 1 Loop
+            const limit = switchIndex !== -1 ? switchIndex + 1 : timeline.length;
+            for(let i=0; i<limit; i++) processBall(timeline[i], inn1Runs, inn1Overs, rr1);
+            // Push final over
+            inn1Runs.push(currentScore); inn1Overs.push(lastOver+1); rr1.push(currentOverRuns);
+
+            // Innings 2 Loop
+            if (switchIndex !== -1) {
+                currentScore = 0; lastOver = -1; currentOverRuns = 0;
+                for(let i=switchIndex+1; i<timeline.length; i++) processBall(timeline[i], inn2Runs, inn2Overs, rr2);
+                inn2Runs.push(currentScore); inn2Overs.push(lastOver+1); rr2.push(currentOverRuns);
+            }
+
+            // --- WORM CHART ---
+            const wormCtx = document.getElementById('wormChart').getContext('2d');
+            if (wormChartInstance) wormChartInstance.destroy();
+            wormChartInstance = new Chart(wormCtx, {
+                type: 'line',
+                data: {
+                    labels: inn1Overs,
+                    datasets: [
+                        { label: data.t1, data: inn1Runs, borderColor: '#3b82f6', borderWidth: 2, tension: 0.4, pointRadius: 0 },
+                        { label: data.t2, data: inn2Runs, borderColor: '#ef4444', borderWidth: 2, tension: 0.4, pointRadius: 0 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#ccc' } } },
+                    scales: {
+                        x: { grid: { color: '#333' }, ticks: { color: '#888' } },
+                        y: { grid: { color: '#333' }, ticks: { color: '#888' } }
+                    }
+                }
+            });
+
+            // --- RUN RATE CHART ---
+            const rrCtx = document.getElementById('runRateChart').getContext('2d');
+            if (rrChartInstance) rrChartInstance.destroy();
+            rrChartInstance = new Chart(rrCtx, {
+                type: 'bar',
+                data: {
+                    labels: inn1Overs,
+                    datasets: [
+                        { label: data.t1, data: rr1, backgroundColor: '#3b82f6' },
+                        { label: data.t2, data: rr2, backgroundColor: '#ef4444' }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#ccc' } } },
+                    scales: {
+                        x: { grid: { color: '#333' }, ticks: { color: '#888' } },
+                        y: { grid: { color: '#333' }, ticks: { color: '#888' } }
+                    }
+                }
+            });
         }
 
         function switchTab(tab) {
-            ['summary', 'scorecard', 'commentary'].forEach(t => {
+            ['summary', 'scorecard', 'commentary', 'stats'].forEach(t => {
                 document.getElementById(`view-${t}`).classList.add('hidden');
                 document.getElementById(`tab-${t}`).classList.remove('active');
             });
             document.getElementById(`view-${tab}`).classList.remove('hidden');
             document.getElementById(`tab-${tab}`).classList.add('active');
+            
+            // Re-render stats if switching to stats tab
+            if (tab === 'stats' && activeListener && currentMatchId) {
+                db.collection('live_matches').doc(currentMatchId).get().then(doc => {
+                    if (doc.exists) renderStats(doc.data());
+                });
+            }
         }
     </script>
 </body>
