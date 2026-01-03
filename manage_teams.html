@@ -37,9 +37,22 @@
                 <button onclick="window.history.back()" class="text-blue-100 hover:text-white">Back</button>
             </div>
 
+            <div class="bg-white p-4 pb-0 z-10">
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                    <input type="text" id="search-teams" 
+                        class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-gray-50 placeholder-gray-500 focus:outline-none focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out" 
+                        placeholder="Search teams...">
+                </div>
+            </div>
+
             <div class="flex-1 overflow-y-auto bg-gray-50 relative">
                 <div class="p-4 space-y-4 pb-24">
-                    <div id="saved-teams-container" class="space-y-3">
+                    <div id="saved-teams-container" class="space-y-1">
                         </div>
                 </div>
             </div>
@@ -190,7 +203,8 @@
             editorTeamLogoPreview: document.getElementById('editor-team-logo-preview'),
             savedTeamsContainer: document.getElementById('saved-teams-container'),
             createNewBtn: document.getElementById('create-new-team-btn'),
-            backBtn: document.getElementById('back-to-list-btn')
+            backBtn: document.getElementById('back-to-list-btn'),
+            searchInput: document.getElementById('search-teams') // Added search input ref
         };
 
         // State holds objects: { name: "John Doe", avatar: "base64..." }
@@ -276,18 +290,12 @@
 
         // --- GLOBAL HANDLERS ---
         window.handlePlayerName = function(index, input) {
-            // Capitalize Words
-            const formatted = titleCase(input.value);
-            // Only update visual value if character count is increasing (avoids cursor jumping on deletion)
-            // Ideally we update state always, but visual update on blur or carefully
-            state.players[index].name = input.value; // Store raw for now
+            state.players[index].name = input.value; 
         };
-        // Apply formatting on blur to prevent cursor jumps
+        // Apply formatting on blur
         document.addEventListener('focusout', function(e) {
             if(e.target.tagName === 'INPUT' && e.target.type === 'text') {
                 e.target.value = titleCase(e.target.value);
-                // Find index and update state
-                // This is a bit loose but works for now
             }
         });
 
@@ -295,14 +303,12 @@
             const file = input.files[0];
             if (!file) return;
 
-            // 1. LIMIT CHECK: Warn if file is larger than 5MB
             if (file.size > 5 * 1024 * 1024) {
                 alert("⚠️ This photo is too large! Please choose a photo smaller than 5MB.");
                 input.value = ''; 
                 return;
             }
 
-            // 2. SMART CROP & COMPRESS
             const reader = new FileReader();
             reader.onload = (readerEvent) => {
                 const tempImg = new Image();
@@ -313,7 +319,6 @@
                     canvas.height = MAX_SIZE;
                     const ctx = canvas.getContext('2d');
 
-                    // Crop to square (center focus)
                     let sWidth, sHeight, sx, sy;
                     if (tempImg.width > tempImg.height) {
                         sHeight = tempImg.height;
@@ -347,24 +352,20 @@
         ui.setupForm.onsubmit = (e) => {
             e.preventDefault();
 
-            // Format Data
             const teamName = ui.editorTeamNameInput.value.trim().toUpperCase(); 
             const teamColor = ui.editorTeamColorInput.value;
             const teamCountry = ui.editorTeamCountryInput.value;
             const teamLogo = ui.editorTeamLogoPreview.dataset.logoSrc || ''; 
             
-            // Clean up players list
             const validPlayers = state.players
-                .map(p => ({ ...p, name: titleCase(p.name) })) // Ensure Title Case on save
+                .map(p => ({ ...p, name: titleCase(p.name) })) 
                 .filter(p => p.name && p.name.trim() !== '');
             
-            // VALIDATION: Works with just 2 players
             if (!teamName || validPlayers.length < 2) {
                 alert("Please enter a Team Name and at least 2 Players.");
                 return;
             }
 
-            // Image size warning
             if (teamLogo.length > 500000) {
                  if(!confirm("Team Logo is large. It might be slow. Continue?")) return;
             }
@@ -404,13 +405,12 @@
                 });
         };
 
-        // --- LOAD FROM CLOUD ---
+        // --- LOAD DATA (UPDATED) ---
         function loadSavedTeams() {
-            ui.savedTeamsContainer.innerHTML = '<div class="text-center p-4 text-gray-500">Loading Cloud Teams...</div>';
+            ui.savedTeamsContainer.innerHTML = '<div class="text-center p-4 text-gray-500">Loading Teams...</div>';
 
-            db.collection("teams").orderBy("updatedAt", "desc").onSnapshot((snapshot) => {
+            db.collection("teams").onSnapshot((snapshot) => {
                 globalTeamsList = [];
-                ui.savedTeamsContainer.innerHTML = '';
 
                 if (snapshot.empty) {
                     ui.savedTeamsContainer.innerHTML = `<div class="text-center py-10 text-gray-400">No teams yet. Create one!</div>`;
@@ -421,39 +421,91 @@
                     const team = doc.data();
                     team.id = doc.id;
                     globalTeamsList.push(team);
+                });
 
+                // Once data is fetched, Render it (filtered/grouped)
+                renderTeams();
+            });
+        }
+
+        // --- RENDER LOGIC (NEW: CATEGORIZED & SORTED) ---
+        function renderTeams() {
+            const container = ui.savedTeamsContainer;
+            container.innerHTML = '';
+            
+            const searchTerm = ui.searchInput.value.toLowerCase().trim();
+
+            // 1. Filter by Search
+            const filteredTeams = globalTeamsList.filter(team => 
+                team.name.toLowerCase().includes(searchTerm)
+            );
+
+            if (filteredTeams.length === 0) {
+                container.innerHTML = `<div class="text-center py-10 text-gray-400">No teams match your search.</div>`;
+                return;
+            }
+
+            // 2. Group by Country
+            const groupedTeams = {};
+            filteredTeams.forEach(team => {
+                const country = team.country || 'Other';
+                if (!groupedTeams[country]) {
+                    groupedTeams[country] = [];
+                }
+                groupedTeams[country].push(team);
+            });
+
+            // 3. Sort Countries Alphabetically
+            const sortedCountries = Object.keys(groupedTeams).sort();
+
+            // 4. Render Groups
+            sortedCountries.forEach(country => {
+                // A. Render Country Header
+                const countryHeader = document.createElement('div');
+                countryHeader.className = "text-xs font-bold text-gray-500 uppercase tracking-wider mt-6 mb-2 pl-2";
+                countryHeader.textContent = country;
+                container.appendChild(countryHeader);
+
+                // B. Sort Teams Alphabetically within this country
+                const teamsInCountry = groupedTeams[country].sort((a, b) => a.name.localeCompare(b.name));
+
+                // C. Render Team Cards
+                teamsInCountry.forEach(team => {
                     const playerCount = team.players ? team.players.length : 0;
                     
                     const card = document.createElement('div');
-                    card.className = "bg-white p-4 rounded-lg shadow border-l-4 border-blue-500 flex justify-between items-center";
-                    card.style.borderLeftColor = team.color;
+                    card.className = "bg-white p-4 mb-3 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center hover:shadow-md transition-shadow";
                     
+                    // Avatar logic inside render
+                    let logoHtml;
+                    if(team.logo) {
+                        logoHtml = `<img src="${team.logo}" class="h-full w-full object-cover">`;
+                    } else {
+                        logoHtml = `<span class="text-lg font-bold" style="color:${team.color}">${team.name.charAt(0)}</span>`;
+                    }
+
                     card.innerHTML = `
                         <div class="flex items-center gap-3 overflow-hidden">
-                            <div class="h-12 w-12 rounded-full bg-gray-100 flex-shrink-0 flex items-center justify-center overflow-hidden border border-gray-200">
-                                ${team.logo 
-                                    ? `<img src="${team.logo}" class="h-full w-full object-cover" />` 
-                                    : `<span class="text-lg font-bold" style="color:${team.color}">${team.name.charAt(0)}</span>`
-                                }
+                            <div class="h-10 w-10 rounded-full bg-gray-50 flex-shrink-0 flex items-center justify-center overflow-hidden border border-gray-200">
+                                ${logoHtml}
                             </div>
                             <div>
-                                <h3 class="font-bold text-gray-800 truncate">${team.name}</h3>
-                                <div class="text-xs text-gray-500 flex items-center gap-2">
+                                <h3 class="font-bold text-gray-800 truncate text-sm">${team.name}</h3>
+                                <div class="text-[10px] text-gray-400 flex items-center gap-2">
                                     <span>${playerCount} Players</span>
-                                    ${team.country ? `<span>• ${team.country}</span>` : ''}
                                 </div>
                             </div>
                         </div>
-                        <div class="flex gap-2">
-                            <button onclick="editTeam('${team.id}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-full">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
+                        <div class="flex gap-1">
+                            <button onclick="editTeam('${team.id}')" class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
                             </button>
-                            <button onclick="deleteTeam('${team.id}')" class="p-2 text-red-600 hover:bg-red-50 rounded-full">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                            <button onclick="deleteTeam('${team.id}')" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
                             </button>
                         </div>
                     `;
-                    ui.savedTeamsContainer.appendChild(card);
+                    container.appendChild(card);
                 });
             });
         }
@@ -526,18 +578,19 @@
             loadSavedTeams();
             showTeamListView();
             
+            // Listen for search input
+            ui.searchInput.addEventListener('input', renderTeams);
+
             ui.editorTeamLogoInput.onchange = (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
 
-                // 1. LIMIT CHECK: Warn if file is larger than 5MB
                 if (file.size > 5 * 1024 * 1024) {
                     alert("⚠️ This logo is too large! Please choose an image smaller than 5MB.");
                     e.target.value = '';
                     return;
                 }
 
-                // 2. SMART CROP & COMPRESS
                 const reader = new FileReader();
                 reader.onload = (readerEvent) => {
                     const tempImg = new Image();
@@ -548,7 +601,6 @@
                         canvas.height = MAX_SIZE;
                         const ctx = canvas.getContext('2d');
 
-                        // Crop to square
                         let sWidth, sHeight, sx, sy;
                         if (tempImg.width > tempImg.height) {
                             sHeight = tempImg.height;
