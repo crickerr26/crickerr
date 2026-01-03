@@ -587,19 +587,37 @@
                 }).join('');
 
             } else if (data.currentOver) {
-                // FALLBACK: OLD DATA (Only Current Over Strings)
+                // FALLBACK DATA LOGIC
                 commList.innerHTML = [...data.currentOver].reverse().map((b, i) => {
-                    // Calc pseudo ball number
-                    const ballNum = data.balls - i; 
+                    // 1. Calculate Over Number
                     const overStr = `${data.overs}.${(data.currentOver.length - i)}`;
+                    
+                    // 2. Extract Event & Names (Handle both old string format and new object format)
+                    let event = "";
+                    let desc = "Bowler to Batter";
+                    
+                    if (typeof b === 'object') {
+                        event = b.event;
+                        // Use saved names if available, otherwise generic
+                        desc = (b.bowler && b.batter) ? `${b.bowler} to ${b.batter}` : "Bowler to Batter";
+                    } else {
+                        event = b; // Old string format support
+                    }
+
+                    // 3. Color Logic
+                    let bgClass = "bg-gray-700";
+                    if(event.includes('W')) bgClass = "bg-red-600";
+                    else if(event == '4') bgClass = "bg-blue-600";
+                    else if(event == '6') bgClass = "bg-green-600";
+
                     return `
                     <div class="flex items-start gap-4 border-b border-gray-800 py-3 px-2">
                         <div class="font-mono text-gray-500 text-xs pt-1 w-8">${overStr}</div>
                         <div class="flex-grow">
                             <div class="flex justify-between items-center">
-                                <span class="text-xs text-gray-400">Bowler to Batter</span>
-                                <div class="flex items-center justify-center w-6 h-6 rounded-full ${b.includes('W')?'bg-red-600':(b=='4'?'bg-blue-600':(b=='6'?'bg-green-600':'bg-gray-700'))} text-white text-[10px] font-bold">
-                                    ${b}
+                                <span class="text-xs text-gray-400 font-medium uppercase tracking-wide">${desc}</span>
+                                <div class="flex items-center justify-center w-6 h-6 rounded-full ${bgClass} text-white text-[10px] font-bold">
+                                    ${event}
                                 </div>
                             </div>
                         </div>
