@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>CRiCKERR_Score Book</title>
+    <title>CRiCKERR Scorebook | Live Scores</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -33,6 +33,7 @@
         .match-card { background: #1e1e1e; transition: transform 0.2s, background 0.2s; position: relative; }
         .match-card:hover { transform: translateY(-2px); background: #252525; }
         
+        /* Ball Circle */
         .ball-circle {
             width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
             border-radius: 50%; font-size: 10px; font-weight: bold; color: black; background: white;
@@ -41,6 +42,7 @@
         .bg-6 { background-color: #22c55e; color: white; }
         .bg-w { background-color: #ef4444; color: white; }
 
+        /* Delete Button */
         .delete-btn {
             position: absolute; bottom: 10px; right: 10px;
             width: 28px; height: 28px;
@@ -51,6 +53,16 @@
             z-index: 20;
         }
         .delete-btn:hover { background: #ef4444; color: white; opacity: 1; border-color: #ef4444; }
+
+        /* LOGO ANIMATION */
+        @keyframes logoFloat {
+            0% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-3px) scale(1.05); }
+            100% { transform: translateY(0px) scale(1); }
+        }
+        .logo-anim {
+            animation: logoFloat 3s ease-in-out infinite;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -58,8 +70,8 @@
     <nav class="bg-[#1e1e1e] border-b border-gray-800 p-4 sticky top-0 z-50">
         <div class="max-w-4xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <img src="crickerrlogo.png" onerror="this.style.display='none'" class="h-8">
-                <h1 class="font-oswald text-xl uppercase tracking-wider text-white">CRiCKERR MATCHES</h1>
+                <img src="my-logo.png" onerror="this.src='https://placehold.co/40x40/black/white?text=C'" class="h-10 w-10 object-contain logo-anim">
+                <h1 class="font-oswald text-2xl uppercase tracking-wider text-white">CRiCKERR Scorebook</h1>
             </div>
             
             <div class="flex items-center gap-4">
@@ -95,8 +107,11 @@
     <div id="detail-view" class="hidden flex-grow flex flex-col max-w-4xl mx-auto w-full bg-[#121212]">
         
         <div class="bg-[#1e1e1e] p-6 pb-0 border-b border-gray-800">
-            <div class="flex justify-between text-xs text-gray-400 uppercase tracking-wider font-bold mb-6">
-                <span id="d-venue">Loading...</span>
+            <div class="flex justify-between text-xs text-gray-400 uppercase tracking-wider font-bold mb-4">
+                <div>
+                    <span id="d-match-type" class="text-blue-400 mr-2">Single Match</span> • 
+                    <span id="d-venue" class="ml-2">Loading...</span>
+                </div>
                 <span id="d-date"></span>
             </div>
 
@@ -124,6 +139,7 @@
             <div class="text-center pb-6 border-b border-gray-800">
                 <p id="d-result-text" class="text-white font-bold text-lg hidden">Team Won by X Runs</p>
                 <p id="d-req-text" class="text-yellow-500 font-medium text-sm"></p>
+                <p id="d-stop-reason" class="text-red-400 font-bold text-sm mt-1 hidden"></p>
             </div>
 
             <div class="flex justify-center gap-10 pt-4 pb-3">
@@ -134,6 +150,15 @@
         </div>
 
         <div id="view-summary" class="p-4 space-y-4">
+            
+            <div class="bg-[#252525] p-3 rounded-lg border border-gray-800 flex items-center gap-3">
+                <div class="text-xl">🪙</div>
+                <div>
+                    <h3 class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Toss Result</h3>
+                    <p id="toss-info" class="text-sm text-white font-medium">Loading toss info...</p>
+                </div>
+            </div>
+
             <div id="pom-card" class="hidden bg-[#252525] p-4 rounded-lg border border-gray-800">
                 <h3 class="text-xs text-yellow-500 font-bold uppercase tracking-widest mb-1">Player of the Match</h3>
                 <div class="flex items-center justify-between">
@@ -151,10 +176,6 @@
                     <h3 class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-4">Top Bowlers</h3>
                     <div id="summary-bowlers" class="space-y-3"></div>
                 </div>
-            </div>
-
-            <div class="bg-[#1e1e1e] p-4 rounded-lg border border-gray-800 text-center">
-                <p id="toss-info" class="text-sm text-gray-400">Toss information not available</p>
             </div>
         </div>
 
@@ -201,48 +222,21 @@
         let activeListener = null;
         let currentMatchId = null;
 
-        // --- INIT WITH DEEP LINKING ---
         window.onload = function() {
-            // Check for ?id=MATCH_ID in the URL
             const urlParams = new URLSearchParams(window.location.search);
             const matchId = urlParams.get('id');
-
-            if (matchId) {
-                // If ID exists, open that match directly
-                openMatch(matchId);
-            } else {
-                // Otherwise show list
-                loadMatchList();
-            }
+            if (matchId) openMatch(matchId);
+            else loadMatchList();
         };
 
-        // --- SHARE LOGIC ---
         async function shareMatch() {
             if (!currentMatchId) return;
-            
-            // Construct the sharing URL
             const shareUrl = `${window.location.origin}${window.location.pathname}?id=${currentMatchId}`;
-            const shareData = {
-                title: 'CRiCKERR Match Score',
-                text: 'Follow the live cricket match on CRiCKERR!',
-                url: shareUrl
-            };
-
-            // Use Web Share API if available (Mobile)
+            const shareData = { title: 'CRiCKERR Scorebook', text: 'Follow live score:', url: shareUrl };
             if (navigator.share) {
-                try {
-                    await navigator.share(shareData);
-                } catch (err) {
-                    console.log('Share canceled');
-                }
+                try { await navigator.share(shareData); } catch (err) {}
             } else {
-                // Fallback for Desktop: Copy to Clipboard
-                try {
-                    await navigator.clipboard.writeText(shareUrl);
-                    alert("Match Link Copied to Clipboard!");
-                } catch (err) {
-                    prompt("Copy this link:", shareUrl);
-                }
+                try { await navigator.clipboard.writeText(shareUrl); alert("Link Copied!"); } catch (err) { prompt("Copy link:", shareUrl); }
             }
         }
 
@@ -269,65 +263,68 @@
                     let isRelevant = true;
                     const lastUpdate = m.timestamp ? m.timestamp.toDate() : new Date(0); 
 
-                    // 1. FILTER: Delete logic for view
-                    if (isComplete) {
-                        if (lastUpdate < twoDaysAgo) isRelevant = false;
-                    } else {
-                        if (lastUpdate < halfDayAgo) isRelevant = false;
-                    }
+                    if (isComplete) { if (lastUpdate < twoDaysAgo) isRelevant = false; } 
+                    else { if (lastUpdate < halfDayAgo) isRelevant = false; }
 
                     if (isRelevant) {
                         const card = createMatchCard(id, m);
-                        if (isComplete) {
-                            completedContainer.innerHTML += card;
-                            completedCount++;
-                        } else {
-                            liveContainer.innerHTML += card;
-                            liveCount++;
-                        }
+                        if (isComplete) { completedContainer.innerHTML += card; completedCount++; } 
+                        else { liveContainer.innerHTML += card; liveCount++; }
                     }
                 });
 
-                if (liveCount === 0) liveContainer.innerHTML = '<div class="text-gray-600 text-sm italic col-span-2 p-4 text-center border border-gray-800 rounded">No live matches found (matches expire after 12h inactivity).</div>';
-                if (completedCount === 0) completedContainer.innerHTML = '<div class="text-gray-600 text-sm italic col-span-2 p-4 text-center">No recent results found (older than 48h removed).</div>';
+                if (liveCount === 0) liveContainer.innerHTML = '<div class="text-gray-600 text-sm italic col-span-2 p-4 text-center border border-gray-800 rounded">No live matches found.</div>';
+                if (completedCount === 0) completedContainer.innerHTML = '<div class="text-gray-600 text-sm italic col-span-2 p-4 text-center">No recent results found.</div>';
             });
         }
 
         function deleteMatch(id, e) {
-            e.stopPropagation(); // Prevent opening the match
-            const code = prompt("Enter Admin Code to DELETE this match permanently:");
-            
+            e.stopPropagation(); 
+            const code = prompt("Enter Admin Code to DELETE:");
             if (code === "2626") {
-                if(confirm("Are you sure? This cannot be undone.")) {
+                if(confirm("Permanently delete match?")) {
                     db.collection('live_matches').doc(id).delete().then(() => {
-                        alert("Match Deleted Successfully.");
-                        loadMatchList(); // Refresh UI
-                    }).catch(error => {
-                        alert("Error removing match: " + error.message);
-                    });
+                        alert("Deleted."); loadMatchList();
+                    }).catch(error => alert("Error: " + error.message));
                 }
-            } else if (code !== null) {
-                alert("Incorrect Code!");
-            }
+            } else if (code !== null) alert("Incorrect Code!");
         }
 
         function createMatchCard(id, m) {
-            const t1Score = m.resultT1 ? m.resultT1.score : `${m.score}/${m.wickets}`;
-            const statusText = m.matchStatus === "COMPLETE" ? `<span class="text-gray-400">${m.resultSub || "Result"}</span>` : `<span class="text-red-500 animate-pulse">● LIVE</span>`;
+            // Determine Status Badge & Color
+            let statusBadge = "LIVE";
+            let statusColor = "bg-blue-900/30 text-blue-400 border-blue-800";
             
+            if (m.matchStatus === "COMPLETE") {
+                statusBadge = "RESULT";
+                statusColor = "bg-gray-800 text-gray-300 border-gray-700";
+            } else if (['RAIN', 'BAD LIGHT', 'STOPPED', 'ABANDONED'].includes(m.matchStatus)) {
+                statusBadge = m.matchStatus;
+                statusColor = "bg-yellow-900/30 text-yellow-500 border-yellow-800";
+            }
+
             let mainScore = "";
             if (m.matchStatus === "COMPLETE") {
-                mainScore = `<div class="text-xs text-gray-400 mt-2">${m.resultMain}</div>`;
+                mainScore = `<div class="text-xs text-gray-400 mt-2">${m.resultMain || "Match Ended"}</div>`;
+            } else if (['RAIN', 'BAD LIGHT', 'STOPPED', 'ABANDONED'].includes(m.matchStatus)) {
+                mainScore = `<div class="text-xs text-yellow-500 mt-2 font-bold uppercase">MATCH STOPPED</div>`;
             } else {
                 const chasing = m.target > 0 ? `Target: ${m.target}` : "1st Innings";
                 mainScore = `<div class="text-xs text-blue-400 mt-2">${chasing}</div>`;
             }
 
+            const matchType = m.matchType || "Single Match";
+
             return `
             <div onclick="openMatch('${id}')" class="match-card cursor-pointer p-5 rounded-xl border border-gray-800 pb-10">
                 <div class="flex justify-between items-start mb-4">
-                    <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">${m.venue || 'Unknown Ground'}</span>
-                    <span class="text-[10px] font-bold uppercase tracking-widest">${statusText}</span>
+                    <div class="flex flex-col">
+                        <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">${m.venue || 'Unknown Ground'}</span>
+                        <span class="text-[9px] font-bold text-blue-500 uppercase tracking-wider mt-0.5">${matchType}</span>
+                    </div>
+                    <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border ${statusColor}">
+                        ${m.matchStatus === 'COMPLETE' ? '' : '<span class="mr-1 animate-pulse">●</span>'}${statusBadge}
+                    </span>
                 </div>
                 
                 <div class="flex justify-between items-center mb-2">
@@ -362,9 +359,9 @@
             document.getElementById('detail-view').classList.remove('hidden');
             document.getElementById('back-btn').classList.remove('hidden');
             document.getElementById('share-btn').classList.remove('hidden');
-            document.getElementById('share-btn').style.display = 'flex'; // Ensure flex layout for button
+            document.getElementById('share-btn').style.display = 'flex';
             
-            if (activeListener) activeListener(); // Unsubscribe prev
+            if (activeListener) activeListener(); 
 
             activeListener = db.collection('live_matches').doc(id).onSnapshot(doc => {
                 if (doc.exists) renderMatchDetails(doc.data());
@@ -372,61 +369,76 @@
         }
 
         function showHome() {
-            // Clear the ?id= from URL so back button works nicely
             window.history.pushState({}, document.title, window.location.pathname);
-
             if (activeListener) activeListener();
             document.getElementById('detail-view').classList.add('hidden');
             document.getElementById('home-view').classList.remove('hidden');
             document.getElementById('back-btn').classList.add('hidden');
             document.getElementById('share-btn').classList.add('hidden');
-            
-            loadMatchList(); // Refresh list
+            loadMatchList(); 
         }
 
         function renderMatchDetails(data) {
             document.getElementById('d-venue').innerText = data.venue || "Indoor Arena";
             document.getElementById('d-date').innerText = data.matchDate || "";
+            document.getElementById('d-match-type').innerText = (data.matchType || "Single Match").toUpperCase();
             
             document.getElementById('d-t1-name').innerText = data.t1;
             document.getElementById('d-t1-logo').src = data.t1Logo || "";
             document.getElementById('d-t2-name').innerText = data.t2;
             document.getElementById('d-t2-logo').src = data.t2Logo || "";
 
+            // Handle Status Display
+            const statusEl = document.getElementById('d-status');
+            const stopReasonEl = document.getElementById('d-stop-reason');
+            stopReasonEl.classList.add('hidden');
+
+            if (data.matchStatus === "COMPLETE") {
+                statusEl.innerText = "RESULT";
+                statusEl.className = "mt-2 inline-block px-3 py-1 bg-gray-800 text-gray-300 text-xs font-bold rounded-full uppercase tracking-wide border border-gray-700";
+            } else if (['RAIN', 'BAD LIGHT', 'STOPPED', 'ABANDONED'].includes(data.matchStatus)) {
+                statusEl.innerText = data.matchStatus;
+                statusEl.className = "mt-2 inline-block px-3 py-1 bg-yellow-900/30 text-yellow-500 text-xs font-bold rounded-full uppercase tracking-wide border border-yellow-800";
+                stopReasonEl.innerText = `MATCH STOPPED: ${data.matchStatus}`;
+                stopReasonEl.classList.remove('hidden');
+            } else {
+                statusEl.innerText = "LIVE";
+                statusEl.className = "mt-2 inline-block px-3 py-1 bg-blue-900/30 text-blue-400 text-xs font-bold rounded-full uppercase tracking-wide border border-blue-800";
+            }
+
+            // TOSS INFO
+            const tossEl = document.getElementById('toss-info');
+            if (data.tossWinner && data.tossChoice) {
+                tossEl.innerText = `${data.tossWinner} won the toss and elected to ${data.tossChoice}`;
+                tossEl.className = "text-sm text-white font-medium";
+            } else {
+                tossEl.innerText = "Toss information not yet available";
+                tossEl.className = "text-sm text-gray-500 italic";
+            }
+
             let t1Text = "0/0"; let t2Text = "0/0";
             
             if (data.matchStatus === "COMPLETE") {
-                document.getElementById('d-status').innerText = "RESULT";
-                document.getElementById('d-status').className = "mt-2 inline-block px-3 py-1 bg-gray-800 text-gray-300 text-xs font-bold rounded-full uppercase tracking-wide border border-gray-700";
-                
                 if(data.resultT1) t1Text = `${data.resultT1.score} <span class="text-sm font-normal text-gray-500">(${data.resultT1.overs})</span>`;
                 if(data.resultT2) t2Text = `${data.resultT2.score} <span class="text-sm font-normal text-gray-500">(${data.resultT2.overs})</span>`;
-                
                 document.getElementById('d-result-text').classList.remove('hidden');
                 document.getElementById('d-result-text').innerText = data.resultMain || "Match Complete";
                 document.getElementById('d-req-text').innerText = data.resultSub || "";
-                
                 if (data.pom) {
                     document.getElementById('pom-card').classList.remove('hidden');
                     document.getElementById('pom-name').innerText = data.pom.name;
                     document.getElementById('pom-stats').innerText = data.pom.stats;
                 }
             } else {
-                document.getElementById('d-status').innerText = "LIVE";
                 document.getElementById('d-result-text').classList.add('hidden');
-                
                 const currentScore = `${data.score}/${data.wickets} <span class="text-sm font-normal text-gray-500">(${data.overs}.${data.balls})</span>`;
-                
                 if (data.target > 0) {
-                    t1Text = `Target: ${data.target}`; 
-                    t2Text = currentScore;
-                    
+                    t1Text = `Target: ${data.target}`; t2Text = currentScore;
                     const needed = data.target - data.score;
                     const ballsRem = (data.totalOvers * 6) - ((data.overs * 6) + data.balls);
                     document.getElementById('d-req-text').innerText = `Need ${needed} runs in ${ballsRem} balls`;
                 } else {
-                    t1Text = currentScore;
-                    t2Text = "Yet to bat";
+                    t1Text = currentScore; t2Text = "Yet to bat";
                     document.getElementById('d-req-text').innerText = `Current Run Rate: ${(data.score / Math.max(1, (data.overs + data.balls/6))).toFixed(2)}`;
                 }
             }
