@@ -217,10 +217,10 @@
 
         <div id="view-commentary" class="hidden p-4">
             <div class="bg-[#1a1a1a] rounded-lg border border-gray-800 p-4 mb-4">
-                <h3 class="text-[10px] text-blue-400 font-bold uppercase tracking-widest mb-3">Current Over</h3>
+                <h3 id="comm-header" class="text-[10px] text-blue-400 font-bold uppercase tracking-widest mb-3">Current Over</h3>
                 <div id="comm-current-over" class="flex gap-2 mb-2 overflow-x-auto pb-2"></div>
             </div>
-            <div id="comm-history-list" class="space-y-2"></div>
+            <div id="comm-history-list" class="space-y-0"></div>
         </div>
     </div>
 
@@ -257,47 +257,20 @@
             }
         }
 
-        // --- IMPACT ANIMATION LOGIC ---
         function triggerImpact(type) {
             if (!['4', '6', 'W'].includes(type)) return;
-
             const overlay = document.getElementById('impact-overlay');
             const content = document.getElementById('impact-content');
             const bg = document.getElementById('impact-bg');
             
-            let colorClass = "";
-            let text = "";
-            let subtext = "";
+            let colorClass = ""; let text = ""; let subtext = "";
+            if (type === '4') { colorClass = "text-blue-500 border-blue-500 bg-blue-900/40"; text = "4"; subtext = "BOUNDARY"; } 
+            else if (type === '6') { colorClass = "text-green-500 border-green-500 bg-green-900/40"; text = "6"; subtext = "MAXIMUM"; } 
+            else if (type === 'W') { colorClass = "text-red-500 border-red-500 bg-red-900/40"; text = "OUT"; subtext = "WICKET"; }
 
-            if (type === '4') {
-                colorClass = "text-blue-500 border-blue-500 bg-blue-900/40";
-                text = "4";
-                subtext = "BOUNDARY";
-            } else if (type === '6') {
-                colorClass = "text-green-500 border-green-500 bg-green-900/40";
-                text = "6";
-                subtext = "MAXIMUM";
-            } else if (type === 'W') {
-                colorClass = "text-red-500 border-red-500 bg-red-900/40";
-                text = "OUT";
-                subtext = "WICKET";
-            }
-
-            content.innerHTML = `
-                <div class="animate-impact flex flex-col items-center justify-center p-8 rounded-full border-4 ${colorClass} shadow-2xl backdrop-blur-sm relative overflow-hidden w-64 h-64">
-                    <div class="text-[120px] font-oswald font-black leading-none tracking-tighter drop-shadow-lg">${text}</div>
-                    <div class="text-xl font-bold uppercase tracking-widest text-white mt-2">${subtext}</div>
-                </div>
-            `;
-
-            overlay.classList.remove('hidden');
-            bg.classList.add('animate-flash');
-
-            setTimeout(() => {
-                overlay.classList.add('hidden');
-                bg.classList.remove('animate-flash');
-                content.innerHTML = "";
-            }, 2600);
+            content.innerHTML = `<div class="animate-impact flex flex-col items-center justify-center p-8 rounded-full border-4 ${colorClass} shadow-2xl backdrop-blur-sm relative overflow-hidden w-64 h-64"><div class="text-[120px] font-oswald font-black leading-none tracking-tighter drop-shadow-lg">${text}</div><div class="text-xl font-bold uppercase tracking-widest text-white mt-2">${subtext}</div></div>`;
+            overlay.classList.remove('hidden'); bg.classList.add('animate-flash');
+            setTimeout(() => { overlay.classList.add('hidden'); bg.classList.remove('animate-flash'); content.innerHTML = ""; }, 2600);
         }
 
         function loadMatchList() {
@@ -319,7 +292,6 @@
                     const m = doc.data();
                     const id = doc.id;
                     const isComplete = m.matchStatus === "COMPLETE";
-                    
                     let isRelevant = true;
                     const lastUpdate = m.timestamp ? m.timestamp.toDate() : new Date(0); 
 
@@ -392,7 +364,6 @@
                         ${m.matchStatus === 'COMPLETE' ? '' : '<span class="mr-1 animate-pulse">●</span>'}${statusBadge}
                     </span>
                 </div>
-                
                 <div class="flex justify-between items-center mb-3">
                     <div class="flex items-center gap-3 w-1/2">
                         <img src="${m.t1Logo || 'https://placehold.co/40x40/333/888?text=T1'}" class="w-10 h-10 rounded-full object-cover team-logo">
@@ -402,7 +373,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="flex justify-between items-center">
                     <div class="flex items-center gap-3 w-1/2">
                         <img src="${m.t2Logo || 'https://placehold.co/40x40/333/888?text=T2'}" class="w-10 h-10 rounded-full object-cover team-logo">
@@ -412,11 +382,9 @@
                         </div>
                     </div>
                 </div>
-                
                 <div class="text-xs text-blue-400 mt-4 border-t border-gray-800 pt-2 uppercase tracking-wide">
                     ${m.matchStatus === "COMPLETE" ? (m.resultMain || "Match Ended") : (m.target > 0 ? "2nd Innings - Chase On" : "1st Innings - Batting")}
                 </div>
-
                 <div class="delete-btn" onclick="deleteMatch('${id}', event)">🗑️</div>
             </div>`;
         }
@@ -428,14 +396,11 @@
             document.getElementById('back-btn').classList.remove('hidden');
             document.getElementById('share-btn').classList.remove('hidden');
             document.getElementById('share-btn').style.display = 'flex';
-            
             if (activeListener) activeListener(); 
-
             activeListener = db.collection('live_matches').doc(id).onSnapshot(doc => {
                 if (doc.exists) {
                     const data = doc.data();
                     renderMatchDetails(data);
-
                     if (data.lastAction && data.lastAction.id !== lastActionId) {
                         lastActionId = data.lastAction.id;
                         triggerImpact(data.lastAction.type);
@@ -521,6 +486,7 @@
             document.getElementById('d-t1-score').innerHTML = t1Text;
             document.getElementById('d-t2-score').innerHTML = t2Text;
 
+            // ... (Tables Logic Same as Before) ...
             const batters = data.battingCard || [];
             const bowlers = data.bowlingCard || [];
             
@@ -559,9 +525,90 @@
                 </tr>
             `).join('');
 
+            // --- FULL BALL-BY-BALL COMMENTARY ---
             const commList = document.getElementById('comm-history-list');
-            const commOver = document.getElementById('comm-current-over');
+            const commHeader = document.getElementById('comm-header');
             
+            // Header Update
+            commHeader.innerText = `CURRENT OVER - ${data.bowler ? data.bowler.name : 'BOWLER'}`;
+
+            // List Update
+            if (data.timeline && Array.isArray(data.timeline)) {
+                // RICH DATA AVAILABLE (Timeline)
+                let lastOver = -1;
+                // Copy & Reverse to show newest first
+                const history = [...data.timeline].reverse(); 
+                
+                commList.innerHTML = history.map((b, i) => {
+                    let html = "";
+                    
+                    // Insert Divider if Over changes (Since we reversed, we check next item's over)
+                    // Actually, simpler logic: If current ball is last ball of over (e.g. 2.6), show end of over above it?
+                    // Better: Just group visually or show "End of Over" items if they exist.
+                    // For now, let's just render the list cleanly.
+                    
+                    // Ball Logic
+                    const isWicket = b.type === 'W' || b.run === 'W';
+                    const runVal = b.run === 'W' ? 'W' : b.run;
+                    
+                    let bgClass = "bg-gray-700 text-white";
+                    if(runVal == "4") bgClass = "bg-blue-600 text-white";
+                    if(runVal == "6") bgClass = "bg-green-600 text-white";
+                    if(isWicket) bgClass = "bg-red-600 text-white";
+
+                    // Wicket Detail Text
+                    let detailText = `${b.bowler} to ${b.batter}`;
+                    let subDetail = "";
+                    if(isWicket) {
+                        subDetail = `<div class="text-[10px] text-red-400 font-bold uppercase mt-0.5">
+                            ${b.wicketType || "WICKET"} ${b.fielder ? `c ${b.fielder}` : ""} b ${b.bowler}
+                        </div>`;
+                    } else if (runVal == "4" || runVal == "6") {
+                        subDetail = `<div class="text-[10px] text-gray-400 font-bold uppercase mt-0.5">${runVal} RUNS</div>`;
+                    }
+
+                    // Over Divider Check (Simple approach: if decimal is .6, show divider before? No, simpler list first)
+                    // Let's just output the ball row
+                    return `
+                    <div class="flex items-start gap-4 border-b border-gray-800 py-3 px-2">
+                        <div class="font-mono text-gray-500 text-xs pt-1 w-8">${b.over}.${b.ball}</div>
+                        <div class="flex-grow">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="text-xs text-white font-medium">${detailText}</div>
+                                    ${subDetail}
+                                </div>
+                                <div class="flex items-center justify-center w-6 h-6 rounded-full ${bgClass} text-[10px] font-bold">
+                                    ${runVal}
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('');
+
+            } else if (data.currentOver) {
+                // FALLBACK: OLD DATA (Only Current Over Strings)
+                commList.innerHTML = [...data.currentOver].reverse().map((b, i) => {
+                    // Calc pseudo ball number
+                    const ballNum = data.balls - i; 
+                    const overStr = `${data.overs}.${(data.currentOver.length - i)}`;
+                    return `
+                    <div class="flex items-start gap-4 border-b border-gray-800 py-3 px-2">
+                        <div class="font-mono text-gray-500 text-xs pt-1 w-8">${overStr}</div>
+                        <div class="flex-grow">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs text-gray-400">Bowler to Batter</span>
+                                <div class="flex items-center justify-center w-6 h-6 rounded-full ${b.includes('W')?'bg-red-600':(b=='4'?'bg-blue-600':(b=='6'?'bg-green-600':'bg-gray-700'))} text-white text-[10px] font-bold">
+                                    ${b}
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+            
+            // Current Over Strip
+            const commOver = document.getElementById('comm-current-over');
             if (data.currentOver && data.currentOver.length > 0) {
                 commOver.innerHTML = data.currentOver.map(b => {
                     let c = "bg-gray-200";
@@ -572,20 +619,6 @@
                 }).join('');
             } else {
                 commOver.innerHTML = "<span class='text-gray-600 text-xs italic'>No balls in current over</span>";
-            }
-
-            if (data.currentOver) {
-                commList.innerHTML = [...data.currentOver].reverse().map((b, i) => `
-                    <div class="flex items-start gap-4 border-b border-gray-800 pb-3">
-                        <div class="font-mono text-gray-500 text-[10px] pt-1">${data.overs}.${data.currentOver.length - i}</div>
-                        <div class="flex-grow">
-                            <div class="flex items-center gap-2">
-                                <span class="font-bold text-white text-xs">${b.includes('W') && !b.includes('WD') ? "WICKET" : (b == "4" ? "FOUR" : (b=="6" ? "SIX" : "RUNS"))}</span>
-                                <span class="ball-circle ${b=="4"?"bg-4":(b=="6"?"bg-6":(b.includes("W")?"bg-w":"bg-gray-300"))} w-5 h-5 text-[9px]">${b}</span>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
             }
         }
 
