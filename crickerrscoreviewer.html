@@ -486,7 +486,7 @@
             document.getElementById('d-t1-score').innerHTML = t1Text;
             document.getElementById('d-t2-score').innerHTML = t2Text;
 
-            // ... (Tables Logic Same as Before) ...
+            // ... (Tables Logic) ...
             const batters = data.battingCard || [];
             const bowlers = data.bowlingCard || [];
             
@@ -525,115 +525,135 @@
                 </tr>
             `).join('');
 
-            // --- FULL BALL-BY-BALL COMMENTARY ---
+            // --- FULL BALL-BY-BALL COMMENTARY (UPDATED) ---
             const commList = document.getElementById('comm-history-list');
             const commHeader = document.getElementById('comm-header');
             
-            // Header Update
+            // Header
             commHeader.innerText = `CURRENT OVER - ${data.bowler ? data.bowler.name : 'BOWLER'}`;
 
-            // List Update
-            if (data.timeline && Array.isArray(data.timeline)) {
-                // RICH DATA AVAILABLE (Timeline)
-                let lastOver = -1;
-                // Copy & Reverse to show newest first
-                const history = [...data.timeline].reverse(); 
+            // List Logic
+            let historyHtml = "";
+            
+            // Check if we have the new Timeline (History) data
+            const sourceData = (data.timeline && Array.isArray(data.timeline)) ? data.timeline : data.currentOver;
+            
+            if (sourceData && sourceData.length > 0) {
+                // Reverse to show newest ball first
+                const history = [...sourceData].reverse();
                 
-                commList.innerHTML = history.map((b, i) => {
+                historyHtml = history.map((b, i) => {
                     let html = "";
                     
-                    // Insert Divider if Over changes (Since we reversed, we check next item's over)
-                    // Actually, simpler logic: If current ball is last ball of over (e.g. 2.6), show end of over above it?
-                    // Better: Just group visually or show "End of Over" items if they exist.
-                    // For now, let's just render the list cleanly.
+                    // --- 1. SETUP DATA ---
+                    let event = (typeof b === 'object') ? b.event : b;
+                    let desc = (b.bowler && b.batter) ? `${b.bowler} to ${b.batter}` : "Bowler to Batter";
                     
-                    // Ball Logic
-                    const isWicket = b.type === 'W' || b.run === 'W';
-                    const runVal = b.run === 'W' ? 'W' : b.run;
+                    let overNum = (b.over !== undefined) ? b.over : data.overs;
+                    let ballNum = (b.ball !== undefined) ? b.ball : (data.currentOver.length - i);
                     
-                    let bgClass = "bg-gray-700 text-white";
-                    if(runVal == "4") bgClass = "bg-blue-600 text-white";
-                    if(runVal == "6") bgClass = "bg-green-600 text-white";
-                    if(isWicket) bgClass = "bg-red-600 text-white";
+                    // --- 2. TEXT FORMATTING (Name to Name, X runs) ---
+                    let runText = "runs";
+                    if(event == "1") runText = "run";
+                    if(event == "4") runText = "FOUR runs";
+                    if(event == "6") runText = "SIX runs";
+                    if(event.includes('W') && !event.includes('WD')) runText = "WICKET";
+                    
+                    // Construct formatted string: "Bowler to Batter, 6 runs"
+                    let fullDesc = `${desc}, ${event} ${runText}`;
+                    if(event == "4" || event == "6") fullDesc = `${desc}, ${runText}`; // Use specific text for 4/6
 
-                    // Wicket Detail Text
-                    let detailText = `${b.bowler} to ${b.batter}`;
-                    let subDetail = "";
-                    if(isWicket) {
-                        subDetail = `<div class="text-[10px] text-red-400 font-bold uppercase mt-0.5">
-                            ${b.wicketType || "WICKET"} ${b.fielder ? `c ${b.fielder}` : ""} b ${b.bowler}
+                    // --- 3. INNINGS BREAK & OVER DIVIDER LOGIC ---
+                    let showDivider = false;
+                    let showInningsBreak = false;
+                    
+                    if (i < history.length - 1) {
+                        const nextItem = history[i + 1];
+                        // Divider Check (Newest item is Over 0, Older item is Over 15 -> Innings Break)
+                        // Note: Because list is reversed, 'nextItem' is chronologically 'previous'
+                        // If current over (e.g., 0) is LESS than previous over (e.g., 15), it's a new innings
+                        if (nextItem.over !== undefined && overNum < nextItem.over) {
+                            showInningsBreak = true;
+                        } else if (nextItem.over !== undefined && nextItem.over !== overNum) {
+                            showDivider = true;
+                        }
+                    }
+
+                    // --- 4. COLORS ---
+                    let bgClass = "bg-gray-700 text-gray-200";
+                    let detailHtml = ""; // Optional extra line if needed
+                    
+                    if(event == "4") {
+                        bgClass = "bg-blue-600 text-white shadow-lg shadow-blue-900/50";
+                    }
+                    else if(event == "6") {
+                        bgClass = "bg-green-600 text-white shadow-lg shadow-green-900/50";
+                    }
+                    else if(event.includes('W') && !event.includes('WD')) {
+                        bgClass = "bg-red-600 text-white shadow-lg shadow-red-900/50";
+                    }
+
+                    // --- 5. HTML ROW ---
+                    const rowHtml = `
+                    <div class="flex items-center gap-4 border-b border-gray-800 py-3 px-2 hover:bg-white/5 transition-colors">
+                        <div class="font-mono text-gray-500 text-xs w-8 text-right">${overNum}.${ballNum}</div>
+                        <div class="flex-grow">
+                             <div class="text-sm text-gray-300">${fullDesc}</div>
+                        </div>
+                        <div class="flex items-center justify-center w-8 h-8 rounded-full ${bgClass} text-xs font-bold ring-1 ring-white/10 shrink-0">
+                            ${event}
+                        </div>
+                    </div>`;
+
+                    let extraHtml = "";
+                    if (showInningsBreak) {
+                        extraHtml = `
+                        <div class="bg-blue-900/40 border-y border-blue-800 py-3 text-center my-2 relative overflow-hidden">
+                            <div class="relative z-10">
+                                <div class="text-blue-300 font-bold uppercase tracking-widest text-xs mb-1">End of First Innings</div>
+                                <div class="text-white font-black text-xl uppercase tracking-wider">Target: ${data.target}</div>
+                            </div>
                         </div>`;
-                    } else if (runVal == "4" || runVal == "6") {
-                        subDetail = `<div class="text-[10px] text-gray-400 font-bold uppercase mt-0.5">${runVal} RUNS</div>`;
+                    } else if (showDivider) {
+                        // Calculate runs for this over
+                        const thisOverBalls = history.filter(h => (h.over !== undefined ? h.over : data.overs) === overNum);
+                        const totalRunsInOver = thisOverBalls.reduce((acc, curr) => {
+                            let r = 0;
+                            if (curr.runs !== undefined) r = parseInt(curr.runs);
+                            else {
+                                // Fallback logic
+                                let e = (typeof curr === 'object' ? curr.event : curr) || "";
+                                if(e == "4") r = 4; else if(e == "6") r = 6; else if(e == "1") r = 1; else if(e == "2") r = 2; else if(e == "3") r = 3; else if(e.includes("wd") || e.includes("nb")) r = 1;
+                            }
+                            return acc + r;
+                        }, 0);
+
+                        extraHtml = `
+                        <div class="my-4 p-3 bg-gray-100 rounded-xl flex justify-between items-center shadow-sm">
+                            <span class="text-gray-500 text-[10px] font-bold uppercase tracking-widest">END OF OVER ${overNum + 1}</span>
+                            <span class="text-black font-bold text-sm">${totalRunsInOver} Runs</span>
+                        </div>`;
                     }
 
-                    // Over Divider Check (Simple approach: if decimal is .6, show divider before? No, simpler list first)
-                    // Let's just output the ball row
-                    return `
-                    <div class="flex items-start gap-4 border-b border-gray-800 py-3 px-2">
-                        <div class="font-mono text-gray-500 text-xs pt-1 w-8">${b.over}.${b.ball}</div>
-                        <div class="flex-grow">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <div class="text-xs text-white font-medium">${detailText}</div>
-                                    ${subDetail}
-                                </div>
-                                <div class="flex items-center justify-center w-6 h-6 rounded-full ${bgClass} text-[10px] font-bold">
-                                    ${runVal}
-                                </div>
-                            </div>
-                        </div>
-                    </div>`;
+                    return rowHtml + extraHtml;
+
                 }).join('');
-
-            } else if (data.currentOver) {
-                // FALLBACK DATA LOGIC
-                commList.innerHTML = [...data.currentOver].reverse().map((b, i) => {
-                    // 1. Calculate Over Number
-                    const overStr = `${data.overs}.${(data.currentOver.length - i)}`;
-                    
-                    // 2. Extract Event & Names (Handle both old string format and new object format)
-                    let event = "";
-                    let desc = "Bowler to Batter";
-                    
-                    if (typeof b === 'object') {
-                        event = b.event;
-                        // Use saved names if available, otherwise generic
-                        desc = (b.bowler && b.batter) ? `${b.bowler} to ${b.batter}` : "Bowler to Batter";
-                    } else {
-                        event = b; // Old string format support
-                    }
-
-                    // 3. Color Logic
-                    let bgClass = "bg-gray-700";
-                    if(event.includes('W')) bgClass = "bg-red-600";
-                    else if(event == '4') bgClass = "bg-blue-600";
-                    else if(event == '6') bgClass = "bg-green-600";
-
-                    return `
-                    <div class="flex items-start gap-4 border-b border-gray-800 py-3 px-2">
-                        <div class="font-mono text-gray-500 text-xs pt-1 w-8">${overStr}</div>
-                        <div class="flex-grow">
-                            <div class="flex justify-between items-center">
-                                <span class="text-xs text-gray-400 font-medium uppercase tracking-wide">${desc}</span>
-                                <div class="flex items-center justify-center w-6 h-6 rounded-full ${bgClass} text-white text-[10px] font-bold">
-                                    ${event}
-                                </div>
-                            </div>
-                        </div>
-                    </div>`;
-                }).join('');
+            } else {
+                historyHtml = `<div class="text-center p-6 text-gray-600 text-xs italic">Match hasn't started yet.</div>`;
             }
+
+            commList.innerHTML = historyHtml;
             
             // Current Over Strip
             const commOver = document.getElementById('comm-current-over');
             if (data.currentOver && data.currentOver.length > 0) {
                 commOver.innerHTML = data.currentOver.map(b => {
+                    let val = (typeof b === 'object') ? b.event : b;
                     let c = "bg-gray-200";
-                    if(b === "4") c = "bg-4";
-                    if(b === "6") c = "bg-6";
-                    if(b.includes("W") && !b.includes("WD")) c = "bg-w";
-                    return `<div class="ball-circle ${c}">${b}</div>`;
+                    if(val === "4") c = "bg-4";
+                    if(val === "6") c = "bg-6";
+                    if(val.includes("W") && !val.includes("WD")) c = "bg-w";
+                    return `<div class="ball-circle ${c}">${val}</div>`;
                 }).join('');
             } else {
                 commOver.innerHTML = "<span class='text-gray-600 text-xs italic'>No balls in current over</span>";
