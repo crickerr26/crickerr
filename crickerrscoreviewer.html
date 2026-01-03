@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>CRiCKERR Match Center | Live Scores</title>
+    <title>CRiCKERR_Score Book</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -30,7 +30,7 @@
         }
 
         /* Card Styles */
-        .match-card { background: #1e1e1e; transition: transform 0.2s, background 0.2s; }
+        .match-card { background: #1e1e1e; transition: transform 0.2s, background 0.2s; position: relative; }
         .match-card:hover { transform: translateY(-2px); background: #252525; }
         
         .ball-circle {
@@ -40,6 +40,17 @@
         .bg-4 { background-color: #3b82f6; color: white; }
         .bg-6 { background-color: #22c55e; color: white; }
         .bg-w { background-color: #ef4444; color: white; }
+
+        .delete-btn {
+            position: absolute; bottom: 10px; right: 10px;
+            width: 28px; height: 28px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; background: rgba(30, 30, 30, 0.8); border: 1px solid #333;
+            color: #ef4444;
+            font-size: 14px; cursor: pointer; opacity: 0.7; transition: all 0.2s;
+            z-index: 20;
+        }
+        .delete-btn:hover { background: #ef4444; color: white; opacity: 1; border-color: #ef4444; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -50,9 +61,16 @@
                 <img src="crickerrlogo.png" onerror="this.style.display='none'" class="h-8">
                 <h1 class="font-oswald text-xl uppercase tracking-wider text-white">CRiCKERR MATCHES</h1>
             </div>
-            <button id="back-btn" onclick="showHome()" class="hidden text-sm font-bold text-gray-400 hover:text-white uppercase tracking-wider">
-                ← Back to List
-            </button>
+            
+            <div class="flex items-center gap-4">
+                <button id="share-btn" onclick="shareMatch()" class="hidden flex items-center gap-2 text-sm font-bold text-blue-400 hover:text-blue-300 uppercase tracking-wider bg-blue-900/20 px-3 py-1.5 rounded-full border border-blue-900/50 transition-colors">
+                    <span>🔗 Share</span>
+                </button>
+
+                <button id="back-btn" onclick="showHome()" class="hidden text-sm font-bold text-gray-400 hover:text-white uppercase tracking-wider">
+                    ← Back
+                </button>
+            </div>
         </div>
     </nav>
 
@@ -183,8 +201,50 @@
         let activeListener = null;
         let currentMatchId = null;
 
-        // --- INIT ---
-        window.onload = loadMatchList;
+        // --- INIT WITH DEEP LINKING ---
+        window.onload = function() {
+            // Check for ?id=MATCH_ID in the URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const matchId = urlParams.get('id');
+
+            if (matchId) {
+                // If ID exists, open that match directly
+                openMatch(matchId);
+            } else {
+                // Otherwise show list
+                loadMatchList();
+            }
+        };
+
+        // --- SHARE LOGIC ---
+        async function shareMatch() {
+            if (!currentMatchId) return;
+            
+            // Construct the sharing URL
+            const shareUrl = `${window.location.origin}${window.location.pathname}?id=${currentMatchId}`;
+            const shareData = {
+                title: 'CRiCKERR Match Score',
+                text: 'Follow the live cricket match on CRiCKERR!',
+                url: shareUrl
+            };
+
+            // Use Web Share API if available (Mobile)
+            if (navigator.share) {
+                try {
+                    await navigator.share(shareData);
+                } catch (err) {
+                    console.log('Share canceled');
+                }
+            } else {
+                // Fallback for Desktop: Copy to Clipboard
+                try {
+                    await navigator.clipboard.writeText(shareUrl);
+                    alert("Match Link Copied to Clipboard!");
+                } catch (err) {
+                    prompt("Copy this link:", shareUrl);
+                }
+            }
+        }
 
         function loadMatchList() {
             const liveContainer = document.getElementById('live-list');
@@ -192,8 +252,9 @@
             liveContainer.innerHTML = '<div class="text-gray-500 text-sm italic col-span-2">Loading matches...</div>';
             completedContainer.innerHTML = '';
 
-            const twoDaysAgo = new Date();
-            twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+            const now = new Date();
+            const twoDaysAgo = new Date(now.getTime() - (48 * 60 * 60 * 1000));
+            const halfDayAgo = new Date(now.getTime() - (12 * 60 * 60 * 1000));
 
             db.collection('live_matches').get().then(snapshot => {
                 liveContainer.innerHTML = '';
@@ -203,15 +264,16 @@
                 snapshot.forEach(doc => {
                     const m = doc.data();
                     const id = doc.id;
-                    
-                    // Filter Logic
                     const isComplete = m.matchStatus === "COMPLETE";
+                    
                     let isRelevant = true;
+                    const lastUpdate = m.timestamp ? m.timestamp.toDate() : new Date(0); 
 
-                    // If complete, check timestamp (fallback to relevant if no timestamp)
-                    if (isComplete && m.timestamp) {
-                        const matchDate = m.timestamp.toDate();
-                        if (matchDate < twoDaysAgo) isRelevant = false;
+                    // 1. FILTER: Delete logic for view
+                    if (isComplete) {
+                        if (lastUpdate < twoDaysAgo) isRelevant = false;
+                    } else {
+                        if (lastUpdate < halfDayAgo) isRelevant = false;
                     }
 
                     if (isRelevant) {
@@ -226,29 +288,43 @@
                     }
                 });
 
-                if (liveCount === 0) liveContainer.innerHTML = '<div class="text-gray-600 text-sm italic col-span-2 p-4 text-center border border-gray-800 rounded">No live matches at the moment.</div>';
-                if (completedCount === 0) completedContainer.innerHTML = '<div class="text-gray-600 text-sm italic col-span-2 p-4 text-center">No recent results.</div>';
+                if (liveCount === 0) liveContainer.innerHTML = '<div class="text-gray-600 text-sm italic col-span-2 p-4 text-center border border-gray-800 rounded">No live matches found (matches expire after 12h inactivity).</div>';
+                if (completedCount === 0) completedContainer.innerHTML = '<div class="text-gray-600 text-sm italic col-span-2 p-4 text-center">No recent results found (older than 48h removed).</div>';
             });
+        }
+
+        function deleteMatch(id, e) {
+            e.stopPropagation(); // Prevent opening the match
+            const code = prompt("Enter Admin Code to DELETE this match permanently:");
+            
+            if (code === "2626") {
+                if(confirm("Are you sure? This cannot be undone.")) {
+                    db.collection('live_matches').doc(id).delete().then(() => {
+                        alert("Match Deleted Successfully.");
+                        loadMatchList(); // Refresh UI
+                    }).catch(error => {
+                        alert("Error removing match: " + error.message);
+                    });
+                }
+            } else if (code !== null) {
+                alert("Incorrect Code!");
+            }
         }
 
         function createMatchCard(id, m) {
             const t1Score = m.resultT1 ? m.resultT1.score : `${m.score}/${m.wickets}`;
-            const t1Overs = m.resultT1 ? m.resultT1.overs : `${m.overs}.${m.balls}`;
-            // For live matches, T2 score is harder to guess from flattened structure, simplified here:
             const statusText = m.matchStatus === "COMPLETE" ? `<span class="text-gray-400">${m.resultSub || "Result"}</span>` : `<span class="text-red-500 animate-pulse">● LIVE</span>`;
             
-            // Simplified logic for card display
             let mainScore = "";
             if (m.matchStatus === "COMPLETE") {
                 mainScore = `<div class="text-xs text-gray-400 mt-2">${m.resultMain}</div>`;
             } else {
-                const batting = m.battingTeam === 'team2' ? m.t2 : m.t1;
                 const chasing = m.target > 0 ? `Target: ${m.target}` : "1st Innings";
                 mainScore = `<div class="text-xs text-blue-400 mt-2">${chasing}</div>`;
             }
 
             return `
-            <div onclick="openMatch('${id}')" class="match-card cursor-pointer p-5 rounded-xl border border-gray-800">
+            <div onclick="openMatch('${id}')" class="match-card cursor-pointer p-5 rounded-xl border border-gray-800 pb-10">
                 <div class="flex justify-between items-start mb-4">
                     <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">${m.venue || 'Unknown Ground'}</span>
                     <span class="text-[10px] font-bold uppercase tracking-widest">${statusText}</span>
@@ -274,6 +350,8 @@
                     </div>
                 </div>
                 ${mainScore}
+                
+                <div class="delete-btn" onclick="deleteMatch('${id}', event)">🗑️</div>
             </div>`;
         }
 
@@ -283,6 +361,8 @@
             document.getElementById('home-view').classList.add('hidden');
             document.getElementById('detail-view').classList.remove('hidden');
             document.getElementById('back-btn').classList.remove('hidden');
+            document.getElementById('share-btn').classList.remove('hidden');
+            document.getElementById('share-btn').style.display = 'flex'; // Ensure flex layout for button
             
             if (activeListener) activeListener(); // Unsubscribe prev
 
@@ -292,15 +372,19 @@
         }
 
         function showHome() {
+            // Clear the ?id= from URL so back button works nicely
+            window.history.pushState({}, document.title, window.location.pathname);
+
             if (activeListener) activeListener();
             document.getElementById('detail-view').classList.add('hidden');
             document.getElementById('home-view').classList.remove('hidden');
             document.getElementById('back-btn').classList.add('hidden');
+            document.getElementById('share-btn').classList.add('hidden');
+            
             loadMatchList(); // Refresh list
         }
 
         function renderMatchDetails(data) {
-            // Header
             document.getElementById('d-venue').innerText = data.venue || "Indoor Arena";
             document.getElementById('d-date').innerText = data.matchDate || "";
             
@@ -309,7 +393,6 @@
             document.getElementById('d-t2-name').innerText = data.t2;
             document.getElementById('d-t2-logo').src = data.t2Logo || "";
 
-            // Score Logic
             let t1Text = "0/0"; let t2Text = "0/0";
             
             if (data.matchStatus === "COMPLETE") {
@@ -323,30 +406,20 @@
                 document.getElementById('d-result-text').innerText = data.resultMain || "Match Complete";
                 document.getElementById('d-req-text').innerText = data.resultSub || "";
                 
-                // Show POM
                 if (data.pom) {
                     document.getElementById('pom-card').classList.remove('hidden');
                     document.getElementById('pom-name').innerText = data.pom.name;
                     document.getElementById('pom-stats').innerText = data.pom.stats;
                 }
             } else {
-                // Live Logic
                 document.getElementById('d-status').innerText = "LIVE";
                 document.getElementById('d-result-text').classList.add('hidden');
                 
-                // Current batting team gets the main live score
-                // Note: The controller structure is flat (score, wickets) for CURRENT batting team
                 const currentScore = `${data.score}/${data.wickets} <span class="text-sm font-normal text-gray-500">(${data.overs}.${data.balls})</span>`;
                 
-                // We need to know who is batting to place the score correctly
-                // Limitation: Controller flat data doesn't explicitly say "battingTeamName" easily in flat root, 
-                // but usually t1 bats first. We will infer from 'battingCard' names if possible or just put score on current.
-                
-                // Simple assumption for display: Check if we are chasing
                 if (data.target > 0) {
-                    // 2nd Innings
                     t1Text = `Target: ${data.target}`; 
-                    t2Text = currentScore; // Assuming T2 is chasing
+                    t2Text = currentScore;
                     
                     const needed = data.target - data.score;
                     const ballsRem = (data.totalOvers * 6) - ((data.overs * 6) + data.balls);
@@ -361,9 +434,6 @@
             document.getElementById('d-t1-score').innerHTML = t1Text;
             document.getElementById('d-t2-score').innerHTML = t2Text;
 
-            // --- POPULATE TABS ---
-            
-            // 1. SUMMARY
             const batters = data.battingCard || [];
             const bowlers = data.bowlingCard || [];
             
@@ -381,7 +451,6 @@
                     <div class="text-right"><span class="font-bold text-white">${p.w}</span><span class="text-gray-500">/${p.r}</span> <span class="text-xs text-gray-500">(${p.o})</span></div>
                 </div>`).join('');
 
-            // 2. SCORECARD (Full)
             document.getElementById('full-batting-table').innerHTML = batters.map(p => `
                 <tr>
                     <td class="p-3 border-b border-gray-800 font-medium text-white">${p.name} <div class="text-[10px] text-gray-500 uppercase">${p.status}</div></td>
@@ -403,12 +472,9 @@
                 </tr>
             `).join('');
 
-            // 3. COMMENTARY (Ball by Ball)
-            // Note: DB only has 'currentOver' array. We simulate history or show just current over.
             const commList = document.getElementById('comm-history-list');
             const commOver = document.getElementById('comm-current-over');
             
-            // Current Over Strip
             if (data.currentOver && data.currentOver.length > 0) {
                 commOver.innerHTML = data.currentOver.map(b => {
                     let c = "bg-gray-200";
@@ -421,9 +487,7 @@
                 commOver.innerHTML = "<span class='text-gray-600 text-xs italic'>No balls in current over</span>";
             }
 
-            // List View (Simulated from Current Over for now as full history isn't in DB root)
             if (data.currentOver) {
-                // Reverse to show newest first
                 commList.innerHTML = [...data.currentOver].reverse().map((b, i) => `
                     <div class="flex items-start gap-4 border-b border-gray-800 pb-3">
                         <div class="font-mono text-gray-500 text-xs pt-1">${data.overs}.${data.currentOver.length - i}</div>
