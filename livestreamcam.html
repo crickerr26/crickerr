@@ -551,59 +551,188 @@
             }
         }
 
-        // --- FIXED RECORDING LOGIC ---
-        function toggleRecording() {
-            if (!isRecording) { startMainRecording(); } else { stopMainRecording(); }
+        // --- 🛡️ ULTIMATE MOBILE SAFETY RECORDER (IndexedDB) ---
+    const DB_NAME = "CricketCamDB";
+    const STORE_NAME = "videoChunks";
+    let videoDB = null; // <--- Renamed to videoDB to avoid conflict
+    let isRecoverable = false;
+
+    // 1. INITIALIZE DATABASE ON LOAD
+    function initDB() {
+        if (!window.indexedDB) {
+            console.warn("IndexedDB not supported.");
+            return;
+        }
+        const request = indexedDB.open(DB_NAME, 1);
+        request.onupgradeneeded = (e) => {
+            videoDB = e.target.result;
+            if (!videoDB.objectStoreNames.contains(STORE_NAME)) {
+                videoDB.createObjectStore(STORE_NAME, { autoIncrement: true });
+            }
+        };
+        request.onsuccess = (e) => {
+            videoDB = e.target.result;
+            checkRecovery(); // Check if there is a crashed video waiting
+        };
+        request.onerror = (e) => console.error("DB Error", e);
+    }
+
+    // 2. CHECK FOR LOST VIDEOS
+    async function checkRecovery() {
+        const count = await getChunkCount();
+        if (count > 0) {
+            isRecoverable = true;
+            // Show a Recovery Button on UI
+            const btn = document.getElementById('rec-button');
+            btn.style.background = "#eab308"; // Yellow warning color
+            btn.style.borderColor = "#ca8a04";
+            document.getElementById('rec-text').innerText = "RECOVER";
+            alert("⚠️ FOUND UN-SAVED FOOTAGE!\n\nIt looks like the app crashed or closed without saving.\n\nClick the yellow 'RECOVER' button to save your video.");
+        }
+    }
+
+    // 3. TOGGLE RECORDING LOGIC
+    async function toggleRecording() {
+        if (isRecoverable) {
+            await recoverVideo(); // If in recovery mode, save the old file first
+            return;
         }
 
-        function startMainRecording() {
+        if (!isRecording) {
+            startSafeDatabaseRecording();
+        } else {
+            stopRecording();
+        }
+    }
+
+    // 4. START RECORDING TO DATABASE
+    function startSafeDatabaseRecording() {
+        // Clear old data first to be safe
+        clearDB().then(() => {
             try {
-                const canvasStream = canvas.captureStream(30); 
+                const canvasStream = canvas.captureStream(30);
                 const audioTracks = currentStream ? currentStream.getAudioTracks() : [];
-                const combinedStream = new MediaStream([ ...canvasStream.getVideoTracks(), ...audioTracks ]);
-                const mimeTypes = ["video/mp4", "video/webm;codecs=h264", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"];
+                const combinedStream = new MediaStream([...canvasStream.getVideoTracks(), ...audioTracks]);
+
+                // Mobile Friendly Codec
+                const mimeTypes = ["video/webm;codecs=vp8", "video/webm;codecs=h264", "video/webm", "video/mp4"];
                 let selectedType = mimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || "";
-                if (!selectedType) { alert("Recording not supported on this device."); return; }
-                const options = { mimeType: selectedType, videoBitsPerSecond: 4500000 };
+
+                if (!selectedType) {
+                    alert("Recording not supported on this device/browser.");
+                    return;
+                }
+
+                const options = { mimeType: selectedType, videoBitsPerSecond: 4000000 };
                 recorder = new MediaRecorder(combinedStream, options);
-                chunks = [];
-                recorder.ondataavailable = e => { if (e.data && e.data.size > 0) chunks.push(e.data); };
-                recorder.onstop = saveRecording;
-                window.addEventListener('beforeunload', emergencySave);
-                window.addEventListener('pagehide', emergencySave);
-                recorder.start(4000); 
+
+                recorder.ondataavailable = (e) => {
+                    if (e.data && e.data.size > 0) {
+                        saveChunkToDB(e.data); // <--- SAVES TO STORAGE IMMEDIATELY
+                    }
+                };
+
+                recorder.start(1000); // Save every 1 second
+                
                 isRecording = true;
                 document.getElementById('rec-button').classList.add('recording');
-                document.getElementById('rec-text').innerText = "RECORDING...";
-            } catch (e) { console.error("Rec Error:", e); alert("Could not start recording: " + e.message); }
-        }
-
-        function stopMainRecording() {
-            if (recorder && recorder.state !== 'inactive') {
-                recorder.stop();
-                isRecording = false;
-                document.getElementById('rec-button').classList.remove('recording');
-                document.getElementById('rec-text').innerText = "SAVING...";
-                window.removeEventListener('beforeunload', emergencySave);
-                window.removeEventListener('pagehide', emergencySave);
+                document.getElementById('rec-text').innerText = "SAFE REC";
+            } catch (e) {
+                alert("Recording Failed: " + e.message);
             }
+        });
+    }
+
+    // 5. STOP RECORDING
+    function stopRecording() {
+        if (recorder && recorder.state !== 'inactive') recorder.stop();
+        isRecording = false;
+        document.getElementById('rec-button').classList.remove('recording');
+        document.getElementById('rec-text').innerText = "SAVING...";
+
+        // Wait a moment for last chunk, then download
+        setTimeout(() => {
+            recoverVideo(); // This compiles the DB chunks into a file
+        }, 1000);
+    }
+
+    // 6. COMPILE & DOWNLOAD (RECOVERY)
+    async function recoverVideo() {
+        const allChunks = await getAllChunks();
+        if (allChunks.length === 0) {
+            alert("No video data found.");
+            resetRecUI();
+            return;
         }
 
-        function emergencySave() { if (isRecording && recorder && recorder.state !== 'inactive') { recorder.stop(); } }
+        const blob = new Blob(allChunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        const now = new Date();
+        a.download = `MATCH_REC_${now.getHours()}-${now.getMinutes()}.webm`;
+        document.body.appendChild(a);
+        a.click();
 
-        function saveRecording() {
-            if (chunks.length === 0) return;
-            const blob = new Blob(chunks, { type: recorder.mimeType });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none'; a.href = url;
-            const now = new Date();
-            const timestamp = `${now.getHours()}-${now.getMinutes()}-${now.getSeconds()}`;
-            let ext = 'webm'; if (recorder.mimeType.includes('mp4')) { ext = 'mp4'; }
-            a.download = `match-recording-${timestamp}.${ext}`;
-            document.body.appendChild(a); a.click();
-            setTimeout(() => { document.body.removeChild(a); window.URL.revokeObjectURL(url); document.getElementById('rec-text').innerText = "REC"; chunks = []; }, 100);
-        }
+        // Cleanup after successful save
+        setTimeout(() => {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            if(confirm("Video Saved!\n\nDelete temp files to free up space?")) {
+                clearDB();
+                resetRecUI();
+            }
+        }, 1000);
+    }
+
+    function resetRecUI() {
+        isRecoverable = false;
+        const btn = document.getElementById('rec-button');
+        btn.style.background = ""; // Reset color
+        btn.style.borderColor = "";
+        document.getElementById('rec-text').innerText = "REC";
+    }
+
+    // --- INDEXED DB HELPER FUNCTIONS ---
+    function saveChunkToDB(chunk) {
+        if(!videoDB) return;
+        const tx = videoDB.transaction(STORE_NAME, "readwrite");
+        tx.objectStore(STORE_NAME).add(chunk);
+    }
+
+    function getAllChunks() {
+        return new Promise((resolve) => {
+            if(!videoDB) return resolve([]);
+            const tx = videoDB.transaction(STORE_NAME, "readonly");
+            const request = tx.objectStore(STORE_NAME).getAll();
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => resolve([]);
+        });
+    }
+
+    function getChunkCount() {
+        return new Promise((resolve) => {
+            if(!videoDB) return resolve(0);
+            const tx = videoDB.transaction(STORE_NAME, "readonly");
+            const request = tx.objectStore(STORE_NAME).count();
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => resolve(0);
+        });
+    }
+
+    function clearDB() {
+        return new Promise((resolve) => {
+            if(!videoDB) return resolve();
+            const tx = videoDB.transaction(STORE_NAME, "readwrite");
+            tx.objectStore(STORE_NAME).clear();
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => resolve();
+        });
+    }
+
+    // Start DB when page loads
+    window.addEventListener('load', initDB);
 
         // --- MENUS & LOGIC ---
         function toggleQualityMenu() {
