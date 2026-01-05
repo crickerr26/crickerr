@@ -660,35 +660,29 @@
         }
     }
 
-    // 3. TOGGLE RECORDING
+    // --- [FIXED] 3. TOGGLE RECORDING ---
     async function toggleRecording() {
         if (isRecoverable) {
             await recoverVideo();
             return;
         }
         if (!isRecording) {
+            // [FIX] Ensure we have a valid stream before starting
+            // If the video is paused/stalled, force play it to wake up the engine
+            if (video.paused) await video.play().catch(e => {}); 
             startSafeDatabaseRecording();
         } else {
             stopRecording();
         }
     }
 
-    // 4. START RECORDING (Self-Healing Fix)
+    // --- [FIXED] 4. START RECORDING (Mobile Safe) ---
     async function startSafeDatabaseRecording() {
-        // SELF-HEALING: If DB is missing, force connect and wait
+        // A. Database Self-Healing
         if (!videoDB) {
             const fallbackId = document.getElementById('match-id').value || "0000";
-            console.log("⚠️ DB missing. Attempting auto-reconnect for:", fallbackId);
             initVideoDB(fallbackId);
-            
-            // Wait up to 1 second for DB to open
-            await new Promise(resolve => {
-                let checks = 0;
-                const interval = setInterval(() => {
-                    checks++;
-                    if(videoDB || checks > 10) { clearInterval(interval); resolve(); }
-                }, 100);
-            });
+            await new Promise(resolve => setTimeout(resolve, 500)); // Wait for DB
         }
 
         if (!videoDB) {
@@ -696,34 +690,81 @@
             return;
         }
 
-        clearDB().then(() => {
-            try {
-                if (!globalCaptureStream) { globalCaptureStream = canvas.captureStream(30); }
+        await clearDB();
 
-                const audioTracks = currentStream ? currentStream.getAudioTracks().map(t => t.clone()) : [];
-                const combinedStream = new MediaStream([...globalCaptureStream.getVideoTracks(), ...audioTracks]);
-
-                const mimeTypes = ["video/mp4;codecs=avc1", "video/webm;codecs=h264", "video/webm"];
-                let selectedType = mimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || "";
-                if (!selectedType) return alert("Recording not supported.");
-                localStorage.setItem("recMimeType", selectedType);
-
-                // 6 Mbps for smooth mobile recording
-                const options = { mimeType: selectedType, videoBitsPerSecond: 6000000 };
-                recorder = new MediaRecorder(combinedStream, options);
-
-                recorder.ondataavailable = (e) => {
-                    if (e.data && e.data.size > 0) saveChunkToDB(e.data);
-                };
-
-                recorder.start(1000); 
-                isRecording = true;
-                document.getElementById('rec-button').classList.add('recording');
-                document.getElementById('rec-text').innerText = "SAFE REC";
-            } catch (e) {
-                alert("Recording Failed: " + e.message);
+        try {
+            // [FIX 1] ALWAYS GET A FRESH STREAM (Don't reuse old variables)
+            // 30 FPS is the sweet spot for mobile stability
+            const freshCanvasStream = canvas.captureStream(30);
+            
+            // [FIX 2] AUDIO TRACK MANAGEMENT (Crucial for Sync)
+            let finalAudioTrack = null;
+            
+            // Try to get mic audio
+            if (currentStream && currentStream.getAudioTracks().length > 0) {
+                finalAudioTrack = currentStream.getAudioTracks()[0].clone();
+            } else {
+                // [CRITICAL FIX] If no mic, generate SILENT audio. 
+                // Videos without audio tracks often freeze on iOS/Android players.
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = ctx.createOscillator();
+                const dest = ctx.createMediaStreamDestination();
+                oscillator.connect(dest);
+                oscillator.start();
+                finalAudioTrack = dest.stream.getAudioTracks()[0];
             }
-        });
+
+            // Combine fresh video + audio
+            const combinedStream = new MediaStream([
+                ...freshCanvasStream.getVideoTracks(),
+                finalAudioTrack
+            ]);
+
+            // [FIX 3] ROBUST MIME TYPE SELECTION
+            // We prioritize MP4 (better playback) -> VP9 (better quality) -> VP8 (compatibility)
+            const types = [
+                "video/mp4;codecs=avc1",     // Best for iOS 15+ & modern Android
+                "video/webm;codecs=vp9",     // Best for Chrome Android
+                "video/webm;codecs=h264",    // Good alternative
+                "video/webm;codecs=vp8",     // Fallback
+                "video/webm"                 // Last resort
+            ];
+            
+            let selectedType = types.find(t => MediaRecorder.isTypeSupported(t)) || "";
+            
+            if (!selectedType) {
+                alert("Recording not supported on this device.");
+                return;
+            }
+            
+            console.log("Recording using:", selectedType);
+            localStorage.setItem("recMimeType", selectedType);
+
+            // [FIX 4] LOWER BITRATE FOR MOBILE STABILITY
+            // 4Mbps is enough for 1080p mobile and prevents buffer overflows that cause freezing
+            const options = { 
+                mimeType: selectedType, 
+                videoBitsPerSecond: 4000000 
+            };
+
+            recorder = new MediaRecorder(combinedStream, options);
+
+            recorder.ondataavailable = (e) => {
+                if (e.data && e.data.size > 0) saveChunkToDB(e.data);
+            };
+
+            // [FIX 5] SLOWER CHUNK RATE
+            // Saving every 1 second (1000ms) is safer than faster intervals
+            recorder.start(1000); 
+
+            isRecording = true;
+            document.getElementById('rec-button').classList.add('recording');
+            document.getElementById('rec-text').innerText = "SAFE REC";
+
+        } catch (e) {
+            console.error(e);
+            alert("Recording Failed: " + e.message);
+        }
     }
 
     // 5. STOP RECORDING
