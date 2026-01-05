@@ -274,7 +274,25 @@
             <button onclick="closeObsModal()" style="width:100%; padding:12px; border-radius:8px; border:1px solid #444; background:transparent; color:#ccc; font-weight:bold; margin-top:15px; cursor:pointer;">CLOSE</button>
         </div>
     </div>
-
+<div id="rec-reminder-modal" class="help-modal" style="display: none;">
+    <div class="modal-card" style="border: 2px solid #ef4444; background: #1a0505;">
+        <div style="font-size: 50px; margin-bottom: 10px;">🔴</div>
+        <h2 style="font-family: 'Anton'; font-size: 28px; margin-bottom: 10px; color: #ef4444;">NOT RECORDING!</h2>
+        <p style="color: #ccc; margin-bottom: 25px; font-size: 16px;">
+            The match is live but you haven't started recording yet.
+        </p>
+        
+        <button onclick="confirmStartRecording()" 
+            style="width:100%; padding:15px; background: linear-gradient(to right, #dc2626, #ef4444); color:white; border:none; border-radius:50px; font-weight:900; font-size: 18px; cursor:pointer; margin-bottom: 10px; box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);">
+            START RECORDING NOW
+        </button>
+        
+        <button onclick="closeRecReminder()" 
+            style="width:100%; padding:12px; background:transparent; color:#777; border:none; font-weight:bold; cursor:pointer;">
+            I'll Record Later
+        </button>
+    </div>
+</div>
 <script>
         // --- FIREBASE CONFIG ---
         const firebaseConfig = { apiKey: "AIzaSyBqcD59IAPpKqk98oDZkgzgkoVZ8b8LGgY", authDomain: "livecricketscoring-92087.firebaseapp.com", databaseURL: "https://livecricketscoring-92087-default-rtdb.firebaseio.com", projectId: "livecricketscoring-92087", storageBucket: "livecricketscoring-92087.firebasestorage.app", messagingSenderId: "522927197627", appId: "1:522927197627:web:f1df5db736cae96893089e" };
@@ -422,6 +440,7 @@
                 resizeCanvas();
                 requestAnimationFrame(renderLoop);
                 listenToDB(id);
+                setTimeout(showRecReminder, 4000);
             } else {
                 btn.innerText = "Start Camera";
                 btn.disabled = false;
@@ -610,20 +629,32 @@
         // Clear old data first to be safe
         clearDB().then(() => {
             try {
-                const canvasStream = canvas.captureStream(30);
+                // 1. Capture at 60 FPS for smooth sports motion
+                const canvasStream = canvas.captureStream(60);
                 const audioTracks = currentStream ? currentStream.getAudioTracks() : [];
                 const combinedStream = new MediaStream([...canvasStream.getVideoTracks(), ...audioTracks]);
 
-                // Mobile Friendly Codec
-                const mimeTypes = ["video/webm;codecs=vp8", "video/webm;codecs=h264", "video/webm", "video/mp4"];
+                // 2. Prioritize MP4 formats
+                const mimeTypes = [
+                    "video/mp4", 
+                    "video/mp4;codecs=avc1", 
+                    "video/mp4;codecs=h264", 
+                    "video/webm;codecs=h264", 
+                    "video/webm;codecs=vp9", 
+                    "video/webm"
+                ];
                 let selectedType = mimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || "";
 
                 if (!selectedType) {
                     alert("Recording not supported on this device/browser.");
                     return;
                 }
+                
+                // Save the format type so we remember it if the app crashes
+                localStorage.setItem("recMimeType", selectedType);
 
-                const options = { mimeType: selectedType, videoBitsPerSecond: 4000000 };
+                // 3. Max Quality (25 Mbps)
+                const options = { mimeType: selectedType, videoBitsPerSecond: 25000000 };
                 recorder = new MediaRecorder(combinedStream, options);
 
                 recorder.ondataavailable = (e) => {
@@ -665,13 +696,24 @@
             return;
         }
 
-        const blob = new Blob(allChunks, { type: 'video/webm' });
+        // Use the saved type or default to webm
+        const savedType = localStorage.getItem("recMimeType") || 'video/webm';
+        const blob = new Blob(allChunks, { type: savedType });
+        
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = url;
+        
         const now = new Date();
-        a.download = `MATCH_REC_${now.getHours()}-${now.getMinutes()}.webm`;
+        
+        // Determine correct extension
+        let ext = 'webm';
+        if (savedType.includes('mp4') || savedType.includes('avc1')) {
+            ext = 'mp4';
+        }
+
+        a.download = `MATCH_REC_${now.getHours()}-${now.getMinutes()}.${ext}`;
         document.body.appendChild(a);
         a.click();
 
@@ -1632,6 +1674,27 @@
             c.fillStyle = "#93c5fd"; c.font = `700 ${boxH * 0.22}px 'Roboto Condensed'`; c.fillText(`OFF ${safeStr(d.balls)} BALLS`, boxX + boxW/2, boxY + boxH * 0.88); 
             c.restore(); c.restore();
         }
+    
+// --- 🚨 RECORDING REMINDER LOGIC ---
+
+    function showRecReminder() {
+        // Only show if we are NOT recording and NOT in recovery mode
+        if (!isRecording && !isRecoverable) {
+            document.getElementById('rec-reminder-modal').style.display = 'flex';
+            
+            // Play a subtle notification sound if you have one, or vibrate
+            if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
+        }
+    }
+
+    function closeRecReminder() {
+        document.getElementById('rec-reminder-modal').style.display = 'none';
+    }
+
+    function confirmStartRecording() {
+        closeRecReminder();
+        toggleRecording(); // Starts the actual recording
+    }
     </script>
 </body>
 </html>
