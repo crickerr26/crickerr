@@ -440,6 +440,7 @@
                 resizeCanvas();
                 requestAnimationFrame(renderLoop);
                 listenToDB(id);
+                initVideoDB(id);
                 setTimeout(showRecReminder, 4000);
             } else {
                 btn.innerText = "Start Camera";
@@ -571,28 +572,32 @@
         }
 
         // --- 🛡️ ULTIMATE MOBILE SAFETY RECORDER (IndexedDB) ---
-    const DB_NAME = "CricketCamDB";
     const STORE_NAME = "videoChunks";
-    let videoDB = null; // <--- Renamed to videoDB to avoid conflict
+    let videoDB = null;
     let isRecoverable = false;
+    let currentRecMatchId = null; // Store the specific ID
 
-    // 1. INITIALIZE DATABASE ON LOAD
-    function initDB() {
-        if (!window.indexedDB) {
-            console.warn("IndexedDB not supported.");
-            return;
-        }
-        const request = indexedDB.open(DB_NAME, 1);
+    // 1. INITIALIZE DATABASE (Specific to Match ID)
+    function initVideoDB(matchId) {
+        if (!window.indexedDB) return console.warn("IndexedDB not supported.");
+        
+        currentRecMatchId = matchId;
+        const dbName = "CricketCamDB_" + matchId; // 👈 UNIQUE DB PER MATCH
+
+        const request = indexedDB.open(dbName, 1);
+        
         request.onupgradeneeded = (e) => {
             videoDB = e.target.result;
             if (!videoDB.objectStoreNames.contains(STORE_NAME)) {
                 videoDB.createObjectStore(STORE_NAME, { autoIncrement: true });
             }
         };
+        
         request.onsuccess = (e) => {
             videoDB = e.target.result;
-            checkRecovery(); // Check if there is a crashed video waiting
+            checkRecovery(); // Only checks for THIS match ID
         };
+        
         request.onerror = (e) => console.error("DB Error", e);
     }
 
@@ -601,22 +606,22 @@
         const count = await getChunkCount();
         if (count > 0) {
             isRecoverable = true;
-            // Show a Recovery Button on UI
+            // Update UI to show Recovery Mode
             const btn = document.getElementById('rec-button');
-            btn.style.background = "#eab308"; // Yellow warning color
+            btn.style.background = "#eab308"; // Yellow
             btn.style.borderColor = "#ca8a04";
             document.getElementById('rec-text').innerText = "RECOVER";
-            alert("⚠️ FOUND UN-SAVED FOOTAGE!\n\nIt looks like the app crashed or closed without saving.\n\nClick the yellow 'RECOVER' button to save your video.");
+            
+            alert(`⚠️ CRASH DETECTED FOR MATCH ${currentRecMatchId}!\n\nWe found unsaved footage for this specific match.\nClick 'RECOVER' to save it.`);
         }
     }
 
-    // 3. TOGGLE RECORDING LOGIC
+    // 3. TOGGLE RECORDING
     async function toggleRecording() {
         if (isRecoverable) {
-            await recoverVideo(); // If in recovery mode, save the old file first
+            await recoverVideo();
             return;
         }
-
         if (!isRecording) {
             startSafeDatabaseRecording();
         } else {
@@ -624,46 +629,33 @@
         }
     }
 
-    // 4. START RECORDING TO DATABASE
+    // 4. START RECORDING
     function startSafeDatabaseRecording() {
-        // Clear old data first to be safe
         clearDB().then(() => {
             try {
-                // 1. Capture at 60 FPS for smooth sports motion
                 const canvasStream = canvas.captureStream(60);
                 const audioTracks = currentStream ? currentStream.getAudioTracks() : [];
                 const combinedStream = new MediaStream([...canvasStream.getVideoTracks(), ...audioTracks]);
 
-                // 2. Prioritize MP4 formats
-                const mimeTypes = [
-                    "video/mp4", 
-                    "video/mp4;codecs=avc1", 
-                    "video/mp4;codecs=h264", 
-                    "video/webm;codecs=h264", 
-                    "video/webm;codecs=vp9", 
-                    "video/webm"
-                ];
+                const mimeTypes = ["video/mp4", "video/mp4;codecs=avc1", "video/webm;codecs=h264", "video/webm"];
                 let selectedType = mimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || "";
 
-                if (!selectedType) {
-                    alert("Recording not supported on this device/browser.");
-                    return;
-                }
+                if (!selectedType) return alert("Recording not supported.");
                 
-                // Save the format type so we remember it if the app crashes
+                // Save type specific to this match? 
+                // We can use a general key since browser capabilities don't change per match
                 localStorage.setItem("recMimeType", selectedType);
 
-                // 3. Max Quality (25 Mbps)
                 const options = { mimeType: selectedType, videoBitsPerSecond: 25000000 };
                 recorder = new MediaRecorder(combinedStream, options);
 
                 recorder.ondataavailable = (e) => {
                     if (e.data && e.data.size > 0) {
-                        saveChunkToDB(e.data); // <--- SAVES TO STORAGE IMMEDIATELY
+                        saveChunkToDB(e.data);
                     }
                 };
 
-                recorder.start(1000); // Save every 1 second
+                recorder.start(1000); 
                 
                 isRecording = true;
                 document.getElementById('rec-button').classList.add('recording');
@@ -681,47 +673,38 @@
         document.getElementById('rec-button').classList.remove('recording');
         document.getElementById('rec-text').innerText = "SAVING...";
 
-        // Wait a moment for last chunk, then download
-        setTimeout(() => {
-            recoverVideo(); // This compiles the DB chunks into a file
-        }, 1000);
+        setTimeout(() => { recoverVideo(); }, 1000);
     }
 
-    // 6. COMPILE & DOWNLOAD (RECOVERY)
+    // 6. RECOVER & DOWNLOAD
     async function recoverVideo() {
         const allChunks = await getAllChunks();
         if (allChunks.length === 0) {
-            alert("No video data found.");
+            alert("No data found.");
             resetRecUI();
             return;
         }
 
-        // Use the saved type or default to webm
         const savedType = localStorage.getItem("recMimeType") || 'video/webm';
         const blob = new Blob(allChunks, { type: savedType });
-        
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = url;
         
         const now = new Date();
+        let ext = savedType.includes('mp4') ? 'mp4' : 'webm';
         
-        // Determine correct extension
-        let ext = 'webm';
-        if (savedType.includes('mp4') || savedType.includes('avc1')) {
-            ext = 'mp4';
-        }
-
-        a.download = `MATCH_REC_${now.getHours()}-${now.getMinutes()}.${ext}`;
+        // Include Match ID in filename
+        a.download = `MATCH_${currentRecMatchId}_REC_${now.getHours()}-${now.getMinutes()}.${ext}`;
+        
         document.body.appendChild(a);
         a.click();
 
-        // Cleanup after successful save
         setTimeout(() => {
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
-            if(confirm("Video Saved!\n\nDelete temp files to free up space?")) {
+            if(confirm("Video Saved!\n\nDelete temp files for this match?")) {
                 clearDB();
                 resetRecUI();
             }
@@ -731,12 +714,12 @@
     function resetRecUI() {
         isRecoverable = false;
         const btn = document.getElementById('rec-button');
-        btn.style.background = ""; // Reset color
+        btn.style.background = ""; 
         btn.style.borderColor = "";
         document.getElementById('rec-text').innerText = "REC";
     }
 
-    // --- INDEXED DB HELPER FUNCTIONS ---
+    // --- DB HELPERS ---
     function saveChunkToDB(chunk) {
         if(!videoDB) return;
         const tx = videoDB.transaction(STORE_NAME, "readwrite");
