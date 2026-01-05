@@ -575,29 +575,25 @@
     const STORE_NAME = "videoChunks";
     let videoDB = null;
     let isRecoverable = false;
-    let currentRecMatchId = null; // Store the specific ID
+    let currentRecMatchId = null; 
+    let globalCaptureStream = null; // FIX: Keep one persistent stream
 
-    // 1. INITIALIZE DATABASE (Specific to Match ID)
+    // 1. INITIALIZE DATABASE
     function initVideoDB(matchId) {
         if (!window.indexedDB) return console.warn("IndexedDB not supported.");
-        
         currentRecMatchId = matchId;
-        const dbName = "CricketCamDB_" + matchId; // 👈 UNIQUE DB PER MATCH
-
+        const dbName = "CricketCamDB_" + matchId; 
         const request = indexedDB.open(dbName, 1);
-        
         request.onupgradeneeded = (e) => {
             videoDB = e.target.result;
             if (!videoDB.objectStoreNames.contains(STORE_NAME)) {
                 videoDB.createObjectStore(STORE_NAME, { autoIncrement: true });
             }
         };
-        
         request.onsuccess = (e) => {
             videoDB = e.target.result;
-            checkRecovery(); // Only checks for THIS match ID
+            checkRecovery(); 
         };
-        
         request.onerror = (e) => console.error("DB Error", e);
     }
 
@@ -606,13 +602,11 @@
         const count = await getChunkCount();
         if (count > 0) {
             isRecoverable = true;
-            // Update UI to show Recovery Mode
             const btn = document.getElementById('rec-button');
-            btn.style.background = "#eab308"; // Yellow
+            btn.style.background = "#eab308"; 
             btn.style.borderColor = "#ca8a04";
             document.getElementById('rec-text').innerText = "RECOVER";
-            
-            alert(`⚠️ CRASH DETECTED FOR MATCH ${currentRecMatchId}!\n\nWe found unsaved footage for this specific match.\nClick 'RECOVER' to save it.`);
+            alert(`⚠️ CRASH DETECTED FOR MATCH ${currentRecMatchId}!\n\nWe found unsaved footage. Click 'RECOVER' to save it.`);
         }
     }
 
@@ -629,21 +623,23 @@
         }
     }
 
-    // 4. START RECORDING
+    // 4. START RECORDING (FIXED)
     function startSafeDatabaseRecording() {
         clearDB().then(() => {
             try {
-                const canvasStream = canvas.captureStream(60);
+                // FIX: Reuse the capture stream to prevent black screen glitches
+                if (!globalCaptureStream) {
+                    globalCaptureStream = canvas.captureStream(60);
+                }
+
                 const audioTracks = currentStream ? currentStream.getAudioTracks() : [];
-                const combinedStream = new MediaStream([...canvasStream.getVideoTracks(), ...audioTracks]);
+                // Create a new stream for THIS recording session combining video + audio
+                const combinedStream = new MediaStream([...globalCaptureStream.getVideoTracks(), ...audioTracks]);
 
                 const mimeTypes = ["video/mp4", "video/mp4;codecs=avc1", "video/webm;codecs=h264", "video/webm"];
                 let selectedType = mimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || "";
 
                 if (!selectedType) return alert("Recording not supported.");
-                
-                // Save type specific to this match? 
-                // We can use a general key since browser capabilities don't change per match
                 localStorage.setItem("recMimeType", selectedType);
 
                 const options = { mimeType: selectedType, videoBitsPerSecond: 25000000 };
@@ -676,7 +672,7 @@
         setTimeout(() => { recoverVideo(); }, 1000);
     }
 
-    // 6. RECOVER & DOWNLOAD
+    // 6. RECOVER & DOWNLOAD (FIXED VIDEO WAKE UP)
     async function recoverVideo() {
         const allChunks = await getAllChunks();
         if (allChunks.length === 0) {
@@ -694,20 +690,26 @@
         
         const now = new Date();
         let ext = savedType.includes('mp4') ? 'mp4' : 'webm';
-        
-        // Include Match ID in filename
         a.download = `MATCH_${currentRecMatchId}_REC_${now.getHours()}-${now.getMinutes()}.${ext}`;
         
         document.body.appendChild(a);
         a.click();
 
+        // FIX: Force Video Wakeup after download dialog
         setTimeout(() => {
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
+            
+            // WAKE UP VIDEO IF IT PAUSED
+            if(video.paused) video.play().catch(e => console.log("Video wake up error", e));
+
             if(confirm("Video Saved!\n\nDelete temp files for this match?")) {
                 clearDB();
                 resetRecUI();
             }
+            
+            // DOUBLE CHECK WAKE UP
+            if(video.paused) video.play().catch(e => console.log("Video wake up error", e));
         }, 1000);
     }
 
@@ -717,6 +719,9 @@
         btn.style.background = ""; 
         btn.style.borderColor = "";
         document.getElementById('rec-text').innerText = "REC";
+        
+        // Final sanity check to ensure background is moving
+        if(video.paused) video.play().catch(e => {});
     }
 
     // --- DB HELPERS ---
