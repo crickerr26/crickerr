@@ -160,12 +160,23 @@
         
         #rec-indicator { width: 12px; height: 12px; background: #ef4444; border-radius: 50%; transition: all 0.3s; }
         
-        /* Recording Active State */
-        .recording { background: rgba(220, 38, 38, 0.9) !important; border-color: #ef4444 !important; }
+        /* Recording Active State - BLINKING ANIMATION */
+        .recording { 
+            background: rgba(220, 38, 38, 0.9) !important; 
+            border-color: #ef4444 !important; 
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
+        }
+        
         .recording #rec-indicator { 
             background: white; 
             border-radius: 2px; /* Square for Stop */
-            animation: none; 
+            animation: blinkRed 1s infinite; /* BLINKING EFFECT */
+        }
+
+        @keyframes blinkRed {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.9); }
+            100% { opacity: 1; transform: scale(1); }
         }
 
         /* --- ZOOM CONTROLS --- */
@@ -1776,15 +1787,21 @@
         closeRecReminder();
         toggleRecording(); // Starts the actual recording
     }
-    // --- 🔄 REFRESH / RESOLVE ISSUES ---
+    // --- 🔄 REFRESH / RESOLVE ISSUES (FIXED SAFE SAVE) ---
     async function refreshCamera() {
         const btn = document.getElementById('refresh-button');
         btn.classList.add('spin-anim'); // Start spinning animation
 
-        // 1. Safety: Stop recording if it was running
+        // 1. SAFETY: Gracefully stop recording if active
         if (isRecording) {
-            if (recorder && recorder.state !== 'inactive') recorder.stop();
+            console.log("Refresh clicked while recording. Stopping and saving...");
+            if (recorder && recorder.state !== 'inactive') {
+                recorder.stop();
+            }
             isRecording = false;
+            
+            // Allow a brief moment for the last chunk to write to IndexedDB
+            await new Promise(r => setTimeout(r, 500));
         }
 
         // 2. Restart Camera Stream (Keep current resolution)
@@ -1798,16 +1815,31 @@
         // Restart engine
         const success = await startCameraStream(w, h);
 
-        // 3. Resolve Issues & Reactivate Record Button
+        // 3. Resolve Issues & Update UI
         if (success) {
             console.log("Stream Refreshed Successfully");
             
-            // Force reset the Record UI
+            // Remove Recording State
             const recBtn = document.getElementById('rec-button');
             recBtn.classList.remove('recording');
-            recBtn.style.background = ""; 
-            recBtn.style.borderColor = "";
-            document.getElementById('rec-text').innerText = "REC";
+            
+            // 4. CRITICAL: Check if we have unsaved video in the DB
+            // If we interrupted a recording, this will turn the button YELLOW (Recover)
+            // instead of resetting it to REC, preventing data loss.
+            const chunkCount = await getChunkCount();
+            
+            if (chunkCount > 0) {
+                isRecoverable = true;
+                recBtn.style.background = "#eab308"; // Yellow
+                recBtn.style.borderColor = "#ca8a04";
+                document.getElementById('rec-text').innerText = "RECOVER";
+                alert("Recording stopped for refresh.\n\nClick 'RECOVER' to save your video!");
+            } else {
+                // Only reset to normal if DB is empty
+                recBtn.style.background = ""; 
+                recBtn.style.borderColor = "";
+                document.getElementById('rec-text').innerText = "REC";
+            }
             
             // Ensure video is playing (fixes freeze issues)
             video.play().catch(e => console.log("Auto-resume error:", e));
