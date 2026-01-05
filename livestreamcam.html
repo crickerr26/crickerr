@@ -11,7 +11,24 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Anton&family=Montserrat:wght@400;600;800;900&family=Roboto:wght@400;500;700;900&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
     
+    <div id="saved-toast">
+    <span>✅</span> <span>VIDEO SAVED SUCCESSFULLY!</span>
+</div>
+
     <style>
+
+        /* SAVED POPUP TOAST */
+        #saved-toast {
+            position: absolute; top: 100px; left: 50%; transform: translateX(-50%);
+            background: rgba(34, 197, 94, 0.95); /* Green */
+            color: white; padding: 15px 30px; border-radius: 50px;
+            font-family: 'Anton', sans-serif; font-size: 20px; letter-spacing: 1px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 2px solid #86efac;
+            z-index: 200; display: none; align-items: center; gap: 10px;
+            animation: slideDown 0.5s ease-out;
+        }
+        @keyframes slideDown { from { top: -50px; opacity: 0; } to { top: 100px; opacity: 1; } }
+
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
         body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Roboto', sans-serif; }
         
@@ -93,10 +110,27 @@
         input:checked + .slider { background-color: #22c55e; }
         input:checked + .slider:before { transform: translateX(22px); }
 
-        /* QUALITY INDICATOR & MENU */
+        /* REFRESH BUTTON (NEW) */
+        #refresh-button {
+            position: absolute; top: 25px; left: 85px; /* Sits next to Gear (which is at 25px) */
+            width: 45px; height: 45px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            color: white; font-size: 20px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; backdrop-filter: blur(8px);
+            transition: transform 0.3s ease, background 0.3s;
+            z-index: 100;
+        }
+        #refresh-button:hover { background: rgba(0,0,0,0.8); }
+        .spin-anim { animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* QUALITY INDICATOR (SHIFTED RIGHT) */
         #quality-badge {
-            position: absolute; top: 25px; left: 85px;
-            color: #888; /* Grey Letters */
+            position: absolute; top: 25px; left: 145px; /* Moved to make room for Refresh button */
+            color: #888;
             font-weight: bold; font-family: 'Roboto Condensed'; font-size: 16px;
             cursor: pointer; z-index: 100;
             padding: 12px; background: rgba(0,0,0,0.4); border-radius: 8px;
@@ -106,14 +140,10 @@
         #quality-badge:hover { color: white; }
 
         #quality-menu {
-            display: none; position: absolute; top: 80px; left: 85px;
+            display: none; position: absolute; top: 80px; left: 145px; /* Matches new badge position */
             background: rgba(15, 23, 42, 0.95); border: 1px solid #333;
             border-radius: 8px; z-index: 101; flex-direction: column;
             backdrop-filter: blur(10px); min-width: 120px;
-        }
-        .q-option {
-            padding: 12px 20px; color: #ccc; cursor: pointer;
-            font-family: 'Roboto'; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.1);
         }
         .q-option:last-child { border-bottom: none; }
         .q-option:hover { background: rgba(255,255,255,0.1); color: white; }
@@ -214,6 +244,8 @@
             
             <div id="gear-button" class="hud-item" onclick="toggleSettingsMenu()">⚙️</div>
             
+            <div id="refresh-button" class="hud-item" onclick="refreshCamera()">🔄</div>
+
             <div id="settings-menu" class="hud-item">
                 <div class="s-option" onclick="showObsModal(); toggleSettingsMenu()">
                     <span>Wireless OBS Link</span>
@@ -440,7 +472,6 @@
                 resizeCanvas();
                 requestAnimationFrame(renderLoop);
                 listenToDB(id);
-                initVideoDB(id);
                 setTimeout(showRecReminder, 4000);
             } else {
                 btn.innerText = "Start Camera";
@@ -576,22 +607,30 @@
     let videoDB = null;
     let isRecoverable = false;
     let currentRecMatchId = null; 
-    let globalCaptureStream = null; // FIX: Keep one persistent stream
+    let globalCaptureStream = null;
 
-    // 1. INITIALIZE DATABASE
+    // 1. INITIALIZE DATABASE (Robust)
     function initVideoDB(matchId) {
         if (!window.indexedDB) return console.warn("IndexedDB not supported.");
+        
+        // If already connected to this match ID, do nothing
+        if (videoDB && currentRecMatchId === matchId) return;
+
         currentRecMatchId = matchId;
         const dbName = "CricketCamDB_" + matchId; 
+        
+        console.log("Opening DB:", dbName);
+
         const request = indexedDB.open(dbName, 1);
         request.onupgradeneeded = (e) => {
-            videoDB = e.target.result;
-            if (!videoDB.objectStoreNames.contains(STORE_NAME)) {
-                videoDB.createObjectStore(STORE_NAME, { autoIncrement: true });
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME, { autoIncrement: true });
             }
         };
         request.onsuccess = (e) => {
             videoDB = e.target.result;
+            console.log("DB Ready!");
             checkRecovery(); 
         };
         request.onerror = (e) => console.error("DB Error", e);
@@ -623,36 +662,50 @@
         }
     }
 
-    // 4. START RECORDING (FIXED)
-    function startSafeDatabaseRecording() {
+    // 4. START RECORDING (Self-Healing Fix)
+    async function startSafeDatabaseRecording() {
+        // SELF-HEALING: If DB is missing, force connect and wait
+        if (!videoDB) {
+            const fallbackId = document.getElementById('match-id').value || "0000";
+            console.log("⚠️ DB missing. Attempting auto-reconnect for:", fallbackId);
+            initVideoDB(fallbackId);
+            
+            // Wait up to 1 second for DB to open
+            await new Promise(resolve => {
+                let checks = 0;
+                const interval = setInterval(() => {
+                    checks++;
+                    if(videoDB || checks > 10) { clearInterval(interval); resolve(); }
+                }, 100);
+            });
+        }
+
+        if (!videoDB) {
+            alert("Storage Error: Please refresh the page.");
+            return;
+        }
+
         clearDB().then(() => {
             try {
-                // FIX: Reuse the capture stream to prevent black screen glitches
-                if (!globalCaptureStream) {
-                    globalCaptureStream = canvas.captureStream(60);
-                }
+                if (!globalCaptureStream) { globalCaptureStream = canvas.captureStream(30); }
 
-                const audioTracks = currentStream ? currentStream.getAudioTracks() : [];
-                // Create a new stream for THIS recording session combining video + audio
+                const audioTracks = currentStream ? currentStream.getAudioTracks().map(t => t.clone()) : [];
                 const combinedStream = new MediaStream([...globalCaptureStream.getVideoTracks(), ...audioTracks]);
 
-                const mimeTypes = ["video/mp4", "video/mp4;codecs=avc1", "video/webm;codecs=h264", "video/webm"];
+                const mimeTypes = ["video/mp4;codecs=avc1", "video/webm;codecs=h264", "video/webm"];
                 let selectedType = mimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || "";
-
                 if (!selectedType) return alert("Recording not supported.");
                 localStorage.setItem("recMimeType", selectedType);
 
-                const options = { mimeType: selectedType, videoBitsPerSecond: 25000000 };
+                // 6 Mbps for smooth mobile recording
+                const options = { mimeType: selectedType, videoBitsPerSecond: 6000000 };
                 recorder = new MediaRecorder(combinedStream, options);
 
                 recorder.ondataavailable = (e) => {
-                    if (e.data && e.data.size > 0) {
-                        saveChunkToDB(e.data);
-                    }
+                    if (e.data && e.data.size > 0) saveChunkToDB(e.data);
                 };
 
                 recorder.start(1000); 
-                
                 isRecording = true;
                 document.getElementById('rec-button').classList.add('recording');
                 document.getElementById('rec-text').innerText = "SAFE REC";
@@ -664,23 +717,39 @@
 
     // 5. STOP RECORDING
     function stopRecording() {
-        if (recorder && recorder.state !== 'inactive') recorder.stop();
+        if (recorder && recorder.state !== 'inactive') {
+            recorder.onstop = () => {
+                document.getElementById('rec-text').innerText = "FINALIZING...";
+                setTimeout(() => { recoverVideo(); }, 1000);
+            };
+            recorder.stop();
+        } else {
+             recoverVideo();
+        }
+        
         isRecording = false;
         document.getElementById('rec-button').classList.remove('recording');
         document.getElementById('rec-text').innerText = "SAVING...";
-
-        setTimeout(() => { recoverVideo(); }, 1000);
     }
 
-    // 6. RECOVER & DOWNLOAD (FIXED VIDEO WAKE UP)
+    // 6. RECOVER WITH PERCENTAGE %
     async function recoverVideo() {
-        const allChunks = await getAllChunks();
+        const btnText = document.getElementById('rec-text');
+        
+        // 1. Get Chunks with Progress
+        const allChunks = await getAllChunksWithProgress((percent) => {
+            btnText.innerText = `SAVING ${percent}%`;
+        });
+
         if (allChunks.length === 0) {
-            alert("No data found.");
+            alert("No data found. Recording was likely too short.");
             resetRecUI();
             return;
         }
 
+        btnText.innerText = "READY!";
+
+        // 2. Build and Download
         const savedType = localStorage.getItem("recMimeType") || 'video/webm';
         const blob = new Blob(allChunks, { type: savedType });
         const url = URL.createObjectURL(blob);
@@ -695,22 +764,25 @@
         document.body.appendChild(a);
         a.click();
 
-        // FIX: Force Video Wakeup after download dialog
+        // 3. Show Success & Cleanup
         setTimeout(() => {
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
+            showSavedMessage(); 
+            clearDB();
+            resetRecUI();
             
-            // WAKE UP VIDEO IF IT PAUSED
-            if(video.paused) video.play().catch(e => console.log("Video wake up error", e));
-
-            if(confirm("Video Saved!\n\nDelete temp files for this match?")) {
-                clearDB();
-                resetRecUI();
-            }
-            
-            // DOUBLE CHECK WAKE UP
-            if(video.paused) video.play().catch(e => console.log("Video wake up error", e));
+            // FIX: Ensure video resumes
+            if(video.paused) video.play().catch(e => {});
         }, 1000);
+    }
+
+    function showSavedMessage() {
+        const toast = document.getElementById('saved-toast');
+        if(toast) {
+            toast.style.display = 'flex';
+            setTimeout(() => { toast.style.display = 'none'; }, 3000);
+        }
     }
 
     function resetRecUI() {
@@ -719,8 +791,6 @@
         btn.style.background = ""; 
         btn.style.borderColor = "";
         document.getElementById('rec-text').innerText = "REC";
-        
-        // Final sanity check to ensure background is moving
         if(video.paused) video.play().catch(e => {});
     }
 
@@ -731,13 +801,30 @@
         tx.objectStore(STORE_NAME).add(chunk);
     }
 
-    function getAllChunks() {
+    function getAllChunksWithProgress(onProgress) {
         return new Promise((resolve) => {
             if(!videoDB) return resolve([]);
             const tx = videoDB.transaction(STORE_NAME, "readonly");
-            const request = tx.objectStore(STORE_NAME).getAll();
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => resolve([]);
+            const store = tx.objectStore(STORE_NAME);
+            const countReq = store.count();
+            countReq.onsuccess = () => {
+                const total = countReq.result;
+                if(total === 0) return resolve([]);
+                const chunks = [];
+                let loaded = 0;
+                const cursorReq = store.openCursor();
+                cursorReq.onsuccess = (e) => {
+                    const cursor = e.target.result;
+                    if(cursor) {
+                        chunks.push(cursor.value);
+                        loaded++;
+                        const percent = Math.round((loaded / total) * 100);
+                        if(onProgress) onProgress(percent);
+                        cursor.continue();
+                    } else { resolve(chunks); }
+                };
+                cursorReq.onerror = () => resolve([]);
+            };
         });
     }
 
@@ -760,6 +847,12 @@
             tx.onerror = () => resolve();
         });
     }
+
+    // Initialize is handled in connectToMatch
+
+    window.addEventListener('load', () => {
+        // DB Init is called manually in connectToMatch
+    });
 
     // Start DB when page loads
     window.addEventListener('load', initDB);
@@ -1682,6 +1775,46 @@
     function confirmStartRecording() {
         closeRecReminder();
         toggleRecording(); // Starts the actual recording
+    }
+    // --- 🔄 REFRESH / RESOLVE ISSUES ---
+    async function refreshCamera() {
+        const btn = document.getElementById('refresh-button');
+        btn.classList.add('spin-anim'); // Start spinning animation
+
+        // 1. Safety: Stop recording if it was running
+        if (isRecording) {
+            if (recorder && recorder.state !== 'inactive') recorder.stop();
+            isRecording = false;
+        }
+
+        // 2. Restart Camera Stream (Keep current resolution)
+        let w = 1920, h = 1080;
+        if (videoTrack) {
+            const s = videoTrack.getSettings();
+            if (s.width) w = s.width;
+            if (s.height) h = s.height;
+        }
+
+        // Restart engine
+        const success = await startCameraStream(w, h);
+
+        // 3. Resolve Issues & Reactivate Record Button
+        if (success) {
+            console.log("Stream Refreshed Successfully");
+            
+            // Force reset the Record UI
+            const recBtn = document.getElementById('rec-button');
+            recBtn.classList.remove('recording');
+            recBtn.style.background = ""; 
+            recBtn.style.borderColor = "";
+            document.getElementById('rec-text').innerText = "REC";
+            
+            // Ensure video is playing (fixes freeze issues)
+            video.play().catch(e => console.log("Auto-resume error:", e));
+        }
+
+        // Stop spinning after 1 second
+        setTimeout(() => btn.classList.remove('spin-anim'), 1000);
     }
     </script>
 </body>
