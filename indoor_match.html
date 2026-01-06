@@ -817,14 +817,14 @@ function broadcastMatchResult() {
 
         // --- STATE & HISTORY ---
         let state = {
-            rules: { wicketRuns: 5, wideRuns: 2, noBallRuns: 2, skins: false },
-            team1: { name: "", logo: "", squad: [], playing: [], playerStats: {}, isLoaded: false },
-            team2: { name: "", logo: "", squad: [], playing: [], playerStats: {}, isLoaded: false },
-            battingTeam: 'team1', bowlingTeam: 'team2',
-            striker: null, nonStriker: null, bowler: null,
-            id: null, innings: 1, target: 0, totalOvers: 16, playersPerSide: 8,
-            currentOver: [], history: []
-        };
+    rules: { wicketRuns: 5, wideRuns: 2, noBallRuns: 2, skins: false },
+    team1: { name: "", logo: "", squad: [], playing: [], playerStats: {}, isLoaded: false },
+    team2: { name: "", logo: "", squad: [], playing: [], playerStats: {}, isLoaded: false },
+    battingTeam: 'team1', bowlingTeam: 'team2',
+    striker: null, nonStriker: null, bowler: null,
+    id: null, innings: 1, target: 0, totalOvers: 16, playersPerSide: 8,
+    currentOver: [], history: [], timeline: [] // <--- ADDED timeline: [] HERE
+};
         
         let undoStack = []; 
         let editingBallIndex = null; // --- EDIT MODE CONTEXT ---
@@ -1141,7 +1141,7 @@ function broadcastMatchResult() {
                     state[key].playing.forEach(pid => {
                         const p = state[key].squad.find(sq => sq.id === pid);
                         const pName = p && p.name ? p.name : "Player " + pid.substr(0,4);
-                        state[key].playerStats[pid] = { id: pid, name: pName, runs: 0, balls: 0, wickets: 0, runsConceded: 0, ballsBowled: 0 };
+                        state[key].playerStats[pid] = { id: pid, name: pName, runs: 0, balls: 0, fours: 0, sixes: 0, wickets: 0, runsConceded: 0, ballsBowled: 0 };
                     });
                 });
             }
@@ -1235,111 +1235,97 @@ function broadcastMatchResult() {
 }
 
         function syncToLiveDB(lastAction = null) {
-            if (!broadcastId) return;
+    if (!broadcastId) return;
 
-            const bt = state[state.battingTeam];
-            const bl = state[state.bowlingTeam];
-            const striker = state.striker || { name: "", runs: 0, balls: 0 };
-            const nonStriker = state.nonStriker || { name: "", runs: 0, balls: 0 };
-            const bowler = state.bowler || { name: "", wickets: 0, runsConceded: 0, ballsBowled: 0 };
+    // --- Helper to Generate a Team's Full Card ---
+    const generateInningsData = (teamKey, opponentKey) => {
+        const team = state[teamKey];
+        const opp = state[opponentKey];
+        
+        // 1. Batting Stats
+        const batting = [];
+        let extrasTotal = 0; // You can enhance this with specific wide/nb counts later
+        
+        Object.values(team.playerStats).forEach(p => {
+             // Include if they played any part
+             const isAtCrease = (state.striker?.id === p.id) || (state.nonStriker?.id === p.id);
+             if (p.balls > 0 || p.runs > 0 || p.dismissal || isAtCrease) {
+                 let status = "not out";
+                 if (p.dismissal) status = p.dismissal;
+                 else if (isAtCrease) status = "not out";
+                 
+                 batting.push({
+                     name: p.name,
+                     runs: p.runs,
+                     balls: p.balls,
+                     fours: p.fours || 0,
+                     sixes: p.sixes || 0,
+                     sr: p.balls > 0 ? (p.runs * 100 / p.balls).toFixed(2) : "0.00",
+                     dismissal: status
+                 });
+             }
+        });
 
-            const t1Obj = state.team1;
-            const t2Obj = state.team2;
-            const t1CapPlayer = t1Obj.squad.find(p => p.id === t1Obj.captainId);
-            const t2CapPlayer = t2Obj.squad.find(p => p.id === t2Obj.captainId);
-
-            // --- GENERATE SQUAD LISTS ---
-            const getSquadList = (teamObj) => {
-                return teamObj.playing.map(pid => {
-                    const p = teamObj.squad.find(s => s.id === pid);
-                    return p ? p.name : "";
-                }).filter(n => n !== "");
-            };
-
-            // --- GENERATE BATTING CARD ---
-            const getBattingCard = () => {
-                const team = state[state.battingTeam];
-                let list = [];
-                // Loop through all playing members to find those with stats
-                team.playing.forEach(pid => {
-                    const p = team.playerStats[pid];
-                    // Include if: has faced balls OR has runs OR is out OR is currently at crease
-                    if (p && (p.balls > 0 || p.runs > 0 || p.dismissal || (state.striker && p.id === state.striker.id) || (state.nonStriker && p.id === state.nonStriker.id))) {
-                        let status = "not out";
-                        if (p.dismissal) status = p.dismissal.toUpperCase();
-                        else if (state.striker && p.id === state.striker.id) status = "BATTING *";
-                        else if (state.nonStriker && p.id === state.nonStriker.id) status = "BATTING";
-                        
-                        list.push({
-                            name: p.name,
-                            runs: p.runs,
-                            balls: p.balls,
-                            status: status
-                        });
-                    }
+        // 2. Bowling Stats (Opponent Bowlers)
+        const bowling = [];
+        Object.values(opp.playerStats).forEach(p => {
+            if (p.ballsBowled > 0) {
+                const o = Math.floor(p.ballsBowled / 6) + '.' + (p.ballsBowled % 6);
+                const econ = (p.runsConceded / (p.ballsBowled/6)).toFixed(2);
+                bowling.push({
+                    name: p.name,
+                    o: o,
+                    m: 0,
+                    r: p.runsConceded,
+                    w: p.wickets,
+                    econ: econ
                 });
-                return list;
-            };
+            }
+        });
+        
+        return {
+            name: team.name,
+            score: `${team.score}/${team.wickets}`,
+            overs: `${team.overs}.${team.balls}`,
+            batting: batting,
+            bowling: bowling,
+            logo: team.logo
+        };
+    };
 
-            // --- GENERATE BOWLING CARD ---
-            const getBowlingCard = () => {
-                const team = state[state.bowlingTeam];
-                let list = [];
-                team.playing.forEach(pid => {
-                    const p = team.playerStats[pid];
-                    if (p && p.ballsBowled > 0) {
-                        const overs = Math.floor(p.ballsBowled / 6) + '.' + (p.ballsBowled % 6);
-                        const econ = (p.runsConceded / (p.ballsBowled/6 || 1)).toFixed(1);
-                        list.push({
-                            name: p.name,
-                            o: overs,
-                            m: 0, // Maidens not currently tracked in simple state, defaulting to 0
-                            r: p.runsConceded,
-                            w: p.wickets,
-                            e: econ
-                        });
-                    }
-                });
-                return list;
-            };
+    // --- Prepare Payload ---
+    const payload = {
+        // Basic Info
+        venue: state.venue || "Unknown Venue",
+        matchDate: document.getElementById('match-date-input').value,
+        matchStatus: state.innings === 2 && state.team2.score > state.team1.score ? "COMPLETE" : "LIVE",
+        
+        // Live State
+        target: state.target || 0,
+        currentOver: state.currentOver.map(b => b.event),
+        timeline: state.timeline || [],
+        
+        // FULL SCORECARDS (The Cricinfo Part)
+        scorecard: {
+            innings1: generateInningsData('team1', 'team2'),
+            innings2: generateInningsData('team2', 'team1')
+        },
 
-            const payload = {
-                venue: state.venue || document.getElementById('venue').value || "Unknown Ground",
-                matchDate: document.getElementById('match-date-input').value || new Date().toDateString(),
-                t1: t1Obj.name,
-                t1Logo: t1Obj.logo || null,
-                t1CaptainImg: t1CapPlayer ? t1CapPlayer.image : null, 
-                
-                squad1: getSquadList(t1Obj),
-                squad2: getSquadList(t2Obj),
+        // Legacy support (optional, keeps old viewers working slightly)
+        t1: state.team1.name, t2: state.team2.name,
+        score: state[state.battingTeam].score,
+        wickets: state[state.battingTeam].wickets,
+        overs: state[state.battingTeam].overs,
+        balls: state[state.battingTeam].balls,
+        
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    };
 
-                // --- NEW: SEND CARDS TO DATABASE ---
-                battingCard: getBattingCard(),
-                bowlingCard: getBowlingCard(),
-                // -----------------------------------
+    if (lastAction) payload.lastAction = { id: Date.now(), type: lastAction };
 
-                t2: t2Obj.name,
-                t2Logo: t2Obj.logo || null,
-                t2CaptainImg: t2CapPlayer ? t2CapPlayer.image : null,
-                score: bt.score || 0,
-                wickets: bt.wickets || 0,
-                overs: bt.overs || 0,
-                balls: bt.balls || 0,
-                target: state.target || 0, 
-                totalOvers: state.totalOvers || 0,
-                playersPerSide: state.playersPerSide || 0,
-                striker: { name: striker.name, runs: striker.runs, balls: striker.balls },
-                nonStriker: { name: nonStriker.name, runs: nonStriker.runs, balls: nonStriker.balls },
-                bowler: { name: bowler.name, wkts: bowler.wickets, runs: bowler.runsConceded, balls: bowler.ballsBowled }, 
-                currentOver: state.currentOver.map(b => b.event), 
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            };
-
-            if (lastAction) payload.lastAction = { id: Date.now(), type: lastAction };
-
-            db.collection("live_matches").doc(broadcastId).set(payload, { merge: true })
-                .catch(err => console.error("Sync Error:", err));
-        }
+    db.collection("live_matches").doc(broadcastId).set(payload, { merge: true })
+        .catch(err => console.error("Sync Error:", err));
+}
 
         function startMatch() {
             state.totalOvers = parseInt(ui.totalOversInput.value);
@@ -1746,7 +1732,16 @@ function broadcastMatchResult() {
                 }, 1500);
             }
 
-            setTimeout(() => { selectPlayer(roleKey, updateUI); }, 1200);
+            // --- FIX: CHECK FOR ALL OUT (International Rules: Wickets = Players - 1) ---
+            // If 4 players, 3 wickets means 1 man standing (All Out)
+            if (bt.wickets >= state.playersPerSide - 1) {
+                setTimeout(() => { 
+                    alert("ALL OUT!"); 
+                    endInnings(); 
+                }, 1200);
+            } else {
+                setTimeout(() => { selectPlayer(roleKey, updateUI); }, 1200);
+            }
         }
 
         function addToHistory() {
@@ -1767,7 +1762,12 @@ function broadcastMatchResult() {
             const bwl = state.bowler; 
 
             bt.score = (bt.score || 0) + runs;
-            if (str) { str.runs += runs; str.balls++; }
+            if (str) { 
+    str.runs += runs; 
+    str.balls++; 
+    if(runs === 4) str.fours = (str.fours || 0) + 1;
+    if(runs === 6) str.sixes = (str.sixes || 0) + 1;
+}
             if (bwl) { bwl.runsConceded += runs; bwl.ballsBowled++; }
 
             if (state.innings === 2 && state.rules.wicketRuns === 0) {
@@ -1832,35 +1832,43 @@ function broadcastMatchResult() {
         function processBall(runs, eventLabel, isLegal) {
     const bt = state[state.battingTeam];
     if (isLegal) { bt.balls = (bt.balls || 0) + 1; }
-    
-    // --- UPDATED: SAVE NAMES ---
+
+    // 1. Get Current Names
     const currentStrikerId = state.striker ? state.striker.id : null;
     const bowlerName = state.bowler ? state.bowler.name : "Bowler";
     const batterName = state.striker ? state.striker.name : "Batter";
 
-    state.currentOver.push({ 
-        event: eventLabel, 
-        runs: runs, 
-        isLegal: isLegal, 
+    // 2. Create detailed ball object
+    const ballObj = {
+        event: eventLabel,
+        runs: runs,
+        isLegal: isLegal,
         strikerId: currentStrikerId,
-        bowler: bowlerName, // Saving Bowler Name
-        batter: batterName  // Saving Batter Name
-    });
-    // ---------------------------
+        bowler: bowlerName,
+        batter: batterName,
+        over: bt.overs || 0,
+        ball: bt.balls || 0
+    };
 
+    // 3. Save to Arrays
+    state.currentOver.push(ballObj);
+    if(!state.timeline) state.timeline = [];
+    state.timeline.push(ballObj); // Save to permanent history
+
+    // 4. Check for Over End
     if(bt.balls === 6) {
-                bt.overs = (bt.overs || 0) + 1;
-                bt.balls = 0;
-                
-                if(bt.overs >= state.totalOvers) {
-                    endInnings();
-                } else if (state.rules.skins && bt.overs % 4 === 0) {
-                    setTimeout(() => { state.currentOver = []; openModal('pair-change-modal'); }, 500);
-                } else {
-                    setTimeout(() => { swapStrikers(); state.currentOver = []; selectPlayer('bowler', updateUI); }, 200);
-                }
-            }
+        bt.overs = (bt.overs || 0) + 1;
+        bt.balls = 0;
+        
+        if(bt.overs >= state.totalOvers) {
+            endInnings();
+        } else if (state.rules.skins && bt.overs % 4 === 0) {
+            setTimeout(() => { state.currentOver = []; openModal('pair-change-modal'); }, 500);
+        } else {
+            setTimeout(() => { swapStrikers(); state.currentOver = []; selectPlayer('bowler', updateUI); }, 200);
         }
+    }
+}
 
         function swapStrikers() { const t = state.striker; state.striker = state.nonStriker; state.nonStriker = t; }
         
