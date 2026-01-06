@@ -1235,97 +1235,108 @@ function broadcastMatchResult() {
 }
 
         function syncToLiveDB(lastAction = null) {
-    if (!broadcastId) return;
+            if (!broadcastId) return;
 
-    // --- Helper to Generate a Team's Full Card ---
-    const generateInningsData = (teamKey, opponentKey) => {
-        const team = state[teamKey];
-        const opp = state[opponentKey];
-        
-        // 1. Batting Stats
-        const batting = [];
-        let extrasTotal = 0; // You can enhance this with specific wide/nb counts later
-        
-        Object.values(team.playerStats).forEach(p => {
-             // Include if they played any part
-             const isAtCrease = (state.striker?.id === p.id) || (state.nonStriker?.id === p.id);
-             if (p.balls > 0 || p.runs > 0 || p.dismissal || isAtCrease) {
-                 let status = "not out";
-                 if (p.dismissal) status = p.dismissal;
-                 else if (isAtCrease) status = "not out";
-                 
-                 batting.push({
-                     name: p.name,
-                     runs: p.runs,
-                     balls: p.balls,
-                     fours: p.fours || 0,
-                     sixes: p.sixes || 0,
-                     sr: p.balls > 0 ? (p.runs * 100 / p.balls).toFixed(2) : "0.00",
-                     dismissal: status
-                 });
-             }
-        });
-
-        // 2. Bowling Stats (Opponent Bowlers)
-        const bowling = [];
-        Object.values(opp.playerStats).forEach(p => {
-            if (p.ballsBowled > 0) {
-                const o = Math.floor(p.ballsBowled / 6) + '.' + (p.ballsBowled % 6);
-                const econ = (p.runsConceded / (p.ballsBowled/6)).toFixed(2);
-                bowling.push({
-                    name: p.name,
-                    o: o,
-                    m: 0,
-                    r: p.runsConceded,
-                    w: p.wickets,
-                    econ: econ
+            // --- Helper to Generate a Team's Full Card ---
+            const generateInningsData = (teamKey, opponentKey) => {
+                const team = state[teamKey];
+                const opp = state[opponentKey];
+                
+                // 1. Batting Stats
+                const batting = [];
+                let extrasTotal = 0; // You can enhance this with specific wide/nb counts later
+                
+                Object.values(team.playerStats).forEach(p => {
+                     // Include if they played any part
+                     const isAtCrease = (state.striker?.id === p.id) || (state.nonStriker?.id === p.id);
+                     if (p.balls > 0 || p.runs > 0 || p.dismissal || isAtCrease) {
+                         let status = "not out";
+                         if (p.dismissal) status = p.dismissal;
+                         else if (isAtCrease) status = "not out";
+                         
+                         batting.push({
+                             name: p.name,
+                             runs: p.runs,
+                             balls: p.balls,
+                             fours: p.fours || 0,
+                             sixes: p.sixes || 0,
+                             sr: p.balls > 0 ? (p.runs * 100 / p.balls).toFixed(2) : "0.00",
+                             dismissal: status
+                         });
+                     }
                 });
-            }
-        });
-        
-        return {
-            name: team.name,
-            score: `${team.score}/${team.wickets}`,
-            overs: `${team.overs}.${team.balls}`,
-            batting: batting,
-            bowling: bowling,
-            logo: team.logo
-        };
-    };
 
-    // --- Prepare Payload ---
-    const payload = {
-        // Basic Info
-        venue: state.venue || "Unknown Venue",
-        matchDate: document.getElementById('match-date-input').value,
-        matchStatus: state.innings === 2 && state.team2.score > state.team1.score ? "COMPLETE" : "LIVE",
-        
-        // Live State
-        target: state.target || 0,
-        currentOver: state.currentOver.map(b => b.event),
-        timeline: state.timeline || [],
-        
-        // FULL SCORECARDS (The Cricinfo Part)
-        scorecard: {
-            innings1: generateInningsData('team1', 'team2'),
-            innings2: generateInningsData('team2', 'team1')
-        },
+                // 2. Bowling Stats (Opponent Bowlers)
+                const bowling = [];
+                Object.values(opp.playerStats).forEach(p => {
+                    if (p.ballsBowled > 0) {
+                        const o = Math.floor(p.ballsBowled / 6) + '.' + (p.ballsBowled % 6);
+                        const econ = (p.runsConceded / (p.ballsBowled/6)).toFixed(2);
+                        bowling.push({
+                            name: p.name,
+                            o: o,
+                            m: 0,
+                            r: p.runsConceded,
+                            w: p.wickets,
+                            econ: econ
+                        });
+                    }
+                });
+                
+                return {
+                    name: team.name,
+                    score: `${team.score}/${team.wickets}`,
+                    overs: `${team.overs}.${team.balls}`,
+                    batting: batting,
+                    bowling: bowling,
+                    logo: team.logo
+                };
+            };
 
-        // Legacy support (optional, keeps old viewers working slightly)
-        t1: state.team1.name, t2: state.team2.name,
-        score: state[state.battingTeam].score,
-        wickets: state[state.battingTeam].wickets,
-        overs: state[state.battingTeam].overs,
-        balls: state[state.battingTeam].balls,
-        
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    };
+            // --- Prepare Payload ---
+            const payload = {
+                // Basic Info
+                venue: state.venue || "Unknown Venue",
+                matchDate: document.getElementById('match-date-input').value,
+                matchStatus: state.innings === 2 && state.team2.score > state.team1.score ? "COMPLETE" : "LIVE",
+                
+                // --- NEW: SEND SUPER OVER STATUS ---
+                isSuperOver: state.isSuperOver || false, 
+                // -----------------------------------
+                
+                // Live State
+                target: state.target || 0,
+                currentOver: state.currentOver.map(b => b.event),
+                timeline: state.timeline || [],
 
-    if (lastAction) payload.lastAction = { id: Date.now(), type: lastAction };
+                // --- NEW: PLAYER NAMES FOR BROADCAST ---
+                striker: state.striker || { name: "", runs: 0, balls: 0 },
+                nonStriker: state.nonStriker || { name: "", runs: 0, balls: 0 },
+                bowler: state.bowler || { name: "", wkts: 0, runs: 0, balls: 0 },
+                // ---------------------------------------
+                
+                // FULL SCORECARDS (The Cricinfo Part)
+                scorecard: {
+                    innings1: generateInningsData('team1', 'team2'),
+                    innings2: generateInningsData('team2', 'team1')
+                },
 
-    db.collection("live_matches").doc(broadcastId).set(payload, { merge: true })
-        .catch(err => console.error("Sync Error:", err));
-}
+                // Legacy support
+                t1: state.team1.name, t2: state.team2.name,
+                t1Logo: state.team1.logo, t2Logo: state.team2.logo, // <--- ADDED LOGOS HERE
+                score: state[state.battingTeam].score,
+                wickets: state[state.battingTeam].wickets,
+                overs: state[state.battingTeam].overs,
+                balls: state[state.battingTeam].balls,
+                
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            if (lastAction) payload.lastAction = { id: Date.now(), type: lastAction };
+
+            db.collection("live_matches").doc(broadcastId).set(payload, { merge: true })
+                .catch(err => console.error("Sync Error:", err));
+        }
 
         function startMatch() {
             state.totalOvers = parseInt(ui.totalOversInput.value);
@@ -1710,12 +1721,7 @@ function broadcastMatchResult() {
                 victim.runs -= penalty; 
             }
 
-            // In Super Over (ICC Rules), runs are NOT deducted for wickets, only wickets count.
-            // But if you want to keep your indoor rules (-5), keep this line. 
-            // Standard Super Over: bt.score -= 0;
-            // Assuming we follow your configured app rules:
             bt.score -= penalty;
-            
             if (state.striker) { state.striker.balls++; }
             bt.wickets = (bt.wickets || 0) + 1;
             
