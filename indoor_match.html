@@ -1710,7 +1710,12 @@ function broadcastMatchResult() {
                 victim.runs -= penalty; 
             }
 
+            // In Super Over (ICC Rules), runs are NOT deducted for wickets, only wickets count.
+            // But if you want to keep your indoor rules (-5), keep this line. 
+            // Standard Super Over: bt.score -= 0;
+            // Assuming we follow your configured app rules:
             bt.score -= penalty;
+            
             if (state.striker) { state.striker.balls++; }
             bt.wickets = (bt.wickets || 0) + 1;
             
@@ -1732,11 +1737,16 @@ function broadcastMatchResult() {
                 }, 1500);
             }
 
-            // --- FIX: CHECK FOR ALL OUT (International Rules: Wickets = Players - 1) ---
-            // If 4 players, 3 wickets means 1 man standing (All Out)
-            if (bt.wickets >= state.playersPerSide - 1) {
+            // --- SUPER OVER LOGIC: 2 Wickets = All Out ---
+            // --- REGULAR LOGIC: Players-1 = All Out ---
+            let wicketLimit = state.playersPerSide - 1;
+            if (state.isSuperOver) {
+                wicketLimit = 2; // ICC Rule: Innings ends at 2 wickets
+            }
+
+            if (bt.wickets >= wicketLimit) {
                 setTimeout(() => { 
-                    alert("ALL OUT!"); 
+                    alert(state.isSuperOver ? "SUPER OVER ENDS (2 Wickets!)" : "ALL OUT!"); 
                     endInnings(); 
                 }, 1200);
             } else {
@@ -1763,17 +1773,25 @@ function broadcastMatchResult() {
 
             bt.score = (bt.score || 0) + runs;
             if (str) { 
-    str.runs += runs; 
-    str.balls++; 
-    if(runs === 4) str.fours = (str.fours || 0) + 1;
-    if(runs === 6) str.sixes = (str.sixes || 0) + 1;
-}
+                str.runs += runs; 
+                str.balls++; 
+                if(runs === 4) str.fours = (str.fours || 0) + 1;
+                if(runs === 6) str.sixes = (str.sixes || 0) + 1;
+            }
             if (bwl) { bwl.runsConceded += runs; bwl.ballsBowled++; }
 
-            if (state.innings === 2 && state.rules.wicketRuns === 0) {
+            // --- FIX: Check for Win in Innings 2 OR Super Over Chase (Innings 4) ---
+            const isChaseInning = (state.innings === 2 && state.rules.wicketRuns === 0) || state.innings === 4;
+            
+            if (isChaseInning) {
                 if (bt.score >= state.target) {
                     processBall(runs, `${runs}`, true);
-                    updateUI(); setTimeout(endInnings, 100); return;
+                    updateUI(); 
+                    setTimeout(() => {
+                        alert("TARGET CHASED! " + bt.name + " WINS!");
+                        endInnings();
+                    }, 100); 
+                    return;
                 }
             }
 
@@ -1818,10 +1836,18 @@ function broadcastMatchResult() {
                 label = `+${runs}`;
             }
 
-            if (state.innings === 2 && state.rules.wicketRuns === 0) {
+            // --- FIX: Check for Win in Innings 2 OR Super Over Chase (Innings 4) ---
+            const isChaseInning = (state.innings === 2 && state.rules.wicketRuns === 0) || state.innings === 4;
+
+            if (isChaseInning) {
                 if (bt.score >= state.target) {
                     processBall(runs, label, false); 
-                    updateUI(); setTimeout(endInnings, 100); return;
+                    updateUI(); 
+                    setTimeout(() => {
+                        alert("TARGET CHASED! " + bt.name + " WINS!");
+                        endInnings();
+                    }, 100); 
+                    return;
                 }
             }
 
@@ -1878,9 +1904,9 @@ function broadcastMatchResult() {
                 selectPlayer('bowler', updateUI);
             });
         }
-
-        function endInnings() {
+function endInnings() {
             if(state.innings === 1) {
+                // Regular Match: Innings 1 -> Innings 2
                 const battingTeam = state[state.battingTeam];
                 state.target = battingTeam.score + 1;
                 document.getElementById('ib-batting-team').textContent = battingTeam.name;
@@ -1889,7 +1915,31 @@ function broadcastMatchResult() {
                 document.getElementById('ib-overs').textContent = `${battingTeam.overs}.${battingTeam.balls}`;
                 document.getElementById('ib-target').textContent = state.target;
                 document.getElementById('innings-break-modal').classList.remove('hidden');
+            
+            } else if (state.innings === 3) {
+                // Super Over: Innings 1 (Total Innings 3) -> Innings 2 (Total Innings 4)
+                state.innings = 4;
+                
+                // Set Target based on what the first team just scored in Super Over
+                const battingTeam = state[state.battingTeam];
+                state.target = battingTeam.score + 1;
+
+                // Swap Teams
+                const t = state.battingTeam; 
+                state.battingTeam = state.bowlingTeam; 
+                state.bowlingTeam = t;
+                
+                // Reset State for next innings
+                state.currentOver = []; 
+                state.bowler = null;
+                state.striker = null;
+                state.nonStriker = null;
+
+                alert(`SUPER OVER 2nd INNINGS!\nTarget: ${state.target} Runs (1 Over)`);
+                initInnings();
+
             } else {
+                // Match Complete (Regular or Super Over Final)
                 generateMatchSummary();
                 document.getElementById('match-summary-modal').classList.remove('hidden');
             }
@@ -1900,22 +1950,51 @@ function broadcastMatchResult() {
             const t2 = state.team2;
             let winnerText = "MATCH TIED";
             let marginText = "Scores Level";
+            let isTie = false;
 
             if (t1.score > t2.score) {
                 winnerText = `${t1.name} WINS!`;
-                marginText = `WON BY ${t1.score - t2.score} RUNS`;
+                // Fix: Check for Super Over context
+                if (state.isSuperOver) {
+                    marginText = `WON BY ${t1.score - t2.score} RUNS (SUPER OVER)`;
+                } else {
+                    marginText = `WON BY ${t1.score - t2.score} RUNS`;
+                }
+
                 document.getElementById('card-t1').className = "bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-lg border border-green-500/50 rounded-2xl p-6 flex items-center justify-between shadow-[0_0_30px_rgba(16,185,129,0.2)]";
                 document.getElementById('card-t2').className = "bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-6 flex items-center justify-between opacity-70 grayscale";
             } else if (t2.score > t1.score) {
                 winnerText = `${t2.name} WINS!`;
-                const wicketsLeft = (state.playersPerSide - 1) - (t2.wickets || 0); 
-                marginText = `WON BY ${wicketsLeft > 0 ? wicketsLeft : 1} WICKETS`;
+                
+                if (state.isSuperOver) {
+                     // Fix: Display run difference for Super Over wins
+                     marginText = `WON BY ${t2.score - t1.score} RUNS (SUPER OVER)`;
+                } else {
+                     const wicketsLeft = (state.playersPerSide - 1) - (t2.wickets || 0); 
+                     marginText = `WON BY ${wicketsLeft > 0 ? wicketsLeft : 1} WICKETS`;
+                }
                 document.getElementById('card-t2').className = "bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-lg border border-green-500/50 rounded-2xl p-6 flex items-center justify-between shadow-[0_0_30px_rgba(16,185,129,0.2)]";
                 document.getElementById('card-t1').className = "bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-6 flex items-center justify-between opacity-70 grayscale";
+            } else {
+                isTie = true;
             }
 
             document.getElementById('summary-winner-text').textContent = winnerText;
             document.getElementById('summary-margin-text').textContent = marginText;
+
+            // --- SUPER OVER BUTTON LOGIC ---
+            const btnContainer = document.querySelector('#match-summary-modal .flex.flex-col.md\\:flex-row');
+            const oldBtn = document.getElementById('btn-super-over');
+            if(oldBtn) oldBtn.remove();
+
+            if (isTie && !state.isSuperOver) {
+                const soBtn = document.createElement('button');
+                soBtn.id = "btn-super-over";
+                soBtn.onclick = startSuperOver;
+                soBtn.className = "w-full mb-4 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-black uppercase tracking-widest rounded-xl shadow-[0_0_20px_rgba(124,58,237,0.5)] animate-pulse hover:scale-105 transition-transform";
+                soBtn.innerHTML = "⚡ START SUPER OVER ⚡";
+                btnContainer.parentElement.insertBefore(soBtn, btnContainer);
+            }
 
             document.getElementById('sum-t1-name').textContent = t1.name;
             if(t1.logo) document.getElementById('sum-t1-logo').innerHTML = `<img src="${t1.logo}" class="w-full h-full object-cover">`;
@@ -1975,6 +2054,44 @@ function broadcastMatchResult() {
                     </div>
                 </label>
             `).join('');
+        }
+
+        function startSuperOver() {
+            // 1. Close the Summary Modal
+            document.getElementById('match-summary-modal').classList.add('hidden');
+
+            // 2. Setup Super Over State
+            state.isSuperOver = true;
+            state.innings = 3; // Technically 3rd innings of the session
+            state.totalOvers = 1; // 1 Over only
+            state.target = 9999; // Reset target for first batting team
+            
+            // 3. Reset Team Scores for the Super Over
+            // Note: We keep the same Batting Team as the end of Innings 2 
+            // (Because the team batting 2nd in main match bats 1st in Super Over)
+            state.team1.score = 0; state.team1.wickets = 0; state.team1.balls = 0; state.team1.overs = 0;
+            state.team2.score = 0; state.team2.wickets = 0; state.team2.balls = 0; state.team2.overs = 0;
+            state.currentOver = [];
+
+            // 4. Clear player stats visually for the Super Over (so they start from 0 on scoreboard)
+            ['team1', 'team2'].forEach(tk => {
+                Object.values(state[tk].playerStats).forEach(p => {
+                    // Reset stats for the "Super Over" display
+                    p.runs = 0; p.balls = 0; p.wickets = 0; 
+                    p.runsConceded = 0; p.ballsBowled = 0; 
+                    p.dismissal = null; 
+                });
+            });
+
+            // 5. Update UI
+            updateMatchHeader();
+            updateScoreboard();
+
+            // 6. Alert and Start
+            // state.battingTeam is currently the team that batted 2nd in match, which is correct for SO start.
+            alert(`SUPER OVER STARTING!\n${state[state.battingTeam].name} to Bat First.\n(1 Over, Max 2 Wickets)`);
+            
+            initInnings();
         }
 
         function startSecondInnings() {
