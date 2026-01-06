@@ -1237,7 +1237,47 @@
             const bottomY = h - barH - (h * 0.03); 
             const pillW = w - (marginX * 2); 
             const pillX = marginX; 
-            const isChasing = (match.target && match.target > 0); 
+            
+            // FIX: Only chase if target is real (ignoring the 9999 placeholder)
+            const isChasing = (match.target && match.target > 0 && match.target < 9999); 
+
+            // --- SUPER OVER BADGE (Above Scoreboard) ---
+            if (match.isSuperOver) {
+                c.save();
+                c.font = "900 24px 'Montserrat'";
+                const soText = "⚡ SUPER OVER ⚡";
+                const soTextW = c.measureText(soText).width;
+                const soPad = 30;
+                const soW = soTextW + soPad;
+                const soH = 36;
+                // Center horizontally relative to screen (or pill)
+                const soX = (w / 2) - (soW / 2);
+                const soY = bottomY - soH - 10; // 10px above the main scoreboard
+
+                // Glow Effect
+                c.shadowColor = "rgba(239, 68, 68, 0.8)"; // Red Glow
+                c.shadowBlur = 20;
+
+                // Background Pill
+                const grd = c.createLinearGradient(soX, soY, soX + soW, soY);
+                grd.addColorStop(0, "#b91c1c"); // Dark Red
+                grd.addColorStop(1, "#ef4444"); // Bright Red
+                c.fillStyle = grd;
+                
+                c.beginPath();
+                if(c.roundRect) c.roundRect(soX, soY, soW, soH, 12);
+                else c.rect(soX, soY, soW, soH);
+                c.fill();
+
+                // Text
+                c.shadowBlur = 0;
+                c.fillStyle = "white";
+                c.textAlign = "center";
+                c.textBaseline = "middle";
+                c.fillText(soText, soX + (soW / 2), soY + (soH / 2) + 2);
+                c.restore();
+            }
+            // -------------------------------------------
             
             // Gold Bar Top
             c.fillStyle = "#fbbf24"; 
