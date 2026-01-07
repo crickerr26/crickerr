@@ -11,7 +11,7 @@
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     
@@ -1168,23 +1168,7 @@ function broadcastMatchResult() {
             syncToLiveDB();
             showScreen('app');
         }
-
-        // --- TOSS & BROADCAST LOGIC ---
-        function selectTossWinner(w) {
-            tossWinner = w;
-            document.querySelectorAll('.toss-card-btn').forEach(b => b.classList.remove('selected'));
-            document.getElementById(`toss-winner-${w}`).classList.add('selected');
-            checkStartReady();
-        }
-
-        function selectTossChoice(c) {
-            tossDecision = c;
-            document.querySelectorAll('.decision-btn').forEach(b => b.classList.remove('selected'));
-            document.getElementById(`toss-choice-${c}`).classList.add('selected');
-            checkStartReady();
-        }
-
-        function generateBroadcastCode() {
+function generateBroadcastCode() {
             broadcastId = Math.floor(1000 + Math.random() * 9000).toString();
             const display = document.getElementById('broadcast-display');
             const codeBox = document.getElementById('match-code-box');
@@ -1194,44 +1178,32 @@ function broadcastMatchResult() {
             btn.classList.remove('bg-blue-50', 'text-blue-700');
             btn.classList.add('bg-green-100', 'text-green-800', 'border-green-300');
             btn.innerHTML = `<span class="text-lg">✅ BROADCAST LIVE</span><span class="text-xs font-normal">Code: ${broadcastId}</span>`;
+            
+            // FIX: Check readiness FIRST, then sync. This prevents the logic gap.
+            checkStartReady();
             syncToLiveDB();
+        }
+        // --- TOSS & BROADCAST LOGIC ---
+        function selectTossWinner(w) {
+            tossWinner = w;
+            document.querySelectorAll('.toss-card-btn').forEach(b => b.classList.remove('selected'));
+            document.getElementById(`toss-winner-${w}`).classList.add('selected');
             checkStartReady();
         }
-        
-        function checkStartReady() {
-            const btn = document.getElementById('start-match-btn');
-            if(tossWinner && tossDecision && broadcastId) {
-                btn.disabled = false;
-                btn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-300');
-                btn.classList.add('bg-blue-600', 'hover:bg-blue-700', 'shadow-lg');
-            } else {
-                btn.disabled = true;
-                btn.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-300');
-                btn.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'shadow-lg');
-            }
-        }
 
-        function copyBroadcastLink() {
-            const code = document.getElementById('match-code-box').textContent;
-            navigator.clipboard.writeText(code).then(() => {
-                const fb = document.getElementById('copy-feedback');
-                fb.classList.remove('hidden');
-                setTimeout(() => fb.classList.add('hidden'), 2000);
-            });
-        }
+        function selectTossChoice(c) {
+    tossDecision = c;
+    document.querySelectorAll('.decision-btn').forEach(b => b.classList.remove('selected'));
+    document.getElementById(`toss-choice-${c}`).classList.add('selected');
+    checkStartReady();
 
-        // --- ADDED MISSING TOGGLE FUNCTION ---
-        function toggleView(viewName, toggleEl) {
-    if(!broadcastId) return;
-    let updateData = {};
-    
-    // Simple toggle logic:
-    if(viewName === 'SQUAD') updateData = { showSquad: toggleEl.checked };
-    else if(viewName === 'BATTING') updateData = { showBattingCard: toggleEl.checked };
-    else if(viewName === 'BOWLING') updateData = { showBowlingCard: toggleEl.checked };
-    else if(viewName === 'RUN_RATE') updateData = { showRunRate: toggleEl.checked }; // <--- ADDED THIS LINE
-
-    db.collection("live_matches").doc(broadcastId).set(updateData, { merge: true });
+    // --- NEW: Smooth Scroll to Start Button ---
+    setTimeout(() => {
+        document.getElementById('start-match-btn').scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+        });
+    }, 300); // Small delay for a natural feel
 }
 
         function syncToLiveDB(lastAction = null) {
@@ -1323,11 +1295,13 @@ function broadcastMatchResult() {
 
                 // Legacy support
                 t1: state.team1.name, t2: state.team2.name,
-                t1Logo: state.team1.logo, t2Logo: state.team2.logo, // <--- ADDED LOGOS HERE
-                score: state[state.battingTeam].score,
-                wickets: state[state.battingTeam].wickets,
-                overs: state[state.battingTeam].overs,
-                balls: state[state.battingTeam].balls,
+                t1Logo: state.team1.logo, t2Logo: state.team2.logo, 
+                
+                // FIX: Added '|| 0' to prevent crash before match starts
+                score: state[state.battingTeam].score || 0,
+                wickets: state[state.battingTeam].wickets || 0,
+                overs: state[state.battingTeam].overs || 0,
+                balls: state[state.battingTeam].balls || 0,
                 
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
@@ -1337,8 +1311,84 @@ function broadcastMatchResult() {
             db.collection("live_matches").doc(broadcastId).set(payload, { merge: true })
                 .catch(err => console.error("Sync Error:", err));
         }
+        
+        function checkStartReady() {
+    const btn = document.getElementById('start-match-btn');
+    
+    // Define the "Active" classes for the pulsing green effect
+    const activeClasses = ['bg-gradient-to-r', 'from-green-500', 'to-emerald-600', 'text-white', 'shadow-[0_0_30px_rgba(34,197,94,0.8)]', 'animate-pulse', 'transform', 'hover:scale-105'];
+    // Define the "Disabled" classes
+    const disabledClasses = ['bg-gray-200', 'text-gray-400', 'opacity-50', 'cursor-not-allowed', 'shadow-none'];
+
+    if(tossWinner && tossDecision && broadcastId) {
+        btn.disabled = false;
+        
+        // Remove disabled styles
+        btn.classList.remove(...disabledClasses);
+        
+        // Add Pulsing Green Styles
+        btn.classList.add(...activeClasses);
+        btn.innerHTML = "🚀 START MATCH 🚀"; // Changes text for emphasis
+    } else {
+        btn.disabled = true;
+        
+        // Add disabled styles
+        btn.classList.add(...disabledClasses);
+        
+        // Remove active styles
+        btn.classList.remove(...activeClasses);
+        btn.innerHTML = "START MATCH";
+    }
+}
+
+        function copyBroadcastLink() {
+            const code = document.getElementById('match-code-box').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                const fb = document.getElementById('copy-feedback');
+                fb.classList.remove('hidden');
+                setTimeout(() => fb.classList.add('hidden'), 2000);
+            });
+        }
+
+        // --- ADDED MISSING TOGGLE FUNCTION ---
+        function toggleView(viewName, toggleEl) {
+    if(!broadcastId) return;
+    let updateData = {};
+    
+    // Simple toggle logic:
+    if(viewName === 'SQUAD') updateData = { showSquad: toggleEl.checked };
+    else if(viewName === 'BATTING') updateData = { showBattingCard: toggleEl.checked };
+    else if(viewName === 'BOWLING') updateData = { showBowlingCard: toggleEl.checked };
+    else if(viewName === 'RUN_RATE') updateData = { showRunRate: toggleEl.checked }; // <--- ADDED THIS LINE
+
+    db.collection("live_matches").doc(broadcastId).set(updateData, { merge: true });
+}
+
+        function selectTossChoice(c) {
+            tossDecision = c;
+            document.querySelectorAll('.decision-btn').forEach(b => b.classList.remove('selected'));
+            document.getElementById(`toss-choice-${c}`).classList.add('selected');
+            checkStartReady();
+
+            // --- NEW: Smooth Scroll to Start Button ---
+            setTimeout(() => {
+                document.getElementById('start-match-btn').scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center' 
+                });
+            }, 300); // Small delay for a natural feel
+        }
 
         function startMatch() {
+            // --- NEW: Confetti Explosion ---
+            confetti({
+                particleCount: 150,
+                spread: 100,
+                origin: { y: 0.6 }, // Starts from slightly below center
+                colors: ['#2563eb', '#facc15', '#ef4444', '#22c55e'] // Blue, Yellow, Red, Green
+            });
+            // -------------------------------
+
             state.totalOvers = parseInt(ui.totalOversInput.value);
             state.playersPerSide = parseInt(ui.playersPerSideInput.value);
             state.venue = ui.venueInput.value;
