@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crickerr - TEam Manager</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cricker - Manage Teams</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -15,6 +15,8 @@
             font-family: 'Inter', sans-serif; 
             overflow: hidden; 
             background-color: #f3f4f6;
+            margin: 0; padding: 0;
+            width: 100vw; height: 100vh;
         }
 
         /* --- APPLE STYLE "AURORA" BACKGROUND --- */
@@ -26,7 +28,6 @@
             overflow: hidden;
         }
 
-        /* The Moving Blobs */
         .aurora-blob {
             position: absolute;
             border-radius: 50%;
@@ -35,24 +36,9 @@
             animation: drift 25s infinite alternate linear;
         }
         
-        .blob-1 {
-            top: -10%; left: -10%; width: 70vw; height: 70vw;
-            background: #a78bfa; /* Soft Purple */
-            animation-delay: 0s;
-        }
-        .blob-2 {
-            bottom: -20%; right: -10%; width: 80vw; height: 80vw;
-            background: #60a5fa; /* Blue */
-            animation-delay: -5s;
-            animation-direction: alternate-reverse;
-        }
-        .blob-3 {
-            top: 30%; left: 20%; width: 60vw; height: 60vw;
-            background: #2dd4bf; /* Teal/Cyan */
-            opacity: 0.6;
-            animation-duration: 30s;
-            animation-delay: -10s;
-        }
+        .blob-1 { top: -10%; left: -10%; width: 70vw; height: 70vw; background: #a78bfa; animation-delay: 0s; }
+        .blob-2 { bottom: -20%; right: -10%; width: 80vw; height: 80vw; background: #60a5fa; animation-delay: -5s; animation-direction: alternate-reverse; }
+        .blob-3 { top: 30%; left: 20%; width: 60vw; height: 60vw; background: #2dd4bf; opacity: 0.6; animation-duration: 30s; animation-delay: -10s; }
 
         @keyframes drift {
             0% { transform: translate(0, 0) scale(1); }
@@ -61,68 +47,65 @@
             100% { transform: translate(50px, 50px) scale(1); }
         }
 
-        /* --- FILM GRAIN TEXTURE (The "Professional" Touch) --- */
+        /* --- GRAIN --- */
         .noise-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: -1;
-            opacity: 0.07; /* Subtle texture */
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; opacity: 0.05; 
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
         }
 
-        /* --- GLASSMORPHISM CARD --- */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.65); /* More transparency for background to show through */
-            backdrop-filter: blur(25px); /* Heavier blur for premium feel */
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
-        }
-
-        @media (max-width: 768px) { 
-            .team-management-card { 
-                max-width: 100%; min-height: 100vh; border-radius: 0; border: none; 
-                background: rgba(255, 255, 255, 0.85); 
-            } 
+        /* --- GLASS CONTAINER --- */
+        .glass-app-container {
+            width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.4); 
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
         }
 
         .setup-btn { background-color: #2563eb; background-image: linear-gradient(to right, #2563eb, #1d4ed8); transition: all 0.3s ease; }
         .setup-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3), 0 4px 6px -2px rgba(37, 99, 235, 0.15); }
         
-        .animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
+        .animate-fade-in { animation: fadeIn 0.2s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
-        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
-        @keyframes shake {
-            10%, 90% { transform: translate3d(-1px, 0, 0); }
-            20%, 80% { transform: translate3d(2px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-            40%, 60% { transform: translate3d(4px, 0, 0); }
-        }
-
-        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.5); border-radius: 3px; }
         
         .keypad-btn {
-            width: 64px; height: 64px;
-            border-radius: 50%;
-            background-color: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            font-size: 24px; font-weight: 500; color: #1f2937;
-            display: flex; align-items: center; justify-content: center;
-            transition: background-color 0.2s;
-            cursor: pointer;
-            user-select: none;
+            width: 70px; height: 70px; border-radius: 50%; background-color: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-size: 28px; font-weight: 400; color: #1f2937;
+            display: flex; align-items: center; justify-content: center; transition: background-color 0.2s; cursor: pointer; user-select: none;
         }
         .keypad-btn:active { background-color: #d1d5db; }
-        .dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid #9ca3af; transition: all 0.2s; }
+        .dot { width: 14px; height: 14px; border-radius: 50%; border: 1px solid #9ca3af; transition: all 0.2s; }
         .dot.filled { background-color: #1f2937; border-color: #1f2937; }
+        
+        .content-width-limiter { max-width: 800px; margin: 0 auto; width: 100%; }
+        
+        /* Filter Dropdown Styling */
+        .filter-dropdown {
+            position: absolute; top: 100%; right: 0; margin-top: 8px;
+            width: 220px; max-height: 300px; overflow-y: auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            z-index: 50;
+            border: 1px solid rgba(255,255,255,0.8);
+            display: none; /* Hidden by default */
+        }
+        .filter-dropdown.show { display: block; animation: fadeIn 0.2s ease-out; }
+        .filter-item {
+            padding: 10px 16px;
+            display: flex; align-items: center; gap: 10px;
+            font-size: 14px; font-weight: 500; color: #374151;
+            cursor: pointer; transition: background 0.1s;
+        }
+        .filter-item:hover { background-color: #f3f4f6; }
+        .filter-item.active { background-color: #eff6ff; color: #2563eb; }
+
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center py-6 px-4">
+<body>
 
     <div class="aurora-container">
         <div class="aurora-blob blob-1"></div>
@@ -132,156 +115,175 @@
     
     <div class="noise-overlay"></div>
 
-    <div class="team-management-card glass-card w-full max-w-md rounded-3xl overflow-hidden flex flex-col relative" style="height: 85vh; max-height: 800px;">
+    <div class="glass-app-container flex flex-col relative">
         
-        <div id="team-list-view" class="h-full flex flex-col relative">
+        <div id="team-list-view" class="h-full flex flex-col relative w-full">
             <div class="bg-blue-600/90 backdrop-blur-md p-4 text-white flex justify-between items-center shadow-md z-10 relative">
-                <h1 class="text-xl font-bold flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                    Manage Teams
-                </h1>
-                <button onclick="window.history.back()" class="text-blue-100 hover:text-white">Back</button>
-            </div>
-
-            <div class="p-4 pb-0 z-10 bg-white/40 backdrop-blur-sm">
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </div>
-                    <input type="text" id="search-teams" 
-                        class="block w-full pl-10 pr-3 py-2 border border-gray-200/50 rounded-xl leading-5 bg-white/60 placeholder-gray-500 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 sm:text-sm transition duration-150 ease-in-out backdrop-blur-sm" 
-                        placeholder="Search teams...">
+                <div class="content-width-limiter flex justify-between items-center w-full">
+                    <h1 class="text-xl font-bold flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                        Manage Teams
+                    </h1>
+                    <button onclick="window.history.back()" class="text-blue-100 hover:text-white px-3 py-1 rounded-md hover:bg-blue-500 transition-colors">Back</button>
                 </div>
             </div>
 
-            <div class="flex-1 overflow-y-auto relative bg-transparent">
-                <div class="p-4 space-y-4 pb-24">
+            <div class="p-4 pb-0 z-10">
+                <div class="content-width-limiter">
+                    <div class="flex gap-2 relative">
+                        <div class="relative flex-1">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                            <input type="text" id="search-teams" 
+                                class="block w-full pl-10 pr-3 py-3 border-0 rounded-xl leading-5 bg-white shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm transition duration-150 ease-in-out text-gray-800" 
+                                placeholder="Search teams...">
+                        </div>
+
+                        <button id="filter-btn" class="bg-white px-4 rounded-xl shadow-sm text-gray-600 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 transition-colors flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                            </svg>
+                        </button>
+
+                        <div id="filter-menu" class="filter-dropdown">
+                            </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto relative bg-transparent w-full">
+                <div class="p-4 space-y-4 pb-24 content-width-limiter">
                     <div id="saved-teams-container" class="space-y-1">
                         </div>
                 </div>
             </div>
 
-            <div class="absolute bottom-6 right-6 z-20">
-                <button id="create-new-team-btn" class="setup-btn h-14 w-14 rounded-full text-white shadow-lg flex items-center justify-center text-2xl">
+            <div class="absolute bottom-8 right-8 z-20">
+                <button id="create-new-team-btn" class="setup-btn h-16 w-16 rounded-full text-white shadow-xl flex items-center justify-center text-3xl transform hover:scale-110 transition-transform">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
                 </button>
             </div>
         </div>
 
         <div id="team-editor-view" class="hidden h-full flex flex-col bg-white/95 backdrop-blur-xl absolute inset-0 z-30">
-            <div class="border-b border-gray-100 p-4 flex items-center gap-3 sticky top-0 z-10 shadow-sm bg-white/80 backdrop-blur-md">
-                <button id="back-to-list-btn" class="text-gray-500 hover:text-gray-800 p-1 rounded-full hover:bg-gray-100">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
-                </button>
-                <h2 class="text-lg font-bold text-gray-800">Team Editor</h2>
+            <div class="border-b border-gray-100 p-4 flex items-center gap-3 sticky top-0 z-10 shadow-sm bg-white/90">
+                <div class="content-width-limiter flex items-center gap-3 w-full">
+                    <button id="back-to-list-btn" class="text-gray-500 hover:text-gray-800 p-1 rounded-full hover:bg-gray-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                    </button>
+                    <h2 class="text-lg font-bold text-gray-800">Team Editor</h2>
+                </div>
             </div>
 
-            <div class="flex-1 overflow-y-auto p-4">
-                <form id="team-setup-form" class="space-y-6 pb-10">
-                    
-                    <div class="space-y-4">
-                        <div class="flex items-start gap-4">
-                            <div class="relative group flex-shrink-0">
-                                <div class="h-20 w-20 rounded-full bg-gray-50 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden cursor-pointer hover:border-blue-500 transition-colors relative">
-                                    <img id="editor-team-logo-preview" class="h-full w-full object-cover hidden">
-                                    <span class="text-gray-400 text-[10px] font-bold text-center px-1">UPLOAD<br>LOGO</span>
-                                    <input type="file" id="editor-team-logo-upload" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
-                                </div>
-                            </div>
-
-                            <div class="flex-1 space-y-3">
-                                <input type="text" id="editor-team-name" placeholder="TEAM NAME (e.g. INDIA)" 
-                                    class="w-full text-lg font-bold border-b-2 border-gray-200 bg-transparent focus:border-blue-600 outline-none py-1 transition-colors uppercase placeholder:normal-case" 
-                                    oninput="this.value = this.value.toUpperCase()" required>
-                                
-                                <div class="flex items-center gap-4">
-                                    <div class="flex items-center gap-2">
-                                        <label class="text-xs text-gray-500 font-semibold uppercase">Color:</label>
-                                        <input type="color" id="editor-team-color" class="h-8 w-12 border-0 p-0 rounded cursor-pointer" value="#3b82f6">
-                                    </div>
-
-                                    <div class="flex-1">
-                                        <select id="editor-team-country" class="w-full p-1 bg-transparent border-b border-gray-200 text-sm focus:border-blue-600 outline-none">
-                                            <option value="" disabled selected>Select Country</option>
-                                            <option value="Afghanistan">🇦🇫 Afghanistan</option>
-                                            <option value="Australia">🇦🇺 Australia</option>
-                                            <option value="Bangladesh">🇧🇩 Bangladesh</option>
-                                            <option value="Canada">🇨🇦 Canada</option>
-                                            <option value="England">🏴󠁧󠁢󠁥󠁮󠁧󠁿 England</option>
-                                            <option value="India">🇮🇳 India</option>
-                                            <option value="Ireland">🇮🇪 Ireland</option>
-                                            <option value="Namibia">🇳🇦 Namibia</option>
-                                            <option value="Nepal">🇳🇵 Nepal</option>
-                                            <option value="Netherlands">🇳🇱 Netherlands</option>
-                                            <option value="New Zealand">🇳🇿 New Zealand</option>
-                                            <option value="Oman">🇴🇲 Oman</option>
-                                            <option value="Pakistan">🇵🇰 Pakistan</option>
-                                            <option value="Papua New Guinea">🇵🇬 Papua New Guinea</option>
-                                            <option value="Scotland">🏴󠁧󠁢󠁳Y🇹 Scotland</option>
-                                            <option value="South Africa">🇿🇦 South Africa</option>
-                                            <option value="Sri Lanka">🇱🇰 Sri Lanka</option>
-                                            <option value="United Arab Emirates">🇦🇪 UAE</option>
-                                            <option value="United Kingdom">🇬🇧 United Kingdom</option>
-                                            <option value="United States">🇺🇸 USA</option>
-                                            <option value="West Indies">🌴 West Indies</option>
-                                            <option value="Zimbabwe">🇿🇼 Zimbabwe</option>
-                                            <option value="Other">🏳️ Other</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <hr class="border-gray-200">
-
-                    <div>
-                        <div class="flex justify-between items-end mb-3">
-                            <h3 class="font-bold text-gray-800">Squad List</h3>
-                            <span class="text-xs text-gray-500">First & Last Name</span>
-                        </div>
+            <div class="flex-1 overflow-y-auto p-4 w-full">
+                <div class="content-width-limiter">
+                    <form id="team-setup-form" class="space-y-6 pb-10">
                         
-                        <div id="player-inputs-container" class="space-y-3"></div>
+                        <div class="space-y-4">
+                            <div class="flex items-start gap-4">
+                                <div class="relative group flex-shrink-0">
+                                    <div class="h-24 w-24 rounded-full bg-gray-50 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden cursor-pointer hover:border-blue-500 transition-colors relative shadow-inner">
+                                        <img id="editor-team-logo-preview" class="h-full w-full object-cover hidden">
+                                        <span class="text-gray-400 text-[10px] font-bold text-center px-1">UPLOAD<br>LOGO</span>
+                                        <input type="file" id="editor-team-logo-upload" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
+                                    </div>
+                                </div>
 
-                        <button type="button" id="add-player-btn" class="mt-4 w-full py-2 border-2 border-dashed border-blue-200 text-blue-600 rounded-lg font-bold hover:bg-blue-50 transition-colors bg-white/50">
-                            + Add Player
-                        </button>
-                    </div>
+                                <div class="flex-1 space-y-3 pt-2">
+                                    <input type="text" id="editor-team-name" placeholder="TEAM NAME" 
+                                        class="w-full text-2xl font-black border-b-2 border-gray-200 bg-transparent focus:border-blue-600 outline-none py-1 transition-colors uppercase placeholder:normal-case placeholder:text-gray-300 placeholder:font-bold" 
+                                        oninput="this.value = this.value.toUpperCase()" required>
+                                    
+                                    <div class="flex items-center gap-4">
+                                        <div class="flex items-center gap-2">
+                                            <label class="text-xs text-gray-500 font-semibold uppercase">Color:</label>
+                                            <input type="color" id="editor-team-color" class="h-8 w-12 border-0 p-0 rounded cursor-pointer shadow-sm" value="#3b82f6">
+                                        </div>
 
-                    <hr class="border-gray-200">
+                                        <div class="flex-1">
+                                            <select id="editor-team-country" class="w-full p-1 bg-transparent border-b border-gray-200 text-sm focus:border-blue-600 outline-none font-medium text-gray-700">
+                                                <option value="" disabled selected>Select Country</option>
+                                                <option value="Afghanistan">🇦🇫 Afghanistan</option>
+                                                <option value="Australia">🇦🇺 Australia</option>
+                                                <option value="Bangladesh">🇧🇩 Bangladesh</option>
+                                                <option value="Canada">🇨🇦 Canada</option>
+                                                <option value="England">🏴󠁧󠁢󠁥󠁮󠁧󠁿 England</option>
+                                                <option value="India">🇮🇳 India</option>
+                                                <option value="Ireland">🇮🇪 Ireland</option>
+                                                <option value="Namibia">🇳🇦 Namibia</option>
+                                                <option value="Nepal">🇳🇵 Nepal</option>
+                                                <option value="Netherlands">🇳🇱 Netherlands</option>
+                                                <option value="New Zealand">🇳🇿 New Zealand</option>
+                                                <option value="Oman">🇴🇲 Oman</option>
+                                                <option value="Pakistan">🇵🇰 Pakistan</option>
+                                                <option value="Papua New Guinea">🇵🇬 Papua New Guinea</option>
+                                                <option value="Scotland">🏴󠁧󠁢󠁳Y🇹 Scotland</option>
+                                                <option value="South Africa">🇿🇦 South Africa</option>
+                                                <option value="Sri Lanka">🇱🇰 Sri Lanka</option>
+                                                <option value="United Arab Emirates">🇦🇪 UAE</option>
+                                                <option value="United Kingdom">🇬🇧 United Kingdom</option>
+                                                <option value="United States">🇺🇸 USA</option>
+                                                <option value="West Indies">🌴 West Indies</option>
+                                                <option value="Zimbabwe">🇿🇼 Zimbabwe</option>
+                                                <option value="Other">🏳️ Other</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Select Captain</label>
-                        <select id="captain-select" class="w-full p-2 bg-gray-50/50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm">
-                            <option value="" disabled selected>Add players first...</option>
-                        </select>
-                    </div>
+                        <hr class="border-gray-200">
 
-                    <div class="pt-4 sticky bottom-0 bg-white/90 backdrop-blur-md pb-4 border-t border-gray-100">
-                        <button type="submit" class="setup-btn w-full py-3.5 rounded-xl text-white font-bold shadow-lg text-lg flex justify-center items-center gap-2">
-                            Save Team
-                        </button>
-                    </div>
-                </form>
+                        <div>
+                            <div class="flex justify-between items-end mb-3">
+                                <h3 class="font-bold text-gray-800 text-lg">Squad List</h3>
+                                <span class="text-xs text-gray-500">First & Last Name</span>
+                            </div>
+                            
+                            <div id="player-inputs-container" class="space-y-3"></div>
+
+                            <button type="button" id="add-player-btn" class="mt-4 w-full py-3 border-2 border-dashed border-blue-200 text-blue-600 rounded-xl font-bold hover:bg-blue-50 transition-colors bg-white/50">
+                                + Add Player
+                            </button>
+                        </div>
+
+                        <hr class="border-gray-200">
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Select Captain</label>
+                            <select id="captain-select" class="w-full p-3 bg-gray-50/50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium">
+                                <option value="" disabled selected>Add players first...</option>
+                            </select>
+                        </div>
+
+                        <div class="pt-6 pb-4">
+                            <button type="submit" class="setup-btn w-full py-4 rounded-xl text-white font-bold shadow-lg text-lg flex justify-center items-center gap-2 transform active:scale-95 transition-transform">
+                                Save Team
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
         
-        <div id="passcode-modal" class="hidden absolute inset-0 z-50 bg-white/40 backdrop-blur-xl flex flex-col items-center justify-center animate-fade-in">
-            <div class="w-full max-w-xs flex flex-col items-center">
-                <div class="mb-8 text-center">
-                    <div class="bg-white/50 shadow-sm w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+        <div id="passcode-modal" class="hidden absolute inset-0 z-50 bg-white/80 backdrop-blur-xl flex flex-col items-center justify-center animate-fade-in">
+            <div class="w-full max-w-sm flex flex-col items-center">
+                <div class="mb-10 text-center">
+                    <div class="bg-white shadow-md w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                     </div>
-                    <h3 class="text-lg font-bold text-gray-800">Enter Admin Passcode</h3>
+                    <h3 class="text-xl font-bold text-gray-800">Enter Admin Passcode</h3>
                 </div>
 
-                <div id="passcode-dots" class="flex gap-4 mb-8">
+                <div id="passcode-dots" class="flex gap-6 mb-12">
                     <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-6 mb-8">
+                <div class="grid grid-cols-3 gap-x-8 gap-y-6 mb-10">
                     <div class="keypad-btn" onclick="handleKeypad(1)">1</div>
                     <div class="keypad-btn" onclick="handleKeypad(2)">2</div>
                     <div class="keypad-btn" onclick="handleKeypad(3)">3</div>
@@ -294,11 +296,11 @@
                     <div class="keypad-btn opacity-0 cursor-default"></div> 
                     <div class="keypad-btn" onclick="handleKeypad(0)">0</div>
                     <div class="keypad-btn text-base font-bold text-gray-500 bg-transparent shadow-none hover:bg-transparent" onclick="handleKeypad('back')">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414a2 2 0 001.414.586H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z" /></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414a2 2 0 001.414.586H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z" /></svg>
                     </div>
                 </div>
 
-                <button onclick="closePasscodeModal()" class="text-blue-700 font-semibold text-sm">Cancel</button>
+                <button onclick="closePasscodeModal()" class="text-blue-600 font-semibold text-base mt-4 hover:underline">Cancel</button>
             </div>
         </div>
 
@@ -359,6 +361,8 @@
             createNewBtn: document.getElementById('create-new-team-btn'),
             backBtn: document.getElementById('back-to-list-btn'),
             searchInput: document.getElementById('search-teams'),
+            filterBtn: document.getElementById('filter-btn'),
+            filterMenu: document.getElementById('filter-menu'),
             passcodeModal: document.getElementById('passcode-modal'),
             passcodeDots: document.getElementById('passcode-dots').children
         };
@@ -370,10 +374,70 @@
             editingTeamId: null,
             currentCaptain: null,
             passcode: "",
-            pendingDeleteId: null
+            pendingDeleteId: null,
+            filterCountry: null // 'null' means show all
         };
 
-        // Initialize players
+        // ==========================================
+        // FILTER LOGIC
+        // ==========================================
+        
+        function initFilterMenu() {
+            ui.filterMenu.innerHTML = '';
+            
+            // "Select Country / Show All" option
+            const allOption = document.createElement('div');
+            allOption.className = `filter-item ${state.filterCountry === null ? 'active' : ''}`;
+            allOption.innerHTML = `<span>Select Country (Show All)</span>`;
+            allOption.onclick = () => selectFilter(null);
+            ui.filterMenu.appendChild(allOption);
+
+            Object.keys(countryFlags).sort().forEach(country => {
+                const item = document.createElement('div');
+                const isActive = state.filterCountry === country;
+                
+                item.className = `filter-item ${isActive ? 'active' : ''}`;
+                
+                const checkmark = isActive 
+                    ? `<svg class="w-4 h-4 ml-auto text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>`
+                    : ``;
+
+                item.innerHTML = `<span>${countryFlags[country]}</span> <span>${country}</span> ${checkmark}`;
+                item.onclick = () => selectFilter(country);
+                ui.filterMenu.appendChild(item);
+            });
+        }
+
+        function selectFilter(country) {
+            state.filterCountry = country;
+            ui.filterMenu.classList.remove('show');
+            
+            if(country) {
+                ui.filterBtn.classList.add('text-blue-600', 'bg-blue-50');
+            } else {
+                ui.filterBtn.classList.remove('text-blue-600', 'bg-blue-50');
+            }
+
+            renderTeams();
+        }
+
+        ui.filterBtn.onclick = (e) => {
+            e.stopPropagation();
+            initFilterMenu(); 
+            ui.filterMenu.classList.toggle('show');
+        };
+
+        window.onclick = (e) => {
+            if (!ui.filterMenu.contains(e.target) && e.target !== ui.filterBtn) {
+                ui.filterMenu.classList.remove('show');
+            }
+        };
+
+
+        // ==========================================
+        // TEAM LOGIC
+        // ==========================================
+
         function initPlayerSlots() {
             state.players = [];
             for(let i=0; i<4; i++) { 
@@ -382,7 +446,6 @@
             generatePlayerInputs();
         }
 
-        // --- HELPER: Title Case ---
         function titleCase(str) {
             return str.toLowerCase().split(' ').map(function(word) {
                 return (word.charAt(0).toUpperCase() + word.slice(1));
@@ -398,15 +461,14 @@
 
             state.players.forEach((player, index) => {
                 const div = document.createElement('div');
-                div.className = "flex items-center gap-3 animate-fade-in bg-white/60 p-2 rounded-lg border border-gray-100";
+                div.className = "flex items-center gap-3 animate-fade-in bg-white/60 p-2 rounded-xl border border-gray-100 shadow-sm";
                 
-                // Avatar Logic
                 const avatarSrc = player.avatar || DEFAULT_AVATAR;
                 const isDefault = !player.avatar;
 
                 div.innerHTML = `
                     <div class="relative group cursor-pointer" onclick="document.getElementById('p-file-${index}').click()">
-                        <div class="h-12 w-12 rounded-full overflow-hidden border border-gray-300 bg-white">
+                        <div class="h-12 w-12 rounded-full overflow-hidden border border-gray-200 bg-white shadow-sm">
                             <img src="${avatarSrc}" class="h-full w-full object-cover" id="p-img-${index}">
                         </div>
                         <div class="absolute inset-0 flex items-center justify-center bg-black/20 rounded-full group-hover:bg-black/40 transition-all">
@@ -423,7 +485,6 @@
                             oninput="handlePlayerName(${index}, this)"
                         >
                     </div>
-
                     <span class="text-xs font-bold text-gray-300">#${index + 1}</span>
                     
                     ${state.players.length > 2 ? `
@@ -436,7 +497,6 @@
                 if (player.name.trim()) validPlayerNames.push(player.name);
             });
 
-            // Populate Captain Dropdown
             validPlayerNames.forEach(name => {
                 const option = document.createElement('option');
                 option.value = name;
@@ -446,11 +506,9 @@
             });
         }
 
-        // --- GLOBAL HANDLERS ---
         window.handlePlayerName = function(index, input) {
             state.players[index].name = input.value; 
         };
-        // Apply formatting on blur
         document.addEventListener('focusout', function(e) {
             if(e.target.tagName === 'INPUT' && e.target.type === 'text') {
                 e.target.value = titleCase(e.target.value);
@@ -463,8 +521,7 @@
 
             if (file.size > 5 * 1024 * 1024) {
                 alert("⚠️ This photo is too large! Please choose a photo smaller than 5MB.");
-                input.value = ''; 
-                return;
+                input.value = ''; return;
             }
 
             const reader = new FileReader();
@@ -476,23 +533,14 @@
                     canvas.width = MAX_SIZE;
                     canvas.height = MAX_SIZE;
                     const ctx = canvas.getContext('2d');
-
                     let sWidth, sHeight, sx, sy;
                     if (tempImg.width > tempImg.height) {
-                        sHeight = tempImg.height;
-                        sWidth = tempImg.height;
-                        sx = (tempImg.width - tempImg.height) / 2;
-                        sy = 0;
+                        sHeight = tempImg.height; sWidth = tempImg.height; sx = (tempImg.width - tempImg.height) / 2; sy = 0;
                     } else {
-                        sWidth = tempImg.width;
-                        sHeight = tempImg.width;
-                        sx = 0;
-                        sy = (tempImg.height - tempImg.width) / 2;
+                        sWidth = tempImg.width; sHeight = tempImg.width; sx = 0; sy = (tempImg.height - tempImg.width) / 2;
                     }
-
                     ctx.drawImage(tempImg, sx, sy, sWidth, sHeight, 0, 0, MAX_SIZE, MAX_SIZE);
                     const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
-
                     state.players[index].avatar = compressedDataUrl;
                     document.getElementById(`p-img-${index}`).src = compressedDataUrl;
                 };
@@ -506,7 +554,6 @@
             generatePlayerInputs();
         };
 
-        // --- SAVE TO CLOUD ---
         ui.setupForm.onsubmit = (e) => {
             e.preventDefault();
 
@@ -515,98 +562,75 @@
             const teamCountry = ui.editorTeamCountryInput.value;
             const teamLogo = ui.editorTeamLogoPreview.dataset.logoSrc || ''; 
             
-            const validPlayers = state.players
-                .map(p => ({ ...p, name: titleCase(p.name) })) 
-                .filter(p => p.name && p.name.trim() !== '');
+            const validPlayers = state.players.map(p => ({ ...p, name: titleCase(p.name) })).filter(p => p.name && p.name.trim() !== '');
             
             if (!teamName || validPlayers.length < 2) {
-                alert("Please enter a Team Name and at least 2 Players.");
-                return;
-            }
-
-            if (teamLogo.length > 500000) {
-                 if(!confirm("Team Logo is large. It might be slow. Continue?")) return;
+                alert("Please enter a Team Name and at least 2 Players."); return;
             }
 
             const teamData = {
-                name: teamName,
-                color: teamColor,
-                country: teamCountry || 'Other',
-                logo: teamLogo,
-                players: validPlayers, 
-                captain: ui.captainSelect.value,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                name: teamName, color: teamColor, country: teamCountry || 'Other', logo: teamLogo,
+                players: validPlayers, captain: ui.captainSelect.value, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
             const submitBtn = ui.setupForm.querySelector('button[type="submit"]');
             const originalText = submitBtn.innerHTML;
-            submitBtn.textContent = "Saving...";
-            submitBtn.disabled = true;
+            submitBtn.textContent = "Saving..."; submitBtn.disabled = true;
 
             const firebaseOperation = state.editMode && state.editingTeamId
                 ? db.collection("teams").doc(state.editingTeamId).update(teamData)
                 : db.collection("teams").add(teamData);
 
-            firebaseOperation
-                .then(() => {
-                    alert("Team Saved Successfully!");
-                    resetForm();
-                    showTeamListView();
-                })
-                .catch((err) => {
-                    console.error("Save Error:", err);
-                    alert("Error: " + err.message);
-                })
-                .finally(() => {
-                    submitBtn.innerHTML = originalText;
-                    submitBtn.disabled = false;
-                });
+            firebaseOperation.then(() => {
+                alert("Team Saved Successfully!"); resetForm(); showTeamListView();
+            }).catch((err) => {
+                alert("Error: " + err.message);
+            }).finally(() => {
+                submitBtn.innerHTML = originalText; submitBtn.disabled = false;
+            });
         };
 
-        // --- LOAD DATA ---
         function loadSavedTeams() {
             ui.savedTeamsContainer.innerHTML = '<div class="text-center p-4 text-gray-500">Loading Teams...</div>';
-
             db.collection("teams").onSnapshot((snapshot) => {
                 globalTeamsList = [];
-
                 if (snapshot.empty) {
-                    ui.savedTeamsContainer.innerHTML = `<div class="text-center py-10 text-gray-400">No teams yet. Create one!</div>`;
-                    return;
+                    ui.savedTeamsContainer.innerHTML = `<div class="text-center py-10 text-gray-400">No teams yet. Create one!</div>`; return;
                 }
-
                 snapshot.forEach((doc) => {
-                    const team = doc.data();
-                    team.id = doc.id;
-                    globalTeamsList.push(team);
+                    const team = doc.data(); team.id = doc.id; globalTeamsList.push(team);
                 });
-
                 renderTeams();
             });
         }
 
-        // --- RENDER LOGIC WITH COUNTRY FLAG ONLY ---
+        // --- RENDER LOGIC WITH FILTER SUPPORT ---
         function renderTeams() {
             const container = ui.savedTeamsContainer;
             container.innerHTML = '';
             
             const searchTerm = ui.searchInput.value.toLowerCase().trim();
 
-            const filteredTeams = globalTeamsList.filter(team => 
-                team.name.toLowerCase().includes(searchTerm)
-            );
+            const filteredTeams = globalTeamsList.filter(team => {
+                const matchesSearch = team.name.toLowerCase().includes(searchTerm);
+                const matchesCountry = state.filterCountry 
+                    ? (team.country === state.filterCountry) 
+                    : true;
+                return matchesSearch && matchesCountry;
+            });
 
             if (filteredTeams.length === 0) {
-                container.innerHTML = `<div class="text-center py-10 text-gray-400">No teams match your search.</div>`;
+                const emptyMsg = state.filterCountry 
+                    ? `No teams found in ${state.filterCountry}` 
+                    : "No teams match your search.";
+                container.innerHTML = `<div class="text-center py-10 text-gray-400">${emptyMsg}</div>`;
                 return;
             }
 
             const groupedTeams = {};
             filteredTeams.forEach(team => {
                 const country = team.country || 'Other';
-                if (!groupedTeams[country]) {
-                    groupedTeams[country] = [];
-                }
+                if (!groupedTeams[country]) groupedTeams[country] = [];
                 groupedTeams[country].push(team);
             });
 
@@ -614,7 +638,7 @@
 
             sortedCountries.forEach(country => {
                 const countryHeader = document.createElement('div');
-                countryHeader.className = "text-xs font-bold text-gray-500 uppercase tracking-wider mt-6 mb-2 pl-2";
+                countryHeader.className = "text-xs font-bold text-gray-700 uppercase tracking-wider mt-6 mb-2 pl-2 shadow-text";
                 countryHeader.textContent = country;
                 container.appendChild(countryHeader);
 
@@ -622,10 +646,10 @@
 
                 teamsInCountry.forEach(team => {
                     const playerCount = team.players ? team.players.length : 0;
-                    
                     const card = document.createElement('div');
-                    // ADDED GLASS EFFECT TO INDIVIDUAL CARDS
-                    card.className = "bg-white/70 backdrop-blur-sm p-4 mb-3 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center hover:shadow-md transition-shadow hover:bg-white/90";
+                    // UPDATE: Added border-gray-300 and mb-5 for better spacing and visibility
+                    card.className = "bg-white p-4 mb-5 rounded-r-xl rounded-l-md shadow-md border border-gray-300 flex justify-between items-center hover:shadow-lg hover:-translate-y-1 transition-all duration-200 group";
+                    card.style.borderLeft = `5px solid ${team.color || '#3b82f6'}`;
                     
                     let logoHtml;
                     if(team.logo) {
@@ -634,30 +658,29 @@
                         logoHtml = `<span class="text-lg font-bold" style="color:${team.color}">${team.name.charAt(0)}</span>`;
                     }
 
-                    // CHANGED: Use getFlag() instead of showing text
                     card.innerHTML = `
                         <div class="flex items-center gap-3 overflow-hidden">
-                            <div class="h-10 w-10 rounded-full bg-gray-50 flex-shrink-0 flex items-center justify-center overflow-hidden border border-gray-200">
+                            <div class="h-12 w-12 rounded-full bg-gray-50 flex-shrink-0 flex items-center justify-center overflow-hidden border border-gray-200 shadow-sm">
                                 ${logoHtml}
                             </div>
                             <div>
-                                <h3 class="font-bold text-gray-800 truncate text-sm flex items-center gap-2">
+                                <h3 class="font-bold text-gray-900 truncate text-base flex items-center gap-2">
                                     ${team.name}
-                                    <span title="${team.country}" class="text-base cursor-default">
+                                    <span title="${team.country}" class="text-lg cursor-default opacity-80 group-hover:opacity-100 transition-opacity">
                                         ${getFlag(team.country)}
                                     </span>
                                 </h3>
-                                <div class="text-[10px] text-gray-400 flex items-center gap-2">
+                                <div class="text-xs text-gray-500 font-medium flex items-center gap-2">
                                     <span>${playerCount} Players</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="flex gap-1">
+                        <div class="flex gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
                             <button onclick="editTeam('${team.id}')" class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
                             </button>
                             <button onclick="initiateDelete('${team.id}')" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
                             </button>
                         </div>
                     `;
@@ -666,53 +689,26 @@
             });
         }
 
-        // ==========================================
-        // PASSCODE LOGIC
-        // ==========================================
         window.initiateDelete = function(id) {
-            state.pendingDeleteId = id;
-            state.passcode = "";
-            updatePasscodeUI();
-            ui.passcodeModal.classList.remove('hidden');
+            state.pendingDeleteId = id; state.passcode = ""; updatePasscodeUI(); ui.passcodeModal.classList.remove('hidden');
         };
 
         window.closePasscodeModal = function() {
-            ui.passcodeModal.classList.add('hidden');
-            state.pendingDeleteId = null;
-            state.passcode = "";
+            ui.passcodeModal.classList.add('hidden'); state.pendingDeleteId = null; state.passcode = "";
         };
 
         window.handleKeypad = function(key) {
             const dotsContainer = document.getElementById('passcode-dots');
-
-            // Handle Backspace
             if (key === 'back') {
-                if(state.passcode.length > 0) {
-                    state.passcode = state.passcode.slice(0, -1);
-                    updatePasscodeUI();
-                }
-                return;
+                if(state.passcode.length > 0) { state.passcode = state.passcode.slice(0, -1); updatePasscodeUI(); } return;
             }
-
-            // Handle Input
             if (state.passcode.length < 4) {
-                state.passcode += key;
-                updatePasscodeUI();
-
-                // Check Code when 4 digits reached
+                state.passcode += key; updatePasscodeUI();
                 if (state.passcode.length === 4) {
                     setTimeout(() => {
-                        if (state.passcode === "2626") {
-                            // Success
-                            performDelete();
-                        } else {
-                            // Failure - Shake Animation
+                        if (state.passcode === "2626") { performDelete(); } else {
                             dotsContainer.classList.add('shake');
-                            setTimeout(() => {
-                                dotsContainer.classList.remove('shake');
-                                state.passcode = "";
-                                updatePasscodeUI();
-                            }, 500);
+                            setTimeout(() => { dotsContainer.classList.remove('shake'); state.passcode = ""; updatePasscodeUI(); }, 500);
                         }
                     }, 100); 
                 }
@@ -722,130 +718,62 @@
         function updatePasscodeUI() {
             const dots = ui.passcodeDots;
             for(let i=0; i<4; i++) {
-                if(i < state.passcode.length) {
-                    dots[i].classList.add('filled');
-                } else {
-                    dots[i].classList.remove('filled');
-                }
+                if(i < state.passcode.length) { dots[i].classList.add('filled'); } else { dots[i].classList.remove('filled'); }
             }
         }
 
         function performDelete() {
             if (state.pendingDeleteId) {
                 db.collection("teams").doc(state.pendingDeleteId).delete()
-                    .then(() => {
-                        closePasscodeModal();
-                    })
+                    .then(() => { closePasscodeModal(); })
                     .catch(err => alert("Error: " + err.message));
             }
         }
 
-        // ==========================================
-        // EXISTING LOGIC
-        // ==========================================
-
         window.editTeam = function(id) {
-            const team = globalTeamsList.find(t => t.id === id);
-            if (!team) return;
-
-            state.editMode = true;
-            state.editingTeamId = id;
-            
-            ui.editorTeamNameInput.value = team.name;
-            ui.editorTeamColorInput.value = team.color;
+            const team = globalTeamsList.find(t => t.id === id); if (!team) return;
+            state.editMode = true; state.editingTeamId = id;
+            ui.editorTeamNameInput.value = team.name; ui.editorTeamColorInput.value = team.color;
             if(ui.editorTeamCountryInput) ui.editorTeamCountryInput.value = team.country || "";
-            
             if (team.logo) {
-                ui.editorTeamLogoPreview.src = team.logo;
-                ui.editorTeamLogoPreview.dataset.logoSrc = team.logo;
-                ui.editorTeamLogoPreview.classList.remove('hidden');
+                ui.editorTeamLogoPreview.src = team.logo; ui.editorTeamLogoPreview.dataset.logoSrc = team.logo; ui.editorTeamLogoPreview.classList.remove('hidden');
             } else {
-                ui.editorTeamLogoPreview.src = '';
-                ui.editorTeamLogoPreview.classList.add('hidden');
+                ui.editorTeamLogoPreview.src = ''; ui.editorTeamLogoPreview.classList.add('hidden');
             }
-
-            // Load Players
-            state.players = (team.players || []).map(p => {
-                if(typeof p === 'string') return { name: p, avatar: '' };
-                return p;
-            });
-            
+            state.players = (team.players || []).map(p => { if(typeof p === 'string') return { name: p, avatar: '' }; return p; });
             while(state.players.length < 4) state.players.push({ name: '', avatar: '' });
-
-            state.currentCaptain = team.captain;
-            generatePlayerInputs();
-            showEditorView();
+            state.currentCaptain = team.captain; generatePlayerInputs(); showEditorView();
         };
 
-        // --- NAVIGATION ---
         function resetForm() {
-            state = { players: [], editMode: false, editingTeamId: null, currentCaptain: null, passcode: "" };
+            state = { players: [], editMode: false, editingTeamId: null, currentCaptain: null, passcode: "", filterCountry: state.filterCountry, pendingDeleteId: null };
             initPlayerSlots();
-            ui.editorTeamNameInput.value = '';
-            ui.editorTeamColorInput.value = '#3b82f6';
+            ui.editorTeamNameInput.value = ''; ui.editorTeamColorInput.value = '#3b82f6';
             if(ui.editorTeamCountryInput) ui.editorTeamCountryInput.selectedIndex = 0;
-            ui.editorTeamLogoInput.value = '';
-            ui.editorTeamLogoPreview.src = '';
-            ui.editorTeamLogoPreview.dataset.logoSrc = '';
-            ui.editorTeamLogoPreview.classList.add('hidden');
+            ui.editorTeamLogoInput.value = ''; ui.editorTeamLogoPreview.src = ''; ui.editorTeamLogoPreview.dataset.logoSrc = ''; ui.editorTeamLogoPreview.classList.add('hidden');
         }
 
-        function showEditorView() {
-            ui.teamListView.classList.add('hidden');
-            ui.teamEditorView.classList.remove('hidden');
-        }
+        function showEditorView() { ui.teamListView.classList.add('hidden'); ui.teamEditorView.classList.remove('hidden'); }
+        function showTeamListView() { ui.teamEditorView.classList.add('hidden'); ui.teamListView.classList.remove('hidden'); }
 
-        function showTeamListView() {
-            ui.teamEditorView.classList.add('hidden');
-            ui.teamListView.classList.remove('hidden');
-        }
-
-        // --- INIT ---
         document.addEventListener('DOMContentLoaded', () => {
-            loadSavedTeams();
-            showTeamListView();
-            
+            loadSavedTeams(); showTeamListView();
             ui.searchInput.addEventListener('input', renderTeams);
 
             ui.editorTeamLogoInput.onchange = (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-
-                if (file.size > 5 * 1024 * 1024) {
-                    alert("⚠️ This logo is too large! Please choose an image smaller than 5MB.");
-                    e.target.value = '';
-                    return;
-                }
-
+                const file = e.target.files[0]; if (!file) return;
+                if (file.size > 5 * 1024 * 1024) { alert("⚠️ This logo is too large!"); e.target.value = ''; return; }
                 const reader = new FileReader();
                 reader.onload = (readerEvent) => {
                     const tempImg = new Image();
                     tempImg.onload = () => {
-                        const MAX_SIZE = 300;
-                        const canvas = document.createElement('canvas');
-                        canvas.width = MAX_SIZE;
-                        canvas.height = MAX_SIZE;
+                        const MAX_SIZE = 300; const canvas = document.createElement('canvas'); canvas.width = MAX_SIZE; canvas.height = MAX_SIZE;
                         const ctx = canvas.getContext('2d');
-
                         let sWidth, sHeight, sx, sy;
-                        if (tempImg.width > tempImg.height) {
-                            sHeight = tempImg.height;
-                            sWidth = tempImg.height;
-                            sx = (tempImg.width - tempImg.height) / 2;
-                            sy = 0;
-                        } else {
-                            sWidth = tempImg.width;
-                            sHeight = tempImg.width;
-                            sx = 0;
-                            sy = (tempImg.height - tempImg.width) / 2;
-                        }
-
+                        if (tempImg.width > tempImg.height) { sHeight = tempImg.height; sWidth = tempImg.height; sx = (tempImg.width - tempImg.height) / 2; sy = 0; } else { sWidth = tempImg.width; sHeight = tempImg.width; sx = 0; sy = (tempImg.height - tempImg.width) / 2; }
                         ctx.drawImage(tempImg, sx, sy, sWidth, sHeight, 0, 0, MAX_SIZE, MAX_SIZE);
                         const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
-
-                        ui.editorTeamLogoPreview.src = compressedDataUrl;
-                        ui.editorTeamLogoPreview.dataset.logoSrc = compressedDataUrl;
-                        ui.editorTeamLogoPreview.classList.remove('hidden');
+                        ui.editorTeamLogoPreview.src = compressedDataUrl; ui.editorTeamLogoPreview.dataset.logoSrc = compressedDataUrl; ui.editorTeamLogoPreview.classList.remove('hidden');
                     };
                     tempImg.src = readerEvent.target.result;
                 };
@@ -854,10 +782,7 @@
 
             ui.createNewBtn.onclick = () => { resetForm(); showEditorView(); };
             ui.backBtn.onclick = showTeamListView;
-            ui.addPlayerBtn.onclick = () => {
-                state.players.push({ name: '', avatar: '' });
-                generatePlayerInputs();
-            };
+            ui.addPlayerBtn.onclick = () => { state.players.push({ name: '', avatar: '' }); generatePlayerInputs(); };
         });
     </script>
 </body>
