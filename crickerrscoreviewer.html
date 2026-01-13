@@ -3,93 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>CRiCKERR Scorebook | Live Scores</title>
+    <title>CRiCKERR Scorebook | Professional Live Scores</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
 
     <style>
         body { background-color: #000000; color: #e0e0e0; font-family: 'Inter', sans-serif; }
         .font-oswald { font-family: 'Oswald', sans-serif; }
-        
-        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #1e1e1e; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-
-        /* Card Styles */
+        
         .match-card { background: #121212; border: 1px solid #2a2a2a; transition: transform 0.2s; position: relative; }
         .match-card:active { transform: scale(0.98); }
         
-        /* Ball Circle */
-        .ball-circle {
-            width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
-            border-radius: 50%; font-size: 10px; font-weight: bold; color: black; background: white;
+        /* DELETE BUTTON */
+        .delete-btn {
+            position: absolute; bottom: 10px; right: 10px;
+            width: 28px; height: 28px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; background: #1f2937; border: 1px solid #374151;
+            color: #ef4444; font-size: 14px; cursor: pointer; z-index: 20;
+            transition: all 0.2s;
         }
+        .delete-btn:hover { background: #374151; color: #ff0000; transform: scale(1.1); }
+
+        .ball-circle { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 10px; font-weight: bold; color: black; background: white; }
         .bg-4 { background-color: #3b82f6; color: white; }
         .bg-6 { background-color: #22c55e; color: white; }
         .bg-w { background-color: #ef4444; color: white; }
+        
+        /* Stat Cards */
+        .stat-card { background: linear-gradient(145deg, #1a1a1a, #111); border: 1px solid #333; border-radius: 8px; padding: 10px; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .stat-value { font-family: 'Oswald', sans-serif; font-size: 18px; color: white; font-weight: 700; letter-spacing: 0.5px; }
+        .stat-label { font-size: 9px; text-transform: uppercase; color: #888; font-weight: 600; letter-spacing: 1px; margin-top: 2px; }
+        
+        /* Probability Bar */
+        .prob-container { height: 6px; background: #333; border-radius: 3px; overflow: hidden; display: flex; margin-top: 4px; }
+        .prob-bar { height: 100%; transition: width 0.5s ease; }
 
-        /* Delete Button */
-        .delete-btn {
-            position: absolute; bottom: 10px; right: 10px;
-            width: 24px; height: 24px;
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 50%; background: #1f2937; border: 1px solid #374151;
-            color: #ef4444; font-size: 12px; cursor: pointer; z-index: 20;
-        }
-
-        /* LOGO ANIMATION */
-        @keyframes logoFloat {
-            0% { transform: translateY(0px) scale(1); }
-            50% { transform: translateY(-3px) scale(1.05); }
-            100% { transform: translateY(0px) scale(1); }
-        }
+        /* Animation */
         .logo-anim { animation: logoFloat 3s ease-in-out infinite; }
-
-        /* TEAM LOGO BORDER */
+        @keyframes logoFloat { 0% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-3px) scale(1.05); } 100% { transform: translateY(0px) scale(1); } }
+        
         .team-logo { border: 2px solid rgba(255,255,255,0.15); padding: 1px; background: #000; }
-
-        /* APPLE STYLE TABS */
-        .tab-container {
-            background-color: #1f1f1f; padding: 4px; border-radius: 8px; display: flex; position: relative;
-        }
-        .tab-btn {
-            flex: 1; text-align: center; padding: 8px 0; font-size: 13px; font-weight: 600; color: #9ca3af;
-            border-radius: 6px; transition: all 0.2s ease; text-transform: uppercase; letter-spacing: 0.5px;
-        }
+        .tab-container { background-color: #1f1f1f; padding: 4px; border-radius: 8px; display: flex; }
+        .tab-btn { flex: 1; text-align: center; padding: 8px 0; font-size: 13px; font-weight: 600; color: #9ca3af; border-radius: 6px; transition: all 0.2s ease; text-transform: uppercase; letter-spacing: 0.5px; }
         .tab-btn.active { background-color: #3b3b3b; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-
-        /* ACCORDION STYLE */
+        
         details > summary { list-style: none; cursor: pointer; outline: none; }
         details > summary::-webkit-details-marker { display: none; }
-        .scorecard-header {
-            background-color: #1a1a1a; color: #e0e0e0; padding: 12px 16px; 
-            border-bottom: 1px solid #333; font-weight: bold; font-size: 12px; 
-            text-transform: uppercase; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center;
-        }
-        .scorecard-header:hover { background-color: #252525; }
-
-        /* IMPACT ANIMATION CSS */
-        #impact-overlay { pointer-events: none; }
-        @keyframes impactPop {
-            0% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
-            50% { transform: scale(1.2) rotate(5deg); opacity: 1; }
-            70% { transform: scale(1.0) rotate(0deg); opacity: 1; }
-            100% { transform: scale(1.1); opacity: 0; }
-        }
-        .animate-impact { animation: impactPop 2.5s ease-out forwards; }
+        .scorecard-header { background-color: #1a1a1a; color: #e0e0e0; padding: 12px 16px; border-bottom: 1px solid #333; font-weight: bold; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center; }
         
-        @keyframes flashBg {
-            0% { background-color: rgba(255, 255, 255, 0); }
-            10% { background-color: rgba(255, 255, 255, 0.2); }
-            100% { background-color: rgba(255, 255, 255, 0); }
-        }
+        /* Impact Animation */
+        #impact-overlay { pointer-events: none; }
+        @keyframes impactPop { 0% { transform: scale(0.5) rotate(-10deg); opacity: 0; } 50% { transform: scale(1.2) rotate(5deg); opacity: 1; } 100% { transform: scale(1.1); opacity: 0; } }
+        .animate-impact { animation: impactPop 2.5s ease-out forwards; }
         .animate-flash { animation: flashBg 0.5s ease-out; }
+        @keyframes flashBg { 0% { background: rgba(255,255,255,0); } 10% { background: rgba(255,255,255,0.2); } 100% { background: rgba(255,255,255,0); } }
+
+        /* KEYPAD STYLES */
+        .keypad-btn { width: 70px; height: 70px; border-radius: 50%; background-color: rgba(255, 255, 255, 0.9); box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-size: 28px; font-weight: 400; color: #1f2937; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s; cursor: pointer; user-select: none; }
+        .keypad-btn:active { background-color: #d1d5db; }
+        .dot { width: 14px; height: 14px; border-radius: 50%; border: 1px solid #9ca3af; transition: all 0.2s; }
+        .dot.filled { background-color: #1f2937; border-color: #1f2937; }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -106,7 +89,7 @@
                 <h1 class="font-oswald text-xl uppercase tracking-wider text-white">CRiCKERR Scorebook</h1>
             </div>
             <div class="flex items-center gap-3">
-                <button id="share-btn" onclick="shareMatch()" class="hidden flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-full shadow-lg transition-colors"><span>Share 🔗</span></button>
+                <button id="share-btn" onclick="shareMatch()" class="hidden flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-full shadow-lg transition-colors"><span>Share</span></button>
                 <button id="back-btn" onclick="showHome()" class="hidden text-xs font-bold text-gray-400 hover:text-white uppercase tracking-wider bg-gray-800 px-3 py-2 rounded-lg">Back</button>
             </div>
         </div>
@@ -135,7 +118,7 @@
                 <span id="d-date"></span>
             </div>
 
-            <div class="flex justify-between items-center mb-6">
+            <div class="flex justify-between items-center mb-4">
                 <div class="flex flex-col items-start w-[40%]">
                     <img id="d-t1-logo" class="w-14 h-14 object-cover rounded-full team-logo mb-2">
                     <div class="text-[10px] font-bold text-gray-400 leading-tight uppercase tracking-wider" id="d-t1-name">TEAM 1</div>
@@ -152,13 +135,38 @@
                 </div>
             </div>
 
-            <div class="text-center pb-6 border-b border-gray-800">
+            <div class="text-center pb-4">
                 <p id="d-result-text" class="text-white font-bold text-lg hidden">Team Won by X Runs</p>
                 <p id="d-req-text" class="text-yellow-500 font-medium text-xs uppercase tracking-wide"></p>
-                <p id="d-stop-reason" class="text-red-400 font-bold text-xs mt-1 hidden"></p>
+                
+                <div id="prob-wrapper" class="hidden w-full max-w-xs mx-auto mt-2">
+                    <div class="flex justify-between text-[9px] font-bold text-gray-500 uppercase">
+                        <span id="prob-t1-name">Team A</span>
+                        <span id="prob-t2-name">Team B</span>
+                    </div>
+                    <div class="prob-container">
+                        <div id="prob-bar-fill" class="prob-bar bg-blue-500" style="width: 50%"></div>
+                        <div class="prob-bar bg-red-500 flex-1"></div>
+                    </div>
+                </div>
             </div>
 
-            <div class="tab-container mt-4 mb-2">
+            <div id="live-stats-row" class="flex gap-2 mb-4">
+                <div class="stat-card">
+                    <div id="stat-part" class="stat-value text-green-400">-</div>
+                    <div class="stat-label">Partnership</div>
+                </div>
+                <div class="stat-card">
+                    <div id="stat-last5" class="stat-value text-blue-400">-</div>
+                    <div class="stat-label">Last 5 Overs</div>
+                </div>
+                <div class="stat-card">
+                    <div id="stat-proj" class="stat-value text-yellow-400">-</div>
+                    <div class="stat-label">Projected</div>
+                </div>
+            </div>
+
+            <div class="tab-container mt-2 mb-2">
                 <button onclick="switchTab('summary')" id="tab-summary" class="tab-btn active">Summary</button>
                 <button onclick="switchTab('scorecard')" id="tab-scorecard" class="tab-btn">Scorecard</button>
                 <button onclick="switchTab('stats')" id="tab-stats" class="tab-btn">Stats</button>
@@ -186,7 +194,16 @@
 
         <div id="view-scorecard" class="hidden p-4 space-y-4">
             <div id="scorecard-inn1"></div>
+            <div id="fow-inn1" class="hidden bg-[#121212] p-3 border border-gray-800 rounded-lg mb-4">
+                <h4 class="text-[10px] text-gray-500 uppercase font-bold mb-2">Fall of Wickets (1st Inn)</h4>
+                <div id="fow-list-1" class="text-xs text-gray-400 leading-relaxed"></div>
+            </div>
+
             <div id="scorecard-inn2"></div>
+            <div id="fow-inn2" class="hidden bg-[#121212] p-3 border border-gray-800 rounded-lg">
+                <h4 class="text-[10px] text-gray-500 uppercase font-bold mb-2">Fall of Wickets (2nd Inn)</h4>
+                <div id="fow-list-2" class="text-xs text-gray-400 leading-relaxed"></div>
+            </div>
         </div>
 
         <div id="view-stats" class="hidden p-4 space-y-6">
@@ -209,7 +226,43 @@
         </div>
     </div>
 
+    <div id="passcode-modal" class="hidden fixed inset-0 z-[110] bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center animate-fade-in">
+        <div class="w-full max-w-sm flex flex-col items-center">
+            <div class="mb-10 text-center">
+                <div class="bg-[#1f1f1f] shadow-md w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                </div>
+                <h3 class="text-xl font-bold text-white">Enter Admin Code</h3>
+                <p class="text-gray-500 text-xs mt-1">To delete match</p>
+            </div>
+
+            <div id="passcode-dots" class="flex gap-6 mb-12">
+                <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-x-8 gap-y-6 mb-10">
+                <div class="keypad-btn" onclick="handleKeypad(1)">1</div>
+                <div class="keypad-btn" onclick="handleKeypad(2)">2</div>
+                <div class="keypad-btn" onclick="handleKeypad(3)">3</div>
+                <div class="keypad-btn" onclick="handleKeypad(4)">4</div>
+                <div class="keypad-btn" onclick="handleKeypad(5)">5</div>
+                <div class="keypad-btn" onclick="handleKeypad(6)">6</div>
+                <div class="keypad-btn" onclick="handleKeypad(7)">7</div>
+                <div class="keypad-btn" onclick="handleKeypad(8)">8</div>
+                <div class="keypad-btn" onclick="handleKeypad(9)">9</div>
+                <div class="keypad-btn opacity-0 cursor-default"></div> 
+                <div class="keypad-btn" onclick="handleKeypad(0)">0</div>
+                <div class="keypad-btn text-base font-bold text-gray-500 bg-transparent shadow-none hover:bg-transparent" onclick="handleKeypad('back')">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414a2 2 0 001.414.586H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z" /></svg>
+                </div>
+            </div>
+
+            <button onclick="closePasscodeModal()" class="text-blue-500 font-semibold text-base mt-4 hover:underline">Cancel</button>
+        </div>
+    </div>
+
     <script>
+        // --- FIREBASE SETUP ---
         const firebaseConfig = { apiKey: "AIzaSyBqcD59IAPpKqk98oDZkgzgkoVZ8b8LGgY", authDomain: "livecricketscoring-92087.firebaseapp.com", databaseURL: "https://livecricketscoring-92087-default-rtdb.firebaseio.com", projectId: "livecricketscoring-92087", storageBucket: "livecricketscoring-92087.firebasestorage.app", messagingSenderId: "522927197627", appId: "1:522927197627:web:f1df5db736cae96893089e" };
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
@@ -219,7 +272,10 @@
         let lastActionId = 0;
         let wormChartInstance = null;
         let rrChartInstance = null;
+        
+        let deleteState = { pendingDeleteId: null, passcode: "" };
 
+        // --- INIT ---
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const matchId = urlParams.get('id');
@@ -259,21 +315,15 @@
             const completedContainer = document.getElementById('completed-list');
             liveContainer.innerHTML = '<div class="text-gray-500 text-sm italic col-span-2">Loading matches...</div>';
             completedContainer.innerHTML = '';
-            const now = new Date();
-            const twoDaysAgo = new Date(now.getTime() - (48 * 60 * 60 * 1000));
-            const halfDayAgo = new Date(now.getTime() - (12 * 60 * 60 * 1000));
-
-            db.collection('live_matches').get().then(snapshot => {
+            
+            db.collection('live_matches').orderBy('timestamp', 'desc').limit(20).get().then(snapshot => {
                 liveContainer.innerHTML = '';
                 let liveCount = 0; let completedCount = 0;
                 snapshot.forEach(doc => {
                     const m = doc.data();
                     const id = doc.id;
                     const isComplete = m.matchStatus === "COMPLETE";
-                    let isRelevant = true;
-                    const lastUpdate = m.timestamp ? m.timestamp.toDate() : new Date(0); 
-                    if (isComplete) { if (lastUpdate < twoDaysAgo) isRelevant = false; } else { if (lastUpdate < halfDayAgo) isRelevant = false; }
-
+                    
                     let t1Score = "0/0"; let t2Score = "Yet to Bat";
                     if (m.scorecard) {
                         if(m.scorecard.innings1) t1Score = m.scorecard.innings1.score;
@@ -284,24 +334,65 @@
                         t1Score = `${m.score}/${m.wickets}`;
                     }
 
-                    if (isRelevant) {
-                        const card = createMatchCard(id, m, t1Score, t2Score);
-                        if (isComplete) { completedContainer.innerHTML += card; completedCount++; } else { liveContainer.innerHTML += card; liveCount++; }
-                    }
+                    const card = createMatchCard(id, m, t1Score, t2Score);
+                    if (isComplete) { completedContainer.innerHTML += card; completedCount++; } 
+                    else { liveContainer.innerHTML += card; liveCount++; }
                 });
                 if (liveCount === 0) liveContainer.innerHTML = '<div class="text-gray-600 text-sm italic col-span-2 p-4 text-center border border-gray-800 rounded">No live matches found.</div>';
                 if (completedCount === 0) completedContainer.innerHTML = '<div class="text-gray-600 text-sm italic col-span-2 p-4 text-center">No recent results found.</div>';
             });
         }
 
-        function deleteMatch(id, e) {
-            e.stopPropagation(); 
-            const code = prompt("Enter Admin Code to DELETE:");
-            if (code === "2626") {
-                if(confirm("Permanently delete match?")) {
-                    db.collection('live_matches').doc(id).delete().then(() => { alert("Deleted."); loadMatchList(); }).catch(error => alert("Error: " + error.message));
+        // --- DELETE FUNCTIONALITY ---
+        window.initiateDelete = function(id, e) {
+            e.stopPropagation();
+            deleteState.pendingDeleteId = id; 
+            deleteState.passcode = ""; 
+            updatePasscodeUI(); 
+            document.getElementById('passcode-modal').classList.remove('hidden');
+        };
+
+        window.closePasscodeModal = function() {
+            document.getElementById('passcode-modal').classList.add('hidden'); 
+            deleteState.pendingDeleteId = null; 
+            deleteState.passcode = "";
+        };
+
+        window.handleKeypad = function(key) {
+            const dotsContainer = document.getElementById('passcode-dots');
+            if (key === 'back') {
+                if(deleteState.passcode.length > 0) { deleteState.passcode = deleteState.passcode.slice(0, -1); updatePasscodeUI(); } return;
+            }
+            if (deleteState.passcode.length < 4) {
+                deleteState.passcode += key; updatePasscodeUI();
+                if (deleteState.passcode.length === 4) {
+                    setTimeout(() => {
+                        if (deleteState.passcode === "2626") { performDelete(); } else {
+                            dotsContainer.classList.add('shake');
+                            setTimeout(() => { dotsContainer.classList.remove('shake'); deleteState.passcode = ""; updatePasscodeUI(); }, 500);
+                        }
+                    }, 100); 
                 }
-            } else if (code !== null) alert("Incorrect Code!");
+            }
+        };
+
+        function updatePasscodeUI() {
+            const dots = document.getElementById('passcode-dots').children;
+            for(let i=0; i<4; i++) {
+                if(i < deleteState.passcode.length) { dots[i].classList.add('filled'); } else { dots[i].classList.remove('filled'); }
+            }
+        }
+
+        function performDelete() {
+            if (deleteState.pendingDeleteId) {
+                db.collection('live_matches').doc(deleteState.pendingDeleteId).delete()
+                    .then(() => { 
+                        alert("Match Deleted Successfully");
+                        closePasscodeModal(); 
+                        loadMatchList();
+                    })
+                    .catch(err => alert("Error: " + err.message));
+            }
         }
 
         function createMatchCard(id, m, t1Score, t2Score) {
@@ -309,8 +400,6 @@
             if (m.matchStatus === "COMPLETE") { statusBadge = "RESULT"; statusColor = "bg-gray-800 text-gray-300 border-gray-700"; } 
             else if (['RAIN', 'BAD LIGHT', 'STOPPED', 'ABANDONED'].includes(m.matchStatus)) { statusBadge = m.matchStatus; statusColor = "bg-yellow-900/30 text-yellow-500 border-yellow-800"; }
             
-            if(!t1Score) t1Score = m.score ? `${m.score}/${m.wickets}` : "-";
-            if(!t2Score) t2Score = "-";
             const matchType = m.matchType || "Single Match";
 
             return `
@@ -324,7 +413,7 @@
                 </div>
                 <div class="flex justify-between items-center"><div class="flex items-center gap-3 w-1/2"><img src="${m.t2Logo || 'https://placehold.co/40x40/333/888?text=T2'}" class="w-10 h-10 rounded-full object-cover team-logo"><div class="flex flex-col"><span class="font-bold text-gray-400 text-xs uppercase tracking-wider">${formatTeamName(m.t2)}</span><span class="font-bold text-white text-xl tracking-tight">${t2Score}</span></div></div></div>
                 <div class="text-xs text-blue-400 mt-4 border-t border-gray-800 pt-2 uppercase tracking-wide">${m.matchStatus === "COMPLETE" ? (m.resultMain || "Match Ended") : (m.target > 0 ? "2nd Innings - Chase On" : "1st Innings - Batting")}</div>
-                <div class="delete-btn" onclick="deleteMatch('${id}', event)">🗑️</div>
+                <button class="delete-btn" onclick="initiateDelete('${id}', event)">🗑️</button>
             </div>`;
         }
 
@@ -379,91 +468,144 @@
             document.getElementById('d-t2-logo').src = data.t2Logo || "";
 
             const statusEl = document.getElementById('d-status');
-            const stopReasonEl = document.getElementById('d-stop-reason');
-            stopReasonEl.classList.add('hidden');
-
             if (data.matchStatus === "COMPLETE") {
                 statusEl.innerText = "RESULT"; statusEl.className = "mt-2 inline-block px-3 py-1 bg-gray-800 text-gray-300 text-xs font-bold rounded-full uppercase tracking-wide border border-gray-700";
-            } else if (['RAIN', 'BAD LIGHT', 'STOPPED', 'ABANDONED'].includes(data.matchStatus)) {
-                statusEl.innerText = data.matchStatus; statusEl.className = "mt-2 inline-block px-3 py-1 bg-yellow-900/30 text-yellow-500 text-xs font-bold rounded-full uppercase tracking-wide border border-yellow-800";
-                stopReasonEl.innerText = `MATCH STOPPED: ${data.matchStatus}`; stopReasonEl.classList.remove('hidden');
             } else {
                 statusEl.innerText = "LIVE"; statusEl.className = "mt-2 inline-block px-3 py-1 bg-red-900/30 text-red-500 text-xs font-bold rounded-full uppercase tracking-wide border border-red-800";
             }
 
+            // --- TOSS LOGIC FIXED ---
             const tossEl = document.getElementById('toss-info');
-            if (data.tossWinner && data.tossChoice) { tossEl.innerText = `${formatTeamName(data.tossWinner)} won the toss and elected to ${data.tossChoice}`; tossEl.className = "text-xs text-white font-medium"; } 
-            else { tossEl.innerText = "Toss information not yet available"; tossEl.className = "text-xs text-gray-500 italic"; }
+            const tossWinner = data.tossWinner || (data.toss ? data.toss.winner : null);
+            const tossChoice = data.tossChoice || (data.toss ? data.toss.choice : null);
+
+            if (tossWinner && tossChoice) { 
+                tossEl.innerText = `${formatTeamName(tossWinner)} won the toss and elected to ${tossChoice}`; 
+                tossEl.className = "text-xs text-white font-medium"; 
+            } else { 
+                tossEl.innerText = "Toss information not yet available"; 
+                tossEl.className = "text-xs text-gray-500 italic"; 
+            }
 
             document.getElementById('d-t1-score').innerHTML = i1.score;
             document.getElementById('d-t2-score').innerHTML = i2.score;
 
+            // --- PROBABILITY BAR LOGIC ---
+            const probWrapper = document.getElementById('prob-wrapper');
+            if(data.matchStatus !== "COMPLETE" && data.target > 0) {
+                probWrapper.classList.remove('hidden');
+                document.getElementById('prob-t1-name').innerText = formatTeamName(data.t1);
+                document.getElementById('prob-t2-name').innerText = formatTeamName(data.t2);
+                
+                const ballsRem = (data.totalOvers * 6) - ((data.overs * 6) + data.balls);
+                const runsNeed = data.target - data.score;
+                const rrr = ballsRem > 0 ? (runsNeed / (ballsRem/6)) : 99;
+                const crr = data.score / Math.max(1, (data.overs + data.balls/6));
+                
+                let t2WinProb = 50;
+                if(rrr > crr + 3) t2WinProb = 20; 
+                else if(rrr > crr + 1) t2WinProb = 40;
+                else if(rrr < crr) t2WinProb = 60;
+                else if(runsNeed < 10) t2WinProb = 90;
+
+                document.getElementById('prob-bar-fill').style.width = `${100 - t2WinProb}%`;
+            } else { probWrapper.classList.add('hidden'); }
+
+            // --- PROFESSIONAL STATS CALCULATIONS (FIXED) ---
+            const timeline = data.timeline || [];
+            
+            // 1. Calculate CRR correctly without zero division
+            const totalBallsBowled = (data.overs * 6) + data.balls;
+            let currentRunRate = 0;
+            if (totalBallsBowled > 0) {
+                currentRunRate = (data.score / totalBallsBowled) * 6;
+            }
+
+            // 2. Projected Score
+            let projectedVal = "-";
+            if (data.matchStatus !== "COMPLETE" && totalBallsBowled > 0) {
+                const projScore = Math.round(currentRunRate * data.totalOvers);
+                projectedVal = projScore;
+            }
+            document.getElementById('stat-proj').innerText = projectedVal;
+
+            // 3. Last 5 Overs
+            let l5Runs = 0; let l5Wickets = 0;
+            if (timeline.length > 0) {
+                const recentBalls = timeline.slice(-30);
+                recentBalls.forEach(b => {
+                    l5Runs += parseInt(b.runs || 0);
+                    if(b.event && b.event.includes('W') && !b.event.includes('WD')) l5Wickets++;
+                });
+                document.getElementById('stat-last5').innerText = `${l5Runs}/${l5Wickets}`;
+                document.getElementById('stat-last5').className = "stat-value " + (l5Runs >= 40 ? "text-green-400" : "text-blue-400");
+            } else { document.getElementById('stat-last5').innerText = "0/0"; }
+
+            // 4. Partnership (Iterate backwards until wicket)
+            let runsSinceWicket = 0;
+            let ballsSinceWicket = 0;
+            for(let i=timeline.length-1; i>=0; i--) {
+                const b = timeline[i];
+                if(b.event && b.event.includes('W') && !b.event.includes('WD')) break;
+                runsSinceWicket += parseInt(b.runs || 0);
+                if(!b.event.includes('WD') && !b.event.includes('NB')) {
+                    ballsSinceWicket++;
+                }
+            }
+            document.getElementById('stat-part').innerText = `${runsSinceWicket} (${ballsSinceWicket})`;
+
+
+            // --- RESULT TEXT ---
             if (data.matchStatus === "COMPLETE") {
                 document.getElementById('d-result-text').classList.remove('hidden');
                 document.getElementById('d-result-text').innerText = data.resultMain || "Match Complete";
                 document.getElementById('d-req-text').innerText = data.resultSub || "";
                 if (data.pom) { document.getElementById('pom-card').classList.remove('hidden'); document.getElementById('pom-name').innerText = data.pom.name; document.getElementById('pom-stats').innerText = data.pom.stats; }
+                document.getElementById('live-stats-row').classList.add('hidden'); 
             } else {
+                document.getElementById('live-stats-row').classList.remove('hidden');
                 document.getElementById('d-result-text').classList.add('hidden');
                 if (data.target > 0) {
                     const needed = data.target - data.score;
                     const ballsRem = (data.totalOvers * 6) - ((data.overs * 6) + data.balls);
-                    document.getElementById('d-req-text').innerText = `Need ${needed} runs in ${ballsRem} balls`;
-                } else { document.getElementById('d-req-text').innerText = `Current Run Rate: ${(data.score / Math.max(1, (data.overs + data.balls/6))).toFixed(2)}`; }
+                    const reqRate = (needed / (ballsRem/6)).toFixed(2);
+                    document.getElementById('d-req-text').innerHTML = `Need <span class="text-white font-bold">${needed}</span> off <span class="text-white font-bold">${ballsRem}</span> balls <span class="text-gray-500">(RRR: ${reqRate})</span>`;
+                } else { 
+                    document.getElementById('d-req-text').innerText = `CRR: ${currentRunRate.toFixed(2)}`; 
+                }
             }
 
-            // --- SCORECARD TAB: Always show 2 sections ---
             const inn1Data = (data.scorecard && data.scorecard.innings1) ? data.scorecard.innings1 : ((!data.scorecard && !data.target) ? i1 : { name: i1.name, score: i1.score, overs: i1.overs, batting: data.battingCard, bowling: data.bowlingCard });
             const inn2Data = (data.scorecard && data.scorecard.innings2) ? data.scorecard.innings2 : (data.target > 0 && !data.scorecard ? { name: i2.name, score: i2.score, overs: i2.overs, batting: data.battingCard, bowling: data.bowlingCard } : { name: i2.name, score: i2.score, overs: i2.overs });
             
-            // Adjust names/Logos for fallback
             if(!inn1Data.name) inn1Data.name = data.t1;
             if(!inn2Data.name) inn2Data.name = data.t2;
-            
-            // Assign Logos based on team name matching
             inn1Data.logo = (inn1Data.name === data.t1) ? data.t1Logo : data.t2Logo;
             inn2Data.logo = (inn2Data.name === data.t1) ? data.t1Logo : data.t2Logo;
 
             renderInningsBlock(document.getElementById('scorecard-inn1'), "Innings 1", inn1Data, "border-blue-500");
             renderInningsBlock(document.getElementById('scorecard-inn2'), "Innings 2", inn2Data, "border-orange-500");
 
-            // --- COMMENTARY ---
+            renderFOW(timeline, 1, 'fow-inn1', 'fow-list-1');
+
             const commList = document.getElementById('comm-history-list');
-            document.getElementById('comm-header').innerText = `CURRENT OVER - ${data.bowler ? data.bowler.name : 'BOWLER'}`;
+            document.getElementById('comm-header').innerText = `CURRENT OVER`;
             const sourceData = (data.timeline && Array.isArray(data.timeline)) ? data.timeline : data.currentOver;
             
             if (sourceData && sourceData.length > 0) {
                 const history = [...sourceData].reverse();
                 commList.innerHTML = history.map((b, i) => {
                     let event = (typeof b === 'object') ? b.event : b;
-                    let desc = (b.bowler && b.batter) ? `${b.bowler} to ${b.batter}` : "Bowler to Batter";
+                    let desc = (b.bowler && b.batter) ? `${b.bowler} to ${b.batter}` : "Ball";
                     let overNum = (b.over !== undefined) ? b.over : data.overs;
-                    let ballNum = (b.ball !== undefined) ? b.ball : (data.currentOver.length - i);
+                    let ballNum = (b.ball !== undefined) ? b.ball : 0;
                     
-                    let runText = "runs"; if(event == "1") runText = "run"; if(event == "4") runText = "FOUR runs"; if(event == "6") runText = "SIX runs"; if(event.includes('W')) runText = "WICKET";
-                    let fullDesc = `${desc}, ${event} ${runText}`; if(event == "4" || event == "6") fullDesc = `${desc}, ${runText}`; 
-
-                    let showDivider = false; let showInningsBreak = false;
-                    if (i < history.length - 1) {
-                        const nextItem = history[i + 1];
-                        if (nextItem.over !== undefined && overNum < nextItem.over) showInningsBreak = true;
-                        else if (nextItem.over !== undefined && nextItem.over !== overNum) showDivider = true;
-                    }
-
                     let bgClass = "bg-gray-700 text-gray-200";
                     if(event == "4") bgClass = "bg-blue-600 text-white shadow-lg shadow-blue-900/50";
                     else if(event == "6") bgClass = "bg-green-600 text-white shadow-lg shadow-green-900/50";
                     else if(event.includes('W') && !event.includes('WD')) bgClass = "bg-red-600 text-white shadow-lg shadow-red-900/50";
 
-                    let extraHtml = "";
-                    if (showInningsBreak) extraHtml = `<div class="bg-blue-900/40 border-y border-blue-800 py-3 text-center my-2"><div class="text-blue-300 font-bold uppercase text-xs">End of First Innings</div><div class="text-white font-black text-xl">Target: ${data.target}</div></div>`;
-                    else if (showDivider) {
-                        const thisOverBalls = history.filter(h => (h.over !== undefined ? h.over : data.overs) === overNum);
-                        const runs = thisOverBalls.reduce((acc, c) => acc + (parseInt(c.runs)||0), 0);
-                        extraHtml = `<div class="my-4 p-3 bg-gray-100 rounded-xl flex justify-between items-center shadow-sm"><span class="text-gray-500 text-[10px] font-bold uppercase tracking-widest">END OF OVER ${overNum + 1}</span><span class="text-black font-bold text-sm">${runs} Runs</span></div>`;
-                    }
-
-                    return `<div class="flex items-center gap-4 border-b border-gray-800 py-3 px-2 hover:bg-white/5 transition-colors"><div class="font-mono text-gray-500 text-xs w-8 text-right">${overNum}.${ballNum}</div><div class="flex-grow"><div class="text-sm text-gray-300">${fullDesc}</div></div><div class="flex items-center justify-center w-8 h-8 rounded-full ${bgClass} text-xs font-bold ring-1 ring-white/10 shrink-0">${event}</div></div>` + extraHtml;
+                    return `<div class="flex items-center gap-4 border-b border-gray-800 py-3 px-2 hover:bg-white/5 transition-colors"><div class="font-mono text-gray-500 text-xs w-8 text-right">${overNum}.${ballNum}</div><div class="flex-grow"><div class="text-xs text-gray-400 uppercase tracking-wider mb-0.5">${desc}</div><div class="text-sm text-gray-200 font-medium">Result: ${event}</div></div><div class="flex items-center justify-center w-8 h-8 rounded-full ${bgClass} text-xs font-bold ring-1 ring-white/10 shrink-0">${event}</div></div>`;
                 }).join('');
             } else { commList.innerHTML = `<div class="text-center p-6 text-gray-600 text-xs italic">Match hasn't started yet.</div>`; }
 
@@ -472,20 +614,34 @@
             else { commOver.innerHTML = "<span class='text-gray-600 text-xs italic'>No balls in current over</span>"; }
         }
 
+        function renderFOW(timeline, inning, divId, listId) {
+            if(!timeline || timeline.length === 0) { document.getElementById(divId).classList.add('hidden'); return; }
+            let fowText = []; let wickets = 0; let currentRuns = 0;
+            timeline.forEach(b => {
+                currentRuns += parseInt(b.runs || 0);
+                if(b.event && b.event.includes('W') && !b.event.includes('WD')) {
+                    wickets++;
+                    fowText.push(`<span class="text-white font-bold">${wickets}-${currentRuns}</span> <span class="text-gray-600">(${b.over}.${b.ball})</span>`);
+                }
+            });
+            if(fowText.length > 0) {
+                document.getElementById(divId).classList.remove('hidden');
+                document.getElementById(listId).innerHTML = fowText.join(',  ');
+            } else { document.getElementById(divId).classList.add('hidden'); }
+        }
+
         function renderInningsBlock(container, title, data, borderColorClass) {
             container.innerHTML = "";
             const section = document.createElement('details');
             section.open = true;
-            // ADDED: Border Left Color for differentiation
             section.className = `bg-[#1a1a1a] rounded-lg overflow-hidden border border-gray-800 mb-4 border-l-4 ${borderColorClass}`;
             
-            // ADDED: Team Logo logic in Header
             const logoSrc = data.logo || 'https://placehold.co/40x40/333/888?text=T';
             const summaryHTML = `
                 <summary class="scorecard-header">
                     <div class="flex items-center gap-3">
                         <img src="${logoSrc}" class="w-8 h-8 rounded-full object-cover border border-gray-600">
-                        <span class="uppercase tracking-widest text-sm">${title} - ${formatTeamName(data.name)}</span>
+                        <span class="uppercase tracking-widest text-sm">${formatTeamName(data.name)}</span>
                     </div>
                     <span class="text-blue-400 text-lg">${data.score} <span class="text-gray-500 text-[10px] font-normal">(${data.overs} ov)</span></span>
                 </summary>
@@ -525,55 +681,38 @@
         function renderStats(data) {
             if (!data.timeline) return;
 
-            // Process Data for Charts
             let inn1Runs = [], inn2Runs = [];
             let inn1Overs = [], inn2Overs = [];
-            let rr1 = [], rr2 = [];
             
             let currentScore = 0;
-            let currentOverRuns = 0;
             let lastOver = -1;
-            let isSecondInnings = false;
             let switchIndex = -1;
 
-            // Determine if innings switch happened in timeline
             for(let i=0; i<data.timeline.length-1; i++) {
                 if (data.timeline[i].over > data.timeline[i+1].over) { switchIndex = i; break; }
             }
 
-            const processBall = (b, inningArr, overArr, rrArr) => {
+            const processBall = (b, inningArr, overArr) => {
                 currentScore += parseInt(b.runs || 0);
-                // Check if over changed
                 if (b.over > lastOver) {
-                    if (lastOver !== -1) {
-                        inningArr.push(currentScore);
-                        overArr.push(lastOver + 1);
-                        rrArr.push(currentOverRuns);
-                    }
-                    currentOverRuns = 0;
+                    if (lastOver !== -1) { inningArr.push(currentScore); overArr.push(lastOver + 1); }
                     lastOver = b.over;
                 }
-                currentOverRuns += parseInt(b.runs || 0);
             };
 
-            // Reset logic
-            currentScore = 0; lastOver = -1; currentOverRuns = 0;
             const timeline = data.timeline;
             
-            // Innings 1 Loop
+            currentScore = 0; lastOver = -1;
             const limit = switchIndex !== -1 ? switchIndex + 1 : timeline.length;
-            for(let i=0; i<limit; i++) processBall(timeline[i], inn1Runs, inn1Overs, rr1);
-            // Push final over
-            inn1Runs.push(currentScore); inn1Overs.push(lastOver+1); rr1.push(currentOverRuns);
+            for(let i=0; i<limit; i++) processBall(timeline[i], inn1Runs, inn1Overs);
+            inn1Runs.push(currentScore); inn1Overs.push(lastOver+1);
 
-            // Innings 2 Loop
             if (switchIndex !== -1) {
-                currentScore = 0; lastOver = -1; currentOverRuns = 0;
-                for(let i=switchIndex+1; i<timeline.length; i++) processBall(timeline[i], inn2Runs, inn2Overs, rr2);
-                inn2Runs.push(currentScore); inn2Overs.push(lastOver+1); rr2.push(currentOverRuns);
+                currentScore = 0; lastOver = -1;
+                for(let i=switchIndex+1; i<timeline.length; i++) processBall(timeline[i], inn2Runs, inn2Overs);
+                inn2Runs.push(currentScore); inn2Overs.push(lastOver+1);
             }
 
-            // --- WORM CHART ---
             const wormCtx = document.getElementById('wormChart').getContext('2d');
             if (wormChartInstance) wormChartInstance.destroy();
             wormChartInstance = new Chart(wormCtx, {
@@ -588,32 +727,7 @@
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     plugins: { legend: { labels: { color: '#ccc' } } },
-                    scales: {
-                        x: { grid: { color: '#333' }, ticks: { color: '#888' } },
-                        y: { grid: { color: '#333' }, ticks: { color: '#888' } }
-                    }
-                }
-            });
-
-            // --- RUN RATE CHART ---
-            const rrCtx = document.getElementById('runRateChart').getContext('2d');
-            if (rrChartInstance) rrChartInstance.destroy();
-            rrChartInstance = new Chart(rrCtx, {
-                type: 'bar',
-                data: {
-                    labels: inn1Overs,
-                    datasets: [
-                        { label: data.t1, data: rr1, backgroundColor: '#3b82f6' },
-                        { label: data.t2, data: rr2, backgroundColor: '#ef4444' }
-                    ]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { labels: { color: '#ccc' } } },
-                    scales: {
-                        x: { grid: { color: '#333' }, ticks: { color: '#888' } },
-                        y: { grid: { color: '#333' }, ticks: { color: '#888' } }
-                    }
+                    scales: { x: { grid: { color: '#333' } }, y: { grid: { color: '#333' } } }
                 }
             });
         }
@@ -626,7 +740,6 @@
             document.getElementById(`view-${tab}`).classList.remove('hidden');
             document.getElementById(`tab-${tab}`).classList.add('active');
             
-            // Re-render stats if switching to stats tab
             if (tab === 'stats' && activeListener && currentMatchId) {
                 db.collection('live_matches').doc(currentMatchId).get().then(doc => {
                     if (doc.exists) renderStats(doc.data());
