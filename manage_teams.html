@@ -33,7 +33,7 @@
 
         /* --- SEGMENTED CONTROL (TABS) --- */
         .segmented-control {
-            background-color: #E3E3E8; /* iOS Segment bg */
+            background-color: #E3E3E8;
             border-radius: 9px;
             padding: 2px;
             display: flex;
@@ -57,55 +57,50 @@
             font-weight: 600;
         }
 
-        /* --- iOS LIST STYLES --- */
+        /* --- SEARCH & FILTER --- */
+        .ios-search-container {
+            position: relative;
+            background: #E3E3E8;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+        }
+        
+        /* --- LIST STYLES --- */
         .sticky-letter-header {
-            position: sticky;
-            top: 0;
-            background-color: #F2F2F7;
-            color: #8E8E93;
-            font-weight: 700;
-            font-size: 13px;
-            padding: 6px 16px;
-            z-index: 10;
+            position: sticky; top: 0;
+            background-color: #F2F2F7; color: #8E8E93;
+            font-weight: 700; font-size: 13px;
+            padding: 6px 16px; z-index: 10;
             border-bottom: 1px solid #E5E5EA;
         }
 
         .team-row {
-            display: flex;
-            align-items: center;
-            padding: 10px 16px;
-            background: white;
+            display: flex; align-items: center;
+            padding: 10px 16px; background: white;
             transition: background 0.2s;
         }
         .team-row:active { background-color: #E5E5EA; }
 
         .team-row-content {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding-right: 10px;
+            flex: 1; display: flex; align-items: center;
+            gap: 12px; padding-right: 10px;
         }
 
         .team-row-divider {
-            height: 1px;
-            background-color: #E5E5EA;
-            margin-left: 64px; /* Align with text start */
+            height: 1px; background-color: #E5E5EA;
+            margin-left: 64px;
         }
 
         .team-avatar {
-            width: 42px; height: 42px;
-            border-radius: 50%; 
-            object-fit: cover;
-            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1);
+            width: 42px; height: 42px; border-radius: 50%; 
+            object-fit: cover; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1);
         }
 
         /* --- BUTTONS --- */
         .ios-btn {
-            padding: 6px 14px;
-            border-radius: 100px;
-            font-size: 13px;
-            font-weight: 600;
+            padding: 6px 14px; border-radius: 100px;
+            font-size: 13px; font-weight: 600;
             transition: all 0.2s;
         }
         .btn-edit { background: #E9F0FD; color: #007AFF; }
@@ -113,15 +108,26 @@
         
         /* --- MODALS --- */
         .ios-modal-bg {
-            background: rgba(0,0,0,0.4);
-            backdrop-filter: blur(5px);
+            background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
         }
+        
+        /* --- iOS ALERT POPUP (Replacing Alert) --- */
+        .ios-alert-box {
+            background: rgba(245, 245, 245, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 14px;
+            width: 270px;
+            text-align: center;
+            overflow: hidden;
+            animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
         /* --- KEYPAD --- */
         .keypad-btn {
             width: 70px; height: 70px; border-radius: 50%; 
-            background-color: #FFFFFF;
-            color: #000; font-size: 24px; font-weight: 400;
+            background-color: #FFFFFF; color: #000; 
+            font-size: 24px; font-weight: 400;
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.1);
             transition: background 0.1s;
@@ -129,10 +135,6 @@
         .keypad-btn:active { background-color: #E5E5EA; }
         .dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid #000; transition: all 0.2s; }
         .dot.filled { background-color: #000; }
-
-        /* Animation */
-        .animate-scale-in { animation: scaleIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        @keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
         /* Hide scrollbar */
         ::-webkit-scrollbar { width: 0px; background: transparent; }
@@ -153,11 +155,17 @@
         </div>
 
         <div class="px-4 pb-2 bg-[#F2F2F7]">
-            <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg class="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <div class="ios-search-container">
+                <div class="pl-3 text-gray-500">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </div>
-                <input type="text" id="search-teams" class="block w-full pl-9 pr-3 py-2 border-none rounded-xl leading-5 bg-[#E3E3E8] text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-0 focus:bg-[#D1D1D6] sm:text-sm transition-colors" placeholder="Search">
+                <input type="text" id="search-teams" class="w-full py-2 pl-2 pr-2 bg-transparent text-gray-900 placeholder-gray-500 focus:outline-none sm:text-sm" placeholder="Search">
+                
+                <button onclick="openFilterModal()" class="pr-2 text-[#007AFF] hover:text-[#0056b3] transition-colors p-2">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                </button>
             </div>
         </div>
 
@@ -179,7 +187,7 @@
         <div class="ios-header px-4 py-3 flex justify-between items-center">
             <button onclick="closeEditor()" class="text-[#007AFF] font-medium text-base">Cancel</button>
             <h2 class="text-base font-semibold text-black" id="editor-title">New Team</h2>
-            <button onclick="submitForm()" class="text-[#007AFF] font-bold text-base opacity-50" id="save-btn" disabled>Done</button>
+            <button onclick="submitForm()" class="text-[#007AFF] font-bold text-base opacity-50 transition-opacity" id="save-btn" disabled>Done</button>
         </div>
 
         <div class="flex-1 overflow-y-auto p-4">
@@ -196,7 +204,7 @@
                         </div>
                         <input type="file" id="editor-team-logo-upload" accept="image/*" class="hidden">
                     </div>
-                    <input type="text" id="editor-team-name" placeholder="Team Name" class="text-center text-xl font-semibold bg-transparent border-b border-gray-300 focus:border-[#007AFF] outline-none w-3/4 pb-1" oninput="checkFormValidity()">
+                    <input type="text" id="editor-team-name" placeholder="Team Name" class="text-center text-lg md:text-xl font-semibold bg-transparent border-b border-gray-300 focus:border-[#007AFF] outline-none w-3/4 pb-1" oninput="checkFormValidity()">
                 </div>
 
                 <div class="bg-white rounded-xl overflow-hidden shadow-sm">
@@ -223,9 +231,9 @@
                         </div>
                         
                         <div>
-                            <label class="text-sm font-medium text-black mb-1 block">Mobile Number (Recovery)</label>
-                            <input type="tel" id="editor-team-mobile" placeholder="+1 234 567 8900" class="w-full bg-gray-50 p-2.5 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#007AFF]">
-                            <p class="text-[10px] text-gray-400 mt-1">Used for verification if you lose your code.</p>
+                            <label class="text-sm font-medium text-black mb-1 block">Mobile Number <span class="text-red-500">*</span></label>
+                            <input type="tel" id="editor-team-mobile" placeholder="+1 234 567 8900" class="w-full bg-gray-50 p-2.5 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#007AFF]" oninput="checkFormValidity()">
+                            <p class="text-[10px] text-gray-400 mt-1">Required for account recovery.</p>
                         </div>
                     </div>
                 </div>
@@ -256,6 +264,18 @@
             <div class="h-20"></div> </div>
     </div>
 
+    <div id="ios-alert-modal" class="fixed inset-0 z-[100] ios-modal-bg hidden flex items-center justify-center p-6">
+        <div class="ios-alert-box">
+            <div class="p-4">
+                <h3 class="text-[17px] font-bold text-black mb-1" id="alert-title">Alert</h3>
+                <p class="text-[13px] text-black leading-relaxed" id="alert-message">Message</p>
+            </div>
+            <div class="border-t border-gray-300/50 flex">
+                <button onclick="closeiOSAlert()" class="flex-1 py-3 text-[17px] text-[#007AFF] font-semibold active:bg-gray-100" id="alert-btn">OK</button>
+            </div>
+        </div>
+    </div>
+
     <div id="passcode-modal" class="fixed inset-0 z-[60] ios-modal-bg hidden flex flex-col justify-end">
         <div class="bg-[#F2F2F7] rounded-t-2xl p-6 animate-slide-up pb-10">
             <div class="text-center mb-6">
@@ -284,7 +304,6 @@
                     <svg class="h-6 w-6 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414a2 2 0 001.414.586H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z" /></svg>
                 </div>
             </div>
-            
             <button onclick="closePasscodeModal()" class="w-full mt-8 text-[#007AFF] font-semibold text-lg">Cancel</button>
         </div>
     </div>
@@ -292,9 +311,7 @@
     <div id="contact-modal" class="fixed inset-0 z-[80] ios-modal-bg hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden text-center p-6 animate-scale-in">
             <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600">
-                <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                </svg>
+                <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
             </div>
             <h3 class="text-xl font-bold text-black mb-2">Forgot PIN?</h3>
             <p class="text-gray-500 text-sm mb-6 leading-relaxed">
@@ -302,10 +319,21 @@
                 <br><span class="font-semibold text-gray-700">+1 416-474-4994</span>
             </p>
             <a href="https://wa.me/14164744994" target="_blank" class="block w-full py-3.5 bg-[#25D366] text-white font-bold rounded-xl mb-3 shadow-lg transform active:scale-95 transition-transform flex items-center justify-center gap-2">
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                 Chat on WhatsApp
             </a>
             <button onclick="closeContactModal()" class="text-gray-400 font-medium text-sm hover:text-gray-600 p-2">Close</button>
+        </div>
+    </div>
+
+    <div id="filter-modal" class="fixed inset-0 z-[80] ios-modal-bg hidden flex flex-col justify-end">
+        <div class="bg-[#F2F2F7] rounded-t-2xl pb-8 animate-slide-up max-h-[80vh] flex flex-col">
+            <div class="p-4 border-b border-gray-200 flex justify-between items-center bg-white rounded-t-2xl sticky top-0 z-10">
+                <button onclick="closeFilterModal()" class="text-[#007AFF] font-medium">Cancel</button>
+                <h3 class="font-semibold text-black">Filter by Country</h3>
+                <div class="w-10"></div>
+            </div>
+            <div class="overflow-y-auto p-4 space-y-2" id="filter-list">
+                </div>
         </div>
     </div>
 
@@ -321,8 +349,6 @@
             </div>
         </div>
     </div>
-
-    <div class="toast-container"></div>
 
     <script>
         // ==========================================
@@ -351,8 +377,9 @@
             passcode: "",
             targetTeamForPin: null, 
             pendingAction: null,
-            activeTab: 'all', // 'all' or 'my'
-            currentUserUid: null
+            activeTab: 'all',
+            currentUserUid: null,
+            filterCountry: null
         };
 
         const countryFlags = { "Afghanistan": "🇦🇫", "Australia": "🇦🇺", "Bangladesh": "🇧🇩", "Canada": "🇨🇦", "England": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "India": "🇮🇳", "Ireland": "🇮🇪", "Namibia": "🇳🇦", "Nepal": "🇳🇵", "Netherlands": "🇳🇱", "New Zealand": "🇳🇿", "Oman": "🇴🇲", "Pakistan": "🇵🇰", "Papua New Guinea": "🇵🇬", "Scotland": "🏴󠁧󠁢󠁳Y🇹", "South Africa": "🇿🇦", "Sri Lanka": "🇱🇰", "United Arab Emirates": "🇦🇪", "United Kingdom": "🇬🇧", "United States": "🇺🇸", "West Indies": "🌴", "Zimbabwe": "🇿🇼", "Other": "🏳️" };
@@ -361,7 +388,6 @@
         // INIT & LOAD
         // ==========================================
         document.addEventListener('DOMContentLoaded', () => {
-            // Anonymous Auth to ensure Firestore access and "My Teams" logic
             auth.signInAnonymously().then((userCred) => {
                 state.currentUserUid = userCred.user.uid;
                 document.getElementById('connection-status').textContent = "ONLINE";
@@ -369,7 +395,7 @@
                 loadTeams();
             }).catch(e => {
                 console.error(e);
-                loadTeams(); // Try load anyway
+                loadTeams(); 
             });
 
             document.getElementById('search-teams').addEventListener('input', renderTeams);
@@ -385,25 +411,57 @@
                     if(!data.name) data.name = "Untitled";
                     globalTeamsList.push(data);
                 });
-                // Sort alphabetically for Apple Contacts style
                 globalTeamsList.sort((a, b) => a.name.localeCompare(b.name));
                 renderTeams();
             });
         }
 
+        // ==========================================
+        // ALERT SYSTEM (APPLE STYLE)
+        // ==========================================
+        function showiOSAlert(title, message) {
+            document.getElementById('alert-title').textContent = title;
+            document.getElementById('alert-message').textContent = message;
+            document.getElementById('ios-alert-modal').classList.remove('hidden');
+        }
+        function closeiOSAlert() {
+            document.getElementById('ios-alert-modal').classList.add('hidden');
+        }
+
+        // ==========================================
+        // FILTER LOGIC
+        // ==========================================
+        function openFilterModal() {
+            const list = document.getElementById('filter-list');
+            list.innerHTML = `<button onclick="setFilter(null)" class="w-full text-left p-3 bg-white rounded-lg mb-2 font-medium ${!state.filterCountry ? 'text-[#007AFF]' : 'text-black'}">Show All</button>`;
+            
+            Object.keys(countryFlags).sort().forEach(c => {
+                const isSelected = state.filterCountry === c;
+                list.innerHTML += `<button onclick="setFilter('${c}')" class="w-full text-left p-3 bg-white rounded-lg font-medium flex justify-between ${isSelected ? 'text-[#007AFF]' : 'text-black'}">
+                    <span>${countryFlags[c]} ${c}</span>
+                    ${isSelected ? '<span>✓</span>' : ''}
+                </button>`;
+            });
+            document.getElementById('filter-modal').classList.remove('hidden');
+        }
+
+        function setFilter(country) {
+            state.filterCountry = country;
+            renderTeams();
+            closeFilterModal();
+        }
+        function closeFilterModal() { document.getElementById('filter-modal').classList.add('hidden'); }
+
         function switchTab(tab) {
             state.activeTab = tab;
-            
-            // UI Toggle
             document.getElementById('tab-all').classList.remove('active');
             document.getElementById('tab-my').classList.remove('active');
             document.getElementById(`tab-${tab}`).classList.add('active');
-            
             renderTeams();
         }
 
         // ==========================================
-        // RENDER (APPLE CONTACTS STYLE)
+        // RENDER TEAMS
         // ==========================================
         function renderTeams() {
             const container = document.getElementById('saved-teams-container');
@@ -413,27 +471,21 @@
             
             let filtered = globalTeamsList.filter(t => t.name.toLowerCase().includes(searchTerm) || (t.country || "").toLowerCase().includes(searchTerm));
 
-            // FILTER BY TAB
-            if (state.activeTab === 'my') {
-                if (state.currentUserUid) {
-                    filtered = filtered.filter(t => t.ownerId === state.currentUserUid);
-                } else {
-                    filtered = []; // If not logged in properly, show empty
-                }
+            if (state.activeTab === 'my' && state.currentUserUid) {
+                filtered = filtered.filter(t => t.ownerId === state.currentUserUid);
+            }
+            if (state.filterCountry) {
+                filtered = filtered.filter(t => t.country === state.filterCountry);
             }
 
             if(filtered.length === 0) {
-                const msg = state.activeTab === 'my' ? "You haven't created any teams yet." : "No teams found";
-                container.innerHTML = `<div class="text-center py-10 text-gray-400 text-sm">${msg}</div>`;
+                container.innerHTML = `<div class="text-center py-10 text-gray-400 text-sm">No teams found</div>`;
                 return;
             }
 
             let currentLetter = '';
-
             filtered.forEach(team => {
                 const firstLetter = team.name.charAt(0).toUpperCase();
-                
-                // Sticky Header logic
                 if (firstLetter !== currentLetter) {
                     currentLetter = firstLetter;
                     const header = document.createElement('div');
@@ -444,11 +496,8 @@
 
                 const row = document.createElement('div');
                 row.className = 'team-row';
-                
                 const initial = team.name.charAt(0).toUpperCase();
-                const logoHtml = team.logo 
-                    ? `<img src="${team.logo}" class="team-avatar">`
-                    : `<div class="team-avatar flex items-center justify-center bg-gray-200 text-gray-500 font-bold text-lg">${initial}</div>`;
+                const logoHtml = team.logo ? `<img src="${team.logo}" class="team-avatar">` : `<div class="team-avatar flex items-center justify-center bg-gray-200 text-gray-500 font-bold text-lg">${initial}</div>`;
 
                 row.innerHTML = `
                     <div class="team-row-content">
@@ -463,10 +512,7 @@
                         <button onclick="initiateAction('${team.id}', 'delete')" class="ios-btn btn-delete">Delete</button>
                     </div>
                 `;
-                
                 container.appendChild(row);
-                
-                // Divider
                 const divider = document.createElement('div');
                 divider.className = 'team-row-divider';
                 container.appendChild(divider);
@@ -480,57 +526,39 @@
             state.targetTeamForPin = globalTeamsList.find(t => t.id === teamId);
             state.pendingAction = action;
             state.passcode = "";
-            
-            // UI Update
             document.getElementById('pin-modal-title').textContent = action === 'delete' ? "Delete Team?" : "Edit Team";
-            document.getElementById('pin-modal-desc').textContent = `Enter Creator Code for ${state.targetTeamForPin.name}`;
+            document.getElementById('pin-modal-desc').textContent = `Enter PIN for ${state.targetTeamForPin.name}`;
             updatePasscodeUI();
-            
             document.getElementById('passcode-modal').classList.remove('hidden');
         }
 
-        function closePasscodeModal() {
-            document.getElementById('passcode-modal').classList.add('hidden');
-            state.passcode = "";
-        }
+        function closePasscodeModal() { document.getElementById('passcode-modal').classList.add('hidden'); state.passcode = ""; }
 
         function handleKeypad(key) {
-            if (key === 'back') {
-                state.passcode = state.passcode.slice(0, -1);
-            } else if (state.passcode.length < 4) {
-                state.passcode += key;
-            }
+            if (key === 'back') state.passcode = state.passcode.slice(0, -1);
+            else if (state.passcode.length < 4) state.passcode += key;
             updatePasscodeUI();
-
-            if (state.passcode.length === 4) {
-                setTimeout(verifyPin, 100);
-            }
+            if (state.passcode.length === 4) setTimeout(verifyPin, 100);
         }
 
         function verifyPin() {
             const entered = state.passcode;
             const correctPin = state.targetTeamForPin.pin;
-            const adminCode = "2626";
-
-            if (entered === correctPin || entered === adminCode) {
-                // Success
+            if (entered === correctPin || entered === "2626") {
                 closePasscodeModal();
-                if (state.pendingAction === 'edit') {
-                    openEditor(state.targetTeamForPin);
-                } else if (state.pendingAction === 'delete') {
-                    if(confirm("Are you sure? This cannot be undone.")) {
-                        db.collection("teams").doc(state.targetTeamForPin.id).delete()
-                        .then(() => showToast("Team deleted", "success"));
+                if (state.pendingAction === 'edit') openEditor(state.targetTeamForPin);
+                else if (state.pendingAction === 'delete') {
+                    // Custom Confirm
+                    if(confirm("Permanently delete this team?")) {
+                        db.collection("teams").doc(state.targetTeamForPin.id).delete();
                     }
                 }
             } else {
-                // Fail
                 document.getElementById('passcode-dots').classList.add('animate-pulse');
                 setTimeout(() => {
                     document.getElementById('passcode-dots').classList.remove('animate-pulse');
-                    state.passcode = "";
-                    updatePasscodeUI();
-                    showToast("Wrong Code", "error");
+                    state.passcode = ""; updatePasscodeUI();
+                    showiOSAlert("Error", "Incorrect PIN");
                 }, 200);
             }
         }
@@ -543,65 +571,40 @@
             }
         }
 
-        // ==========================================
-        // CONTACT MODAL (WHATSAPP)
-        // ==========================================
-        function openContactModal() {
-            document.getElementById('contact-modal').classList.remove('hidden');
-        }
-        function closeContactModal() {
-            document.getElementById('contact-modal').classList.add('hidden');
-        }
+        function openContactModal() { document.getElementById('contact-modal').classList.remove('hidden'); }
+        function closeContactModal() { document.getElementById('contact-modal').classList.add('hidden'); }
 
         // ==========================================
-        // EDITOR LOGIC
+        // EDITOR LOGIC (FIXED INPUTS)
         // ==========================================
         function openEditor(team = null) {
             const modal = document.getElementById('team-editor-view');
             const title = document.getElementById('editor-title');
-            
             if (team) {
-                state.editMode = true;
-                state.editingTeamId = team.id;
-                title.textContent = "Edit Team";
-                
+                state.editMode = true; state.editingTeamId = team.id; title.textContent = "Edit Team";
                 document.getElementById('editor-team-name').value = team.name;
                 document.getElementById('editor-team-color').value = team.color || '#007AFF';
                 document.getElementById('editor-team-country').value = team.country || 'Other';
                 document.getElementById('editor-team-pin').value = team.pin || '';
-                document.getElementById('editor-team-mobile').value = team.mobile || ''; // Load mobile
-                
+                document.getElementById('editor-team-mobile').value = team.mobile || '';
                 if (team.logo) {
                     const img = document.getElementById('editor-team-logo-preview');
-                    img.src = team.logo;
-                    img.dataset.logoSrc = team.logo;
-                    img.classList.remove('hidden');
-                    document.getElementById('logo-placeholder').classList.add('hidden');
+                    img.src = team.logo; img.dataset.logoSrc = team.logo;
+                    img.classList.remove('hidden'); document.getElementById('logo-placeholder').classList.add('hidden');
                 }
-
                 state.players = (team.players || []).map(p => ({
-                    name: p.name || p, 
-                    avatar: p.avatar || '', 
-                    roles: p.roles || {bat:false, bowl:false, wk:false}
+                    name: p.name || p, avatar: p.avatar || '', roles: p.roles || {bat:false, bowl:false, wk:false}
                 }));
             } else {
-                state.editMode = false;
-                title.textContent = "New Team";
-                resetEditor();
+                state.editMode = false; title.textContent = "New Team"; resetEditor();
             }
-
-            // Ensure min players
             while(state.players.length < 4) state.players.push({name:'', avatar:'', roles:{bat:false, bowl:false, wk:false}});
-            
             renderPlayerInputs();
             modal.classList.remove('translate-y-full');
             checkFormValidity();
         }
 
-        function closeEditor() {
-            document.getElementById('team-editor-view').classList.add('translate-y-full');
-        }
-
+        function closeEditor() { document.getElementById('team-editor-view').classList.add('translate-y-full'); }
         function resetEditor() {
             document.getElementById('team-setup-form').reset();
             state.players = [];
@@ -610,13 +613,13 @@
             document.getElementById('editor-team-logo-preview').dataset.logoSrc = "";
         }
 
+        // --- FIXED PLAYER INPUT LOGIC ---
         function renderPlayerInputs() {
             const container = document.getElementById('player-inputs-container');
             container.innerHTML = '';
             
-            const currentCap = document.getElementById('captain-select').value;
-            const capSelect = document.getElementById('captain-select');
-            capSelect.innerHTML = '<option value="" disabled selected>Select Captain</option>';
+            // Re-populate Captain Select silently
+            updateCaptainSelect();
 
             state.players.forEach((player, idx) => {
                 const div = document.createElement('div');
@@ -627,44 +630,81 @@
                 const roleWk = player.roles.wk ? 'bg-orange-100 text-orange-600 border-orange-200' : 'opacity-30 grayscale';
 
                 div.innerHTML = `
-                    <input type="text" value="${player.name}" placeholder="Player ${idx + 1}" 
+                    <input type="text" id="player-input-${idx}" value="${player.name}" placeholder="Player ${idx + 1}" 
                         class="flex-1 bg-transparent text-sm font-medium outline-none"
-                        oninput="updatePlayerName(${idx}, this.value)">
+                        oninput="handleNameInput(${idx}, this.value)"
+                        onkeydown="handleEnterKey(event, ${idx})">
                     
                     <div class="flex gap-1">
-                        <button type="button" onclick="toggleRole(${idx}, 'bat')" class="w-6 h-6 rounded border flex items-center justify-center text-xs ${roleBat}">🏏</button>
-                        <button type="button" onclick="toggleRole(${idx}, 'bowl')" class="w-6 h-6 rounded border flex items-center justify-center text-xs ${roleBowl}">⚾</button>
-                        <button type="button" onclick="toggleRole(${idx}, 'wk')" class="w-6 h-6 rounded border flex items-center justify-center text-xs ${roleWk}">🧤</button>
+                        <button type="button" onclick="toggleRole(${idx}, 'bat', this)" class="w-6 h-6 rounded border flex items-center justify-center text-xs ${roleBat}">🏏</button>
+                        <button type="button" onclick="toggleRole(${idx}, 'bowl', this)" class="w-6 h-6 rounded border flex items-center justify-center text-xs ${roleBowl}">⚾</button>
+                        <button type="button" onclick="toggleRole(${idx}, 'wk', this)" class="w-6 h-6 rounded border flex items-center justify-center text-xs ${roleWk}">🧤</button>
                     </div>
                     <button type="button" onclick="removePlayer(${idx})" class="text-red-400 pl-2">×</button>
                 `;
                 container.appendChild(div);
+            });
+        }
 
-                // Populate Captain Select
-                if (player.name) {
+        // Only updates the data, DOES NOT re-render inputs
+        function handleNameInput(idx, val) {
+            state.players[idx].name = val;
+            checkFormValidity();
+            // We update captain list only, not the whole input list
+            updateCaptainSelect(); 
+        }
+
+        function handleEnterKey(e, idx) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                // If last player, add new
+                if (idx === state.players.length - 1) {
+                    addPlayerSlot();
+                } else {
+                    // Focus next
+                    const nextInput = document.getElementById(`player-input-${idx + 1}`);
+                    if(nextInput) nextInput.focus();
+                }
+            }
+        }
+
+        function updateCaptainSelect() {
+            const select = document.getElementById('captain-select');
+            const currentVal = select.value;
+            select.innerHTML = '<option value="" disabled selected>Add players first...</option>';
+            
+            state.players.forEach(p => {
+                if(p.name.trim()) {
                     const opt = document.createElement('option');
-                    opt.value = player.name;
-                    opt.textContent = player.name;
-                    if(player.name === currentCap) opt.selected = true;
-                    capSelect.appendChild(opt);
+                    opt.value = p.name;
+                    opt.textContent = p.name;
+                    if(p.name === currentVal) opt.selected = true;
+                    select.appendChild(opt);
                 }
             });
         }
 
-        function updatePlayerName(idx, val) {
-            state.players[idx].name = val;
-            renderPlayerInputs(); // Re-render to update captain list real-time
-            checkFormValidity();
-        }
-
-        function toggleRole(idx, role) {
+        function toggleRole(idx, role, btn) {
             state.players[idx].roles[role] = !state.players[idx].roles[role];
-            renderPlayerInputs();
+            // Toggle classes visually without re-render
+            if(state.players[idx].roles[role]) {
+                btn.className = btn.className.replace('opacity-30 grayscale', '');
+                if(role==='bat') btn.classList.add('bg-blue-100','text-blue-600','border-blue-200');
+                if(role==='bowl') btn.classList.add('bg-green-100','text-green-600','border-green-200');
+                if(role==='wk') btn.classList.add('bg-orange-100','text-orange-600','border-orange-200');
+            } else {
+                btn.className = "w-6 h-6 rounded border flex items-center justify-center text-xs opacity-30 grayscale";
+            }
         }
 
         function addPlayerSlot() {
             state.players.push({name:'', avatar:'', roles:{bat:false, bowl:false, wk:false}});
             renderPlayerInputs();
+            // Focus the new input
+            setTimeout(() => {
+                const inputs = document.querySelectorAll('input[id^="player-input-"]');
+                if(inputs.length) inputs[inputs.length-1].focus();
+            }, 50);
         }
 
         function removePlayer(idx) {
@@ -677,12 +717,9 @@
             if(!file) return;
             const reader = new FileReader();
             reader.onload = (ev) => {
-                // Simple canvas compression logic could go here, simplified for brevity
                 const img = document.getElementById('editor-team-logo-preview');
-                img.src = ev.target.result;
-                img.dataset.logoSrc = ev.target.result;
-                img.classList.remove('hidden');
-                document.getElementById('logo-placeholder').classList.add('hidden');
+                img.src = ev.target.result; img.dataset.logoSrc = ev.target.result;
+                img.classList.remove('hidden'); document.getElementById('logo-placeholder').classList.add('hidden');
             };
             reader.readAsDataURL(file);
         }
@@ -690,15 +727,15 @@
         function checkFormValidity() {
             const name = document.getElementById('editor-team-name').value.trim();
             const pin = document.getElementById('editor-team-pin').value;
+            const mobile = document.getElementById('editor-team-mobile').value.trim();
             const validPlayers = state.players.filter(p => p.name.trim() !== "").length;
             
             const btn = document.getElementById('save-btn');
-            if (name && pin.length === 4 && validPlayers >= 2) {
-                btn.disabled = false;
-                btn.classList.remove('opacity-50');
+            // MOBILE IS NOW MANDATORY
+            if (name && pin.length === 4 && mobile.length > 5 && validPlayers >= 2) {
+                btn.disabled = false; btn.classList.remove('opacity-50');
             } else {
-                btn.disabled = true;
-                btn.classList.add('opacity-50');
+                btn.disabled = true; btn.classList.add('opacity-50');
             }
         }
 
@@ -715,16 +752,8 @@
                 ...p, name: titleCase(p.name)
             }));
 
-            const data = { 
-                name, pin, mobile, country, color, logo, captain, 
-                players: validPlayers, 
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp() 
-            };
-
-            // If creating new, assign owner
-            if (!state.editMode && state.currentUserUid) {
-                data.ownerId = state.currentUserUid;
-            }
+            const data = { name, pin, mobile, country, color, logo, captain, players: validPlayers, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+            if (!state.editMode && state.currentUserUid) data.ownerId = state.currentUserUid;
 
             const saveBtn = document.getElementById('save-btn');
             saveBtn.textContent = "...";
@@ -734,10 +763,10 @@
                 : db.collection("teams").add(data);
 
             promise.then(() => {
-                showToast("Saved!", "success");
+                showiOSAlert("Success", "Team Saved Successfully");
                 closeEditor();
             }).catch(err => {
-                showToast("Error: " + err.message, "error");
+                showiOSAlert("Error", err.message);
             }).finally(() => {
                 saveBtn.textContent = "Done";
             });
@@ -745,13 +774,7 @@
 
         // --- UTILS ---
         function titleCase(str) { return str.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '); }
-        function showToast(msg, type) {
-            const t = document.createElement('div'); t.className = 'toast';
-            t.innerHTML = `<span>${msg}</span>`;
-            document.querySelector('.toast-container').appendChild(t);
-            setTimeout(() => t.remove(), 3000);
-        }
-
+        
         // Bulk Logic
         function openBulkModal() { document.getElementById('bulk-paste-modal').classList.remove('hidden'); }
         function processBulkPaste() {
