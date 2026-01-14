@@ -110,21 +110,21 @@
         .dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid #000; transition: all 0.2s; }
         .dot.filled { background-color: #000; }
 
-        /* --- PLAYER ROW STYLES (Watery Effect) --- */
-        .player-row-glass {
-            background: rgba(255, 255, 255, 0.6);
+        /* --- WATERY INPUTS --- */
+        .watery-input {
+            background: rgba(255, 255, 255, 0.5);
             backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
         }
         
         .captain-badge {
             background: linear-gradient(135deg, #FFD700, #FDB931);
             color: white; font-size: 10px; font-weight: 900;
-            width: 18px; height: 18px; border-radius: 50%;
+            width: 16px; height: 16px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-right: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
         /* Hide scrollbar */
@@ -195,7 +195,7 @@
                         </div>
                         <input type="file" id="editor-team-logo-upload" accept="image/*" class="hidden">
                     </div>
-                    <input type="text" id="editor-team-name" placeholder="Team Name" class="text-center text-lg md:text-xl font-semibold bg-transparent border-b border-gray-300 focus:border-[#007AFF] outline-none w-3/4 pb-1" oninput="checkFormValidity()">
+                    <input type="text" id="editor-team-name" placeholder="Team Name" class="text-center text-base md:text-xl font-semibold bg-transparent border-b border-gray-300 focus:border-[#007AFF] outline-none w-3/4 pb-1" oninput="checkFormValidity()">
                 </div>
 
                 <div class="bg-white rounded-xl overflow-hidden shadow-sm">
@@ -212,15 +212,33 @@
                 </div>
 
                 <div class="bg-white rounded-xl overflow-hidden shadow-sm p-4">
-                    <h3 class="text-xs font-bold text-gray-500 uppercase mb-3">Creator Security</h3>
+                    <h3 class="text-xs font-bold text-gray-500 uppercase mb-3">Creator Details</h3>
+                    
                     <div class="flex flex-col gap-4">
                         <div>
-                            <label class="text-sm font-medium text-black mb-1 block">Creator Code (PIN)</label>
-                            <input type="tel" id="editor-team-pin" maxlength="4" placeholder="4-digit PIN" class="w-full bg-gray-50 p-2.5 rounded-lg text-center tracking-[8px] font-mono text-lg outline-none focus:ring-2 focus:ring-[#007AFF]" oninput="checkFormValidity()">
+                            <label class="text-sm font-medium text-black mb-1 block">Your Name (Creator)</label>
+                            <input type="text" id="editor-creator-name" placeholder="Who is creating this?" class="watery-input w-full p-2.5 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#007AFF]" oninput="checkFormValidity()">
                         </div>
+
+                        <div>
+                            <label class="text-sm font-medium text-black mb-1 block">Creator Code (PIN)</label>
+                            <input type="tel" id="editor-team-pin" maxlength="4" placeholder="4-digit PIN" class="watery-input w-full p-2.5 rounded-lg text-center tracking-[8px] font-mono text-lg outline-none focus:ring-2 focus:ring-[#007AFF]" oninput="checkFormValidity()">
+                        </div>
+                        
                         <div>
                             <label class="text-sm font-medium text-black mb-1 block">Mobile Number <span class="text-red-500">*</span></label>
-                            <input type="tel" id="editor-team-mobile" placeholder="+1 234 567 8900" class="w-full bg-gray-50 p-2.5 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#007AFF]" oninput="checkFormValidity()">
+                            <div class="flex gap-2">
+                                <div class="relative w-28">
+                                    <select id="country-code-select" class="watery-input w-full p-2.5 rounded-lg text-sm appearance-none outline-none font-medium text-gray-700 focus:ring-2 focus:ring-[#007AFF]">
+                                        <option value="+1">🇨🇦 +1</option><option value="+93">🇦🇫 +93</option><option value="+61">🇦🇺 +61</option><option value="+880">🇧🇩 +880</option><option value="+44">🏴󠁧󠁢󠁥󠁮󠁧󠁿 +44</option><option value="+91">🇮🇳 +91</option><option value="+353">🇮🇪 +353</option><option value="+264">🇳🇦 +264</option><option value="+977">🇳🇵 +977</option><option value="+31">🇳🇱 +31</option><option value="+64">🇳🇿 +64</option><option value="+968">🇴🇲 +968</option><option value="+92">🇵🇰 +92</option><option value="+675">🇵🇬 +675</option><option value="+44">🏴󠁧󠁢󠁳Y🇹 +44</option><option value="+27">🇿🇦 +27</option><option value="+94">🇱🇰 +94</option><option value="+971">🇦🇪 +971</option><option value="+44">🇬🇧 +44</option><option value="+1">🇺🇸 +1</option><option value="+1">🌴 +1</option><option value="+263">🇿🇼 +263</option>
+                                    </select>
+                                    <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </div>
+                                </div>
+                                <input type="tel" id="mobile-number-input" placeholder="Phone Number" class="watery-input flex-1 p-2.5 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#007AFF]" oninput="checkFormValidity()">
+                            </div>
+                            <p class="text-[10px] text-gray-400 mt-1">We'll use this if you forget your code.</p>
                         </div>
                     </div>
                 </div>
@@ -292,7 +310,7 @@
     <div id="contact-modal" class="fixed inset-0 z-[80] ios-modal-bg hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden text-center p-6 animate-scale-in">
             <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600">
-                <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c..."/></svg> <svg class="w-8 h-8" viewBox="0 0 24 24" fill="currentColor"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.698c.969.587 1.974.88 3.037.881 3.179 0 5.767-2.587 5.767-5.766.001-3.187-2.875-6.068-6.008-6.068zm5.767 5.766c0 1.904-1.48 3.526-3.283 3.826.5.64 2.113 1.943 2.113 1.943a5.763 5.763 0 0 0 2.275-2.275c-.248-.694-.248-1.289-.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
             </div>
             <h3 class="text-xl font-bold text-black mb-2">Forgot PIN?</h3>
             <p class="text-gray-500 text-sm mb-6 leading-relaxed">
@@ -420,7 +438,7 @@
         function switchTab(t) { state.activeTab = t; document.getElementById('tab-all').classList.remove('active'); document.getElementById('tab-my').classList.remove('active'); document.getElementById(`tab-${t}`).classList.add('active'); renderTeams(); }
 
         // ==========================================
-        // RENDER TEAMS
+        // RENDER TEAMS (DETAILED ROW)
         // ==========================================
         function renderTeams() {
             const container = document.getElementById('saved-teams-container');
@@ -447,13 +465,27 @@
                 row.className = 'team-row';
                 const initial = team.name.charAt(0).toUpperCase();
                 const logoHtml = team.logo ? `<img src="${team.logo}" class="team-avatar">` : `<div class="team-avatar flex items-center justify-center bg-gray-200 text-gray-500 font-bold text-lg">${initial}</div>`;
+                
+                // DATA PREP
+                const captainName = team.captain ? team.captain.split(' ')[0] : null;
+                const creatorName = team.creator || "Unknown";
+                const playerCount = (team.players || []).length;
 
                 row.innerHTML = `
                     <div class="team-row-content">
                         ${logoHtml}
                         <div class="flex flex-col">
-                            <span class="text-[17px] font-semibold text-black leading-tight">${team.name}</span>
-                            <span class="text-[13px] text-gray-500">${countryFlags[team.country] || '🏳️'} ${team.country || 'Other'}</span>
+                            <span class="text-[15px] font-bold text-black leading-tight">${team.name}</span>
+                            
+                            <div class="flex flex-wrap gap-x-2 gap-y-1 mt-1 text-[11px] text-gray-500 font-medium">
+                                <span class="flex items-center gap-1">${countryFlags[team.country] || '🏳️'} ${team.country || 'Other'}</span>
+                                ${captainName ? `<span class="flex items-center gap-1 text-[#007AFF] font-semibold"><span class="bg-[#007AFF] text-white text-[9px] w-3.5 h-3.5 rounded-full flex items-center justify-center">C</span> ${captainName}</span>` : ''}
+                            </div>
+
+                            <div class="flex flex-wrap gap-x-2 mt-0.5 text-[10px] text-gray-400">
+                                <span>${playerCount} Players</span>
+                                <span>• By ${creatorName}</span>
+                            </div>
                         </div>
                     </div>
                     <div class="flex gap-2">
@@ -516,7 +548,21 @@
                 document.getElementById('editor-team-color').value = team.color || '#007AFF';
                 document.getElementById('editor-team-country').value = team.country || 'Other';
                 document.getElementById('editor-team-pin').value = team.pin || '';
-                document.getElementById('editor-team-mobile').value = team.mobile || '';
+                document.getElementById('editor-creator-name').value = team.creator || '';
+                
+                // Parse Mobile
+                const fullMobile = team.mobile || "";
+                const codeSelect = document.getElementById('country-code-select');
+                const numInput = document.getElementById('mobile-number-input');
+                
+                const parts = fullMobile.split(' ');
+                if (parts.length > 1) {
+                    codeSelect.value = parts[0];
+                    numInput.value = parts.slice(1).join(' ');
+                } else {
+                    numInput.value = fullMobile;
+                }
+
                 if (team.logo) {
                     const img = document.getElementById('editor-team-logo-preview');
                     img.src = team.logo; img.dataset.logoSrc = team.logo;
@@ -686,10 +732,13 @@
         function checkFormValidity() {
             const name = document.getElementById('editor-team-name').value.trim();
             const pin = document.getElementById('editor-team-pin').value;
-            const mobile = document.getElementById('editor-team-mobile').value.trim();
+            const mobile = document.getElementById('mobile-number-input').value.trim(); // Changed ID
+            const creator = document.getElementById('editor-creator-name').value.trim();
             const validPlayers = state.players.filter(p => p.name.trim() !== "").length;
             const btn = document.getElementById('save-btn');
-            if (name && pin.length === 4 && mobile.length > 5 && validPlayers >= 2) {
+            
+            // CREATOR NAME IS ALSO MANDATORY
+            if (name && pin.length === 4 && mobile.length >= 7 && creator && validPlayers >= 2) {
                 btn.disabled = false; btn.classList.remove('opacity-50');
             } else {
                 btn.disabled = true; btn.classList.add('opacity-50');
@@ -699,7 +748,13 @@
         function submitForm() {
             const name = document.getElementById('editor-team-name').value.trim().toUpperCase();
             const pin = document.getElementById('editor-team-pin').value;
-            const mobile = document.getElementById('editor-team-mobile').value;
+            const creator = document.getElementById('editor-creator-name').value.trim();
+            
+            // Combine Code and Number
+            const code = document.getElementById('country-code-select').value;
+            const number = document.getElementById('mobile-number-input').value.trim();
+            const mobile = `${code} ${number}`;
+
             const country = document.getElementById('editor-team-country').value;
             const color = document.getElementById('editor-team-color').value;
             const logo = document.getElementById('editor-team-logo-preview').dataset.logoSrc || "";
@@ -707,7 +762,12 @@
 
             const validPlayers = state.players.filter(p => p.name.trim() !== "").map(p => ({ ...p, name: titleCase(p.name) }));
 
-            const data = { name, pin, mobile, country, color, logo, captain, players: validPlayers, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+            const data = { 
+                name, pin, mobile, creator, 
+                country, color, logo, captain, 
+                players: validPlayers, 
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp() 
+            };
             if (!state.editMode && state.currentUserUid) data.ownerId = state.currentUserUid;
 
             const saveBtn = document.getElementById('save-btn');
