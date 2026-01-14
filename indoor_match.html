@@ -540,30 +540,31 @@
 
     <div id="opening-pair-modal" class="modal-overlay fixed inset-0 bg-slate-900/95 backdrop-blur-xl hidden z-50 flex items-center justify-center p-2">
         <div class="bg-white rounded-3xl w-full max-w-5xl shadow-2xl flex flex-col h-[90vh] overflow-hidden">
-            <div class="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+            <div class="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center flex-shrink-0">
                 <div>
                     <h3 class="text-2xl font-black text-blue-900 uppercase tracking-tight">Select Opening Pair</h3>
                     <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Choose Striker first, then Non-Striker</p>
                 </div>
             </div>
 
-            <div class="flex-grow grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-100 overflow-hidden">
-                <div class="flex flex-col h-full bg-blue-50/30">
+            <div class="flex-grow grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-100 overflow-y-auto md:overflow-hidden">
+                
+                <div class="flex flex-col h-auto md:h-full bg-blue-50/30">
                     <div class="p-3 bg-blue-100/50 text-blue-800 font-black text-center text-sm uppercase tracking-widest border-b border-blue-100 sticky top-0 z-10">
                         1. Choose Striker 🏏
                     </div>
-                    <div id="op-striker-grid" class="grid grid-cols-3 md:grid-cols-4 gap-3 p-4 overflow-y-auto custom-scroll content-start"></div>
+                    <div id="op-striker-grid" class="grid grid-cols-3 md:grid-cols-4 gap-3 p-4 overflow-y-visible md:overflow-y-auto custom-scroll content-start"></div>
                 </div>
 
-                <div class="flex flex-col h-full bg-orange-50/30">
-                    <div class="p-3 bg-orange-100/50 text-orange-800 font-black text-center text-sm uppercase tracking-widest border-b border-orange-100 sticky top-0 z-10">
+                <div class="flex flex-col h-auto md:h-full bg-orange-50/30">
+                    <div id="op-ns-header" class="p-3 bg-orange-100/50 text-orange-800 font-black text-center text-sm uppercase tracking-widest border-b border-orange-100 sticky top-0 z-10">
                         2. Choose Non-Striker 🏃
                     </div>
-                    <div id="op-nonstriker-grid" class="grid grid-cols-3 md:grid-cols-4 gap-3 p-4 overflow-y-auto custom-scroll content-start transition-opacity duration-300"></div>
+                    <div id="op-nonstriker-grid" class="grid grid-cols-3 md:grid-cols-4 gap-3 p-4 overflow-y-visible md:overflow-y-auto custom-scroll content-start transition-opacity duration-300"></div>
                 </div>
             </div>
             
-            <div class="p-4 border-t border-gray-100 bg-gray-50 flex justify-center">
+            <div class="p-4 border-t border-gray-100 bg-gray-50 flex justify-center flex-shrink-0">
                 <button id="op-confirm-btn" onclick="confirmOpeningPair()" class="w-full md:w-1/2 py-4 bg-gray-300 text-gray-500 font-black rounded-xl text-xl shadow-none transition-all uppercase tracking-widest cursor-not-allowed" disabled>
                     Confirm Pair
                 </button>
@@ -1992,6 +1993,12 @@ function generateBroadcastCode() {
                 } else {
                     tempStrikerId = p.id;
                     tempNonStrikerId = null; // Reset NS if Striker changes
+                    
+                    // --- NEW: Scroll to Non-Striker Section on Mobile ---
+                    setTimeout(() => {
+                        const nsSection = document.getElementById('op-ns-header');
+                        if(nsSection) nsSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 150);
                 }
                 renderOpeningPairGrids();
             };
