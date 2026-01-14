@@ -161,8 +161,56 @@
             </div>
 
             <div class="relative">
-                <div id="setup-step-1" class="setup-step active max-w-2xl mx-auto">
+                <div id="setup-step-0" class="setup-step active max-w-4xl mx-auto pt-4 md:pt-10">
+                    <div class="text-center mb-10">
+                        <h1 class="text-4xl md:text-5xl font-black text-gray-900 tracking-tight mb-2">CRICKER<span class="text-blue-600">.</span></h1>
+                        <p class="text-gray-500 uppercase tracking-widest text-xs font-bold">Indoor Cricket Controller</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+                        <button onclick="startNewMatchFlow()" class="group relative p-8 bg-white border-2 border-gray-100 rounded-3xl shadow-xl hover:shadow-2xl hover:border-blue-500 transition-all duration-300 text-left flex flex-col justify-between h-64 overflow-hidden">
+                            <div class="absolute inset-0 bg-gradient-to-br from-blue-50 to-white opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            <div class="relative z-10">
+                                <span class="inline-block p-3 bg-blue-100 text-blue-600 rounded-2xl mb-4 text-2xl">⚡</span>
+                                <h3 class="text-2xl font-black text-gray-900 mb-2">Create New Match</h3>
+                                <p class="text-sm text-gray-500 font-medium">Start a fresh game. Set up teams, overs, and rules from scratch.</p>
+                            </div>
+                            <div class="relative z-10 mt-4 flex justify-end">
+                                <span class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shadow-lg group-hover:scale-110 transition-transform">→</span>
+                            </div>
+                        </button>
+
+                        <div class="group relative p-8 bg-slate-900 border-2 border-slate-800 rounded-3xl shadow-xl text-left flex flex-col justify-between h-64 overflow-hidden">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-purple-500 rounded-full blur-3xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
+                            
+                            <div id="resume-initial-view" class="relative z-10 h-full flex flex-col justify-between transition-all duration-300">
+                                <div>
+                                    <span class="inline-block p-3 bg-slate-800 text-purple-400 rounded-2xl mb-4 text-2xl">📡</span>
+                                    <h3 class="text-2xl font-black text-white mb-2">Continue Match</h3>
+                                    <p class="text-sm text-slate-400 font-medium">Take over scoring from another device using the Match Code.</p>
+                                </div>
+                                <div class="mt-4">
+                                    <button onclick="showResumeInput()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl border border-slate-700 transition-colors uppercase text-xs tracking-wider">
+                                        Enter Code
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="resume-input-view" class="absolute inset-0 bg-slate-900 z-20 p-8 flex flex-col justify-center items-center text-center hidden">
+                                <h3 class="text-white font-bold mb-4 uppercase tracking-wider text-sm">Enter Broadcast Code</h3>
+                                <input type="number" id="resume-code-input" placeholder="0000" class="w-full text-center text-4xl font-mono font-black bg-transparent border-b-2 border-slate-700 text-white focus:border-purple-500 outline-none placeholder-slate-700 mb-6 py-2">
+                                <div class="flex gap-3 w-full">
+                                    <button onclick="hideResumeInput()" class="flex-1 py-3 bg-transparent border border-slate-700 text-slate-400 font-bold rounded-xl hover:text-white">Cancel</button>
+                                    <button onclick="takeoverMatch()" class="flex-1 py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl shadow-lg shadow-purple-900/50">CONNECT</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="setup-step-1" class="setup-step hidden max-w-2xl mx-auto">
                     <header class="text-center mb-6">
+                        <button onclick="goToStep(0)" class="mb-4 text-xs font-bold text-gray-400 hover:text-gray-600 uppercase tracking-wider">← Back to Menu</button>
                         <h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 tracking-tight" id="setup-title">Indoor Match Setup</h1>
                         <p class="text-xs text-gray-500 mt-1">Configure format and specific rules</p>
                     </header>
@@ -694,6 +742,17 @@
     </div>
 </div>
 
+    <div id="device-lockout-overlay" class="fixed inset-0 z-[99999] bg-slate-900/95 flex flex-col items-center justify-center text-white hidden backdrop-blur-md">
+        <div class="bg-red-500/20 p-6 rounded-full mb-6 animate-pulse border-4 border-red-500">
+            <svg class="w-16 h-16 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+        </div>
+        <h1 class="text-3xl font-black uppercase tracking-widest mb-2 text-center">Scoring Disabled</h1>
+        <p class="text-gray-400 text-center max-w-md px-4 mb-8">
+            Scoring for this match has been transferred to another device. This screen is now read-only to prevent conflicts.
+        </p>
+        <button onclick="location.reload()" class="px-8 py-3 bg-white text-slate-900 font-bold rounded-full hover:scale-105 transition-transform uppercase">Go to Home</button>
+    </div>
+
     <script>
         // --- ADD THIS FUNCTION TO YOUR CONTROLLER SCRIPT (51 - .html) ---
 
@@ -817,22 +876,25 @@ function broadcastMatchResult() {
 
         // --- STATE & HISTORY ---
         let state = {
-    rules: { wicketRuns: 5, wideRuns: 2, noBallRuns: 2, skins: false },
-    team1: { name: "", logo: "", squad: [], playing: [], playerStats: {}, isLoaded: false },
-    team2: { name: "", logo: "", squad: [], playing: [], playerStats: {}, isLoaded: false },
-    battingTeam: 'team1', bowlingTeam: 'team2',
-    striker: null, nonStriker: null, bowler: null,
-    id: null, innings: 1, target: 0, totalOvers: 16, playersPerSide: 8,
-    currentOver: [], history: [], timeline: [] // <--- ADDED timeline: [] HERE
-};
+            rules: { wicketRuns: 5, wideRuns: 2, noBallRuns: 2, skins: false },
+            team1: { name: "", logo: "", squad: [], playing: [], playerStats: {}, isLoaded: false },
+            team2: { name: "", logo: "", squad: [], playing: [], playerStats: {}, isLoaded: false },
+            battingTeam: 'team1', bowlingTeam: 'team2',
+            striker: null, nonStriker: null, bowler: null,
+            id: null, innings: 1, target: 0, totalOvers: 16, playersPerSide: 8,
+            currentOver: [], history: [], timeline: [] 
+        };
         
         let undoStack = []; 
-        let editingBallIndex = null; // --- EDIT MODE CONTEXT ---
+        let editingBallIndex = null; 
 
         let tossWinner = null, tossDecision = null;
         let broadcastId = null;
         let savedTeamsData = [];
         let isEditMatchMode = false;
+        
+        // UNIQUE DEVICE ID FOR HANDOVER
+        const myDeviceId = 'dev_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
 
         // --- INITIALIZATION ---
         window.onload = function() {
@@ -865,7 +927,32 @@ function broadcastMatchResult() {
 
             loadSavedTeams();
             showScreen('setup-screen');
+            // Ensure we start at Step 0 (Mode Select)
+            document.querySelectorAll('.setup-step').forEach(s => { s.classList.remove('active'); s.classList.add('hidden'); });
+            document.getElementById('setup-step-0').classList.remove('hidden');
+            setTimeout(() => document.getElementById('setup-step-0').classList.add('active'), 10);
+            
+            // Initial Progress Bar
+            ui.progressBar.style.width = '0%';
         };
+
+        // --- NEW LANDING PAGE FUNCTIONS ---
+        function startNewMatchFlow() {
+            goToStep(1);
+        }
+
+        function showResumeInput() {
+            document.getElementById('resume-initial-view').classList.add('hidden');
+            document.getElementById('resume-input-view').classList.remove('hidden');
+            document.getElementById('resume-input-view').classList.add('flex');
+            document.getElementById('resume-code-input').focus();
+        }
+
+        function hideResumeInput() {
+            document.getElementById('resume-input-view').classList.add('hidden');
+            document.getElementById('resume-input-view').classList.remove('flex');
+            document.getElementById('resume-initial-view').classList.remove('hidden');
+        }
 
         function showScreen(id) {
             document.querySelectorAll('body > div').forEach(d => {
@@ -1267,37 +1354,41 @@ function generateBroadcastCode() {
 
             // --- Prepare Payload ---
             const payload = {
+                // Security & Session
+                adminPin: "2626", 
+                lastUpdatedBy: Date.now(),
+
+                // Game State (CRITICAL FOR HANDOVER)
+                currentInnings: state.innings,       // Save that we are in Innings 2
+                activeBattingTeam: state.battingTeam, // Save 'team1' or 'team2' key
+                target: state.target || 0,
+
                 // Basic Info
                 venue: state.venue || "Unknown Venue",
                 matchDate: document.getElementById('match-date-input').value,
                 matchStatus: state.innings === 2 && state.team2.score > state.team1.score ? "COMPLETE" : "LIVE",
                 
-                // --- NEW: SEND SUPER OVER STATUS ---
                 isSuperOver: state.isSuperOver || false, 
-                // -----------------------------------
                 
                 // Live State
-                target: state.target || 0,
                 currentOver: state.currentOver.map(b => b.event),
                 timeline: state.timeline || [],
 
-                // --- NEW: PLAYER NAMES FOR BROADCAST ---
+                // Player Names
                 striker: state.striker || { name: "", runs: 0, balls: 0 },
                 nonStriker: state.nonStriker || { name: "", runs: 0, balls: 0 },
                 bowler: state.bowler || { name: "", wkts: 0, runs: 0, balls: 0 },
-                // ---------------------------------------
                 
-                // FULL SCORECARDS (The Cricinfo Part)
+                // Full Scorecards
                 scorecard: {
                     innings1: generateInningsData('team1', 'team2'),
                     innings2: generateInningsData('team2', 'team1')
                 },
 
-                // Legacy support
+                // Legacy
                 t1: state.team1.name, t2: state.team2.name,
                 t1Logo: state.team1.logo, t2Logo: state.team2.logo, 
                 
-                // FIX: Added '|| 0' to prevent crash before match starts
                 score: state[state.battingTeam].score || 0,
                 wickets: state[state.battingTeam].wickets || 0,
                 overs: state[state.battingTeam].overs || 0,
@@ -2438,6 +2529,134 @@ function endInnings() {
                     <td class="text-right py-1 pr-2 text-gray-500 text-[9px] align-middle">${econ}</td>
                 </tr>`;
             }
+        }
+        // ==========================================
+        // DEVICE HANDOVER & SYNC LOGIC
+        // ==========================================
+
+        function takeoverMatch() {
+            const code = document.getElementById('resume-code-input').value.trim();
+            if (!code) { alert("Please enter the code."); return; }
+
+            // 1. Fetch Match Data
+            db.collection("live_matches").doc(code).get().then(doc => {
+                if (!doc.exists) { alert("Match not found! Check the code."); return; }
+                
+                const data = doc.data();
+                
+                // 2. Security Check (Basic PIN)
+                const pin = prompt("Enter Match PIN to take over scoring:");
+                if (pin !== "2626" && pin !== data.adminPin) { 
+                    alert("Incorrect PIN! Access Denied."); return; 
+                }
+
+                // 3. CLAIM OWNERSHIP (The Handover)
+                // We set 'activeScorerId' to THIS device's ID.
+                // The old device will see this change and lock itself.
+                db.collection("live_matches").doc(code).update({
+                    activeScorerId: myDeviceId,
+                    lastAction: { type: "HANDOVER", device: myDeviceId }
+                }).then(() => {
+                    // 4. Load State Locally
+                    broadcastId = code;
+                    mapRemoteDataToLocalState(data);
+                    
+                    // 5. Update UI
+                    updateMatchHeader();
+                    updateScoreboard();
+                    
+                    // Show Broadcast Box in Setup (in case we go back)
+                    document.getElementById('match-code-box').textContent = broadcastId;
+                    const bBtn = document.getElementById('btn-broadcast-enable');
+                    bBtn.classList.remove('bg-blue-50', 'text-blue-700');
+                    bBtn.classList.add('bg-green-100', 'text-green-800', 'border-green-300');
+                    bBtn.innerHTML = `<span class="text-lg">✅ BROADCAST LIVE</span><span class="text-xs font-normal">Code: ${broadcastId}</span>`;
+                    document.getElementById('broadcast-display').classList.remove('hidden');
+
+                    // 6. Activate Listener (to protect OUR session)
+                    activateScorerListener(code);
+                    
+                    // 7. Launch App
+                    showScreen('app');
+                    
+                    // 8. Re-Enable Start Button visual state if checking setup
+                    tossWinner = 'resumed'; // Bypass check
+                    tossDecision = 'resumed';
+                    checkStartReady();
+
+                }).catch(err => alert("Error taking over match: " + err.message));
+
+            }).catch(err => alert("Error finding match: " + err.message));
+        }
+
+        function activateScorerListener(matchId) {
+            console.log("Active Scorer Listening...");
+            db.collection("live_matches").doc(matchId).onSnapshot(doc => {
+                const remote = doc.data();
+                if (!remote) return;
+
+                // --- CRITICAL: CHECK OWNERSHIP ---
+                // If the database says the active scorer is NOT me, 
+                // it means another device took over. Lock this device.
+                if (remote.activeScorerId && remote.activeScorerId !== myDeviceId) {
+                    document.getElementById('device-lockout-overlay').classList.remove('hidden');
+                    return; // Stop processing
+                }
+            });
+        }
+
+        function mapRemoteDataToLocalState(data) {
+            // 1. Restore Basic Config
+            state.venue = data.venue;
+            state.totalOvers = 16; 
+            state.playersPerSide = 8;
+            
+            // 2. Restore Teams
+            state.team1.name = data.t1;
+            state.team2.name = data.t2;
+            state.team1.logo = data.t1Logo;
+            state.team2.logo = data.t2Logo;
+
+            // 3. Restore Game State (HANDOVER LOGIC)
+            if (data.currentInnings) state.innings = data.currentInnings;
+            if (data.target) state.target = data.target;
+            
+            // Set Active Batting Team based on saved key, or fallback to name check
+            if (data.activeBattingTeam) {
+                state.battingTeam = data.activeBattingTeam;
+                state.bowlingTeam = (data.activeBattingTeam === 'team1') ? 'team2' : 'team1';
+            } else {
+                // Fallback for old matches
+                const inn1Name = data.scorecard.innings1.name;
+                if (inn1Name === state.team1.name) {
+                    state.battingTeam = 'team1'; state.bowlingTeam = 'team2';
+                } else {
+                    state.battingTeam = 'team2'; state.bowlingTeam = 'team1';
+                }
+            }
+
+            // 4. Restore Scores
+            const i1Parts = data.scorecard.innings1.score.split('/');
+            const i2Parts = data.scorecard.innings2.score.split('/');
+            
+            state.team1.score = parseInt(i1Parts[0]); state.team1.wickets = parseInt(i1Parts[1]);
+            state.team2.score = parseInt(i2Parts[0]); state.team2.wickets = parseInt(i2Parts[1]);
+            
+            // 5. Restore Timeline & Current Over
+            state.timeline = data.timeline || [];
+            state.currentOver = []; 
+            
+            if (state.timeline.length > 0) {
+                const lastBall = state.timeline[state.timeline.length - 1];
+                const currentOverNum = lastBall.over;
+                state.currentOver = state.timeline.filter(b => b.over === currentOverNum);
+            }
+
+            // 6. Restore Active Players
+            // Note: We create dummy objects with IDs to keep UI working until new scorer selects players
+            if (data.striker && data.striker.name) state.striker = { id: 'p_res_1', name: data.striker.name, runs: data.striker.runs, balls: data.striker.balls };
+            if (data.nonStriker && data.nonStriker.name) state.nonStriker = { id: 'p_res_2', name: data.nonStriker.name, runs: data.nonStriker.runs, balls: data.nonStriker.balls };
+            if (data.bowler && data.bowler.name) state.bowler = { id: 'p_res_3', name: data.bowler.name, runsConceded: data.bowler.runs, ballsBowled: data.bowler.balls, wickets: data.bowler.wkts };
         }
     </script>
 </body>
