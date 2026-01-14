@@ -264,25 +264,6 @@
                                 }
                             </style>
 
-                            <style>
-                                /* Glass Shimmer Animation */
-                                @keyframes glassShimmer {
-                                    0% { background-position: 0% 50%; }
-                                    50% { background-position: 100% 50%; }
-                                    100% { background-position: 0% 50%; }
-                                }
-                                .glass-input {
-                                    background: linear-gradient(90deg, rgba(255,255,255,0.4), rgba(255,255,255,0.8), rgba(255,255,255,0.4));
-                                    background-size: 200% 100%;
-                                    animation: glassShimmer 5s ease-in-out infinite;
-                                }
-                                .glass-input:focus {
-                                    background: white;
-                                    animation: none;
-                                    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
-                                }
-                            </style>
-
                             <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
                                 <div class="bg-gradient-to-r from-blue-900 via-indigo-900 to-purple-900 px-6 py-4 flex justify-between items-center shadow-md relative z-10">
                                     <span class="text-white font-bold uppercase tracking-widest text-xs flex items-center gap-2">
@@ -319,9 +300,9 @@
                                                 <select id="team1-select" class="w-full p-2 bg-white/80 backdrop-blur-sm border border-blue-200 rounded-lg text-xs font-bold uppercase text-blue-700 shadow-sm focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer hover:bg-white transition-colors"><option value="">▼ Load Saved Team</option></select>
                                                 
                                                 <input type="text" id="team1-name-input" 
-                                                       onblur="this.value = this.value.replace(/Cricket\s+Club/gi, 'C.C').replace(/Cricket/gi, 'C.').replace(/Club/gi, 'C.').trim().toUpperCase()"
+                                                       onblur="this.value = this.value.replace(/Cricket Club/gi, 'C.C').replace(/Cricket/gi, 'C.').trim().toUpperCase()"
                                                        placeholder="HOME TEAM" 
-                                                       class="glass-input w-full p-2.5 rounded-lg text-sm md:text-xl font-black text-gray-800 uppercase border border-blue-100 focus:border-blue-500 outline-none transition-all placeholder-blue-200/50 shadow-sm">
+                                                       class="glass-input w-full p-2.5 rounded-lg text-xs md:text-sm font-black text-gray-800 uppercase border border-blue-100 focus:border-blue-500 outline-none transition-all placeholder-blue-200/50 shadow-sm">
                                             </div>
                                         </div>
                                     </div>
@@ -347,9 +328,9 @@
                                                 <select id="team2-select" class="w-full p-2 bg-white/80 backdrop-blur-sm border border-red-200 rounded-lg text-xs font-bold uppercase text-red-700 shadow-sm focus:ring-2 focus:ring-red-500 outline-none cursor-pointer hover:bg-white transition-colors"><option value="">▼ Load Saved Team</option></select>
                                                 
                                                 <input type="text" id="team2-name-input" 
-                                                       onblur="this.value = this.value.replace(/Cricket\s+Club/gi, 'C.C').replace(/Cricket/gi, 'C.').replace(/Club/gi, 'C.').trim().toUpperCase()"
+                                                       onblur="this.value = this.value.replace(/Cricket Club/gi, 'C.C').replace(/Cricket/gi, 'C.').trim().toUpperCase()"
                                                        placeholder="AWAY TEAM" 
-                                                       class="glass-input w-full p-2.5 rounded-lg text-sm md:text-xl font-black text-gray-800 uppercase border border-red-100 focus:border-red-500 outline-none transition-all placeholder-red-200/50 shadow-sm">
+                                                       class="glass-input w-full p-2.5 rounded-lg text-xs md:text-sm font-black text-gray-800 uppercase border border-red-100 focus:border-red-500 outline-none transition-all placeholder-red-200/50 shadow-sm">
                                             </div>
                                         </div>
                                     </div>
@@ -1589,8 +1570,11 @@ function generateBroadcastCode() {
 
             const headerHTML = `
                 <div class="py-2 relative">
-                    ${codeDisplay} <h1 class="text-xl sm:text-2xl font-black text-gray-900 uppercase tracking-tight leading-tight">${t1} <span class="text-gray-400 font-medium text-lg px-1">vs</span> ${t2}</h1>
-                    <p class="text-xs sm:text-sm text-gray-500 font-medium mt-1 tracking-wide">${subTitle}</p>
+                    ${codeDisplay} 
+                    <h1 class="text-xs font-black text-gray-900 uppercase tracking-tight leading-tight">
+                        ${t1} <span class="text-gray-400 font-medium text-[10px] px-1">vs</span> ${t2}
+                    </h1>
+                    <p class="text-[10px] text-gray-500 font-medium mt-1 tracking-wide">${subTitle}</p>
                 </div>
             `;
             document.getElementById('match-header').innerHTML = headerHTML;
