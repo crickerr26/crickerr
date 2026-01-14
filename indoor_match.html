@@ -1560,20 +1560,32 @@ function generateBroadcastCode() {
             const venue = (state.venue || 'Unknown Venue').toUpperCase();
             const dateObj = state.matchDate ? new Date(state.matchDate) : new Date();
             const dateStr = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-            const subTitle = `${venue} | ${dateStr} | ${state.totalOvers} Overs | ${state.playersPerSide}-a-side`;
-
-            let codeDisplay = "";
+            
+            // Build the subtitle parts
+            let infoParts = [];
+            
+            // 1. Add Match Code first (Styled Blue)
             if (typeof broadcastId !== 'undefined' && broadcastId) {
-                codeDisplay = `<div class="absolute top-0 left-0 bg-blue-600 text-white text-[10px] font-bold px-2 py-1 rounded-br-lg shadow-sm z-50">📡 CODE: ${broadcastId}</div>`;
+                infoParts.push(`<span class="text-blue-600 font-bold">CODE: ${broadcastId}</span>`);
             }
+            
+            // 2. Add remaining details
+            infoParts.push(venue);
+            infoParts.push(dateStr);
+            infoParts.push(`${state.totalOvers} Overs`);
+            infoParts.push(`${state.playersPerSide}-a-side`);
+
+            // Join with a separator
+            const subTitle = infoParts.join(" <span class='text-gray-300'>|</span> ");
 
             const headerHTML = `
                 <div class="py-2 relative">
-                    ${codeDisplay} 
                     <h1 class="text-xs font-black text-gray-900 uppercase tracking-tight leading-tight">
                         ${t1} <span class="text-gray-400 font-medium text-[10px] px-1">vs</span> ${t2}
                     </h1>
-                    <p class="text-[10px] text-gray-500 font-medium mt-1 tracking-wide">${subTitle}</p>
+                    <p class="text-[10px] text-gray-500 font-medium mt-1 tracking-wide">
+                        ${subTitle}
+                    </p>
                 </div>
             `;
             document.getElementById('match-header').innerHTML = headerHTML;
