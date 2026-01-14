@@ -16,114 +16,153 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     
 <style>
-                    /* --- Custom Step 0 Styles --- */
-                    /* Hide default input spinners */
-                    input[type=number]::-webkit-inner-spin-button, 
-                    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-                    input[type=number] { -moz-appearance: textfield; }
+    /* --- Base Styles --- */
+    body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+    
+    /* --- MOBILE SPECIFIC FIXES --- */
+    @media (max-width: 768px) {
+        body { font-size: 14px; }
+        
+        #setup-screen {
+            align-items: flex-start !important;
+            justify-content: flex-start !important;
+            padding: 0 !important;
+            background-color: white !important;
+        }
+        
+        .setup-card { 
+            width: 100% !important;
+            height: 100% !important;
+            min-height: 100vh !important;
+            max-width: 100% !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            padding-top: 1rem !important;
+        }
 
-                    /* Animated Water Text Effect */
-                    @keyframes shine {
-                        0% { background-position: 0% 50%; }
-                        50% { background-position: 100% 50%; }
-                        100% { background-position: 0% 50%; }
-                    }
-                    .water-text {
-                        background: linear-gradient(to right, #2563eb, #60a5fa, #06b6d4, #2563eb);
-                        background-size: 200% auto;
-                        color: transparent;
-                        -webkit-background-clip: text;
-                        background-clip: text;
-                        animation: shine 4s linear infinite;
-                    }
-                    
-                    /* Card 1: Clean White Professional */
-                    .card-pro-white {
-                        background: #ffffff;
-                        border: 1px solid #f1f5f9;
-                        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-                        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-                    }
-                    .card-pro-white:hover {
-                        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
-                        transform: translateY(-4px);
-                        border-color: #3b82f6;
-                    }
+        #app { overflow: hidden; }
+        #app > .flex-grow { padding: 8px; display: flex; flex-direction: column; }
+        #match-header h1 { font-size: 1.25rem; }
+        #scoreboard { padding: 0; }
+        #batting-table th, #batting-table td, #bowling-table th, #bowling-table td { padding: 4px 2px; font-size: 0.75rem; }
+    }
 
-                    /* Card 2: Professional Blue Gradient (Aurora) */
-                    .card-pro-aurora {
-                        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-                        border: 1px solid #bfdbfe;
-                        box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1);
-                        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-                    }
-                    .card-pro-aurora:hover {
-                        box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.15);
-                        transform: translateY(-4px);
-                    }
-                </style>
+    /* --- Setup & UI Components --- */
+    .setup-bg { background-color:#f3f4f6; }
+    .setup-card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 1rem; }
+    .setup-step { transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out; }
+    .setup-step.hidden { opacity: 0; transform: translateX(30px) scale(0.98); position: absolute; pointer-events: none; }
+    .setup-step.active { opacity: 1; transform: translateX(0) scale(1); }
+    .progress-bar-fill { background-color: #2563eb; transition: width 0.5s ease-in-out; }
+    
+    /* Toss Buttons */
+    .toss-card-btn { 
+        border-radius: 1rem; 
+        background-color: white; 
+        border: 2px solid #e5e7eb; 
+        transition: all 0.2s ease-out; 
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        padding: 2rem; cursor: pointer;
+    }
+    .toss-card-btn:hover { border-color: #93c5fd; }
+    .toss-card-btn.selected { background-color: #eff6ff; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2); }
 
-                <div id="setup-step-0" class="setup-step active max-w-5xl mx-auto pt-12 md:pt-20">
-                    <div class="text-center mb-16 relative z-10">
-                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-blue-100 rounded-full blur-[80px] pointer-events-none opacity-60"></div>
-                        
-                        <h1 class="text-5xl md:text-7xl font-black tracking-tighter mb-4 water-text drop-shadow-sm select-none">
-                            Crickerr Indoor Match.
-                        </h1>
-                        <p class="text-slate-400 uppercase tracking-[0.1em] text-[15px] font-bold">Control your indoor match</p>
-                    </div>
+    .decision-btn {
+        border-radius: 0.75rem; background-color: white; border: 1px solid #d1d5db;
+        padding: 0.75rem 2rem; font-weight: bold; transition: all 0.2s;
+    }
+    .decision-btn.selected { background-color: #2563eb; color: white; border-color: #2563eb; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3); }
+    
+    /* --- Scoring Grid --- */
+    .scoring-grid { 
+        display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: 1fr 1fr 0.7fr; 
+        flex-grow: 1; gap: 6px; padding: 6px; background: #f0f2f5;
+    }
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 px-6 max-w-4xl mx-auto">
-                        
-                        <div onclick="startNewMatchFlow()" class="card-pro-white group rounded-[2rem] p-10 cursor-pointer relative h-80 flex flex-col justify-between select-none overflow-hidden">
-                            
-                            <div class="relative z-10">
-                                <span class="inline-block py-1 px-3 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-6 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">New Session</span>
-                                <h3 class="text-4xl font-black text-slate-900 mb-3 tracking-tight">Create New Match</h3>
-                                <p class="text-slate-500 text-sm font-medium leading-relaxed max-w-[80%]">Start a fresh scoring session. Configure teams, overs, and rules.</p>
-                            </div>
+    .watery-btn {
+        border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        font-family: 'Inter', sans-serif; transition: transform 0.1s active, filter 0.2s;
+        backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center;
+        position: relative; overflow: hidden;
+    }
+    .watery-btn:active { transform: scale(0.96); }
 
-                            <div class="relative z-10">
-                                <span class="text-sm font-bold text-slate-300 group-hover:text-blue-600 transition-colors flex items-center gap-2">
-                                    Start Configuration <span class="text-xl">→</span>
-                                </span>
-                            </div>
-                        </div>
+    /* Gradients */
+    .btn-grey { background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%); color: #374151; }
+    .btn-dark-grey { background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%); color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+    .btn-sky { background: linear-gradient(135deg, #7dd3fc 0%, #0ea5e9 100%); color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+    .btn-green { background: linear-gradient(135deg, #86efac 0%, #16a34a 100%); color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+    .btn-red { background: linear-gradient(135deg, #fca5a5 0%, #dc2626 100%); color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+    .btn-yellow { background: linear-gradient(135deg, #fde047 0%, #eab308 100%); color: #713f12; }
+    .btn-purple { background: linear-gradient(135deg, #c084fc 0%, #9333ea 100%); color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
 
-                        <div class="card-pro-aurora rounded-[2rem] p-10 h-80 flex flex-col relative overflow-hidden select-none">
-                            
-                            <div id="resume-initial-view" class="flex flex-col h-full justify-between relative z-10">
-                                <div>
-                                    <span class="inline-block py-1 px-3 rounded-full bg-blue-200/50 text-blue-700 text-[10px] font-bold uppercase tracking-widest mb-6">Remote Sync</span>
-                                    <h3 class="text-4xl font-black text-blue-900 mb-3 tracking-tight">Continue Match</h3>
-                                    <p class="text-blue-800/70 text-sm font-medium leading-relaxed max-w-[90%]">Resume scoring from another device using a broadcast code.</p>
-                                </div>
+    /* Animation */
+    @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 50% { transform: scale(1.3); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+    .animate-pop { animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    
+    .modal-overlay { transition: opacity 0.3s ease-in-out; }
+    .roster-row { display: grid; grid-template-columns: auto 1fr auto; gap: 0.75rem; align-items: center; padding: 0.5rem; background-color: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; transition: all 0.2s; }
+    .roster-row.selected { background-color: #eff6ff; border-color: #3b82f6; }
+    .roster-input { width: 100%; font-weight: 600; color: #374151; background: transparent; border: none; outline: none; text-transform: uppercase; font-size: 0.85rem; }
+    .roster-input:focus { border-bottom: 2px solid #3b82f6; }
+    
+    /* Ball Chips */
+    .ball-chip { display: inline-flex; justify-content: center; align-items: center; width: 1.2rem; height: 1.2rem; font-size: 0.6rem; font-weight: bold; border-radius: 9999px; margin-right: 0.1rem; background-color: #e5e7eb; color: #374151; flex-shrink: 0; }
+    .ball-4 { background-color: #3b82f6; color: white; }
+    .ball-6 { background-color: #22c55e; color: white; }
+    .ball-w { background-color: #ef4444; color: white; }
+    .ball-wd, .ball-nb { background-color: #f59e0b; color: white; }
 
-                                <button onclick="showResumeInput()" class="w-full py-4 bg-blue-600 text-white rounded-2xl text-xs font-bold uppercase tracking-widest hover:bg-blue-700 transition-all hover:scale-[1.02] active:scale-95 shadow-lg shadow-blue-500/20">
-                                    Enter Code
-                                </button>
-                            </div>
+    .custom-scroll::-webkit-scrollbar { width: 6px; }
+    .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .opacity-60 { filter: grayscale(100%); opacity: 0.6; }
 
-                            <div id="resume-input-view" class="absolute inset-0 z-20 p-8 flex flex-col justify-center hidden bg-white/90 backdrop-blur-xl transition-all">
-                                <div class="text-center w-full animate-pop">
-                                    <p class="text-blue-400 text-[10px] font-bold uppercase tracking-widest mb-6">Broadcast Match Code</p>
-                                    
-                                    <input type="tel" inputmode="numeric" pattern="[0-9]*" id="resume-code-input" placeholder="0000" maxlength="4" 
-                                           class="w-full bg-transparent border-b-2 border-slate-200 text-center text-6xl font-sans font-black text-slate-900 focus:border-blue-500 focus:outline-none py-4 mb-8 placeholder-slate-200 transition-colors tracking-[0.3em]">
-                                    
-                                    <div class="flex gap-4">
-                                        <button onclick="hideResumeInput()" class="flex-1 py-4 text-slate-400 hover:text-slate-600 text-xs font-bold uppercase transition-colors">Cancel</button>
-                                        <button onclick="takeoverMatch()" class="flex-1 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-xs font-bold uppercase tracking-wide shadow-lg shadow-blue-500/30 transition-all hover:scale-105 active:scale-95">Connect</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+    /* iOS Toggle */
+    .ios-toggle { appearance: none; width: 50px; height: 30px; background: #e5e7eb; border-radius: 9999px; position: relative; cursor: pointer; outline: none; transition: background-color 0.3s ease; }
+    .ios-toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 26px; height: 26px; background: white; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); }
+    .ios-toggle:checked { background-color: #34c759; }
+    .ios-toggle:checked::after { transform: translateX(20px); }
+
+    /* --- EDIT MODAL STYLES --- */
+    .ball-edit-row { display: flex; align-items: stretch; margin-bottom: 0.75rem; cursor: pointer; transition: transform 0.1s ease-in-out; }
+    .ball-edit-row:active { transform: scale(0.98); }
+    .ball-label { width: 4.5rem; display: flex; align-items: center; justify-content: center; background-color: #f1f5f9; color: #64748b; font-size: 0.65rem; font-weight: 900; text-transform: uppercase; border-top-left-radius: 0.75rem; border-bottom-left-radius: 0.75rem; border: 1px solid #e2e8f0; border-right: none; letter-spacing: 0.05em; }
+    .ball-value { flex-grow: 1; display: flex; align-items: center; justify-content: space-between; background-color: white; padding: 0 1.25rem; height: 3.5rem; border: 1px solid #e2e8f0; border-top-right-radius: 0.75rem; border-bottom-right-radius: 0.75rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    
+    .mini-score-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; background: #f1f5f9; padding: 8px; border-radius: 12px; border: 1px solid #cbd5e1; margin-bottom: 10px; }
+    .mini-score-grid .watery-btn { height: 3.5rem; font-size: 1.1rem; font-weight: 800; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.4); }
+    .mini-score-grid .watery-btn:active { transform: scale(0.95); }
+    .extras-edit-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; padding: 8px; background: #f8fafc; border-radius: 12px; }
+</style>
+</head>
+<body class="bg-gray-100 antialiased text-gray-800">
+
+    <div id="splash-screen" class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-gray-50 transition-opacity duration-700" style="display: none;">
+        <img src="my-logo.png" alt="App Logo" class="w-24 h-24 mb-4 animate-pulse">
+        <h1 class="text-xl font-bold text-blue-700">INDOOR CRICKET</h1>
+    </div>
+
+    <div id="event-animation-overlay" class="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm pointer-events-none hidden z-50 transition-opacity duration-300">
+        <h1 id="event-animation-text" class="text-8xl font-black uppercase drop-shadow-2xl text-center"></h1>
+    </div>
+
+    <div id="setup-screen" class="min-h-screen w-full flex flex-col md:items-center md:justify-center setup-bg">
+        <div class="w-full md:max-w-6xl md:shadow-xl md:rounded-2xl p-4 md:p-8 setup-card overflow-hidden min-h-screen md:min-h-0 bg-white">
+            <div id="progress-container" class="mb-8 max-w-2xl mx-auto">
+                <div class="w-full h-2 bg-gray-200 rounded-full">
+                    <div id="progress-bar" class="progress-bar-fill h-2 rounded-full" style="width: 33%;"></div>
                 </div>
+                <div class="flex justify-between text-xs sm:text-sm text-gray-500 mt-2 font-medium">
+                    <span>Config</span><span>Squad Review</span><span>Toss</span>
+                </div>
+            </div>
 
-                <div id="setup-step-1" class="setup-step hidden max-w-2xl mx-auto">
+            <div class="relative">
+                <div id="setup-step-1" class="setup-step active max-w-2xl mx-auto">
                     <header class="text-center mb-6">
-                        <button onclick="goToStep(0)" class="mb-4 text-xs font-bold text-gray-400 hover:text-gray-600 uppercase tracking-wider">← Back to Menu</button>
                         <h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 tracking-tight" id="setup-title">Indoor Match Setup</h1>
                         <p class="text-xs text-gray-500 mt-1">Configure format and specific rules</p>
                     </header>
@@ -195,6 +234,14 @@
                         </div>
                     </div>
                     <div class="mt-4 text-right"><button onclick="goToStep(2)" class="px-6 py-3 bg-blue-600 text-white font-bold rounded-lg shadow">Next Step →</button></div>
+                    
+                    <div class="mt-8 pt-8 border-t border-gray-200">
+                        <h3 class="font-bold text-gray-500 text-xs uppercase tracking-widest mb-3">Already Started?</h3>
+                        <div class="flex gap-2">
+                            <input type="text" id="resume-code" placeholder="Enter Broadcast Code" class="p-3 border rounded-xl font-mono text-lg w-full uppercase font-bold text-gray-700 focus:ring-2 focus:ring-purple-500 outline-none">
+                            <button onclick="resumeMatch()" class="bg-purple-600 text-white font-bold px-6 rounded-xl shadow-lg hover:bg-purple-700 transition-all active:scale-95">RESUME</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="setup-step-2" class="setup-step hidden w-full">
@@ -655,17 +702,6 @@
     </div>
 </div>
 
-    <div id="device-lockout-overlay" class="fixed inset-0 z-[99999] bg-slate-900/95 flex flex-col items-center justify-center text-white hidden backdrop-blur-md">
-        <div class="bg-red-500/20 p-6 rounded-full mb-6 animate-pulse border-4 border-red-500">
-            <svg class="w-16 h-16 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-        </div>
-        <h1 class="text-3xl font-black uppercase tracking-widest mb-2 text-center">Scoring Disabled</h1>
-        <p class="text-gray-400 text-center max-w-md px-4 mb-8">
-            Scoring for this match has been transferred to another device. This screen is now read-only to prevent conflicts.
-        </p>
-        <button onclick="location.reload()" class="px-8 py-3 bg-white text-slate-900 font-bold rounded-full hover:scale-105 transition-transform uppercase">Go to Home</button>
-    </div>
-
     <script>
         // --- ADD THIS FUNCTION TO YOUR CONTROLLER SCRIPT (51 - .html) ---
 
@@ -789,25 +825,22 @@ function broadcastMatchResult() {
 
         // --- STATE & HISTORY ---
         let state = {
-            rules: { wicketRuns: 5, wideRuns: 2, noBallRuns: 2, skins: false },
-            team1: { name: "", logo: "", squad: [], playing: [], playerStats: {}, isLoaded: false },
-            team2: { name: "", logo: "", squad: [], playing: [], playerStats: {}, isLoaded: false },
-            battingTeam: 'team1', bowlingTeam: 'team2',
-            striker: null, nonStriker: null, bowler: null,
-            id: null, innings: 1, target: 0, totalOvers: 16, playersPerSide: 8,
-            currentOver: [], history: [], timeline: [] 
-        };
+    rules: { wicketRuns: 5, wideRuns: 2, noBallRuns: 2, skins: false },
+    team1: { name: "", logo: "", squad: [], playing: [], playerStats: {}, isLoaded: false },
+    team2: { name: "", logo: "", squad: [], playing: [], playerStats: {}, isLoaded: false },
+    battingTeam: 'team1', bowlingTeam: 'team2',
+    striker: null, nonStriker: null, bowler: null,
+    id: null, innings: 1, target: 0, totalOvers: 16, playersPerSide: 8,
+    currentOver: [], history: [], timeline: [] // <--- ADDED timeline: [] HERE
+};
         
         let undoStack = []; 
-        let editingBallIndex = null; 
+        let editingBallIndex = null; // --- EDIT MODE CONTEXT ---
 
         let tossWinner = null, tossDecision = null;
         let broadcastId = null;
         let savedTeamsData = [];
         let isEditMatchMode = false;
-        
-        // UNIQUE DEVICE ID FOR HANDOVER
-        const myDeviceId = 'dev_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
 
         // --- INITIALIZATION ---
         window.onload = function() {
@@ -840,32 +873,7 @@ function broadcastMatchResult() {
 
             loadSavedTeams();
             showScreen('setup-screen');
-            // Ensure we start at Step 0 (Mode Select)
-            document.querySelectorAll('.setup-step').forEach(s => { s.classList.remove('active'); s.classList.add('hidden'); });
-            document.getElementById('setup-step-0').classList.remove('hidden');
-            setTimeout(() => document.getElementById('setup-step-0').classList.add('active'), 10);
-            
-            // Initial Progress Bar
-            ui.progressBar.style.width = '0%';
         };
-
-        // --- NEW LANDING PAGE FUNCTIONS ---
-        function startNewMatchFlow() {
-            goToStep(1);
-        }
-
-        function showResumeInput() {
-            document.getElementById('resume-initial-view').classList.add('hidden');
-            document.getElementById('resume-input-view').classList.remove('hidden');
-            document.getElementById('resume-input-view').classList.add('flex');
-            document.getElementById('resume-code-input').focus();
-        }
-
-        function hideResumeInput() {
-            document.getElementById('resume-input-view').classList.add('hidden');
-            document.getElementById('resume-input-view').classList.remove('flex');
-            document.getElementById('resume-initial-view').classList.remove('hidden');
-        }
 
         function showScreen(id) {
             document.querySelectorAll('body > div').forEach(d => {
@@ -2444,12 +2452,12 @@ function endInnings() {
             }
         }
         // ==========================================
-        // DEVICE HANDOVER & SYNC LOGIC
+        // RESUME & SYNC LOGIC (The "Google Docs" Mode)
         // ==========================================
 
-        function takeoverMatch() {
-            const code = document.getElementById('resume-code-input').value.trim();
-            if (!code) { alert("Please enter the code."); return; }
+        function resumeMatch() {
+            const code = document.getElementById('resume-code').value.trim();
+            if (!code) { alert("Please enter a valid Broadcast Code."); return; }
 
             // 1. Fetch Match Data
             db.collection("live_matches").doc(code).get().then(doc => {
@@ -2457,63 +2465,58 @@ function endInnings() {
                 
                 const data = doc.data();
                 
-                // 2. Security Check (Basic PIN)
-                const pin = prompt("Enter Match PIN to take over scoring:");
+                // 2. Security Check
+                const pin = prompt("Enter Match PIN to Score:");
                 if (pin !== "2626" && pin !== data.adminPin) { 
                     alert("Incorrect PIN! Access Denied."); return; 
                 }
 
-                // 3. CLAIM OWNERSHIP (The Handover)
-                // We set 'activeScorerId' to THIS device's ID.
-                // The old device will see this change and lock itself.
-                db.collection("live_matches").doc(code).update({
-                    activeScorerId: myDeviceId,
-                    lastAction: { type: "HANDOVER", device: myDeviceId }
-                }).then(() => {
-                    // 4. Load State Locally
-                    broadcastId = code;
-                    mapRemoteDataToLocalState(data);
-                    
-                    // 5. Update UI
-                    updateMatchHeader();
-                    updateScoreboard();
-                    
-                    // Show Broadcast Box in Setup (in case we go back)
-                    document.getElementById('match-code-box').textContent = broadcastId;
-                    const bBtn = document.getElementById('btn-broadcast-enable');
-                    bBtn.classList.remove('bg-blue-50', 'text-blue-700');
-                    bBtn.classList.add('bg-green-100', 'text-green-800', 'border-green-300');
-                    bBtn.innerHTML = `<span class="text-lg">✅ BROADCAST LIVE</span><span class="text-xs font-normal">Code: ${broadcastId}</span>`;
-                    document.getElementById('broadcast-display').classList.remove('hidden');
+                // 3. Load State
+                broadcastId = code;
+                mapRemoteDataToLocalState(data);
+                
+                // 4. Update UI
+                updateMatchHeader();
+                updateScoreboard();
+                document.getElementById('match-code-box').textContent = broadcastId;
+                document.getElementById('broadcast-display').classList.remove('hidden');
+                
+                // 5. Activate Sync Listener
+                activateScorerListener(code);
+                
+                alert("Match Loaded! You are now synced.");
+                showScreen('app');
 
-                    // 6. Activate Listener (to protect OUR session)
-                    activateScorerListener(code);
-                    
-                    // 7. Launch App
-                    showScreen('app');
-                    
-                    // 8. Re-Enable Start Button visual state if checking setup
-                    tossWinner = 'resumed'; // Bypass check
-                    tossDecision = 'resumed';
-                    checkStartReady();
-
-                }).catch(err => alert("Error taking over match: " + err.message));
-
-            }).catch(err => alert("Error finding match: " + err.message));
+            }).catch(err => alert("Error loading match: " + err.message));
         }
 
         function activateScorerListener(matchId) {
-            console.log("Active Scorer Listening...");
+            console.log("Listening for external updates...");
             db.collection("live_matches").doc(matchId).onSnapshot(doc => {
                 const remote = doc.data();
                 if (!remote) return;
 
-                // --- CRITICAL: CHECK OWNERSHIP ---
-                // If the database says the active scorer is NOT me, 
-                // it means another device took over. Lock this device.
-                if (remote.activeScorerId && remote.activeScorerId !== myDeviceId) {
-                    document.getElementById('device-lockout-overlay').classList.remove('hidden');
-                    return; // Stop processing
+                // Check if update is from another device (simple timestamp check)
+                // We assume if 'lastUpdatedBy' is very recent and NOT our push, we sync.
+                // For simplicity in this version, we will just sync if the scores differ
+                
+                const localScore = state[state.battingTeam].score;
+                const remoteScore = parseInt(remote.scorecard.innings1.score.split('/')[0]); // simplified check
+                
+                // If local state lags behind or differs, we pull (Simplistic Sync)
+                // In a perfect world we check IDs, but here we just re-map if triggered externally
+                // We avoid loops by checking if we just pushed.
+                
+                // For now, let's just log it. To make it "Google Docs" style requires
+                // ignoring our own writes. 
+                // Since this is a simple implementation: 
+                // If the remote Timeline is longer than ours, we take it.
+                
+                if (remote.timeline && remote.timeline.length > (state.timeline?.length || 0)) {
+                    console.log("New data detected! Syncing...");
+                    mapRemoteDataToLocalState(remote);
+                    updateScoreboard();
+                    // Optional: Toast "Score Updated by Admin B"
                 }
             });
         }
