@@ -662,7 +662,7 @@
             
             <div class="mb-4">
                 <p class="text-xs font-bold text-green-600 uppercase mb-2">Add Runs (+)</p>
-                <div class="grid grid-cols-6 gap-2">
+                <div class="grid grid-cols-6 gap-2 mb-2">
                     <button onclick="handleAddExtra('ext', 1)" class="p-3 bg-green-50 text-green-800 font-bold rounded-lg text-sm border border-green-200 hover:bg-green-100">+1</button>
                     <button onclick="handleAddExtra('ext', 2)" class="p-3 bg-green-50 text-green-800 font-bold rounded-lg text-sm border border-green-200 hover:bg-green-100">+2</button>
                     <button onclick="handleAddExtra('ext', 3)" class="p-3 bg-green-50 text-green-800 font-bold rounded-lg text-sm border border-green-200 hover:bg-green-100">+3</button>
@@ -670,6 +670,10 @@
                     <button onclick="handleAddExtra('ext', 5)" class="p-3 bg-green-50 text-green-800 font-bold rounded-lg text-sm border border-green-200 hover:bg-green-100">+5</button>
                     <button onclick="handleAddExtra('ext', 6)" class="p-3 bg-green-50 text-green-800 font-bold rounded-lg text-sm border border-green-200 hover:bg-green-100">+6</button>
                 </div>
+                
+                <button onclick="setupExtraRunOut('ext')" class="w-full py-3 bg-orange-100 text-orange-900 font-bold rounded-lg border border-orange-200 hover:bg-orange-200 uppercase tracking-wide">
+                    Leg Byes / Extra Run Out
+                </button>
             </div>
 
             <div>
@@ -683,6 +687,24 @@
                     <button onclick="handleAddExtra('pen', -6)" class="p-3 bg-red-50 text-red-800 font-bold rounded-lg text-sm border border-red-200 hover:bg-red-100">-6</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div id="extra-runs-modal" class="modal-overlay fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center">
+        <div class="modal-content bg-white rounded-2xl p-6 w-80 shadow-2xl text-center relative">
+            <button onclick="closeModal('extra-runs-modal')" class="absolute top-3 right-4 text-gray-400 hover:text-gray-600 font-bold text-xl">✕</button>
+            <h3 class="text-xl font-bold text-blue-900 mb-2">Runs Completed?</h3>
+            <p class="text-xs text-gray-500 mb-4 uppercase tracking-wide">Before the Run Out occurred</p>
+            
+            <div class="grid grid-cols-3 gap-3 mb-4">
+                <button onclick="selectExtraRuns(0)" class="aspect-square bg-gray-100 hover:bg-blue-50 hover:border-blue-200 border-2 border-transparent text-gray-800 font-black text-2xl rounded-xl transition-all">0</button>
+                <button onclick="selectExtraRuns(1)" class="aspect-square bg-gray-100 hover:bg-blue-50 hover:border-blue-200 border-2 border-transparent text-gray-800 font-black text-2xl rounded-xl transition-all">1</button>
+                <button onclick="selectExtraRuns(2)" class="aspect-square bg-gray-100 hover:bg-blue-50 hover:border-blue-200 border-2 border-transparent text-gray-800 font-black text-2xl rounded-xl transition-all">2</button>
+                <button onclick="selectExtraRuns(3)" class="aspect-square bg-gray-100 hover:bg-blue-50 hover:border-blue-200 border-2 border-transparent text-gray-800 font-black text-2xl rounded-xl transition-all">3</button>
+                <button onclick="selectExtraRuns(4)" class="aspect-square bg-gray-100 hover:bg-blue-50 hover:border-blue-200 border-2 border-transparent text-gray-800 font-black text-2xl rounded-xl transition-all">4</button>
+                <button onclick="selectExtraRuns(5)" class="aspect-square bg-gray-100 hover:bg-blue-50 hover:border-blue-200 border-2 border-transparent text-gray-800 font-black text-2xl rounded-xl transition-all">5</button>
+            </div>
+            <button onclick="closeModal('extra-runs-modal')" class="text-xs font-bold text-gray-400 uppercase tracking-widest hover:text-gray-600">Cancel</button>
         </div>
     </div>
 
@@ -1536,16 +1558,22 @@ function generateBroadcastCode() {
             const wVal = state.rules.wideRuns;
             const nbVal = state.rules.noBallRuns;
 
+            // Wide Buttons + Run Out Option
             let wButtons = `<button onclick="handleAddExtra('wd', ${wVal})" class="col-span-3 p-4 bg-blue-100 text-blue-900 font-bold rounded-xl mb-1">Standard (+${wVal})</button>`;
             [3, 4, 5, 6].forEach(r => {
                 if (r !== wVal) wButtons += `<button onclick="handleAddExtra('wd', ${r})" class="p-4 bg-gray-100 font-bold rounded-xl">+${r}</button>`;
             });
+            // Add Wide Run Out Button
+            wButtons += `<button onclick="setupExtraRunOut('wd')" class="col-span-3 mt-2 p-3 bg-red-50 text-red-900 font-bold rounded-xl border border-red-200">RUN OUT</button>`;
             document.getElementById('wide-options').innerHTML = wButtons;
 
+            // No Ball Buttons + Run Out Option
             let nbButtons = `<button onclick="handleAddExtra('nb', ${nbVal})" class="col-span-3 p-4 bg-blue-100 text-blue-900 font-bold rounded-xl mb-1">Standard (+${nbVal})</button>`;
             [3, 4, 5, 6].forEach(r => {
                 if (r !== nbVal) nbButtons += `<button onclick="handleAddExtra('nb', ${r})" class="p-4 bg-gray-100 font-bold rounded-xl">+${r}</button>`;
             });
+            // Add NB Run Out Button
+            nbButtons += `<button onclick="setupExtraRunOut('nb')" class="col-span-3 mt-2 p-3 bg-red-50 text-red-900 font-bold rounded-xl border border-red-200">RUN OUT</button>`;
             document.getElementById('noball-options').innerHTML = nbButtons;
 
             updateMatchHeader();
@@ -1827,6 +1855,35 @@ function generateBroadcastCode() {
             }
         }
 
+        // Global to hold temp data for Extra Run Outs
+        let extraRunOutState = null;
+        let tempExtraType = null; // Temp storage for the type while selecting runs
+
+        function setupExtraRunOut(type) {
+            // 1. Close the extra modal
+            if(type === 'wd') closeModal('wide-modal');
+            if(type === 'nb') closeModal('noball-modal');
+            if(type === 'ext') closeModal('extras-modal');
+
+            // 2. Store the type (Wide, NB, or Leg Bye) and Open the Runs Modal
+            tempExtraType = type;
+            openModal('extra-runs-modal');
+        }
+
+        function selectExtraRuns(runs) {
+            closeModal('extra-runs-modal');
+            
+            // 3. Store state and open the "Who is Out?" modal
+            extraRunOutState = { type: tempExtraType, runs: runs };
+            
+            const btnS = document.getElementById('btn-ro-striker');
+            const btnNS = document.getElementById('btn-ro-nonstriker');
+            btnS.textContent = state.striker ? `${state.striker.name} (Striker)` : "Striker";
+            btnNS.textContent = state.nonStriker ? `${state.nonStriker.name} (Non-Striker)` : "Non-Striker";
+            
+            openModal('runout-modal');
+        }
+
         function handleAddExtra(type, runs) {
             if (editingBallIndex !== null) {
                 // EDIT MODE
@@ -1881,10 +1938,79 @@ function generateBroadcastCode() {
 
         function finalizeRunOut(who) {
             closeModal('runout-modal');
+            
             if (editingBallIndex !== null) {
                 applyBallCorrection(editingBallIndex, 0, 'W');
                 editingBallIndex = null;
-            } else {
+            } 
+            else if (extraRunOutState) {
+                // --- SPECIAL EXTRA RUN OUT LOGIC ---
+                const { type, runs } = extraRunOutState;
+                const penalty = state.rules.wicketRuns;
+                const bt = state[state.battingTeam];
+                const bwl = state.bowler;
+                const roleKey = (who === 'nonstriker' || who === 'nonStriker') ? 'nonStriker' : 'striker';
+                const victim = state[roleKey];
+
+                addToHistory();
+
+                // 1. Calculate Score based on Type
+                let totalRunsToAdd = 0;
+                let eventLabel = "";
+                let isLegal = false;
+
+                if (type === 'wd') {
+                    // Wide (1) + Completed Runs
+                    totalRunsToAdd = state.rules.wideRuns + runs; 
+                    eventLabel = `WD+${runs} W`;
+                    isLegal = false;
+                } else if (type === 'nb') {
+                    // NB (1) + Completed Runs
+                    totalRunsToAdd = state.rules.noBallRuns + runs;
+                    eventLabel = `NB+${runs} W`;
+                    isLegal = false; // NB doesn't count as ball bowled
+                } else if (type === 'ext') {
+                    // Just Completed Runs (Leg Byes)
+                    totalRunsToAdd = runs;
+                    eventLabel = `LB+${runs} W`;
+                    isLegal = true; // Leg Byes count as legal ball
+                }
+                
+                // 2. Apply Scores & Wicket Penalty
+                bt.score += totalRunsToAdd; // Add the extras/runs first
+                if (bwl) bwl.runsConceded += totalRunsToAdd;
+
+                bt.score -= penalty; // Then subtract wicket penalty
+                bt.wickets++;
+
+                if (victim) {
+                    victim.runs -= penalty;
+                    victim.dismissal = `Run Out (${eventLabel})`;
+                }
+                
+                // Note: Bowler does NOT get credit for Run Out
+                if (bwl && isLegal) bwl.ballsBowled++; // Only increment ball count if it was Leg Byes
+
+                // 3. Process Ball
+                processBall(totalRunsToAdd - penalty, eventLabel, isLegal);
+                
+                // 4. Reset & UI
+                extraRunOutState = null;
+                showEventPopup("OUT", "text-red-600");
+                updateUI();
+
+                // 5. Check All Out / Next Player
+                let wicketLimit = state.playersPerSide - 1;
+                if (state.isSuperOver) wicketLimit = 2;
+
+                if (bt.wickets >= wicketLimit) {
+                    setTimeout(() => { alert("ALL OUT!"); endInnings(); }, 500);
+                } else {
+                    setTimeout(() => { selectPlayer(roleKey, updateUI); }, 500);
+                }
+            } 
+            else {
+                // Standard Run Out
                 applyWicketPenalty(who, 'Run Out');
             }
         }
