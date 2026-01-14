@@ -161,86 +161,175 @@
             </div>
 
             <div class="relative">
-                <div id="setup-step-1" class="setup-step active max-w-2xl mx-auto">
-                    <header class="text-center mb-6">
-                        <h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 tracking-tight" id="setup-title">Indoor Match Setup</h1>
-                        <p class="text-xs text-gray-500 mt-1">Configure format and specific rules</p>
-                    </header>
-                    <div class="space-y-6 h-[60vh] overflow-y-auto pr-2 custom-scroll">
-                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-4">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div><label class="block text-sm font-bold mb-1">Ground</label><input type="text" id="venue" placeholder="ARENA NAME" class="w-full p-2 border rounded uppercase"></div>
-                                <div><label class="block text-sm font-bold mb-1">Date</label><input type="date" id="match-date-input" class="w-full p-2 border rounded"></div>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-bold mb-1">Overs (3-15)</label>
-                                    <select id="total-overs" class="w-full p-2 border rounded">
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-bold mb-1">Players/Side (4-11)</label>
-                                    <select id="players-per-side" class="w-full p-2 border rounded">
-                                    </select>
-                                </div>
-                            </div>
+                <div id="setup-step-1" class="setup-step active w-full max-w-5xl mx-auto px-2">
+                    
+                    <div class="text-center mb-8 mt-4">
+                        <div class="inline-flex items-center justify-center gap-2 mb-2">
+                             <div class="h-1 w-8 bg-purple-500 rounded-full"></div>
+                             <span class="text-[10px] font-black tracking-[0.3em] text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500 uppercase">Indoor Match Configuration</span>
+                             <div class="h-1 w-8 bg-purple-500 rounded-full"></div>
                         </div>
-                        
-                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 space-y-4">
-                            <h3 class="text-sm font-bold text-blue-500 uppercase tracking-wider">Indoor Rules</h3>
-                            <div class="grid grid-cols-3 gap-2">
-                                <div>
-                                    <label class="block text-xs font-bold mb-1">Wicket Penalty <span class="text-red-500 text-lg">*</span></label>
-                                    <select id="rule-wicket" class="w-full p-2 border rounded text-sm text-red-600 font-bold border-red-300 focus:ring-2 focus:ring-red-500 outline-none">
-                                        <option value="" selected disabled>Select...</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold mb-1">Wide <span class="text-red-500 text-lg">*</span></label>
-                                    <select id="rule-wide" class="w-full p-2 border rounded text-sm border-red-300 focus:ring-2 focus:ring-red-500 outline-none">
-                                        <option value="" selected disabled>Select...</option>
-                                        <option value="2">2 Runs</option>
-                                        <option value="3">3 Runs</option>
-                                        <option value="1">1 Run</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold mb-1">No Ball <span class="text-red-500 text-lg">*</span></label>
-                                    <select id="rule-noball" class="w-full p-2 border rounded text-sm border-red-300 focus:ring-2 focus:ring-red-500 outline-none">
-                                        <option value="" selected disabled>Select...</option>
-                                        <option value="2">2 Runs</option>
-                                        <option value="3">3 Runs</option>
-                                        <option value="1">1 Run</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
+                        <h1 class="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-purple-600 to-pink-600  tracking-tighter drop-shadow-sm leading-tight" id="setup-title">Indoor Crickerr Match</h1>
+                    </div>
 
-                        <div class="grid grid-cols-2 gap-4">
-                             <div class="p-3 bg-green-50 rounded-xl border border-green-200">
-   <label class="block text-xs font-bold mb-1 text-green-800">Home Team</label>
-   <select id="team1-select" class="w-full p-2 mb-2 border rounded text-sm"><option value="">+ Load Saved Team</option></select>
-   <input type="text" id="team1-name-input" placeholder="Home Team Name" class="w-full p-2 border rounded font-bold uppercase">
-   <input type="file" id="team1-logo-input" class="mt-2 text-xs" onchange="handleLogoUpload(this.files[0], 'team1')">
-   <img id="team1-logo-preview" class="hidden mt-2 w-16 h-16 object-cover rounded-full border-2 border-green-500 shadow-sm">
-</div>
-<div class="p-3 bg-blue-50 rounded-xl border border-blue-200">
-   <label class="block text-xs font-bold mb-1 text-blue-800">Away Team</label>
-   <select id="team2-select" class="w-full p-2 mb-2 border rounded text-sm"><option value="">+ Load Saved Team</option></select>
-   <input type="text" id="team2-name-input" placeholder="Away Team Name" class="w-full p-2 border rounded font-bold uppercase">
-   <input type="file" id="team2-logo-input" class="mt-2 text-xs" onchange="handleLogoUpload(this.files[0], 'team2')">
-   <img id="team2-logo-preview" class="hidden mt-2 w-16 h-16 object-cover rounded-full border-2 border-blue-500 shadow-sm">
-</div>
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[60vh] overflow-y-auto pr-2 custom-scroll content-start pb-10">
+                        
+                        <div class="lg:col-span-12 space-y-6">
+                            
+                            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200 shadow-sm overflow-hidden">
+                                <div class="p-5">
+                                    <div class="flex items-center gap-2 mb-5">
+                                        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shadow-sm border border-blue-200">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                        </div>
+                                        <h3 class="text-xs font-bold text-blue-700 uppercase tracking-widest">Match Details</h3>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-blue-400 uppercase mb-1">Venue Name</label>
+                                            <input type="text" id="venue" placeholder="STADIUM / ARENA" class="w-full p-3 bg-white/70 backdrop-blur-sm border border-blue-200 rounded-lg font-bold text-gray-700 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all uppercase placeholder-blue-300 shadow-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-blue-400 uppercase mb-1">Date</label>
+                                            <input type="date" id="match-date-input" class="w-full p-3 bg-white/70 backdrop-blur-sm border border-blue-200 rounded-lg font-bold text-gray-700 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all uppercase shadow-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-blue-400 uppercase mb-1">Overs</label>
+                                            <select id="total-overs" class="w-full p-3 bg-white/70 backdrop-blur-sm border border-blue-200 rounded-lg font-bold text-gray-700 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all cursor-pointer shadow-sm"></select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-blue-400 uppercase mb-1">Squad Size</label>
+                                            <select id="players-per-side" class="w-full p-3 bg-white/70 backdrop-blur-sm border border-blue-200 rounded-lg font-bold text-gray-700 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all cursor-pointer shadow-sm"></select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl border border-orange-200 shadow-sm overflow-hidden">
+                                <div class="p-5">
+                                    <div class="flex items-center gap-2 mb-5">
+                                        <div class="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 shadow-sm border border-orange-200">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
+                                        </div>
+                                        <h3 class="text-xs font-bold text-orange-700 uppercase tracking-widest">Playing Conditions</h3>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-red-500 uppercase mb-1">Wicket Penalty</label>
+                                            <div class="relative">
+                                                <select id="rule-wicket" class="w-full p-3 bg-white/70 backdrop-blur-sm border border-red-200 rounded-lg font-bold text-red-600 text-sm focus:ring-2 focus:ring-red-500 outline-none transition-all appearance-none cursor-pointer shadow-sm"></select>
+                                                <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-red-400 text-xs">▼</div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-orange-600 uppercase mb-1">Wide Ball</label>
+                                            <div class="relative">
+                                                <select id="rule-wide" class="w-full p-3 bg-white/70 backdrop-blur-sm border border-orange-200 rounded-lg font-bold text-orange-700 text-sm focus:ring-2 focus:ring-orange-500 outline-none transition-all appearance-none cursor-pointer shadow-sm">
+                                                    <option value="1" selected>1 Run</option>
+                                                    <option value="2">2 Runs</option>
+                                                    <option value="3">3 Runs</option>
+                                                </select>
+                                                <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-orange-400 text-xs">▼</div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-orange-600 uppercase mb-1">No Ball</label>
+                                            <div class="relative">
+                                                <select id="rule-noball" class="w-full p-3 bg-white/70 backdrop-blur-sm border border-orange-200 rounded-lg font-bold text-orange-700 text-sm focus:ring-2 focus:ring-orange-500 outline-none transition-all appearance-none cursor-pointer shadow-sm">
+                                                    <option value="1" selected>1 Run</option>
+                                                    <option value="2">2 Runs</option>
+                                                    <option value="3">3 Runs</option>
+                                                </select>
+                                                <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-orange-400 text-xs">▼</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                                <div class="bg-gradient-to-r from-blue-900 via-indigo-900 to-purple-900 px-6 py-4 flex justify-between items-center shadow-md relative z-10">
+                                    <span class="text-white font-bold uppercase tracking-widest text-xs flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                                        Match Fixture
+                                    </span>
+                                    <span class="text-white/30 text-xs font-black tracking-[0.2em]">VERSUS MODE</span>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 relative">
+                                    
+                                    <div class="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-white rounded-full items-center justify-center z-20 shadow-xl border-4 border-gray-100">
+                                        <span class="text-xs font-black text-transparent bg-clip-text bg-gradient-to-br from-blue-600 to-red-600">VS</span>
+                                    </div>
+
+                                    <div class="p-8 bg-gradient-to-br from-blue-50 via-white to-blue-50/30 flex flex-col gap-6 border-b md:border-b-0 md:border-r border-gray-100">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-[10px] font-black text-white bg-gradient-to-r from-blue-500 to-cyan-500 px-3 py-1 rounded-full uppercase tracking-wider shadow-sm shadow-blue-200">Home Team</span>
+                                            <label for="team1-logo-input" class="cursor-pointer text-[10px] font-bold text-blue-400 hover:text-blue-600 transition-colors flex items-center gap-1 group bg-white px-2 py-1 rounded-lg border border-blue-100 shadow-sm">
+                                                <span class="group-hover:underline">UPLOAD LOGO</span> 📤
+                                            </label>
+                                        </div>
+                                        
+                                        <div class="flex items-center gap-4">
+                                            <div class="relative flex-shrink-0 group">
+                                                <div class="w-20 h-20 rounded-full bg-white border-4 border-blue-100 flex items-center justify-center overflow-hidden shadow-lg group-hover:border-blue-300 transition-colors">
+                                                    <img id="team1-logo-preview" class="hidden w-full h-full object-cover">
+                                                    <span class="text-blue-100 font-black text-3xl">H</span>
+                                                </div>
+                                                <input type="file" id="team1-logo-input" class="hidden" onchange="handleLogoUpload(this.files[0], 'team1')">
+                                            </div>
+                                            
+                                            <div class="flex-grow space-y-2">
+                                                <select id="team1-select" class="w-full p-2 bg-white/80 backdrop-blur-sm border border-blue-200 rounded-lg text-xs font-bold uppercase text-blue-700 shadow-sm focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer hover:bg-white transition-colors"><option value="">▼ Load Saved Team</option></select>
+                                                
+                                                <input type="text" id="team1-name-input" placeholder="HOME TEAM" class="w-full text-2xl font-black text-gray-800 uppercase bg-transparent border-b-2 border-blue-100 focus:border-blue-500 outline-none transition-colors placeholder-blue-100 pb-2">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="p-8 bg-gradient-to-br from-red-50 via-white to-red-50/30 flex flex-col gap-6">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-[10px] font-black text-white bg-gradient-to-r from-red-500 to-orange-500 px-3 py-1 rounded-full uppercase tracking-wider shadow-sm shadow-red-200">Away Team</span>
+                                            <label for="team2-logo-input" class="cursor-pointer text-[10px] font-bold text-red-400 hover:text-red-600 transition-colors flex items-center gap-1 group bg-white px-2 py-1 rounded-lg border border-red-100 shadow-sm">
+                                                <span class="group-hover:underline">UPLOAD LOGO</span> 📤
+                                            </label>
+                                        </div>
+                                        
+                                        <div class="flex items-center gap-4">
+                                            <div class="relative flex-shrink-0 group">
+                                                <div class="w-20 h-20 rounded-full bg-white border-4 border-red-100 flex items-center justify-center overflow-hidden shadow-lg group-hover:border-red-300 transition-colors">
+                                                    <img id="team2-logo-preview" class="hidden w-full h-full object-cover">
+                                                    <span class="text-red-100 font-black text-3xl">A</span>
+                                                </div>
+                                                <input type="file" id="team2-logo-input" class="hidden" onchange="handleLogoUpload(this.files[0], 'team2')">
+                                            </div>
+
+                                            <div class="flex-grow space-y-2">
+                                                <select id="team2-select" class="w-full p-2 bg-white/80 backdrop-blur-sm border border-red-200 rounded-lg text-xs font-bold uppercase text-red-700 shadow-sm focus:ring-2 focus:ring-red-500 outline-none cursor-pointer hover:bg-white transition-colors"><option value="">▼ Load Saved Team</option></select>
+                                                
+                                                <input type="text" id="team2-name-input" placeholder="AWAY TEAM" class="w-full text-2xl font-black text-gray-800 uppercase bg-transparent border-b-2 border-red-100 focus:border-red-500 outline-none transition-colors placeholder-red-100 pb-2">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
                         </div>
                     </div>
-                    <div class="mt-4 text-right"><button onclick="goToStep(2)" class="px-6 py-3 bg-blue-600 text-white font-bold rounded-lg shadow">Next Step →</button></div>
                     
-                    <div class="mt-8 pt-8 border-t border-gray-200">
-                        <h3 class="font-bold text-gray-500 text-xs uppercase tracking-widest mb-3">Already Started?</h3>
-                        <div class="flex gap-2">
-                            <input type="text" id="resume-code" placeholder="Enter Broadcast Code" class="p-3 border rounded-xl font-mono text-lg w-full uppercase font-bold text-gray-700 focus:ring-2 focus:ring-purple-500 outline-none">
-                            <button onclick="resumeMatch()" class="bg-purple-600 text-white font-bold px-6 rounded-xl shadow-lg hover:bg-purple-700 transition-all active:scale-95">RESUME</button>
+                    <div class="mt-4 border-t border-gray-100 pt-6 flex items-center justify-between pb-6">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-gray-50 rounded-xl p-1.5 flex items-center border border-gray-200 shadow-inner">
+                                <span class="text-[10px] font-bold text-gray-400 px-3">RESUME MATCH:</span>
+                                <input type="text" id="resume-code" placeholder="CODE" class="bg-transparent border-none w-20 text-left font-mono font-bold text-gray-700 focus:ring-0 text-sm p-0 uppercase placeholder-gray-300">
+                            </div>
+                            <button onclick="resumeMatch()" class="hidden md:block text-[10px] font-bold text-purple-600 bg-purple-50 px-4 py-2 rounded-xl border border-purple-100 hover:bg-purple-100 transition-colors shadow-sm">LOAD DATA</button>
                         </div>
+                        <button onclick="goToStep(2)" class="px-10 py-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-black text-sm rounded-xl shadow-xl shadow-blue-500/30 hover:scale-[1.02] hover:shadow-2xl transition-all transform active:scale-[0.98] flex items-center gap-3">
+                            <span>CONFIRM SQUADS</span>
+                            <span class="bg-white/20 px-2 py-0.5 rounded text-[10px]">➜</span>
+                        </button>
                     </div>
                 </div>
 
@@ -868,6 +957,7 @@ function broadcastMatchResult() {
                 const opt = document.createElement('option'); 
                 opt.value = i; 
                 opt.text = (i === 0) ? "No Penalty (0)" : `-${i} Runs`;
+                if(i === 0) opt.selected = true; // Auto-select No Penalty
                 wicketSelect.appendChild(opt);
             }
 
