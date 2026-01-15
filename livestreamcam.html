@@ -1078,10 +1078,19 @@ function goLiveOnDB(matchId, peerId) {
             setTimeout(() => stage.classList.remove('splitting'), 3000);
         }
 
-        // --- RENDER LOOP ---
+        // --- RENDER LOOP (BACKGROUND SAFE) ---
         function renderLoop() {
-            const w = window.innerWidth; const h = window.innerHeight;
+            const w = window.innerWidth; 
+            const h = window.innerHeight;
+            
+            // Ensure canvas size is correct even if hidden
+            if (canvas.width !== w || canvas.height !== h) {
+                canvas.width = w; canvas.height = h;
+            }
+
             ctx.clearRect(0, 0, w, h);
+            
+            // 1. Draw Content
             if (replayState === "LIVE") {
                 drawVideoObject(video, w, h);
                 drawLiveGraphics(w, h);
@@ -1098,8 +1107,15 @@ function goLiveOnDB(matchId, peerId) {
                 let finished = drawCoolStinger(w, h, "OUT");
                 if (finished) { cleanupReplay(); }
             }
-            // Removed old impactState check here
-            requestAnimationFrame(renderLoop);
+
+            // 2. INTELLIGENT LOOPING (Fixes Split-Screen Freeze)
+            if (document.hidden) {
+                // If app is in background/split-screen, force update via setTimeout
+                setTimeout(renderLoop, 50); // 20 FPS in background
+            } else {
+                // If app is active, use standard high-performance loop
+                requestAnimationFrame(renderLoop);
+            }
         }
 
         function drawVideoObject(vidObj, w, h) {
