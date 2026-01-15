@@ -1078,44 +1078,42 @@ function goLiveOnDB(matchId, peerId) {
             setTimeout(() => stage.classList.remove('splitting'), 3000);
         }
 
-        // --- RENDER LOOP (BACKGROUND SAFE) ---
+        // --- BACKGROUND-SAFE RENDER LOOP ---
         function renderLoop() {
+            // 1. Force Canvas Dimensions (Fixes 0x0 bug)
             const w = window.innerWidth; 
             const h = window.innerHeight;
-            
-            // Ensure canvas size is correct even if hidden
-            if (canvas.width !== w || canvas.height !== h) {
+            if (canvas.width === 0 || canvas.height === 0 || canvas.width !== w) {
                 canvas.width = w; canvas.height = h;
             }
 
+            // 2. Clear & Draw
             ctx.clearRect(0, 0, w, h);
-            
-            // 1. Draw Content
-            if (replayState === "LIVE") {
-                drawVideoObject(video, w, h);
-                drawLiveGraphics(w, h);
-            } else if (replayState === "TRANSITION_IN") {
-                drawVideoObject(video, w, h);
-                let finished = drawCoolStinger(w, h, "IN");
-                if (finished) { replayState = "PLAYING"; if(replayVideo) replayVideo.play().catch(e => {}); replayStartTime = Date.now(); }
-            } else if (replayState === "PLAYING") {
-                if(replayVideo) drawVideoObject(replayVideo, w, h);
-                drawReplayOverlay(w, h);
-                if ((replayVideo && replayVideo.ended) || (Date.now() - replayStartTime > 15000)) { replayState = "TRANSITION_OUT"; transitionStartTime = Date.now(); }
-            } else if (replayState === "TRANSITION_OUT") {
-                drawVideoObject(video, w, h); 
-                let finished = drawCoolStinger(w, h, "OUT");
-                if (finished) { cleanupReplay(); }
+
+            try {
+                if (replayState === "LIVE") {
+                    drawVideoObject(video, w, h);
+                    drawLiveGraphics(w, h);
+                } else if (replayState === "TRANSITION_IN") {
+                    drawVideoObject(video, w, h);
+                    let finished = drawCoolStinger(w, h, "IN");
+                    if (finished) { replayState = "PLAYING"; if(replayVideo) replayVideo.play().catch(e => {}); replayStartTime = Date.now(); }
+                } else if (replayState === "PLAYING") {
+                    if(replayVideo) drawVideoObject(replayVideo, w, h);
+                    drawReplayOverlay(w, h);
+                    if ((replayVideo && replayVideo.ended) || (Date.now() - replayStartTime > 15000)) { replayState = "TRANSITION_OUT"; transitionStartTime = Date.now(); }
+                } else if (replayState === "TRANSITION_OUT") {
+                    drawVideoObject(video, w, h); 
+                    let finished = drawCoolStinger(w, h, "OUT");
+                    if (finished) { cleanupReplay(); }
+                }
+            } catch (err) {
+                console.error("Render Error:", err);
             }
 
-            // 2. INTELLIGENT LOOPING (Fixes Split-Screen Freeze)
-            if (document.hidden) {
-                // If app is in background/split-screen, force update via setTimeout
-                setTimeout(renderLoop, 50); // 20 FPS in background
-            } else {
-                // If app is active, use standard high-performance loop
-                requestAnimationFrame(renderLoop);
-            }
+            // 3. FORCE LOOP (Use setTimeout instead of requestAnimationFrame)
+            // This forces the browser to update even if the tab is backgrounded/split-screen
+            setTimeout(renderLoop, 30); 
         }
 
         function drawVideoObject(vidObj, w, h) {
