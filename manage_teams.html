@@ -368,6 +368,10 @@
 
         // Global State
         let globalTeamsList = [];
+        let lastVisibleDoc = null; // For Pagination
+        let isFetching = false;
+        let hasMoreTeams = true;
+        
         let state = {
             players: [], 
             editMode: false,
@@ -391,24 +395,106 @@
                 state.currentUserUid = userCred.user.uid;
                 document.getElementById('connection-status').textContent = "ONLINE";
                 document.getElementById('connection-status').className = "text-[10px] font-bold text-green-500 uppercase";
-                loadTeams();
-            }).catch(e => { console.error(e); loadTeams(); });
+                resetAndLoadTeams();
+            }).catch(e => { console.error(e); resetAndLoadTeams(); });
 
-            document.getElementById('search-teams').addEventListener('input', renderTeams);
+            // Search Listener (Debounced)
+            let searchTimeout;
+            document.getElementById('search-teams').addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    const term = e.target.value.trim();
+                    if(term.length > 0) {
+                        performSearch(term);
+                    } else {
+                        resetAndLoadTeams();
+                    }
+                }, 600);
+            });
+
+            // Infinite Scroll Listener
+            const scrollArea = document.getElementById('main-scroll-area');
+            scrollArea.addEventListener('scroll', () => {
+                if (scrollArea.scrollTop + scrollArea.clientHeight >= scrollArea.scrollHeight - 50) {
+                    loadMoreTeams();
+                }
+            });
+
             document.getElementById('editor-team-logo-upload').onchange = (e) => handleImageUpload(e, 'logo');
         });
 
-        function loadTeams() {
-            db.collection("teams").onSnapshot(snapshot => {
-                globalTeamsList = [];
-                snapshot.forEach(doc => {
-                    const data = doc.data(); data.id = doc.id;
-                    if(!data.name) data.name = "Untitled";
-                    globalTeamsList.push(data);
-                });
-                globalTeamsList.sort((a, b) => a.name.localeCompare(b.name));
-                renderTeams();
+        function resetAndLoadTeams() {
+            globalTeamsList = [];
+            lastVisibleDoc = null;
+            hasMoreTeams = true;
+            document.getElementById('saved-teams-container').innerHTML = '';
+            loadMoreTeams();
+        }
+
+        function loadMoreTeams() {
+            if (!hasMoreTeams || isFetching) return;
+            isFetching = true;
+
+            let query = db.collection("teams")
+                .orderBy("name") // Alphabetical sort for contacts style
+                .limit(10); // PAGINATION LIMIT
+
+            // Country Filter
+            if (state.filterCountry) {
+                query = db.collection("teams").where("country", "==", state.filterCountry).limit(10);
+            }
+            
+            // "My Teams" Tab Logic
+            if (state.activeTab === 'my' && state.currentUserUid) {
+                query = db.collection("teams").where("ownerId", "==", state.currentUserUid).limit(10);
+            }
+
+            if (lastVisibleDoc) {
+                query = query.startAfter(lastVisibleDoc);
+            }
+
+            query.get().then(snapshot => {
+                if (snapshot.empty) {
+                    hasMoreTeams = false;
+                    if(globalTeamsList.length === 0) renderEmptyState();
+                } else {
+                    lastVisibleDoc = snapshot.docs[snapshot.docs.length - 1];
+                    snapshot.forEach(doc => {
+                        const data = doc.data(); 
+                        data.id = doc.id;
+                        if(!data.name) data.name = "Untitled";
+                        globalTeamsList.push(data);
+                    });
+                    renderTeams(); // Append/Render new data
+                }
+            }).catch(err => {
+                console.error("Load Error:", err);
+            }).finally(() => {
+                isFetching = false;
             });
+        }
+
+        function performSearch(term) {
+            // Firestore specific search (Prefix search logic)
+            // Note: This relies on exact casing or storing lowercase names. 
+            // We blindly try to match the case user types, or Capitalized.
+            const termCap = term.charAt(0).toUpperCase() + term.slice(1).toLowerCase();
+            
+            isFetching = true;
+            db.collection("teams")
+                .where("name", ">=", termCap)
+                .where("name", "<=", termCap + '\uf8ff')
+                .limit(20)
+                .get()
+                .then(snapshot => {
+                    globalTeamsList = [];
+                    snapshot.forEach(doc => {
+                        const data = doc.data(); data.id = doc.id;
+                        globalTeamsList.push(data);
+                    });
+                    renderTeams(); // Render search results
+                })
+                .finally(() => { isFetching = false; });
         }
 
         // ==========================================
@@ -433,27 +519,39 @@
             });
             document.getElementById('filter-modal').classList.remove('hidden');
         }
-        function setFilter(c) { state.filterCountry = c; renderTeams(); closeFilterModal(); }
+        function setFilter(c) { 
+            state.filterCountry = c; 
+            closeFilterModal(); 
+            resetAndLoadTeams(); // Must reload from server for accurate filtered pagination
+        }
         function closeFilterModal() { document.getElementById('filter-modal').classList.add('hidden'); }
-        function switchTab(t) { state.activeTab = t; document.getElementById('tab-all').classList.remove('active'); document.getElementById('tab-my').classList.remove('active'); document.getElementById(`tab-${t}`).classList.add('active'); renderTeams(); }
+        
+        function switchTab(t) { 
+            state.activeTab = t; 
+            document.getElementById('tab-all').classList.remove('active'); 
+            document.getElementById('tab-my').classList.remove('active'); 
+            document.getElementById(`tab-${t}`).classList.add('active'); 
+            resetAndLoadTeams(); // Must reload to apply owner filter on server
+        }
 
         // ==========================================
-        // RENDER TEAMS (DETAILED ROW)
+        // RENDER TEAMS (Detailed Row & Efficient)
         // ==========================================
         function renderTeams() {
             const container = document.getElementById('saved-teams-container');
-            container.innerHTML = '';
-            const searchTerm = document.getElementById('search-teams').value.toLowerCase();
-            let filtered = globalTeamsList.filter(t => t.name.toLowerCase().includes(searchTerm) || (t.country || "").toLowerCase().includes(searchTerm));
+            container.innerHTML = ''; // Re-render logic to ensure letters sort correctly
 
-            if (state.activeTab === 'my' && state.currentUserUid) filtered = filtered.filter(t => t.ownerId === state.currentUserUid);
-            if (state.filterCountry) filtered = filtered.filter(t => t.country === state.filterCountry);
-
-            if(filtered.length === 0) { container.innerHTML = `<div class="text-center py-10 text-gray-400 text-sm">No teams found</div>`; return; }
+            if(globalTeamsList.length === 0) { renderEmptyState(); return; }
 
             let currentLetter = '';
-            filtered.forEach(team => {
+            
+            // Safe sort client-side for the current batch
+            globalTeamsList.sort((a,b) => a.name.localeCompare(b.name));
+
+            globalTeamsList.forEach(team => {
                 const firstLetter = team.name.charAt(0).toUpperCase();
+                
+                // Sticky Header
                 if (firstLetter !== currentLetter) {
                     currentLetter = firstLetter;
                     const header = document.createElement('div');
@@ -461,12 +559,15 @@
                     header.textContent = currentLetter;
                     container.appendChild(header);
                 }
+
                 const row = document.createElement('div');
                 row.className = 'team-row';
-                const initial = team.name.charAt(0).toUpperCase();
-                const logoHtml = team.logo ? `<img src="${team.logo}" class="team-avatar">` : `<div class="team-avatar flex items-center justify-center bg-gray-200 text-gray-500 font-bold text-lg">${initial}</div>`;
                 
-                // DATA PREP
+                const initial = team.name.charAt(0).toUpperCase();
+                const logoHtml = team.logo 
+                    ? `<img src="${team.logo}" class="team-avatar">` 
+                    : `<div class="team-avatar flex items-center justify-center bg-gray-200 text-gray-500 font-bold text-lg">${initial}</div>`;
+                
                 const captainName = team.captain ? team.captain.split(' ')[0] : null;
                 const creatorName = team.creator || "Unknown";
                 const playerCount = (team.players || []).length;
@@ -496,6 +597,19 @@
                 container.appendChild(row);
                 container.appendChild(document.createElement('div')).className = 'team-row-divider';
             });
+            
+            // Loading Indicator at bottom
+            if(hasMoreTeams) {
+                const loader = document.createElement('div');
+                loader.className = "text-center py-4 text-xs text-gray-400";
+                loader.innerText = "Loading more...";
+                container.appendChild(loader);
+            }
+        }
+
+        function renderEmptyState() {
+            document.getElementById('saved-teams-container').innerHTML = 
+                `<div class="text-center py-10 text-gray-400 text-sm">No teams found. Try searching or create one!</div>`;
         }
 
         // ==========================================
@@ -699,11 +813,10 @@
             reader.onload = (ev) => {
                 const img = new Image();
                 img.onload = () => {
-                    // Compress Image
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
                     
-                    // Low Quality for scoring sheet (150x150)
+                    // FORCE LOW QUALITY FOR PUBLIC USE
                     const MAX_SIZE = 150; 
                     let width = img.width; let height = img.height;
                     
@@ -713,7 +826,8 @@
                     canvas.width = width; canvas.height = height;
                     ctx.drawImage(img, 0, 0, width, height);
                     
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.6); // 60% Quality
+                    // 50% Quality to save bandwidth
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.5); 
 
                     if(type === 'logo') {
                         const preview = document.getElementById('editor-team-logo-preview');
