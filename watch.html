@@ -12,7 +12,6 @@
     <style>
         body { margin: 0; background: #000; font-family: 'Roboto', sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
-        /* LOGIN SCREEN */
         #login-screen {
             position: absolute; inset: 0; z-index: 20;
             background: radial-gradient(circle at center, #1e293b, #000);
@@ -31,30 +30,23 @@
             box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
         }
 
-        /* VIDEO CONTAINER */
-        #video-wrapper { 
-            width: 100%; height: 100%; position: relative; 
-            background: black; display: none; 
-        }
+        #video-wrapper { width: 100%; height: 100%; position: relative; background: black; display: none; }
         video { width: 100%; height: 100%; object-fit: contain; background: black; }
         
-        /* OVERLAYS */
         #status-pill {
             position: absolute; top: 20px; left: 20px;
             background: rgba(220, 38, 38, 0.9); color: white;
             padding: 8px 16px; border-radius: 20px;
             font-size: 14px; font-weight: bold; pointer-events: none;
-            display: flex; align-items: center; gap: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 50;
+            display: flex; align-items: center; gap: 8px; z-index: 50;
         }
         .blink { animation: blink 1s infinite; width: 10px; height: 10px; background: white; border-radius: 50%; }
         @keyframes blink { 50% { opacity: 0.5; } }
 
-        /* DEBUG LOG */
         #debug-log {
             position: absolute; bottom: 20px; left: 20px;
-            color: #4ade80; font-family: monospace; font-size: 10px;
-            pointer-events: none; opacity: 0.8; z-index: 100; text-shadow: 1px 1px 1px black;
+            color: lime; font-family: monospace; font-size: 10px;
+            pointer-events: none; opacity: 0.8; z-index: 100;
         }
     </style>
 </head>
@@ -69,31 +61,23 @@
 
     <div id="video-wrapper">
         <div id="status-pill"><div class="blink"></div> LIVE</div>
-        </div>
+    </div>
 
     <div id="debug-log">Ready...</div>
 
     <script>
-        // 1. FIREBASE CONFIG
+        // CONFIG MUST MATCH YOUR BROADCASTER APP
         const firebaseConfig = { apiKey: "AIzaSyBqcD59IAPpKqk98oDZkgzgkoVZ8b8LGgY", authDomain: "livecricketscoring-92087.firebaseapp.com", databaseURL: "https://livecricketscoring-92087-default-rtdb.firebaseio.com", projectId: "livecricketscoring-92087", storageBucket: "livecricketscoring-92087.firebasestorage.app", messagingSenderId: "522927197627", appId: "1:522927197627:web:f1df5db736cae96893089e" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        let currentStream = null;
-
-        function log(msg) {
-            console.log(msg);
-            document.getElementById('debug-log').innerText = msg;
-        }
+        function log(msg) { console.log(msg); document.getElementById('debug-log').innerText = msg; }
 
         function joinStream() {
             const matchId = document.getElementById('match-id').value.trim().toUpperCase();
             if(!matchId) return;
-
-            const btn = document.querySelector('button');
-            btn.innerText = "CONNECTING...";
-            btn.disabled = true;
-
+            document.querySelector('button').innerText = "CONNECTING...";
+            
             log("Searching for Match ID: " + matchId);
             db.collection("live_matches").doc(matchId).onSnapshot(doc => {
                 if(doc.exists && doc.data().isStreaming && doc.data().streamId) {
@@ -101,82 +85,64 @@
                     connectToPeer(doc.data().streamId);
                 } else {
                     log("Waiting for Broadcaster...");
-                    btn.innerText = "WAITING...";
                 }
             });
         }
 
         function connectToPeer(targetId) {
             const peer = new Peer({ config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] } });
-            
             peer.on('open', (id) => {
-                log("Connected to Server. Calling Broadcaster...");
+                log("Calling Broadcaster...");
                 const dummyDest = new AudioContext().createMediaStreamDestination();
                 const call = peer.call(targetId, dummyDest.stream);
 
                 call.on('stream', (remoteStream) => {
-                    log("Signal Received. Starting Video...");
-                    currentStream = remoteStream;
-                    
+                    log("Stream Arrived! Building Player...");
                     document.getElementById('login-screen').style.display = 'none';
                     document.getElementById('video-wrapper').style.display = 'block';
-
-                    // Force rebuild the player to ensure clean start
-                    buildVideoPlayer(remoteStream);
+                    
+                    // Delay build slightly to ensure stream data is ready
+                    setTimeout(() => buildPlayer(remoteStream), 500);
                 });
 
                 call.on('close', () => { alert("Stream Ended"); location.reload(); });
                 call.on('error', (e) => log("Call Error: " + e));
             });
-            
-            peer.on('error', (e) => {
-                log("Connection Error: " + e.type);
-                document.getElementById('error-msg').innerText = "Retrying connection...";
-                setTimeout(() => location.reload(), 2000);
-            });
         }
 
-        function buildVideoPlayer(stream) {
+        function buildPlayer(stream) {
             const wrapper = document.getElementById('video-wrapper');
-            wrapper.innerHTML = '<div id="status-pill"><div class="blink"></div> LIVE</div>'; // Clear old video
+            // Remove old video if exists
+            const old = wrapper.querySelector('video');
+            if(old) old.remove();
 
             const vid = document.createElement('video');
-            vid.autoplay = true;
-            vid.playsInline = true;
-            vid.muted = true; // Essential for autoplay
-            vid.setAttribute('playsinline', '');
-            vid.setAttribute('webkit-playsinline', '');
+            vid.autoplay = true; vid.playsInline = true; vid.muted = true;
+            vid.setAttribute('playsinline', ''); vid.setAttribute('webkit-playsinline', '');
             vid.srcObject = stream;
             
             wrapper.appendChild(vid);
 
             vid.play().then(() => {
-                log("Video Playing.");
-                monitorStream(vid);
+                log("Playing.");
+                // Check if video is stuck at 0x0
+                setInterval(() => {
+                    if (vid.videoWidth === 0) {
+                        log("⚠️ 0x0 Stream detected. Broadcaster might be hidden.");
+                        document.getElementById('status-pill').style.background = "#eab308"; // Yellow
+                    } else {
+                        log(`✅ LIVE: ${vid.videoWidth}x${vid.videoHeight}`);
+                        document.getElementById('status-pill').style.background = "#dc2626"; // Red
+                    }
+                }, 2000);
             }).catch(e => {
-                log("Tap screen to watch.");
+                log("Autoplay blocked. Tap screen.");
                 const btn = document.createElement('button');
                 btn.innerText = "TAP TO WATCH";
                 btn.style.cssText = "position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:100; padding:20px; font-weight:900;";
-                btn.onclick = () => { vid.play(); btn.remove(); monitorStream(vid); };
+                btn.onclick = () => { vid.play(); btn.remove(); };
                 wrapper.appendChild(btn);
             });
-        }
-
-        function monitorStream(vid) {
-            setInterval(() => {
-                const w = vid.videoWidth;
-                const h = vid.videoHeight;
-                
-                if (w > 0 && h > 0) {
-                    log(`✅ LIVE SIGNAL: ${w}x${h}`);
-                    document.getElementById('status-pill').style.background = "#dc2626"; // Red (Good)
-                } else {
-                    log("⚠️ Waiting for video data (0x0)...");
-                    document.getElementById('status-pill').style.background = "#eab308"; // Yellow (Waiting)
-                    // If stuck at 0x0, the issue is definitely on the broadcaster side
-                }
-            }, 2000);
         }
     </script>
 </body>
