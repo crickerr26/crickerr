@@ -197,7 +197,8 @@
 
         /* SETUP SCREEN */
         #setup-screen { position: absolute; inset: 0; z-index: 60; background: radial-gradient(circle at center, #0f172a 0%, #000000 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .input-field { background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); color: #fbbf24; font-size: 4rem; text-align: center; font-weight: 700; letter-spacing: 0.5rem; width: 320px; padding: 1rem; border-radius: 1rem; outline: none; transition: all 0.3s; font-family: 'Anton', sans-serif; margin-bottom: 2rem; }
+        /* Updated .input-field: Auto width, smaller font for long IDs, force uppercase */
+        .input-field { background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); color: #fbbf24; font-size: 2.5rem; text-align: center; font-weight: 700; letter-spacing: 0.2rem; width: 90%; max-width: 600px; padding: 1rem; border-radius: 1rem; outline: none; transition: all 0.3s; font-family: 'Anton', sans-serif; margin-bottom: 2rem; text-transform: uppercase; }
         .start-btn { background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); color: #000; border: none; padding: 1rem 4rem; border-radius: 50px; font-size: 1.1rem; font-weight: 800; letter-spacing: 2px; cursor: pointer; box-shadow: 0 10px 30px rgba(251, 191, 36, 0.3); text-transform: uppercase; transition: transform 0.1s; }
         .start-btn:active { transform: scale(0.95); }
         
@@ -284,7 +285,7 @@
     <div id="setup-screen">
         <h1 style="font-family: 'Anton'; font-size: 3rem; color: white; margin-bottom: 0.5rem; letter-spacing: 2px;">BROADCAST UNIT</h1>
         <p style="color: #94a3b8; font-size: 0.9rem; font-weight: bold; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px; font-family: 'Roboto';">Enter Match Code</p>
-        <input type="text" id="match-id" class="input-field" placeholder="0000" maxlength="4" inputmode="numeric">
+        <input type="text" id="match-id" class="input-field" placeholder="MATCH_XXXXX" oninput="this.value = this.value.toUpperCase()">
         <button onclick="connectToMatch()" class="start-btn" id="btn-start">Start Camera</button>
     </div>
 
@@ -807,7 +808,7 @@
             menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
         }
         function toggleHighlights(checkbox) { areHighlightsEnabled = checkbox.checked; }
-        function changeMatchId() { const newId = prompt("Enter New Match ID:"); if(newId && newId.trim() !== "") window.location.search = `?id=${newId.trim()}`; }
+        function changeMatchId() { const newId = prompt("Enter New Match ID:"); if(newId && newId.trim() !== "") window.location.search = `?id=${newId.trim().toUpperCase()}`; }
         function selectQuality(height) {
             document.getElementById('quality-menu').style.display = 'none';
             let w = (height * 16) / 9;
