@@ -146,29 +146,29 @@
         }
         .q-option:last-child { border-bottom: none; }
         .q-option:hover { background: rgba(255,255,255,0.1); color: white; }
-/* GO LIVE BUTTON */
+/* GO LIVE BUTTON (Moved to Top Right) */
 #live-button {
-    position: absolute; bottom: 30px; right: 30px;
-    background: #2563eb; /* Blue */
-    color: white; padding: 15px 30px; 
-    border-radius: 50px; border: 2px solid rgba(255,255,255,0.3);
-    font-family: 'Anton', sans-serif; font-size: 22px; letter-spacing: 1px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5); cursor: pointer;
-    display: flex; align-items: center; gap: 10px;
-    z-index: 100; transition: all 0.3s ease;
+    position: absolute; top: 25px; right: 135px; /* Next to REC button */
+    background: rgba(0, 0, 0, 0.4); 
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 8px 20px; 
+    border-radius: 50px; 
+    color: white;
+    font-family: 'Roboto', sans-serif; /* Matches REC button font */
+    font-size: 14px; 
+    font-weight: 700; 
+    letter-spacing: 1px;
+    display: flex; align-items: center; gap: 10px; cursor: pointer;
+    backdrop-filter: blur(8px); transition: all 0.2s;
+    z-index: 100;
 }
 #live-button:active { transform: scale(0.95); }
 
 /* LIVE STATE */
 .is-live {
     background: #ef4444 !important; /* Red */
-    box-shadow: 0 0 20px rgba(239, 68, 68, 0.6) !important;
-    animation: pulseLive 2s infinite;
-}
-@keyframes pulseLive {
-    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-    70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
 }
         /* REC BUTTON */
         #rec-button {
@@ -874,39 +874,28 @@ async function toggleLiveStream() {
     const matchIdInput = document.getElementById('match-id');
     const matchId = matchIdInput ? matchIdInput.value.trim().toUpperCase() : "";
 
-    // 1. Validation
-    if (!matchId) return alert("❌ Enter a MATCH ID first!");
-    if (!currentStream) return alert("❌ Start the camera first!");
+    // 1. Validation (Log errors to console instead of Alert to prevent freezing)
+    if (!matchId) { console.warn("No Match ID"); return; }
+    if (!currentStream) { console.warn("Camera not started"); return; }
 
-    // 2. Stop Stream (If already live)
+    // 2. Stop Stream (Immediate stop, no popup confirmation)
     if (isLive) {
-        if(confirm("Stop Live Stream?")) {
-            // Optional: Destroy peer or just update DB
-            db.collection("live_matches").doc(matchId).update({ isStreaming: false });
-            isLive = false;
-            if(btn) btn.classList.remove('is-live');
-            if(txt) txt.innerText = "GO LIVE";
-            alert("Stream Ended.");
-        }
+        db.collection("live_matches").doc(matchId).update({ isStreaming: false });
+        isLive = false;
+        if(btn) btn.classList.remove('is-live');
+        if(txt) txt.innerText = "GO LIVE";
         return;
     }
 
     // 3. Start Stream
     if(txt) txt.innerText = "STARTING...";
     
-    // Create Peer if not exists
     if (!peer) {
         const code = Math.floor(1000 + Math.random() * 9000);
         myPeerId = "broadcast-" + code; 
         
-        // --- ADDED STUN SERVERS HERE ---
         peer = new Peer(myPeerId, {
-            config: {
-                iceServers: [
-                    { urls: 'stun:stun.l.google.com:19302' },
-                    { urls: 'stun:stun1.l.google.com:19302' }
-                ]
-            }
+            config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
         });
 
         peer.on('open', (id) => {
@@ -916,8 +905,7 @@ async function toggleLiveStream() {
         
         peer.on('error', (err) => {
             console.error(err);
-            alert("Connection Error: " + err.type);
-            if(txt) txt.innerText = "GO LIVE";
+            if(txt) txt.innerText = "ERROR";
         });
     } else {
         goLiveOnDB(matchId, myPeerId);
@@ -928,26 +916,21 @@ function goLiveOnDB(matchId, peerId) {
     const btn = document.getElementById('live-button');
     const txt = document.getElementById('live-text');
 
-    // Capture the CANVAS (Graphics + Video)
     const stream = canvas.captureStream(30);
     
-    // Add Audio (Mic + SFX)
     if (currentStream && currentStream.getAudioTracks().length > 0) {
         stream.addTrack(currentStream.getAudioTracks()[0]);
     } else {
-        // If no mic, add dummy audio so connection works
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
         const dest = ctx.createMediaStreamDestination();
         stream.addTrack(dest.stream.getAudioTracks()[0]);
     }
 
-    // Handle incoming viewers
     peer.on('call', (call) => {
         console.log("Viewer Connected!");
         call.answer(stream);
     });
 
-    // Update Firebase so Viewers can find us
     db.collection("live_matches").doc(matchId).set({
         streamId: peerId,
         isStreaming: true,
@@ -955,11 +938,10 @@ function goLiveOnDB(matchId, peerId) {
     }, { merge: true }).then(() => {
         isLive = true;
         if(btn) btn.classList.add('is-live');
-        if(txt) txt.innerText = "END STREAM";
-        alert(`✅ YOU ARE LIVE!\n\nViewer Code: ${matchId}`);
+        if(txt) txt.innerText = "LIVE"; // No Alert popup!
     }).catch(err => {
-        alert("Database Error: " + err.message);
-        if(txt) txt.innerText = "GO LIVE";
+        console.error("DB Error", err);
+        if(txt) txt.innerText = "RETRY";
     });
 }
         function copyObsUrl() {
