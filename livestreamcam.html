@@ -146,7 +146,30 @@
         }
         .q-option:last-child { border-bottom: none; }
         .q-option:hover { background: rgba(255,255,255,0.1); color: white; }
+/* GO LIVE BUTTON */
+#live-button {
+    position: absolute; bottom: 30px; right: 30px;
+    background: #2563eb; /* Blue */
+    color: white; padding: 15px 30px; 
+    border-radius: 50px; border: 2px solid rgba(255,255,255,0.3);
+    font-family: 'Anton', sans-serif; font-size: 22px; letter-spacing: 1px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5); cursor: pointer;
+    display: flex; align-items: center; gap: 10px;
+    z-index: 100; transition: all 0.3s ease;
+}
+#live-button:active { transform: scale(0.95); }
 
+/* LIVE STATE */
+.is-live {
+    background: #ef4444 !important; /* Red */
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.6) !important;
+    animation: pulseLive 2s infinite;
+}
+@keyframes pulseLive {
+    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+    70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
         /* REC BUTTON */
         #rec-button {
             position: absolute; top: 25px; right: 25px;
@@ -291,6 +314,9 @@
 
     <div id="app-container" style="display: none;">
         <div id="controls-layer">
+            <div id="live-button" class="hud-item" onclick="toggleLiveStream()">
+    <span>📡</span> <span id="live-text">GO LIVE</span>
+</div>
             <div id="gear-button" class="hud-item" onclick="toggleSettingsMenu()">⚙️</div>
             <div id="refresh-button" class="hud-item" onclick="refreshCamera()">🔄</div>
 
@@ -838,24 +864,104 @@
         // --- WIRELESS OBS ---
         function showObsModal() { document.getElementById('obs-modal').style.display = 'flex'; }
         function closeObsModal() { document.getElementById('obs-modal').style.display = 'none'; }
-        function startWirelessStream() {
-            if(peer) return; 
-            const code = Math.floor(1000 + Math.random() * 9000);
-            myPeerId = "match-cam-" + code;
-            peer = new Peer(myPeerId);
-            peer.on('open', (id) => {
-                const fullUrl = `${window.location.href.split('?')[0]}?obs=${myPeerId}`;
-                document.getElementById('btn-start-stream').style.display = 'none';
-                document.getElementById('obs-instructions').style.display = 'block';
-                document.getElementById('obs-url-display').innerText = fullUrl;
-                const stream = canvas.captureStream(60);
-                if(video.srcObject) {
-                    const audioTracks = video.srcObject.getAudioTracks();
-                    if(audioTracks.length > 0) stream.addTrack(audioTracks[0]);
-                }
-                peer.on('call', (call) => { call.answer(stream); });
-            });
+        // --- UPDATE THIS FUNCTION IN 56.html ---
+// --- LIVE STREAMING LOGIC ---
+let isLive = false;
+
+async function toggleLiveStream() {
+    const btn = document.getElementById('live-button');
+    const txt = document.getElementById('live-text');
+    const matchIdInput = document.getElementById('match-id');
+    const matchId = matchIdInput ? matchIdInput.value.trim().toUpperCase() : "";
+
+    // 1. Validation
+    if (!matchId) return alert("❌ Enter a MATCH ID first!");
+    if (!currentStream) return alert("❌ Start the camera first!");
+
+    // 2. Stop Stream (If already live)
+    if (isLive) {
+        if(confirm("Stop Live Stream?")) {
+            // Optional: Destroy peer or just update DB
+            db.collection("live_matches").doc(matchId).update({ isStreaming: false });
+            isLive = false;
+            if(btn) btn.classList.remove('is-live');
+            if(txt) txt.innerText = "GO LIVE";
+            alert("Stream Ended.");
         }
+        return;
+    }
+
+    // 3. Start Stream
+    if(txt) txt.innerText = "STARTING...";
+    
+    // Create Peer if not exists
+    if (!peer) {
+        const code = Math.floor(1000 + Math.random() * 9000);
+        myPeerId = "broadcast-" + code; 
+        
+        // --- ADDED STUN SERVERS HERE ---
+        peer = new Peer(myPeerId, {
+            config: {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' }
+                ]
+            }
+        });
+
+        peer.on('open', (id) => {
+            console.log("My Peer ID: " + id);
+            goLiveOnDB(matchId, id);
+        });
+        
+        peer.on('error', (err) => {
+            console.error(err);
+            alert("Connection Error: " + err.type);
+            if(txt) txt.innerText = "GO LIVE";
+        });
+    } else {
+        goLiveOnDB(matchId, myPeerId);
+    }
+}
+
+function goLiveOnDB(matchId, peerId) {
+    const btn = document.getElementById('live-button');
+    const txt = document.getElementById('live-text');
+
+    // Capture the CANVAS (Graphics + Video)
+    const stream = canvas.captureStream(30);
+    
+    // Add Audio (Mic + SFX)
+    if (currentStream && currentStream.getAudioTracks().length > 0) {
+        stream.addTrack(currentStream.getAudioTracks()[0]);
+    } else {
+        // If no mic, add dummy audio so connection works
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const dest = ctx.createMediaStreamDestination();
+        stream.addTrack(dest.stream.getAudioTracks()[0]);
+    }
+
+    // Handle incoming viewers
+    peer.on('call', (call) => {
+        console.log("Viewer Connected!");
+        call.answer(stream);
+    });
+
+    // Update Firebase so Viewers can find us
+    db.collection("live_matches").doc(matchId).set({
+        streamId: peerId,
+        isStreaming: true,
+        startedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true }).then(() => {
+        isLive = true;
+        if(btn) btn.classList.add('is-live');
+        if(txt) txt.innerText = "END STREAM";
+        alert(`✅ YOU ARE LIVE!\n\nViewer Code: ${matchId}`);
+    }).catch(err => {
+        alert("Database Error: " + err.message);
+        if(txt) txt.innerText = "GO LIVE";
+    });
+}
         function copyObsUrl() {
             navigator.clipboard.writeText(document.getElementById('obs-url-display').innerText).then(() => alert("URL Copied!"));
         }
