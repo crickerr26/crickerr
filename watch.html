@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Crickerr Match Centre</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto+Condensed:wght@700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { background: #0f172a; color: white; font-family: 'Roboto', sans-serif; overflow: hidden; }
+        #app-container { position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at center, #1e293b 0%, #020617 100%); }
+        
+        /* LAYERS */
+        #video-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; z-index: 1; display: none; }
+        #graphics-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
+        
+        /* UI OVERLAY */
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; display: flex; flex-direction: column; justify-content: flex-start; padding: 20px; }
+        .interactive { pointer-events: auto; }
+
+        /* LOADING / START SCREEN */
+        #start-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.9); z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .glass-input { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 15px; border-radius: 12px; color: white; font-size: 20px; text-align: center; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; outline: none; width: 80%; max-width: 300px; font-family: 'Anton'; }
+        .action-btn { background: #2563eb; color: white; padding: 15px 40px; border-radius: 50px; font-weight: bold; font-size: 18px; border: none; cursor: pointer; transition: transform 0.2s; text-transform: uppercase; }
+        .action-btn:active { transform: scale(0.95); }
+
+        /* LIVE BADGE */
+        #live-badge { display: none; background: #ef4444; color: white; padding: 5px 12px; border-radius: 4px; font-weight: 900; font-size: 12px; letter-spacing: 1px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        /* CONNECT BTN */
+        #btn-connect-stream { display: none; margin-top: 10px; background: #22c55e; color: white; border: none; padding: 8px 20px; border-radius: 20px; font-weight: bold; font-size: 14px; cursor: pointer; pointer-events: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        
+        /* LOGO WATERMARK */
+        .watermark { position: absolute; bottom: 20px; right: 20px; opacity: 0.3; width: 80px; }
+    </style>
+</head>
+<body>
+
+    <div id="start-screen">
+        <img src="my-logo.png" class="w-24 h-24 mb-6 rounded-xl shadow-2xl animate-bounce">
+        <h1 class="text-3xl font-black mb-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">MATCH CENTRE</h1>
+        <p class="text-gray-400 mb-6 text-sm">Enter the Match Code to watch</p>
+        <input type="text" id="match-input" class="glass-input" placeholder="CODE">
+        <button onclick="loadMatch()" class="action-btn">Watch Match</button>
+    </div>
+
+    <div id="app-container">
+        <video id="video-layer" autoplay playsinline></video>
+        
+        <canvas id="graphics-canvas"></canvas>
+
+        <div id="ui-layer">
+            <div class="flex justify-between items-start w-full">
+                <div id="live-badge">LIVE FEED AVAILABLE</div>
+                <button id="btn-connect-stream" class="interactive" onclick="connectToVideo()">🎥 WATCH VIDEO STREAM</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- FIREBASE CONFIG (SAME AS YOUR APP) ---
+        const firebaseConfig = { apiKey: "AIzaSyBqcD59IAPpKqk98oDZkgzgkoVZ8b8LGgY", authDomain: "livecricketscoring-92087.firebaseapp.com", databaseURL: "https://livecricketscoring-92087-default-rtdb.firebaseio.com", projectId: "livecricketscoring-92087", storageBucket: "livecricketscoring-92087.firebasestorage.app", messagingSenderId: "522927197627", appId: "1:522927197627:web:f1df5db736cae96893089e" };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // --- STATE ---
+        let matchId = null;
+        let matchData = { t1: "HOME", t2: "AWAY", score: 0, wickets: 0, overs: 0, balls: 0, striker: {}, nonStriker: {}, bowler: {}, currentOver: [], target: 0, streamId: null, isStreaming: false };
+        
+        // Assets
+        let t1Logo = new Image(), t2Logo = new Image(), appLogo = new Image();
+        appLogo.src = 'my-logo.png';
+
+        // Canvas
+        const canvas = document.getElementById('graphics-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // PeerJS
+        let peer = null;
+        let activeCall = null;
+
+        // --- INITIALIZATION ---
+        window.onload = () => {
+            const params = new URLSearchParams(window.location.search);
+            if(params.has('id')) {
+                document.getElementById('match-input').value = params.get('id');
+                loadMatch();
+            }
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            requestAnimationFrame(renderLoop);
+        };
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function loadMatch() {
+            const input = document.getElementById('match-input').value.trim().toUpperCase();
+            if(!input) return alert("Enter a code!");
+            matchId = input;
+
+            document.getElementById('start-screen').style.display = 'none';
+            
+            // Listen to Match Data
+            db.collection("live_matches").doc(matchId).onSnapshot(doc => {
+                if(doc.exists) {
+                    const data = doc.data();
+                    matchData = { ...matchData, ...data };
+                    
+                    // Handle Logos
+                    if(data.t1Logo && t1Logo.src !== data.t1Logo) { t1Logo.src = data.t1Logo; t1Logo.crossOrigin = "anonymous"; }
+                    if(data.t2Logo && t2Logo.src !== data.t2Logo) { t2Logo.src = data.t2Logo; t2Logo.crossOrigin = "anonymous"; }
+
+                    // Check for Video Stream Availability
+                    updateStreamStatus();
+                } else {
+                    alert("Match not found!");
+                    document.getElementById('start-screen').style.display = 'flex';
+                }
+            });
+        }
+
+        function updateStreamStatus() {
+            const btn = document.getElementById('btn-connect-stream');
+            const badge = document.getElementById('live-badge');
+
+            if (matchData.isStreaming && matchData.streamId) {
+                btn.style.display = 'block'; // Show "Watch Video" button
+                badge.style.display = 'block';
+                badge.innerText = "🔴 LIVE CAMERA ACTIVE";
+            } else {
+                btn.style.display = 'none';
+                badge.style.display = 'none';
+                // If stream stops, hide video layer
+                document.getElementById('video-layer').style.display = 'none';
+            }
+        }
+
+        // --- PEER JS CONNECTION (VIDEO) ---
+        function connectToVideo() {
+            if(!matchData.streamId) return alert("Stream not currently active.");
+            
+            const btn = document.getElementById('btn-connect-stream');
+            btn.innerText = "CONNECTING...";
+            btn.disabled = true;
+
+            peer = new Peer();
+            
+            peer.on('open', (id) => {
+                console.log("Viewer ID:", id);
+                const conn = peer.connect(matchData.streamId);
+                const call = peer.call(matchData.streamId, new MediaStream()); // One-way call
+                
+                call.on('stream', (remoteStream) => {
+                    const vid = document.getElementById('video-layer');
+                    vid.srcObject = remoteStream;
+                    vid.style.display = 'block';
+                    vid.play().catch(e => console.log("Play error", e));
+                    
+                    btn.innerText = "CONNECTED";
+                    setTimeout(() => btn.style.display = 'none', 2000);
+                });
+
+                call.on('close', () => {
+                    alert("Broadcast ended.");
+                    location.reload();
+                });
+                
+                call.on('error', (err) => {
+                    console.error(err);
+                    btn.innerText = "FAILED - RETRY";
+                    btn.disabled = false;
+                });
+            });
+
+            peer.on('error', (err) => {
+                console.error("Peer Error", err);
+                btn.innerText = "CONNECTION ERROR";
+                btn.disabled = false;
+            });
+        }
+
+        // --- GRAPHICS ENGINE (Replicates 56.html) ---
+        function renderLoop() {
+            const w = canvas.width;
+            const h = canvas.height;
+            ctx.clearRect(0, 0, w, h);
+
+            // If no video, draw a nice background
+            if (document.getElementById('video-layer').style.display === 'none') {
+                drawDigitalBackground(w, h);
+            }
+
+            // Draw Scoreboard (Reused Logic from 56.html)
+            drawScoreboard(ctx, w, h);
+            
+            // Draw Dismissal Card if active
+            if(matchData.showDismissalCard && matchData.dismissalData) {
+               // Reuse dismissal logic here if needed, or simplified for viewer
+               drawSimpleDismissal(ctx, w, h);
+            }
+
+            requestAnimationFrame(renderLoop);
+        }
+
+        function drawDigitalBackground(w, h) {
+            const grad = ctx.createLinearGradient(0, 0, 0, h);
+            grad.addColorStop(0, "#0f172a");
+            grad.addColorStop(1, "#1e3a8a");
+            ctx.fillStyle = grad;
+            ctx.fillRect(0,0,w,h);
+            
+            // Grid
+            ctx.strokeStyle = "rgba(255,255,255,0.05)";
+            ctx.lineWidth = 1;
+            const step = 50;
+            for(let x=0; x<w; x+=step) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+            for(let y=0; y<h; y+=step) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+            
+            // Center Logo
+            if(appLogo.complete) {
+                ctx.globalAlpha = 0.1;
+                const ls = Math.min(w,h) * 0.5;
+                ctx.drawImage(appLogo, (w-ls)/2, (h-ls)/2, ls, ls);
+                ctx.globalAlpha = 1.0;
+            }
+        }
+
+        // Simplified Scoreboard Renderer for Viewer
+        function drawScoreboard(c, w, h) {
+            const barH = h * 0.12; 
+            const y = h - barH - 20;
+            const x = w * 0.05;
+            const width = w * 0.9;
+            
+            // Main Bar
+            c.shadowColor = "rgba(0,0,0,0.5)"; c.shadowBlur = 10;
+            c.fillStyle = "white";
+            c.beginPath(); c.roundRect(x, y, width, barH, 15); c.fill();
+            c.shadowBlur = 0;
+
+            // Team 1
+            const logoS = barH * 0.8;
+            drawLogo(c, t1Logo, x + 10, y + (barH-logoS)/2, logoS);
+            c.fillStyle = "#1e293b"; c.font = `900 ${barH * 0.4}px 'Roboto Condensed'`; c.textAlign = "left";
+            c.fillText(matchData.t1.substring(0,3), x + 20 + logoS, y + barH * 0.65);
+
+            // Scores
+            c.textAlign = "center";
+            c.font = `900 ${barH * 0.6}px 'Anton'`; c.fillStyle = "#ef4444";
+            c.fillText(`${matchData.score}/${matchData.wickets}`, w/2, y + barH * 0.6);
+            
+            c.font = `700 ${barH * 0.2}px 'Roboto'`; c.fillStyle = "#64748b";
+            c.fillText(`OVERS ${matchData.overs}.${matchData.balls}`, w/2, y + barH * 0.85);
+
+            // Team 2
+            drawLogo(c, t2Logo, x + width - 10 - logoS, y + (barH-logoS)/2, logoS);
+            c.textAlign = "right"; c.fillStyle = "#1e293b"; c.font = `900 ${barH * 0.4}px 'Roboto Condensed'`;
+            c.fillText(matchData.t2.substring(0,3), x + width - 20 - logoS, y + barH * 0.65);
+            
+            // Status/Target
+            if(matchData.target > 0) {
+                 const req = Math.max(0, matchData.target - matchData.score);
+                 c.fillStyle = "#2563eb"; c.font = `bold ${barH * 0.2}px 'Roboto'`; c.textAlign = "center";
+                 c.fillText(`TARGET ${matchData.target} (${req} TO WIN)`, w/2, y + barH * 0.25);
+            }
+        }
+
+        function drawLogo(c, img, x, y, s) {
+            c.save();
+            c.beginPath(); c.arc(x + s/2, y + s/2, s/2, 0, Math.PI*2); c.clip();
+            if(img && img.complete) c.drawImage(img, x, y, s, s);
+            else { c.fillStyle = "#cbd5e1"; c.fillRect(x,y,s,s); }
+            c.restore();
+        }
+
+        function drawSimpleDismissal(c, w, h) {
+            const d = matchData.dismissalData;
+            const cw = w * 0.8; const ch = h * 0.2;
+            const cx = (w - cw)/2; const cy = (h - ch)/2;
+            
+            c.fillStyle = "#ef4444"; 
+            c.beginPath(); c.roundRect(cx, cy, cw, ch, 20); c.fill();
+            c.strokeStyle = "white"; c.lineWidth = 4; c.stroke();
+            
+            c.fillStyle = "white"; c.textAlign = "center";
+            c.font = "900 40px 'Anton'";
+            c.fillText("WICKET!", w/2, cy + 50);
+            c.font = "bold 30px 'Roboto'";
+            c.fillText(d.name, w/2, cy + 90);
+            c.font = "20px 'Roboto'";
+            c.fillText(d.howOut, w/2, cy + 130);
+        }
+
+    </script>
+</body>
+</html>
