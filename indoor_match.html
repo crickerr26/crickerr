@@ -1385,23 +1385,48 @@ function broadcastMatchResult() {
             goToStep(1);
         }
 
-        function saveEditChanges() {
-            state.totalOvers = parseInt(ui.totalOversInput.value);
-            state.playersPerSide = parseInt(ui.playersPerSideInput.value);
-            state.venue = ui.venueInput.value;
-            alert("Match Settings Updated!");
-            isEditMatchMode = false;
-            updateMatchHeader();
-            updateScoreboard();
-            syncToLiveDB();
-            showScreen('app');
-        }
-function generateBroadcastCode() {
-            broadcastId = Math.floor(1000 + Math.random() * 9000).toString();
+        function generateBroadcastCode() {
+            // 1. Generate Robust ID (e.g., MATCH_9X2Y5) to prevent collisions
+            // Generates a random alphanumeric string (base 36)
+            const randomPart = Math.random().toString(36).substring(2, 7).toUpperCase();
+            broadcastId = `MATCH_${randomPart}`;
+
             const display = document.getElementById('broadcast-display');
             const codeBox = document.getElementById('match-code-box');
+            
             display.classList.remove('hidden');
+            
+            // 2. Adjust font size for longer ID so it fits on mobile
+            codeBox.classList.remove('text-6xl');
+            codeBox.classList.add('text-3xl', 'md:text-4xl'); 
+            
             codeBox.textContent = broadcastId;
+            const btn = document.getElementById('btn-broadcast-enable');
+            btn.classList.remove('bg-blue-50', 'text-blue-700');
+            btn.classList.add('bg-green-100', 'text-green-800', 'border-green-300');
+            btn.innerHTML = `<span class="text-lg">✅ BROADCAST LIVE</span><span class="text-xs font-normal">Code: ${broadcastId}</span>`;
+            
+            // FIX: Check readiness FIRST, then sync. This prevents the logic gap.
+            checkStartReady();
+            syncToLiveDB(null, true); // Full Sync to upload initial Logo/Venue data
+        }
+function generateBroadcastCode() {
+            // 1. Generate Robust ID (e.g., MATCH_9X2Y5) to prevent collisions
+            // Generates a random alphanumeric string (base 36)
+            const randomPart = Math.random().toString(36).substring(2, 7).toUpperCase();
+            broadcastId = `MATCH_${randomPart}`;
+
+            const display = document.getElementById('broadcast-display');
+            const codeBox = document.getElementById('match-code-box');
+            
+            display.classList.remove('hidden');
+            
+            // 2. Adjust font size for longer ID so it fits on mobile
+            codeBox.classList.remove('text-6xl');
+            codeBox.classList.add('text-3xl', 'md:text-4xl'); 
+            
+            codeBox.textContent = broadcastId;
+            
             const btn = document.getElementById('btn-broadcast-enable');
             btn.classList.remove('bg-blue-50', 'text-blue-700');
             btn.classList.add('bg-green-100', 'text-green-800', 'border-green-300');
@@ -1434,7 +1459,7 @@ function generateBroadcastCode() {
     }, 300); // Small delay for a natural feel
 }
 
-        function syncToLiveDB(lastAction = null) {
+        function syncToLiveDB(lastAction = null, isFullSync = false) {
             if (!broadcastId) return;
 
             // --- Helper to Generate a Team's Full Card ---
@@ -1493,43 +1518,36 @@ function generateBroadcastCode() {
                 };
             };
 
-            // --- Prepare Payload ---
+            // --- Prepare Base Payload (Dynamic Data - Sent Every Time) ---
             const payload = {
                 // Security & Session
                 adminPin: "2626", 
                 lastUpdatedBy: Date.now(),
 
-                // Game State (CRITICAL FOR HANDOVER)
-                currentInnings: state.innings,       // Save that we are in Innings 2
-                activeBattingTeam: state.battingTeam, // Save 'team1' or 'team2' key
+                // Game State
+                currentInnings: state.innings,
+                activeBattingTeam: state.battingTeam,
                 target: state.target || 0,
-
-                // Basic Info
-                venue: state.venue || "Unknown Venue",
-                matchDate: document.getElementById('match-date-input').value,
-                matchStatus: state.innings === 2 && state.team2.score > state.team1.score ? "COMPLETE" : "LIVE",
                 
+                matchStatus: state.innings === 2 && state.team2.score > state.team1.score ? "COMPLETE" : "LIVE",
                 isSuperOver: state.isSuperOver || false, 
                 
                 // Live State
                 currentOver: state.currentOver.map(b => b.event),
                 timeline: state.timeline || [],
 
-                // Player Names
+                // Player Names (Active)
                 striker: state.striker || { name: "", runs: 0, balls: 0 },
                 nonStriker: state.nonStriker || { name: "", runs: 0, balls: 0 },
                 bowler: state.bowler || { name: "", wkts: 0, runs: 0, balls: 0 },
                 
-                // Full Scorecards
+                // Full Scorecards (Calculated Stats)
                 scorecard: {
                     innings1: generateInningsData('team1', 'team2'),
                     innings2: generateInningsData('team2', 'team1')
                 },
 
-                // Legacy
-                t1: state.team1.name, t2: state.team2.name,
-                t1Logo: state.team1.logo, t2Logo: state.team2.logo, 
-                
+                // Key Scores
                 score: state[state.battingTeam].score || 0,
                 wickets: state[state.battingTeam].wickets || 0,
                 overs: state[state.battingTeam].overs || 0,
@@ -1537,6 +1555,17 @@ function generateBroadcastCode() {
                 
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
+
+            // --- OPTIMIZATION: Only send Heavy Static Data on FULL sync ---
+            if (isFullSync) {
+                payload.venue = state.venue || "Unknown Venue";
+                payload.matchDate = document.getElementById('match-date-input').value;
+                payload.t1 = state.team1.name;
+                payload.t2 = state.team2.name;
+                // Heavy Images (Base64) - Only sent when match starts or settings change
+                payload.t1Logo = state.team1.logo; 
+                payload.t2Logo = state.team2.logo; 
+            }
 
             if (lastAction) payload.lastAction = { id: Date.now(), type: lastAction };
 
@@ -1634,7 +1663,7 @@ function generateBroadcastCode() {
                 state.battingTeam = 'team2'; state.bowlingTeam = 'team1';
             }
 
-            syncToLiveDB();
+            syncToLiveDB(null, true); // Full Sync to ensure Teams/Logos are set on match start
 
             state.rules.wicketRuns = parseInt(document.getElementById('rule-wicket').value); 
             
