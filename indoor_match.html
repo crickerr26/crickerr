@@ -2620,41 +2620,44 @@ function generateBroadcastCode() {
                 else alert("Nothing to undo!"); 
                 return; 
             }
+            
+            // 1. Restore the Old State completely
             state = undoStack.pop();
             
-            // Close all standard scoring modals
-            closeModal('wicket-type-modal'); 
-            closeModal('wide-modal'); 
-            closeModal('noball-modal'); 
-            closeModal('extras-modal'); 
-            closeModal('runout-modal'); 
-            
-            // Close new modals to prevent UI locking
-            if(document.getElementById('mid-over-modal')) closeModal('mid-over-modal'); 
-            if(document.getElementById('player-modal')) closeModal('player-modal');   
-
-            // Hide Custom Dialog
+            // 2. Close any open modals/dialogs
+            const modals = ['wicket-type-modal', 'wide-modal', 'noball-modal', 'extras-modal', 'runout-modal', 'mid-over-modal', 'player-modal'];
+            modals.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.classList.add('hidden');
+            });
             if(typeof CustomDialog !== 'undefined' && CustomDialog.hide) CustomDialog.hide();
 
-            // 1. Restore Reference Integrity
+            // 3. Restore Reference Integrity
+            // Crucial: We must ensure state.striker points to the player object INSIDE the restored state.teamX
+            // otherwise the UI might read from the 'old' state object but the logic updates a 'detached' object.
             const restoreRef = (role, teamKey) => {
-                if (state[role] && state[role].id) {
-                    const realObj = state[teamKey].playerStats[state[role].id];
-                    if (realObj) state[role] = realObj;
+                // Determine the correct team based on the restored state
+                const team = state[teamKey];
+                
+                if (state[role] && state[role].id && team && team.playerStats) {
+                    const realObj = team.playerStats[state[role].id];
+                    // Force the role to point to the object inside the team stats
+                    if (realObj) {
+                        state[role] = realObj;
+                    }
+                } else {
+                    state[role] = null;
                 }
             };
+            
             restoreRef('bowler', state.bowlingTeam);
             restoreRef('striker', state.battingTeam);
             restoreRef('nonStriker', state.battingTeam);
 
-            // 2. Standard Updates
+            // 4. Force Update UI
+            // We specifically call these to repaint the tables with the 'state' data we just restored
             updateScoreboard(); 
-            updateUI();
-
-            // 3. FORCE RE-RENDER OF TABLES (The Missing Link)
-            // This ensures the lists visually revert to the old stats
-            renderBattingCard();
-            renderBowlingCard();
+            updateUI(); 
         }
 
         // --- Helper Render Functions (Ensures Undo Visuals Work) ---
