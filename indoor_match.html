@@ -20,33 +20,60 @@
     /* --- Base Styles --- */
     body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
     
-    /* --- MOBILE SPECIFIC FIXES --- */
+    /* --- MOBILE & APP UX STYLES --- */
     @media (max-width: 768px) {
-        body { font-size: 14px; }
+        body { font-size: 14px; background-color: #f8fafc; }
         
+        /* Flatten the setup card on mobile */
         #setup-screen {
-            align-items: flex-start !important;
-            justify-content: flex-start !important;
+            display: block !important;
             padding: 0 !important;
-            background-color: white !important;
+            background-color: #f8fafc !important;
         }
         
         .setup-card { 
             width: 100% !important;
-            height: 100% !important;
-            min-height: 100vh !important;
             max-width: 100% !important;
+            min-height: 100vh !important;
             border: none !important;
             border-radius: 0 !important;
             box-shadow: none !important;
-            padding-top: 1rem !important;
+            padding: 1rem !important;
+            padding-bottom: 6rem !important; /* Space for sticky button */
+            background-color: transparent !important;
         }
 
+        /* Prevent nested scrolling issues */
+        .overflow-y-auto { overflow-y: visible !important; height: auto !important; max-height: none !important; }
+        
         #app { overflow: hidden; }
         #app > .flex-grow { padding: 8px; display: flex; flex-direction: column; }
         #scoreboard { padding: 0; }
         #batting-table th, #batting-table td, #bowling-table th, #bowling-table td { padding: 4px 2px; font-size: 0.75rem; }
     }
+
+    /* --- Mobile Wizard Components --- */
+    .wizard-section { margin-bottom: 2rem; background: white; border-radius: 1rem; padding: 1.25rem; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    .wizard-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.75rem; }
+    .wizard-icon { width: 2.5rem; height: 2.5rem; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; }
+    
+    /* Input Fields for Mobile */
+    .mobile-input-group { margin-bottom: 1rem; }
+    .mobile-label { display: block; font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 0.4rem; letter-spacing: 0.05em; }
+    .mobile-input { width: 100%; padding: 0.8rem; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; font-weight: 600; font-size: 0.95rem; color: #334155; outline: none; transition: all 0.2s; }
+    .mobile-input:focus { background-color: white; border-color: #3b82f6; ring: 2px solid #bfdbfe; }
+    
+    /* Sticky Bottom Actions */
+    .sticky-footer { position: fixed; bottom: 0; left: 0; right: 0; padding: 1rem; background: white; border-top: 1px solid #e2e8f0; z-index: 50; box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.05); }
+    
+    /* Mobile Cards (Teams & Schedule) */
+    .mobile-card { background: white; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1rem; margin-bottom: 0.75rem; position: relative; }
+    .mobile-card.active { border-color: #3b82f6; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1); }
+    
+    /* Schedule specific */
+    .sch-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+    .sch-versus { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; background: #f8fafc; padding: 0.5rem; border-radius: 0.75rem; }
+    .drag-handle-mobile { width: 2rem; height: 2rem; display: flex; align-items: center; justify-content: center; color: #cbd5e1; touch-action: none; }
 
     /* --- Setup & UI Components --- */
     .setup-bg { background-color:#f3f4f6; }
@@ -413,143 +440,204 @@
     </div>
 </div>
 
-<div id="tournament-setup" class="setup-step hidden w-full max-w-5xl mx-auto px-4 pb-10">
-    <button onclick="backToModeSelect()" class="mb-4 text-xs font-bold text-gray-400 hover:text-gray-600 uppercase tracking-wider">← Back to Menu</button>
-    
-    <div class="flex items-center gap-4 mb-8">
-        <div class="w-14 h-14 bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl flex items-center justify-center text-3xl shadow-lg shadow-purple-200">🏆</div>
-        <div>
-            <h2 class="text-3xl font-black text-gray-900 uppercase leading-none tracking-tight">Tournament Setup</h2>
-            <p class="text-xs text-gray-500 font-bold uppercase tracking-widest mt-1">Step 1: Configuration & Teams</p>
-        </div>
+<div id="tournament-setup" class="setup-step hidden w-full max-w-lg mx-auto pb-24">
+    <div class="flex items-center justify-between mb-6 pt-2 px-1">
+        <button onclick="backToModeSelect()" class="text-xs font-bold text-white uppercase tracking-wider bg-gradient-to-r from-red-500 to-orange-500 shadow-md shadow-orange-200 px-5 py-2.5 rounded-xl hover:scale-105 transition-transform flex items-center gap-2">
+            <span>←</span> Back to Menu
+        </button>
+        <span class="text-[10px] font-black text-purple-600 uppercase tracking-widest bg-purple-50 px-3 py-1 rounded-full border border-purple-100">Step 1 of 2</span>
     </div>
     
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-1 h-full bg-purple-500"></div>
-            <h3 class="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-4 flex items-center gap-2"><span>📝</span> Details</h3>
-            <div class="grid grid-cols-2 gap-3">
-                <div class="col-span-2">
-                    <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1">Tournament Name *</label>
-                    <input type="text" id="tourney-name" placeholder="e.g. SUMMER LEAGUE 2026" class="w-full p-2.5 border border-gray-200 rounded-lg font-bold uppercase text-xs focus:border-purple-500 outline-none bg-gray-50 focus:bg-white transition-colors">
-                </div>
-                <div>
-                    <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1">Grounds Count</label>
-                    <select id="tourney-ground-count" onchange="renderGroundInputs()" class="w-full p-2.5 border border-gray-200 rounded-lg font-bold text-xs bg-gray-50 outline-none">
-                        <option value="1">1 Ground</option><option value="2">2 Grounds</option><option value="3">3 Grounds</option>
-                    </select>
-                </div>
-                <div>
-                     <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1">Start Date</label>
-                     <input type="date" id="tourney-start-date" class="w-full p-2.5 border border-gray-200 rounded-lg font-bold text-xs bg-gray-50 outline-none uppercase text-gray-600">
-                </div>
-                <div class="col-span-2 grid grid-cols-2 gap-2" id="dynamic-grounds-container">
-                    <input type="text" id="ground-1" placeholder="Ground 1 Name" class="ground-input w-full p-2 border border-gray-200 rounded font-bold text-xs bg-white outline-none">
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-1 h-full bg-orange-500"></div>
-            <h3 class="text-[10px] font-black text-orange-600 uppercase tracking-widest mb-4 flex items-center gap-2"><span>🏏</span> Rules</h3>
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="text-[9px] font-bold text-gray-400 uppercase">Overs</label>
-                    <select id="tourney-overs" class="w-full p-2 border border-gray-200 rounded font-bold text-xs bg-white outline-none">
-                        <option value="4">4 Overs</option><option value="6">6 Overs</option><option value="8">8 Overs</option>
-                        <option value="10">10 Overs</option><option value="12">12 Overs</option><option value="16" selected>16 Overs</option>
-                        <option value="20">20 Overs</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="text-[9px] font-bold text-gray-400 uppercase">Players</label>
-                    <select id="tourney-players" class="w-full p-2 border border-gray-200 rounded font-bold text-xs bg-white outline-none">
-                        <option value="8" selected>8 Players</option><option value="11">11 Players</option>
-                    </select>
-                </div>
-                <div class="col-span-2">
-                    <label class="text-[9px] font-bold text-gray-400 uppercase">Ball Type</label>
-                    <select id="tourney-ball" class="w-full p-2 border border-gray-200 rounded font-bold text-xs bg-white outline-none">
-                        <option value="TENNIS_HARD">Hard Tennis</option><option value="TENNIS_SOFT">Soft Tennis</option><option value="LEATHER">Leather</option>
-                    </select>
-                </div>
-                <div class="hidden"><select id="tourney-match-type"><option value="LIMITED">Limited</option></select></div>
-            </div>
-        </div>
+    <div class="mb-6 px-1">
+        <h2 class="text-2xl font-black text-gray-900 uppercase leading-none">Tournament Setup</h2>
+        <p class="text-xs text-gray-500 font-medium mt-1">Configure details and register teams.</p>
     </div>
+    
+    <div class="wizard-section">
+        <div class="wizard-header">
+            <div class="wizard-icon bg-purple-100 text-purple-600">📝</div>
+            <h3 class="text-sm font-black text-gray-800 uppercase tracking-wide">Basic Details</h3>
+        </div>
+        
+        <div class="mobile-input-group">
+            <label class="mobile-label">Tournament Name</label>
+            <input type="text" id="tourney-name" placeholder="e.g. Summer Cup 2026" class="mobile-input">
+        </div>
 
-    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden h-[45vh] flex flex-col">
-         <div class="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
-            <h3 class="text-xs font-black text-gray-800 uppercase tracking-widest">Register Teams</h3>
-            <div class="flex items-center gap-2">
-                 <label class="text-[9px] font-bold text-gray-400 uppercase">Total Teams:</label>
-                 <select id="tourney-team-count" onchange="renderTournamentSlots()" class="p-2 border border-gray-200 rounded font-bold text-xs bg-white outline-none w-24">
-                    <option value="2">2 Teams</option><option value="4" selected>4 Teams</option>
-                    <option value="6">6 Teams</option><option value="8">8 Teams</option>
-                    <option value="10">10 Teams</option><option value="12">12 Teams</option>
+        <div class="mobile-input-group">
+            <label class="mobile-label">Country</label>
+            <select id="tourney-country" onchange="renderTournamentSlots()" class="mobile-input">
+                <option value="" disabled selected>Select Country</option>
+                <option value="Canada">🇨🇦 Canada</option>
+                <option value="India">🇮🇳 India</option>
+                <option value="Australia">🇦🇺 Australia</option>
+                <option value="England">🇬🇧 England</option>
+                <option value="USA">🇺🇸 USA</option>
+                <option value="Pakistan">🇵🇰 Pakistan</option>
+                <option value="Sri Lanka">🇱🇰 Sri Lanka</option>
+                <option value="South Africa">🇿🇦 South Africa</option>
+                <option value="New Zealand">🇳🇿 New Zealand</option>
+                <option value="West Indies">🌴 West Indies</option>
+                <option value="Bangladesh">🇧🇩 Bangladesh</option>
+            </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+            <div class="mobile-input-group">
+                <label class="mobile-label">Start Date</label>
+                <input type="date" id="tourney-start-date" class="mobile-input">
+            </div>
+            <div class="mobile-input-group">
+                <label class="mobile-label">Grounds</label>
+                <select id="tourney-ground-count" onchange="renderGroundInputs()" class="mobile-input">
+                    <option value="1">1 Ground</option>
+                    <option value="2">2 Grounds</option>
+                    <option value="3">3 Grounds</option>
+                    <option value="4">4 Grounds</option>
+                    <option value="5">5 Grounds</option>
+                    <option value="6">6 Grounds</option>
+                    <option value="7">7 Grounds</option>
+                    <option value="8">8 Grounds</option>
+                    <option value="9">9 Grounds</option>
+                    <option value="10">10 Grounds</option>
                 </select>
             </div>
         </div>
-        <div id="tournament-slots-container" class="flex-grow p-5 overflow-y-auto custom-scroll grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 content-start"></div>
         
-        <div class="p-4 border-t border-gray-200 bg-gray-50">
-            <button onclick="goToTournamentSchedule()" class="w-full py-4 bg-gray-900 text-white font-black rounded-xl shadow-lg uppercase tracking-widest hover:bg-black transition flex items-center justify-center gap-3">
-                <span>Next Step: Schedule Fixtures</span>
-                <span class="bg-white/20 px-2 py-0.5 rounded text-xs">➜</span>
-            </button>
+        <div id="dynamic-grounds-container" class="space-y-3 pt-2">
+            <input type="text" id="ground-1" placeholder="Ground 1 Name" class="mobile-input bg-white">
         </div>
+    </div>
+
+    <div class="wizard-section">
+        <div class="wizard-header">
+            <div class="wizard-icon bg-orange-100 text-orange-600">⚖️</div>
+            <h3 class="text-sm font-black text-gray-800 uppercase tracking-wide">Rules</h3>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4">
+            <div class="mobile-input-group">
+                <label class="mobile-label">Overs</label>
+                <select id="tourney-overs" class="mobile-input">
+                    <option value="4">4 Overs</option>
+                    <option value="6">6 Overs</option>
+                    <option value="8">8 Overs</option>
+                    <option value="10">10 Overs</option>
+                    <option value="12">12 Overs</option>
+                    <option value="16" selected>16 Overs</option>
+                    <option value="20">20 Overs</option>
+                </select>
+            </div>
+            <div class="mobile-input-group">
+                <label class="mobile-label">Players</label>
+                <select id="tourney-players" class="mobile-input">
+                    <option value="3">3 Players</option>
+                    <option value="4">4 Players</option>
+                    <option value="5">5 Players</option>
+                    <option value="6">6 Players</option>
+                    <option value="7">7 Players</option>
+                    <option value="8" selected>8 Players</option>
+                    <option value="9">9 Players</option>
+                    <option value="10">10 Players</option>
+                    <option value="11">11 Players</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="mobile-input-group">
+            <label class="mobile-label">Ball Type</label>
+            <select id="tourney-ball" class="mobile-input">
+                <option value="TENNIS_HARD">Hard Tennis</option>
+                <option value="TENNIS_SOFT">Soft Tennis</option>
+                <option value="LEATHER">Leather</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="wizard-section">
+        <div class="wizard-header">
+            <div class="wizard-icon bg-blue-100 text-blue-600">👥</div>
+            <div class="flex-grow">
+                <h3 class="text-sm font-black text-gray-800 uppercase tracking-wide">Teams</h3>
+                <p class="text-[10px] text-gray-400">Select total teams participating</p>
+            </div>
+            <select id="tourney-team-count" onchange="renderTournamentSlots()" class="mobile-input w-24 py-1 px-2 text-xs">
+                <option value="" selected disabled>Select</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+                <option value="11">11</option>
+                <option value="12">12</option>
+                <option value="13">13</option>
+                <option value="14">14</option>
+                <option value="15">15</option>
+                <option value="16">16</option>
+                <option value="17">17</option>
+                <option value="18">18</option>
+                <option value="19">19</option>
+                <option value="20">20</option>
+                <option value="21">21</option>
+                <option value="22">22</option>
+                <option value="23">23</option>
+                <option value="24">24</option>
+                <option value="25">25</option>
+                <option value="26">26</option>
+                <option value="27">27</option>
+                <option value="28">28</option>
+                <option value="29">29</option>
+                <option value="30">30</option>
+            </select>
+        </div>
+        
+        <div id="tournament-slots-container" class="space-y-3">
+            </div>
+    </div>
+
+    <div class="sticky-footer">
+        <button onclick="goToTournamentSchedule()" class="w-full py-4 bg-gray-900 text-white font-black rounded-xl shadow-lg uppercase tracking-widest text-sm flex items-center justify-center gap-3 active:scale-95 transition-transform">
+            <span>Next: Schedule</span>
+            <span class="bg-white/20 px-2 py-0.5 rounded text-xs">➜</span>
+        </button>
     </div>
 </div>
 
-<div id="tournament-schedule-step" class="setup-step hidden w-full max-w-7xl mx-auto px-4 pb-10">
-    <button onclick="backToTournamentSetup()" class="mb-4 text-xs font-bold text-gray-400 hover:text-gray-600 uppercase tracking-wider">← Back to Configuration</button>
-    
-    <div class="flex items-center gap-4 mb-8">
-        <div class="w-14 h-14 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center text-3xl shadow-lg shadow-blue-200">📅</div>
-        <div>
-            <h2 class="text-3xl font-black text-gray-900 uppercase leading-none tracking-tight">Match Schedule</h2>
-            <p class="text-xs text-gray-500 font-bold uppercase tracking-widest mt-1">Step 2: Create Fixtures</p>
-        </div>
+<div id="tournament-schedule-step" class="setup-step hidden w-full max-w-lg mx-auto pb-32">
+    <div class="flex items-center justify-between mb-6 pt-2 px-1">
+        <button onclick="backToTournamentSetup()" class="text-xs font-bold text-white uppercase tracking-wider bg-gradient-to-r from-red-500 to-orange-500 shadow-md shadow-orange-200 px-5 py-2.5 rounded-xl hover:scale-105 transition-transform flex items-center gap-2">
+            <span>←</span> Back
+        </button>
+        <span class="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-3 py-1 rounded-full border border-blue-100">Step 2 of 2</span>
     </div>
 
-    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col h-[70vh]">
-        <div class="p-4 bg-gray-50 border-b border-gray-200 flex flex-wrap md:flex-nowrap justify-between items-center gap-4">
-            <div>
-                <h3 class="text-xs font-black text-gray-800 uppercase tracking-widest">Fixture List</h3>
-                <p class="text-[9px] text-gray-400 font-bold uppercase">Drag to Reorder • Teams auto-shortened</p>
-            </div>
-            <div class="flex gap-2 flex-wrap justify-end">
-                <button onclick="autoGenerateFixtures()" class="bg-purple-50 text-purple-600 border border-purple-200 px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-purple-100 transition shadow-sm">⚡ Auto-Generate</button>
-                <button onclick="addScheduleRow('League Match')" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-blue-700 transition shadow-sm">+ Match</button>
-                <button onclick="addScheduleRow('Final')" class="bg-yellow-500 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-yellow-600 transition shadow-sm">+ Final</button>
-            </div>
-        </div>
-        
-        <div class="flex-grow overflow-auto custom-scroll bg-gray-50/50">
-            <table class="w-full text-left border-collapse">
-                <thead class="bg-gray-100 text-[10px] font-black text-gray-500 uppercase sticky top-0 z-10 shadow-sm">
-                    <tr>
-                        <th class="p-3 w-8 text-center">#</th>
-                        <th class="p-3 w-32">Stage</th>
-                        <th class="p-3 w-1/4">Team A</th>
-                        <th class="p-3 text-center w-8 text-gray-300">vs</th>
-                        <th class="p-3 w-1/4">Team B</th>
-                        <th class="p-3 w-1/5">Ground</th>
-                        <th class="p-3 w-32">Time</th>
-                        <th class="p-3 w-8 text-center"></th>
-                    </tr>
-                </thead>
-                <tbody id="schedule-rows" class="bg-white divide-y divide-gray-100 font-bold text-xs text-gray-700">
-                    </tbody>
-            </table>
-        </div>
+    <div class="mb-6 px-1">
+        <h2 class="text-2xl font-black text-gray-900 uppercase leading-none">Schedule</h2>
+        <p class="text-xs text-gray-500 font-medium mt-1">Create fixtures. Drag to reorder.</p>
+    </div>
 
-        <div class="p-4 border-t border-gray-200 bg-gray-50">
-            <button id="btn-create-tourney" onclick="createProfessionalTournament()" class="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-black rounded-xl shadow-lg uppercase tracking-widest hover:scale-[1.01] transition flex items-center justify-center gap-3">
-                <span>Finalize & Create Tournament</span>
-                <span class="bg-white/20 px-2 py-0.5 rounded text-xs">✓</span>
-            </button>
+    <div class="grid grid-cols-2 gap-3 mb-6">
+        <button onclick="autoGenerateFixtures()" class="py-3 bg-purple-50 text-purple-700 font-bold text-xs rounded-xl border border-purple-100 uppercase tracking-wide hover:bg-purple-100 transition">⚡ Auto-Gen</button>
+        <button onclick="addScheduleRow('League Match')" class="py-3 bg-blue-50 text-blue-700 font-bold text-xs rounded-xl border border-blue-100 uppercase tracking-wide hover:bg-blue-100 transition">+ Add Match</button>
+    </div>
+
+    <div id="schedule-rows" class="space-y-4 min-h-[200px]">
         </div>
+    
+    <div class="h-24"></div>
+
+    <div class="sticky-footer flex flex-col gap-3">
+        <button onclick="addScheduleRow('Final')" class="w-full py-3 bg-yellow-50 text-yellow-700 font-bold rounded-xl border border-yellow-200 uppercase tracking-wide text-xs hover:bg-yellow-100 transition">
+            + Add Final Match
+        </button>
+        <button id="btn-create-tourney" onclick="createProfessionalTournament()" class="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-black rounded-xl shadow-lg uppercase tracking-widest text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform">
+            <span>Create Tournament</span>
+            <span class="bg-white/20 px-2 py-0.5 rounded text-xs">✓</span>
+        </button>
     </div>
 </div>
 
@@ -572,17 +660,17 @@
     <div class="flex-grow bg-gray-50 overflow-y-auto custom-scroll p-4 md:p-8 relative">
         
         <div id="view-fixtures" class="dash-view h-full flex flex-col">
-    <div class="flex justify-between items-center mb-4 shrink-0">
+    <div class="flex justify-between items-center mb-6 shrink-0 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
         <div>
-            <h3 class="text-2xl font-black text-gray-800 uppercase">Tournament Board</h3>
-            <p class="text-xs text-gray-400 font-bold uppercase">Drag cards to move rounds • Click to Edit</p>
+            <h3 class="text-xl font-black text-gray-900 uppercase tracking-tight">Match Center</h3>
+            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Tap a card to start/edit match</p>
         </div>
-        <button onclick="quickCreateMatch()" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 uppercase text-xs tracking-wider flex items-center gap-2 transition-transform active:scale-95">
-            <span class="text-xl leading-none">+</span> New Card
+        <button onclick="quickCreateMatch()" class="bg-blue-600 text-white w-10 h-10 rounded-full font-black shadow-lg hover:bg-blue-700 flex items-center justify-center transition-transform active:scale-95 text-xl">
+            +
         </button>
     </div>
 
-    <div id="kanban-board" class="flex-grow flex gap-4 overflow-x-auto pb-4 custom-scroll snap-x">
+    <div id="kanban-board" class="flex-grow overflow-y-auto custom-scroll space-y-8 pb-10">
         </div>
 </div>
 
@@ -1599,16 +1687,22 @@ function broadcastMatchResult() {
                 savedTeamsData = [];
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
-                    // FIX: Map 'avatar' (from Team Manager) to 'image' (used here)
                     const players = (data.players || []).map(p => {
                         if (typeof p === 'string') return { name: p, image: '' };
                         return { 
                             name: p.name, 
-                            image: p.avatar || p.image || '', // Check both fields
+                            image: p.avatar || p.image || '', 
                             id: p.id || null 
                         };
                     });
-                    savedTeamsData.push({ id: doc.id, name: data.name, logo: data.logo, players: players });
+                    // Capture Country, Default to Canada if missing (for testing)
+                    savedTeamsData.push({ 
+                        id: doc.id, 
+                        name: data.name, 
+                        logo: data.logo, 
+                        players: players,
+                        country: data.country || "Canada" 
+                    });
                 });
                 populateTeamDropdowns();
             });
@@ -1641,21 +1735,24 @@ function broadcastMatchResult() {
             // 1. Load New Squad with fresh IDs
             state[teamKey].squad = teamData.players.map(p => ({...p, id: generateUniqueId()}));
             
-            // 2. RESET Squad Selection State (Fixes Bug: Squad Selection Blocked)
-            // We must clear the 'playing' array because it holds IDs from the PREVIOUS team.
+            // 2. RESET Squad Selection State
             state[teamKey].playing = [];       
             state[teamKey].playerStats = {};   
             state[teamKey].captainId = null;   
             
             state[teamKey].isLoaded = true;
 
-            // NEW: Show Logo Preview
+            // NEW: FORCE Logo Preview Display
             const previewEl = document.getElementById(`${teamKey}-logo-preview`);
+            const initialsEl = previewEl.nextElementSibling; // The text span sibling
+            
             if (state[teamKey].logo) {
                 previewEl.src = state[teamKey].logo;
                 previewEl.classList.remove('hidden');
+                if(initialsEl) initialsEl.classList.add('hidden'); // Hide initials if logo exists
             } else {
                 previewEl.classList.add('hidden');
+                if(initialsEl) initialsEl.classList.remove('hidden');
             }
         }
         function handleLogoUpload(file, teamKey) {
@@ -1694,8 +1791,36 @@ function broadcastMatchResult() {
 
         function goToStep(step) {
             if (step === 2) {
-                const overs = document.getElementById('total-overs').value;
-                const players = document.getElementById('players-per-side').value;
+                // --- FIX: TOURNAMENT VALIDATION LOGIC ---
+                let overs = document.getElementById('total-overs').value;
+                let players = document.getElementById('players-per-side').value;
+                
+                // If in Tournament Mode, ensure DOM reflects state (fixes "Missing Info" error)
+                if (state.matchType === 'TOURNAMENT') {
+                     // Force DOM to match state if it's empty (e.g. 16/20 overs option missing in dropdown)
+                     if (!overs && state.totalOvers) {
+                         const os = document.getElementById('total-overs');
+                         const opt = document.createElement('option');
+                         opt.value = state.totalOvers;
+                         opt.text = state.totalOvers + " Overs (Tourney)";
+                         opt.selected = true;
+                         os.add(opt);
+                         os.value = state.totalOvers;
+                         overs = state.totalOvers; 
+                     }
+                     
+                     if (!players && state.playersPerSide) {
+                         const ps = document.getElementById('players-per-side');
+                         const opt = document.createElement('option');
+                         opt.value = state.playersPerSide;
+                         opt.text = state.playersPerSide + " Players (Tourney)";
+                         opt.selected = true;
+                         ps.add(opt);
+                         ps.value = state.playersPerSide;
+                         players = state.playersPerSide;
+                     }
+                }
+
                 const bpo = document.getElementById('balls-per-over').value; 
                 const w = document.getElementById('rule-wicket').value;
                 const wd = document.getElementById('rule-wide').value;
@@ -1716,16 +1841,19 @@ function broadcastMatchResult() {
                 state.rules.noBallRuns = parseInt(nb);
                 state.rules.skins = false; 
 
-                const t1Name = ui.team1NameInput.value.trim() || 'HOME TEAM';
-                const t2Name = ui.team2NameInput.value.trim() || 'AWAY TEAM';
+                // FIX: Only read inputs if NOT in Tournament Mode to prevent overwriting names
+                if (state.matchType !== 'TOURNAMENT') {
+                    const t1Name = ui.team1NameInput.value.trim() || 'HOME TEAM';
+                    const t2Name = ui.team2NameInput.value.trim() || 'AWAY TEAM';
 
-                if (!state.team1.isLoaded) {
-                    state.team1.name = t1Name.toUpperCase();
-                    handleLogoUpload(ui.team1LogoInput.files[0], 'team1');
-                }
-                if (!state.team2.isLoaded) {
-                    state.team2.name = t2Name.toUpperCase();
-                    handleLogoUpload(ui.team2LogoInput.files[0], 'team2');
+                    if (!state.team1.isLoaded) {
+                        state.team1.name = t1Name.toUpperCase();
+                        handleLogoUpload(ui.team1LogoInput.files[0], 'team1');
+                    }
+                    if (!state.team2.isLoaded) {
+                        state.team2.name = t2Name.toUpperCase();
+                        handleLogoUpload(ui.team2LogoInput.files[0], 'team2');
+                    }
                 }
 
                 ui.team1RosterTitle.textContent = state.team1.name;
@@ -4437,24 +4565,69 @@ function renderGroundInputs() {
 
 function renderTournamentSlots() {
     const totalTeams = parseInt(document.getElementById('tourney-team-count').value);
+    const selectedCountry = document.getElementById('tourney-country').value;
     const container = document.getElementById('tournament-slots-container');
+    
+    // Don't render if selection is invalid/empty
+    if (!totalTeams || isNaN(totalTeams)) {
+        container.innerHTML = '';
+        return;
+    }
+
     container.innerHTML = '';
     
+    // 1. Filter Teams by Country
+    let filteredTeams = savedTeamsData;
+    if (selectedCountry) {
+        filteredTeams = savedTeamsData.filter(t => t.country === selectedCountry);
+    }
+
+    // 2. Build Options
     let optionsHTML = '<option value="">-- Select Team --</option>';
-    savedTeamsData.forEach(t => {
+    filteredTeams.forEach(t => {
         optionsHTML += `<option value="${t.name}">${t.name}</option>`;
     });
 
+    // 3. Render Cards with Logo Logic
     for (let i = 0; i < totalTeams; i++) {
         const div = document.createElement('div');
-        div.className = "flex items-center gap-2 bg-gray-50 p-2 rounded-lg border border-gray-100";
+        div.className = "mobile-card flex items-center gap-3 p-4";
         div.innerHTML = `
-            <div class="w-6 h-6 rounded-full bg-white border border-gray-300 flex items-center justify-center font-bold text-[9px] text-gray-500">${i+1}</div>
-            <select class="tourney-team-select w-full bg-transparent text-xs font-bold outline-none uppercase cursor-pointer">
-                ${optionsHTML}
-            </select>
+            <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-black text-xs border border-blue-100 shadow-sm">${i+1}</div>
+            
+            <img class="team-slot-logo w-10 h-10 rounded-full object-cover border border-gray-200 hidden bg-gray-100">
+            
+            <div class="flex-grow">
+                <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1">Select Team</label>
+                <select onchange="updateSlotLogo(this)" class="tourney-team-select w-full bg-transparent text-sm font-bold text-gray-800 outline-none uppercase cursor-pointer">
+                    ${optionsHTML}
+                </select>
+            </div>
+            <div class="text-gray-300 text-[10px]">▼</div>
         `;
         container.appendChild(div);
+    }
+}
+
+// Helper to update the logo when a user picks a team
+function updateSlotLogo(selectEl) {
+    const card = selectEl.closest('.mobile-card');
+    const imgEl = card.querySelector('.team-slot-logo');
+    const teamName = selectEl.value;
+
+    if (!teamName) {
+        imgEl.classList.add('hidden');
+        return;
+    }
+
+    const team = savedTeamsData.find(t => t.name === teamName);
+    if (team && team.logo) {
+        imgEl.src = team.logo;
+        imgEl.classList.remove('hidden');
+    } else {
+        // Fallback if no logo
+        imgEl.src = `https://placehold.co/40x40/gray/white?text=${teamName.substring(0,2)}`;
+        imgEl.classList.remove('hidden');
     }
 }
 
@@ -4522,8 +4695,6 @@ function backToTournamentSetup() {
 }
 
 function autoGenerateFixtures() {
-    if(!confirm("Auto-generate schedule? This will reset the fixture list.")) return;
-    
     // 1. Get Teams
     const teams = [];
     document.querySelectorAll('.tourney-team-select').forEach(sel => {
@@ -4535,90 +4706,131 @@ function autoGenerateFixtures() {
         return;
     }
 
-    // 2. Clear Table
+    // 2. Ask User for Balance
+    const suggested = teams.length % 2 === 0 ? teams.length - 1 : teams.length;
+    const input = prompt(`How many matches should each team play?\n(Enter ${suggested} for a full Round Robin)`, suggested);
+    if (!input || isNaN(input)) return;
+    const roundsToPlay = parseInt(input);
+
+    if(!confirm(`This will generate ${roundsToPlay} rounds of fixtures. Existing schedule will be cleared. Continue?`)) return;
+
+    // 3. Clear Table
     document.getElementById('schedule-rows').innerHTML = '';
 
-    // 3. Round Robin Logic (League Matches)
-    for(let i=0; i<teams.length; i++) {
-        for(let j=i+1; j<teams.length; j++) {
-            addScheduleRow('League Match', { t1: teams[i], t2: teams[j] });
+    // 4. Fair Scheduling Algorithm (Circle Method)
+    // Ensures equal breaks and correct distribution
+    let pool = [...teams];
+    if (pool.length % 2 !== 0) pool.push(null); // Add dummy for Bye
+
+    const totalTeams = pool.length;
+    const half = totalTeams / 2;
+
+    for (let r = 0; r < roundsToPlay; r++) {
+        // Generate pairs for this round
+        for (let i = 0; i < half; i++) {
+            const t1 = pool[i];
+            const t2 = pool[totalTeams - 1 - i];
+
+            // If neither is a dummy (Bye), schedule the match
+            if (t1 && t2) {
+                addScheduleRow('League Match', { t1: t1, t2: t2 });
+            }
         }
+
+        // Rotate the pool for next round (Fix 1st, rotate rest)
+        // [0, 1, 2, 3] becomes [0, 3, 1, 2]
+        const fixed = pool[0];
+        const rotated = pool.slice(1);
+        const last = rotated.pop();
+        rotated.unshift(last);
+        pool = [fixed, ...rotated];
     }
 
-    // 4. Knockout Stages Logic
-    // If 4 or more teams, add Semi Finals
+    // 5. Knockout Stages Logic
     if (teams.length >= 4) {
-        addScheduleRow('Semi Final 1'); // Defaults to TBD vs TBD
+        addScheduleRow('Semi Final 1');
         addScheduleRow('Semi Final 2');
     }
-
-    // 5. Always add Final (Ensures exactly one final)
     addScheduleRow('Final');
 }
 
 function addScheduleRow(defaultType = 'League Match', preFill = null) {
-    const tbody = document.getElementById('schedule-rows');
+    const container = document.getElementById('schedule-rows');
 
-    // FIX: Prevent Duplicate Finals
     if (defaultType === 'Final') {
-        const existingFinal = Array.from(tbody.querySelectorAll('.sch-type')).find(sel => sel.value === 'Final');
+        const existingFinal = Array.from(container.querySelectorAll('.sch-type')).find(sel => sel.value === 'Final');
         if (existingFinal) {
             showCustomAlert("Info", "A Final match already exists.", "blue");
             return;
         }
     }
 
-    const rowId = `sched-row-${Date.now()}`;
-    const matchNo = tbody.children.length + 1;
+    const cardId = `sched-card-${Date.now()}`;
+    const matchNo = container.children.length + 1;
     
-    const tr = document.createElement('tr');
-    tr.id = rowId;
-    tr.className = "hover:bg-blue-50/30 transition-colors cursor-grab active:cursor-grabbing border-b border-gray-50";
+    const card = document.createElement('div');
+    card.id = cardId;
+    card.className = "sch-card mobile-card p-0 overflow-hidden shadow-sm"; 
     
-    tr.innerHTML = `
-        <td class="p-2 text-center text-gray-300 font-mono text-[10px] select-none">☰ ${matchNo}</td>
-        <td class="p-2">
-            <select class="sch-type w-full bg-transparent outline-none border-b border-gray-200 pb-1 text-[10px] uppercase font-bold text-gray-500">
-                ${TOURNAMENT_ROUNDS.map(r => `<option value="${r}" ${r===defaultType?'selected':''}>${r}</option>`).join('')}
-            </select>
-        </td>
-        <td class="p-2 relative">
-             <div class="flex items-center gap-1">
-                <img class="sch-img-t1 w-5 h-5 rounded-full bg-gray-100 object-cover hidden">
-                <select onchange="handleScheduleSelection(this)" class="sch-t1 w-full bg-transparent outline-none border-b border-transparent focus:border-blue-500 pb-1 uppercase font-bold text-blue-900 cursor-pointer text-[10px] md:text-xs"></select>
-             </div>
-        </td>
-        <td class="p-2 text-center text-[9px] text-gray-300">vs</td>
-        <td class="p-2 relative">
-             <div class="flex items-center gap-1">
-                <img class="sch-img-t2 w-5 h-5 rounded-full bg-gray-100 object-cover hidden">
-                <select onchange="handleScheduleSelection(this)" class="sch-t2 w-full bg-transparent outline-none border-b border-transparent focus:border-blue-500 pb-1 uppercase font-bold text-red-900 cursor-pointer text-[10px] md:text-xs"></select>
-             </div>
-        </td>
-        <td class="p-2"><select class="sch-ground w-full bg-transparent outline-none border-b border-gray-200 pb-1 text-[9px] text-gray-500 font-bold"></select></td>
-        <td class="p-2"><input type="datetime-local" class="sch-time w-full bg-transparent outline-none text-[9px] font-bold text-gray-500"></td>
-        <td class="p-2 text-center"><button onclick="this.closest('tr').remove()" class="text-gray-300 hover:text-red-500 font-bold text-lg">×</button></td>
-    `;
-    tbody.appendChild(tr);
+    card.innerHTML = `
+        <div class="bg-gray-50 border-b border-gray-100 p-3 flex justify-between items-center handle cursor-grab active:cursor-grabbing">
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-black text-gray-400 select-none">#${matchNo}</span>
+                <select class="sch-type bg-transparent text-[10px] font-bold text-blue-600 uppercase outline-none">
+                    ${TOURNAMENT_ROUNDS.map(r => `<option value="${r}" ${r===defaultType?'selected':''}>${r}</option>`).join('')}
+                </select>
+            </div>
+            <button onclick="this.closest('.sch-card').remove()" class="text-gray-300 hover:text-red-500 font-bold p-1">✕</button>
+        </div>
+        
+        <div class="p-4">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="flex-1">
+                    <label class="text-[9px] font-bold text-gray-400 uppercase block mb-1">Team A</label>
+                    <div class="flex items-center gap-2">
+                        <img class="sch-img-t1 w-8 h-8 rounded-full border border-gray-100 object-cover hidden bg-gray-100">
+                        <select onchange="handleScheduleSelection(this)" class="sch-t1 w-full bg-gray-50 p-2 rounded-lg text-xs font-bold text-gray-800 outline-none border border-gray-200 focus:border-blue-500 transition-colors uppercase"></select>
+                    </div>
+                </div>
+                
+                <span class="text-xs font-black text-gray-300 mt-4">VS</span>
+                
+                <div class="flex-1">
+                    <label class="text-[9px] font-bold text-gray-400 uppercase block mb-1">Team B</label>
+                    <div class="flex items-center gap-2">
+                        <img class="sch-img-t2 w-8 h-8 rounded-full border border-gray-100 object-cover hidden bg-gray-100">
+                        <select onchange="handleScheduleSelection(this)" class="sch-t2 w-full bg-gray-50 p-2 rounded-lg text-xs font-bold text-gray-800 outline-none border border-gray-200 focus:border-red-500 transition-colors uppercase"></select>
+                    </div>
+                </div>
+            </div>
 
-    // AUTO SELECT LOGIC FOR FINALS OR AUTO-GEN
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="text-[9px] font-bold text-gray-400 uppercase block mb-1">Ground</label>
+                    <select class="sch-ground w-full bg-white p-2 rounded-lg text-xs font-bold text-gray-600 outline-none border border-gray-200"></select>
+                </div>
+                <div>
+                    <label class="text-[9px] font-bold text-gray-400 uppercase block mb-1">Time</label>
+                    <input type="datetime-local" class="sch-time w-full bg-white p-2 rounded-lg text-xs font-bold text-gray-600 outline-none border border-gray-200">
+                </div>
+            </div>
+        </div>
+    `;
+    container.appendChild(card);
+
     if(!preFill && defaultType === 'Final') {
         const teams = [];
         document.querySelectorAll('.tourney-team-select').forEach(sel => { if(sel.value) teams.push(sel.value); });
-        
-        // If only 2 teams exist, auto-set them for the Final
-        if(teams.length === 2) {
-            preFill = { t1: teams[0], t2: teams[1] };
-        }
+        if(teams.length === 2) { preFill = { t1: teams[0], t2: teams[1] }; }
     }
 
-    populateRowDropdowns(tr, preFill);
+    populateRowDropdowns(card, preFill);
 }
 
 function updateScheduleDropdowns() {
-    const rows = document.getElementById('schedule-rows').querySelectorAll('tr');
-    if(rows.length === 0) addScheduleRow(); 
-    else rows.forEach(row => populateRowDropdowns(row));
+    const cards = document.getElementById('schedule-rows').querySelectorAll('.sch-card');
+    if(cards.length === 0) addScheduleRow(); 
+    else cards.forEach(card => populateRowDropdowns(card));
 }
 
 function populateRowDropdowns(row, preFill = null) {
@@ -4660,12 +4872,12 @@ function populateRowDropdowns(row, preFill = null) {
 }
 
 function handleScheduleSelection(selectElement) {
-    const row = selectElement.closest('tr');
-    const s1 = row.querySelector('.sch-t1');
-    const s2 = row.querySelector('.sch-t2');
-    const img1 = row.querySelector('.sch-img-t1');
-    const img2 = row.querySelector('.sch-img-t2');
-
+    const card = selectElement.closest('.sch-card');
+    const s1 = card.querySelector('.sch-t1');
+    const s2 = card.querySelector('.sch-t2');
+    const img1 = card.querySelector('.sch-img-t1');
+    const img2 = card.querySelector('.sch-img-t2');
+    
     const v1 = s1.value;
     const v2 = s2.value;
 
@@ -4673,41 +4885,44 @@ function handleScheduleSelection(selectElement) {
     Array.from(s2.options).forEach(opt => opt.disabled = (opt.value !== "" && opt.value !== "TBD" && opt.value === v1));
     Array.from(s1.options).forEach(opt => opt.disabled = (opt.value !== "" && opt.value !== "TBD" && opt.value === v2));
 
-    // 2. Show Logo
-    const updateLogo = (teamName, imgEl) => {
-        if(!teamName || teamName === "TBD") { imgEl.classList.add('hidden'); return; }
-        const tData = savedTeamsData.find(t => t.name === teamName);
-        if(tData && tData.logo) {
-            imgEl.src = tData.logo;
-            imgEl.classList.remove('hidden');
-        } else {
+    // 2. Update Logos
+    const updateLogo = (name, imgEl) => {
+        if (!name || name === "TBD") {
             imgEl.classList.add('hidden');
+        } else {
+            const team = savedTeamsData.find(t => t.name === name);
+            if (team && team.logo) {
+                imgEl.src = team.logo;
+                imgEl.classList.remove('hidden');
+            } else {
+                // Show a placeholder or hide if no logo
+                imgEl.src = `https://placehold.co/40x40/gray/white?text=${name.substring(0,2)}`;
+                imgEl.classList.remove('hidden');
+            }
         }
     };
+
     updateLogo(v1, img1);
     updateLogo(v2, img2);
 }
 
 function createProfessionalTournament() {
-    // 1. Gather & Validate Inputs
     const name = document.getElementById('tourney-name').value;
-    // Fix: Default if missing
     const startDate = document.getElementById('tourney-start-date').value || new Date().toISOString().split('T')[0];
-    const country = "Unknown"; // Hardcoded to prevent crash as input removed
+    const country = "Unknown"; 
 
     if(!name) { showCustomAlert("Error", "Tournament Name is required", "red"); return; }
 
-    // 2. Gather Schedule
-    const rows = document.getElementById('schedule-rows').querySelectorAll('tr');
+    const cards = document.getElementById('schedule-rows').querySelectorAll('.sch-card');
     const fixtures = [];
     const tourneyId = "T_" + Math.random().toString(36).substr(2, 6).toUpperCase();
 
-    rows.forEach((row, index) => {
-        const t1 = row.querySelector('.sch-t1').value;
-        const t2 = row.querySelector('.sch-t2').value;
-        const type = row.querySelector('.sch-type').value;
-        const ground = row.querySelector('.sch-ground').value;
-        const time = row.querySelector('.sch-time').value;
+    cards.forEach((card, index) => {
+        const t1 = card.querySelector('.sch-t1').value;
+        const t2 = card.querySelector('.sch-t2').value;
+        const type = card.querySelector('.sch-type').value;
+        const ground = card.querySelector('.sch-ground').value;
+        const time = card.querySelector('.sch-time').value;
 
         if(t1 && t2) {
             fixtures.push({
@@ -4727,7 +4942,6 @@ function createProfessionalTournament() {
 
     if(fixtures.length === 0) { showCustomAlert("Error", "Schedule at least one match.", "red"); return; }
 
-    // 3. Gather Teams
     const teamsMap = [];
     const usedNames = new Set();
     document.querySelectorAll('.tourney-team-select').forEach(sel => {
@@ -4740,7 +4954,6 @@ function createProfessionalTournament() {
     
     if(teamsMap.length < 2) { showCustomAlert("Error", "Need at least 2 teams.", "red"); return; }
 
-    // 4. Construct Data
     const optimizedTeams = teamsMap.map(t => {
         const full = t.fullData;
         return {
@@ -4768,7 +4981,6 @@ function createProfessionalTournament() {
         matchStatsLog: []
     };
 
-    // 5. Save with Error Handling
     const btn = document.getElementById('btn-create-tourney');
     const originalText = btn.innerHTML;
     btn.innerHTML = "Creating... ⏳";
@@ -4945,121 +5157,97 @@ function renderFixtures() {
     board.innerHTML = '';
 
     const fixtures = tournamentState.data.fixtures || [];
+    if(fixtures.length === 0) {
+        board.innerHTML = '<div class="text-center text-gray-400 font-bold p-10">No matches scheduled</div>';
+        return;
+    }
 
-    // Define Columns (Stages)
-    const columns = [
-        { id: 'League Match', title: 'Schedule', color: 'border-blue-500' },
-        { id: 'Qualifier 1', title: 'Qualifier 1', color: 'border-purple-500' },
-        { id: 'Eliminator', title: 'Eliminator', color: 'border-purple-500' },
-        { id: 'Qualifier 2', title: 'Qualifier 2', color: 'border-purple-500' },
-        { id: 'Semi Final 1', title: 'Semi Final 1', color: 'border-indigo-500' },
-        { id: 'Semi Final 2', title: 'Semi Final 2', color: 'border-indigo-500' },
-        { id: 'Final', title: 'Grand Final', color: 'border-yellow-500' }
-    ];
+    // 1. Group by Stage
+    const grouped = {};
+    const order = TOURNAMENT_ROUNDS;
+    
+    // Sort logic
+    fixtures.sort((a,b) => (a.matchNo || 999) - (b.matchNo || 999));
 
-    // Filter used columns only (don't show empty knockout stages if not used)
-    const activeColumns = columns.filter(col => {
-        if(col.id === 'League Match') return true;
-        return fixtures.some(f => f.stage === col.id);
+    fixtures.forEach(f => {
+        if(!grouped[f.stage]) grouped[f.stage] = [];
+        grouped[f.stage].push(f);
     });
 
-    activeColumns.forEach(col => {
-        const colDiv = document.createElement('div');
-        colDiv.className = "min-w-[320px] w-[320px] flex flex-col h-full bg-white rounded-xl border-t-4 shadow-sm " + col.color;
+    // 2. Render Groups Vertically
+    Object.keys(grouped).sort((a, b) => order.indexOf(a) - order.indexOf(b)).forEach(stage => {
+        const stageGroup = document.createElement('div');
+        stageGroup.className = "mb-6";
         
-        colDiv.innerHTML = `
-            <div class="p-3 border-b border-gray-100 bg-gray-50 rounded-t-lg flex justify-between items-center">
-                <h4 class="font-black text-gray-700 uppercase text-xs tracking-wider">${col.title}</h4>
-                <span class="bg-white px-2 py-0.5 rounded text-[9px] font-bold text-gray-400 border shadow-sm count-badge">0</span>
+        stageGroup.innerHTML = `
+            <div class="flex items-center gap-3 mb-3 px-2">
+                <div class="h-4 w-1 bg-purple-600 rounded-full"></div>
+                <h4 class="font-black text-gray-800 uppercase text-sm tracking-wide">${stage}</h4>
+                <span class="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">${grouped[stage].length} Matches</span>
             </div>
-            <div class="flex-grow p-2 space-y-2 overflow-y-auto custom-scroll sortable-list min-h-[100px]" data-stage="${col.id}">
-                </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" id="group-${stage.replace(/\s/g,'-')}"></div>
         `;
+        
+        const container = stageGroup.querySelector('div[id^="group-"]');
 
-        const listContainer = colDiv.querySelector('.sortable-list');
+        grouped[stage].forEach(f => {
+            // Helper to find Logo
+            const getTeamLogo = (tName) => {
+                const team = tournamentState.data.teams.find(t => t.name === tName);
+                if(team && team.logo) return `<img src="${team.logo}" class="w-8 h-8 rounded-full border border-gray-100 object-cover">`;
+                return `<div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-bold text-[10px] text-gray-500">${tName.substring(0,2)}</div>`;
+            };
 
-        // Filter fixtures
-        const colFixtures = fixtures.filter(f => f.stage === col.id).sort((a,b) => (a.matchNo || 999) - (b.matchNo || 999));
-
-        colDiv.querySelector('.count-badge').textContent = colFixtures.length;
-
-        colFixtures.forEach(f => {
-            const card = document.createElement('div');
-            card.className = "bg-white border border-gray-200 p-3 rounded-lg shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing group relative select-none transition-transform";
-            card.setAttribute('data-id', f.id);
+            const t1Logo = getTeamLogo(f.t1);
+            const t2Logo = getTeamLogo(f.t2);
+            const status = f.status || 'UPCOMING';
             
-            let statusBadge = '';
-            let playBtn = '';
-            
-            // STATUS LOGIC
-            if(f.status === 'COMPLETED') {
-                statusBadge = `<div class="mt-2 text-center text-[10px] font-bold text-green-600 bg-green-50 rounded py-1 border border-green-100 uppercase">${f.result}</div>`;
-                card.classList.add('opacity-80');
-            } else if (f.status === 'LIVE') {
-                statusBadge = `<button onclick="event.stopPropagation(); resumeMatch('${f.broadcastId}')" class="mt-2 w-full text-[10px] font-bold text-white bg-red-500 rounded py-1 animate-pulse">LIVE ◉</button>`;
+            let actionBtn = '';
+            if(status === 'COMPLETED') {
+                actionBtn = `<span class="text-[10px] font-bold text-green-600 bg-green-50 px-3 py-1 rounded-lg uppercase border border-green-100 block w-full text-center">${f.result}</span>`;
+            } else if (status === 'LIVE') {
+                actionBtn = `<button onclick="resumeMatch('${f.broadcastId}')" class="w-full py-2 bg-red-500 text-white font-bold text-xs rounded-lg uppercase animate-pulse shadow-red-200 shadow-lg">Watch Live ◉</button>`;
             } else {
-                // Only show PLAY if teams are decided
-                if (f.t1 !== 'TBD' && f.t2 !== 'TBD') {
-                    playBtn = `<button onclick="event.stopPropagation(); startTournamentMatch('${f.id}')" class="text-[10px] bg-gray-900 text-white px-3 py-1.5 rounded-lg font-bold hover:scale-105 transition-transform uppercase tracking-wider">Start Match</button>`;
-                } else {
-                    playBtn = `<span class="text-[10px] font-bold text-gray-300 italic">Waiting...</span>`;
-                }
+                 if (f.t1 !== 'TBD' && f.t2 !== 'TBD') {
+                    actionBtn = `<button onclick="startTournamentMatch('${f.id}')" class="w-full py-2 bg-gray-900 text-white font-bold text-xs rounded-lg uppercase shadow-lg active:scale-95 transition-transform">Start Match ▶</button>`;
+                 } else {
+                    actionBtn = `<button disabled class="w-full py-2 bg-gray-100 text-gray-400 font-bold text-xs rounded-lg uppercase cursor-not-allowed">Waiting...</button>`;
+                 }
             }
 
-            const t1Text = f.t1 === "TBD" ? `<span class="text-gray-300 italic">TBD</span>` : f.t1;
-            const t2Text = f.t2 === "TBD" ? `<span class="text-gray-300 italic">TBD</span>` : f.t2;
-            const matchNo = f.matchNo ? `#${f.matchNo}` : '';
-            const ground = f.ground || 'Main Ground';
-            const time = f.time || 'TBD';
-
-            // SCHEDULE SHEET CARD LAYOUT
+            const card = document.createElement('div');
+            card.className = "bg-white p-4 rounded-2xl shadow-sm border border-gray-100 relative group transition-all hover:shadow-md";
+            
             card.innerHTML = `
-                <div class="flex justify-between items-start mb-2 border-b border-gray-50 pb-1">
-                    <span class="text-[9px] font-bold text-gray-400 uppercase">${matchNo} • ${ground}</span>
-                    <button onclick="event.stopPropagation(); deleteFixture('${f.id}')" class="text-gray-300 hover:text-red-500 font-bold px-1">×</button>
+                <div class="flex justify-between items-start mb-4 border-b border-gray-50 pb-2">
+                    <div>
+                        <span class="block text-[10px] font-black text-gray-400 uppercase tracking-wider">Match #${f.matchNo}</span>
+                        <span class="block text-[10px] font-bold text-gray-500">${f.ground || 'Main Ground'} • ${f.time || 'TBD'}</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="openEditMatchModal('${f.id}')" class="text-gray-300 hover:text-blue-500">✎</button>
+                        <button onclick="deleteFixture('${f.id}')" class="text-gray-300 hover:text-red-500">×</button>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex flex-col items-center gap-1 w-[40%] text-center">
+                        ${t1Logo}
+                        <span class="text-[10px] font-black text-gray-800 uppercase leading-tight">${f.t1}</span>
+                    </div>
+                    <div class="font-black text-gray-300 text-xs">VS</div>
+                    <div class="flex flex-col items-center gap-1 w-[40%] text-center">
+                        ${t2Logo}
+                        <span class="text-[10px] font-black text-gray-800 uppercase leading-tight">${f.t2}</span>
+                    </div>
                 </div>
                 
-                <div class="flex items-center justify-between mb-3" onclick="openEditMatchMode('${f.id}')">
-                    <div class="text-xs font-black text-gray-800 uppercase w-5/12 truncate text-right">${t1Text}</div>
-                    <div class="text-[9px] font-bold text-gray-300 mx-1">vs</div>
-                    <div class="text-xs font-black text-gray-800 uppercase w-5/12 truncate text-left">${t2Text}</div>
-                </div>
-
-                <div class="flex justify-between items-center pt-2">
-                    <div class="flex flex-col">
-                        <span class="text-[8px] font-bold text-gray-400 uppercase">Time</span>
-                        <span class="text-[10px] font-bold text-gray-600">${time}</span>
-                    </div>
-                    <div class="flex gap-2 items-center">
-                        <button onclick="openEditMatchModal('${f.id}')" class="text-[10px] font-bold text-blue-500 uppercase hover:underline">Edit</button>
-                        ${playBtn}
-                    </div>
-                </div>
-                ${statusBadge}
+                ${actionBtn}
             `;
-            
-            listContainer.appendChild(card);
+            container.appendChild(card);
         });
 
-        // Initialize Sortable
-        new Sortable(listContainer, {
-            group: 'fixtures', 
-            animation: 150,
-            ghostClass: 'bg-blue-50',
-            handle: '.cursor-grab', // Drag by whole card
-            onEnd: function (evt) {
-                const itemEl = evt.item;
-                const newStage = evt.to.getAttribute('data-stage');
-                const matchId = itemEl.getAttribute('data-id');
-                const f = tournamentState.data.fixtures.find(x => x.id === matchId);
-                if(f) {
-                    f.stage = newStage;
-                    saveTournamentData();
-                }
-            }
-        });
-
-        board.appendChild(colDiv);
+        board.appendChild(stageGroup);
     });
 }
 
@@ -5156,6 +5344,20 @@ function startTournamentMatch(fixtureId) {
     state.tournamentId = tournamentState.id;
     state.fixtureId = fixtureId;
     
+    // --- FIX: FORCE RESET GAME LOGIC VARIABLES ---
+    state.innings = 1;
+    state.target = 0;
+    state.currentOver = [];
+    state.history = [];
+    state.timeline = [];
+    state.isSuperOver = false;
+    state.striker = null;
+    state.nonStriker = null;
+    state.bowler = null;
+    state.battingTeam = 'team1'; // Will be confirmed after Toss
+    state.bowlingTeam = 'team2';
+    // ---------------------------------------------
+
     // 4. Load Config
     state.totalOvers = fixture.overs || tournamentState.data.rules.overs || 16;
     state.playersPerSide = tournamentState.data.rules.players || 8;
@@ -5171,7 +5373,6 @@ function startTournamentMatch(fixtureId) {
     state.team2 = t2Ready;
     
     // 6. Reset Squads (Clean Slate for Step 2)
-    // We do NOT auto-fill players here. We let Step 2 (generateUnifiedRoster) handle selection.
     ['team1', 'team2'].forEach(k => {
         state[k].playerStats = {};
         state[k].playing = [];
@@ -5199,7 +5400,6 @@ function startTournamentMatch(fixtureId) {
     saveTournamentData();
 
     // 9. ROUTE TO STEP 2 (Professional Flow)
-    // This allows captains to verify/change squads before toss, ensuring "Single Match" identical logic.
     showScreen('setup-screen');
     goToStep(2);
 }
