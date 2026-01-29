@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tournament Viewer - Cricker</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; }
+        .watermark { position: fixed; bottom: 10px; right: 10px; font-size: 10px; font-weight: bold; color: #cbd5e1; opacity: 0.5; pointer-events: none; }
+        .custom-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body class="min-h-screen pb-10">
+
+    <div id="loader" class="fixed inset-0 flex items-center justify-center bg-white z-50">
+        <div class="animate-pulse flex flex-col items-center">
+            <div class="w-12 h-12 bg-gray-200 rounded-full mb-4"></div>
+            <div class="h-4 w-32 bg-gray-200 rounded"></div>
+        </div>
+    </div>
+
+    <div id="content" class="hidden max-w-3xl mx-auto px-4 py-8">
+        
+        <header class="mb-8 text-center">
+            <div class="inline-block bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-3" id="t-status">UPCOMING</div>
+            <h1 id="t-name" class="text-3xl md:text-4xl font-black text-gray-900 uppercase leading-tight tracking-tight mb-2">Tournament Name</h1>
+            <div class="flex items-center justify-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wide">
+                <span id="t-category">Category</span>
+                <span>•</span>
+                <span id="t-location">Location</span>
+                <span>•</span>
+                <span id="t-date">Date</span>
+            </div>
+        </header>
+
+        <section class="mb-10 animate-fade-in">
+            <h2 class="text-sm font-black text-gray-900 uppercase tracking-wide mb-4 flex items-center gap-2">
+                <span class="w-1 h-5 bg-blue-600 rounded-full"></span>
+                Points Table
+            </h2>
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="overflow-x-auto custom-scroll">
+                    <table class="w-full text-left whitespace-nowrap">
+                        <thead>
+                            <tr class="bg-gray-50 border-b border-gray-100 text-[10px] font-black uppercase text-gray-400 tracking-wider">
+                                <th class="p-4 pl-6">Team</th>
+                                <th class="p-4 text-center">P</th>
+                                <th class="p-4 text-center">W</th>
+                                <th class="p-4 text-center">L</th>
+                                <th class="p-4 text-center">NRR</th>
+                                <th class="p-4 pr-6 text-center text-blue-600">PTS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="standings-body" class="text-xs font-bold text-gray-700 divide-y divide-gray-50">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section class="animate-fade-in" style="animation-delay: 100ms;">
+            <h2 class="text-sm font-black text-gray-900 uppercase tracking-wide mb-4 flex items-center gap-2">
+                <span class="w-1 h-5 bg-purple-600 rounded-full"></span>
+                Match Schedule
+            </h2>
+            <div id="schedule-list" class="space-y-3">
+                </div>
+        </section>
+
+    </div>
+
+    <div id="error-msg" class="hidden fixed inset-0 flex items-center justify-center bg-white z-50 text-center p-6">
+        <div>
+            <div class="text-4xl mb-2">⚠️</div>
+            <h2 class="text-lg font-black text-gray-900 uppercase">Tournament Not Found</h2>
+            <p class="text-xs text-gray-500 mt-2">Check the ID or ask the organizer for a new link.</p>
+        </div>
+    </div>
+
+    <div class="watermark">Powered by Crickerr</div>
+
+    <script>
+        // --- FIREBASE CONFIG (Read Only) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBqcD59IAPpKqk98oDZkgzgkoVZ8b8LGgY",
+            authDomain: "livecricketscoring-92087.firebaseapp.com",
+            databaseURL: "https://livecricketscoring-92087-default-rtdb.firebaseio.com",
+            projectId: "livecricketscoring-92087",
+            storageBucket: "livecricketscoring-92087.firebasestorage.app",
+            messagingSenderId: "522927197627",
+            appId: "1:522927197627:web:f1df5db736cae96893089e"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // --- VIEWER LOGIC ---
+        window.onload = function() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+
+            if (!id) {
+                showError();
+                return;
+            }
+
+            db.collection("tournaments").doc(id).get()
+                .then(doc => {
+                    if (!doc.exists) {
+                        showError();
+                    } else {
+                        renderTournament(doc.data());
+                    }
+                })
+                .catch(err => showError());
+        };
+
+        function showError() {
+            document.getElementById('loader').classList.add('hidden');
+            document.getElementById('error-msg').classList.remove('hidden');
+        }
+
+        function renderTournament(data) {
+            // 1. Header
+            const meta = data.meta;
+            document.getElementById('t-name').textContent = meta.name;
+            document.getElementById('t-category').textContent = meta.category || "Open";
+            document.getElementById('t-location').textContent = meta.country || "Global";
+            document.getElementById('t-date').textContent = meta.startDate;
+            
+            // Status Logic (Simple Check)
+            const completedCount = data.fixtures.filter(f => f.status === 'COMPLETED').length;
+            const totalCount = data.fixtures.length;
+            const statusEl = document.getElementById('t-status');
+            
+            if (completedCount === totalCount && totalCount > 0) {
+                statusEl.textContent = "COMPLETED";
+                statusEl.className = "inline-block bg-green-50 text-green-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-3";
+            } else if (completedCount > 0) {
+                statusEl.textContent = "LIVE NOW";
+                statusEl.className = "inline-block bg-red-50 text-red-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-3 animate-pulse";
+            }
+
+            // 2. Standings
+            const tbody = document.getElementById('standings-body');
+            const sortedStandings = data.standings.sort((a,b) => b.pts - a.pts || b.nrr - a.nrr);
+            
+            tbody.innerHTML = sortedStandings.map((t, i) => `
+                <tr class="hover:bg-gray-50 transition-colors group">
+                    <td class="p-4 pl-6 flex items-center gap-3">
+                        <span class="font-mono text-gray-300 text-[10px]">${i+1}</span>
+                        <span class="font-bold text-gray-800 group-hover:text-blue-600 transition-colors">${t.name}</span>
+                    </td>
+                    <td class="p-4 text-center text-gray-400 font-mono">${t.p}</td>
+                    <td class="p-4 text-center text-green-600 font-bold bg-green-50/30 rounded-lg">${t.w}</td>
+                    <td class="p-4 text-center text-red-400 font-medium">${t.l}</td>
+                    <td class="p-4 text-center text-gray-500 font-mono text-[10px]">${t.nrr.toFixed(3)}</td>
+                    <td class="p-4 pr-6 text-center text-lg font-black text-blue-900 bg-blue-50/30">${t.pts}</td>
+                </tr>
+            `).join('');
+
+            // 3. Schedule
+            const list = document.getElementById('schedule-list');
+            const fixtures = data.fixtures.sort((a,b) => a.matchNo - b.matchNo);
+            
+            list.innerHTML = fixtures.map(f => {
+                let badge = "";
+                let resultRow = "";
+                
+                if (f.status === 'COMPLETED') {
+                    badge = `<span class="bg-gray-100 text-gray-500 text-[9px] font-black px-2 py-0.5 rounded uppercase">Finished</span>`;
+                    resultRow = `<div class="mt-3 text-center text-[10px] font-bold text-green-600 uppercase bg-green-50 py-1 rounded border border-green-100">${f.result}</div>`;
+                } else if (f.status === 'LIVE') {
+                    badge = `<span class="bg-red-100 text-red-600 text-[9px] font-black px-2 py-0.5 rounded uppercase animate-pulse">● LIVE</span>`;
+                } else {
+                    badge = `<span class="bg-blue-50 text-blue-600 text-[9px] font-black px-2 py-0.5 rounded uppercase">${f.time || 'Upcoming'}</span>`;
+                }
+
+                const isFinal = f.stage.includes('Final');
+                const borderClass = isFinal ? 'border-yellow-200 shadow-yellow-50' : 'border-gray-100';
+
+                return `
+                <div class="bg-white p-4 rounded-xl border ${borderClass} shadow-sm flex flex-col relative overflow-hidden">
+                    ${isFinal ? '<div class="absolute top-0 left-0 w-1 h-full bg-yellow-400"></div>' : ''}
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-[9px] font-black text-gray-300 uppercase tracking-wider">${f.stage} • ${f.ground || 'Main Ground'}</span>
+                        ${badge}
+                    </div>
+                    <div class="flex justify-between items-center px-2">
+                        <div class="w-5/12 text-center">
+                            <div class="text-xs font-black text-gray-800 uppercase truncate">${f.t1}</div>
+                        </div>
+                        <div class="text-[10px] font-black text-gray-300">VS</div>
+                        <div class="w-5/12 text-center">
+                            <div class="text-xs font-black text-gray-800 uppercase truncate">${f.t2}</div>
+                        </div>
+                    </div>
+                    ${resultRow}
+                </div>
+                `;
+            }).join('');
+
+            // Show Content
+            document.getElementById('loader').classList.add('hidden');
+            document.getElementById('content').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
