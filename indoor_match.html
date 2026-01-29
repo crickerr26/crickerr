@@ -1907,7 +1907,48 @@ function broadcastMatchResult() {
 
             loadSavedTeams();
             showScreen('setup-screen');
+            setupGlobalEnterNavigation(); // Initialize Global Navigation
         };
+
+        // --- GLOBAL KEYBOARD NAVIGATION (PROFESSIONAL UX) ---
+        function setupGlobalEnterNavigation() {
+            document.addEventListener('keydown', (e) => {
+                // Logic: Enter key acts as Tab for data entry
+                if (e.key !== 'Enter') return;
+
+                const target = e.target;
+                
+                // Allow standard Enter behavior for Buttons, Links, and Textareas
+                if (['BUTTON', 'A', 'TEXTAREA'].includes(target.tagName)) return;
+
+                // 1. Identify all potentially focusable inputs/selects
+                const selector = 'input:not([type="hidden"]):not([disabled]), select:not([disabled])';
+                const allElements = Array.from(document.querySelectorAll(selector));
+                
+                // 2. Filter for ONLY visible elements (Handling SPA hidden sections)
+                // We check offsetParent or dimensions to ensure the user can actually see it
+                const visibleElements = allElements.filter(el => {
+                    return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length) &&
+                           window.getComputedStyle(el).visibility !== 'hidden';
+                });
+
+                const index = visibleElements.indexOf(target);
+
+                if (index > -1 && index < visibleElements.length - 1) {
+                    e.preventDefault(); // Prevent premature form submission
+                    const nextEl = visibleElements[index + 1];
+                    nextEl.focus();
+                    
+                    // UX Polish: Auto-select text in inputs for rapid overwrite
+                    if (nextEl.tagName === 'INPUT' && ['text', 'number', 'tel', 'email'].includes(nextEl.type)) {
+                        nextEl.select();
+                    }
+                } else if (index === visibleElements.length - 1) {
+                    // Last field: Blur to close mobile keyboard or indicate completion
+                    target.blur();
+                }
+            });
+        }
 
         function showScreen(id) {
             document.querySelectorAll('body > div').forEach(d => {
