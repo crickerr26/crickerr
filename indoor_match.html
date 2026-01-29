@@ -15,7 +15,6 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-    
 <style>
     /* --- Base Styles --- */
     body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; color: #000000; }
@@ -539,6 +538,22 @@
 
 <div id="tournament-setup" class="setup-step hidden w-full md:max-w-5xl mx-auto bg-[#F8F9FA] min-h-screen font-sans">
     
+    <style>
+        /* Professional Animations for this section */
+        @keyframes slideUpFade {
+            from { transform: translateY(15px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-slide-up { animation: slideUpFade 0.4s ease-out forwards; }
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+
+        /* Wizard Stepper Active States */
+        .step-active-bg { background-color: #1e3a8a !important; color: white !important; }
+        .step-active-line { background-color: #1e3a8a !important; width: 100% !important; }
+    </style>
+
     <div class="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
         <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
             <button onclick="backToModeSelect()" class="group flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors px-2 py-1 rounded hover:bg-gray-100">
@@ -548,24 +563,24 @@
             
             <div class="flex items-center gap-2">
                  <div class="flex items-center gap-1">
-                    <div id="step-dot-1" class="w-6 h-6 rounded-full bg-blue-900 text-white text-[10px] font-bold flex items-center justify-center">1</div>
-                    <div class="w-8 h-0.5 bg-gray-200 rounded-full">
-                        <div id="step-line-1" class="h-full bg-blue-900 w-0 transition-all duration-500"></div>
+                    <div id="wiz-dot-1" class="w-6 h-6 rounded-full bg-blue-900 text-white text-[10px] font-bold flex items-center justify-center transition-all duration-300">1</div>
+                    <div class="w-8 h-0.5 bg-gray-200 rounded-full overflow-hidden">
+                        <div id="wiz-line-1" class="h-full bg-gray-200 w-0 transition-all duration-500"></div>
                     </div>
                  </div>
                  <div class="flex items-center gap-1">
-                    <div id="step-dot-2" class="w-6 h-6 rounded-full bg-gray-200 text-gray-500 text-[10px] font-bold flex items-center justify-center transition-colors">2</div>
-                    <div class="w-8 h-0.5 bg-gray-200 rounded-full">
-                        <div id="step-line-2" class="h-full bg-blue-900 w-0 transition-all duration-500"></div>
+                    <div id="wiz-dot-2" class="w-6 h-6 rounded-full bg-gray-200 text-gray-400 text-[10px] font-bold flex items-center justify-center transition-all duration-300">2</div>
+                    <div class="w-8 h-0.5 bg-gray-200 rounded-full overflow-hidden">
+                        <div id="wiz-line-2" class="h-full bg-gray-200 w-0 transition-all duration-500"></div>
                     </div>
                  </div>
                  <div class="flex items-center gap-1">
-                    <div id="step-dot-3" class="w-6 h-6 rounded-full bg-gray-200 text-gray-500 text-[10px] font-bold flex items-center justify-center transition-colors">3</div>
-                    <div class="w-8 h-0.5 bg-gray-200 rounded-full">
-                        <div id="step-line-3" class="h-full bg-blue-900 w-0 transition-all duration-500"></div>
+                    <div id="wiz-dot-3" class="w-6 h-6 rounded-full bg-gray-200 text-gray-400 text-[10px] font-bold flex items-center justify-center transition-all duration-300">3</div>
+                    <div class="w-8 h-0.5 bg-gray-200 rounded-full overflow-hidden">
+                        <div id="wiz-line-3" class="h-full bg-gray-200 w-0 transition-all duration-500"></div>
                     </div>
                  </div>
-                 <div id="step-dot-4" class="w-6 h-6 rounded-full bg-gray-200 text-gray-500 text-[10px] font-bold flex items-center justify-center transition-colors">4</div>
+                 <div id="wiz-dot-4" class="w-6 h-6 rounded-full bg-gray-200 text-gray-400 text-[10px] font-bold flex items-center justify-center transition-all duration-300">4</div>
             </div>
             
             <div class="w-20 text-right">
@@ -574,7 +589,7 @@
         </div>
     </div>
 
-    <div id="tourney-page-1" class="w-full relative pb-40 animate-pop">
+    <div id="tourney-page-1" class="w-full relative pb-40 animate-slide-up">
         <div class="max-w-3xl mx-auto px-4 mt-8 space-y-8">
             
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -605,7 +620,7 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden animate-slide-up delay-100">
                 <div class="bg-gray-50 px-6 py-3 border-b border-gray-200 flex items-center gap-2">
                     <span class="text-blue-600 font-bold text-lg">02.</span>
                     <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Logistics</h3>
@@ -667,7 +682,7 @@
 
         <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-50">
             <div class="max-w-3xl mx-auto flex justify-end">
-                <button onclick="nextTourneyStep()" class="px-8 py-3 bg-blue-900 text-white font-bold rounded-lg shadow hover:bg-black transition-all active:scale-[0.98] flex items-center gap-2 uppercase tracking-wide text-xs">
+                <button onclick="updateStepper(2); nextTourneyStep()" class="px-8 py-3 bg-blue-900 text-white font-bold rounded-lg shadow hover:bg-black transition-all active:scale-[0.98] flex items-center gap-2 uppercase tracking-wide text-xs">
                     <span>Next: Rules</span>
                     <span>→</span>
                 </button>
@@ -675,7 +690,7 @@
         </div>
     </div>
 
-    <div id="tourney-page-2" class="hidden w-full relative pb-40 animate-pop">
+    <div id="tourney-page-2" class="hidden w-full relative pb-40 animate-slide-up">
         <div class="max-w-3xl mx-auto px-4 mt-8 space-y-8">
             
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -713,9 +728,113 @@
                  <input type="hidden" id="tourney-wickets" value="10">
             </div>
 
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="bg-gray-50 px-6 py-3 border-b border-gray-200 flex items-center gap-2">
+                        <span class="text-blue-600 font-bold text-lg">04.</span>
+                        <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide">League Configuration</h3>
+                    </div>
+                    <div class="p-4 space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Total Teams</label>
+                                <select id="tourney-team-count" onchange="renderTournamentSlots()" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs font-bold text-gray-800 outline-none focus:border-blue-500">
+                                    <option value="" selected disabled>Select...</option>
+                                    <option value="2">2 Teams</option>
+                                    <option value="3">3 Teams</option>
+                                    <option value="4">4 Teams</option>
+                                    <option value="5">5 Teams</option>
+                                    <option value="6">6 Teams</option>
+                                    <option value="8">8 Teams</option>
+                                    <option value="10">10 Teams</option>
+                                    <option value="12">12 Teams</option>
+                                    <option value="14">14 Teams</option>
+                                    <option value="16">16 Teams</option>
+                                    <option value="18">18 Teams</option>
+                                    <option value="20">20 Teams</option>
+                                    <option value="24">24 Teams</option>
+                                    <option value="32">32 Teams</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Group Stage</label>
+                                <select id="tourney-group-mode" onchange="renderTournamentSlots()" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs font-bold text-gray-800 outline-none focus:border-blue-500">
+                                    <option value="1" selected>1 Single Group</option>
+                                    <option value="2">2 Groups (A-B)</option>
+                                    <option value="3">3 Groups (A-C)</option>
+                                    <option value="4">4 Groups (A-D)</option>
+                                    <option value="5">5 Groups (A-E)</option>
+                                    <option value="6">6 Groups (A-F)</option>
+                                    <option value="8">8 Groups (A-H)</option>
+                                    <option value="10">10 Groups (A-J)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Matches Per Team</label>
+                            <div class="relative">
+                                <select id="tourney-rounds-count" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs font-bold text-gray-800 outline-none focus:border-blue-500 appearance-none">
+                                    <option value="1" selected>1 Match</option>
+                                    <option value="2">2 Matches</option>
+                                    <option value="3">3 Matches</option>
+                                    <option value="4">4 Matches</option>
+                                    <option value="5">5 Matches</option>
+                                    <option value="6">6 Matches</option>
+                                    <option value="7">7 Matches</option>
+                                    <option value="8">8 Matches</option>
+                                    <option value="9">9 Matches</option>
+                                    <option value="10">10 Matches</option>
+                                    <option value="11">11 Matches</option>
+                                    <option value="12">12 Matches</option>
+                                    <option value="13">13 Matches</option>
+                                    <option value="14">14 Matches</option>
+                                    <option value="15">15 Matches</option>
+                                    <option value="16">16 Matches</option>
+                                    <option value="17">17 Matches</option>
+                                    <option value="18">18 Matches</option>
+                                    <option value="19">19 Matches</option>
+                                    <option value="20">20 Matches</option>
+                                </select>
+                                <div class="absolute right-3 top-2.5 pointer-events-none text-gray-400 text-[10px]">▼</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Qualification Rule</label>
+                            <select id="tourney-qualify-rule" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs font-bold text-gray-800 outline-none focus:border-blue-500">
+                                <option value="TOP_4">Top 4 Teams Qualify (Semis)</option>
+                                <option value="TOP_2">Top 2 Teams Qualify (Final)</option>
+                                <option value="TOP_8">Top 8 Teams Qualify (Quarters)</option>
+                                <option value="TOP_1">Table Topper Declared Winner</option>
+                                <option value="GROUP_TOP">Group Toppers Only</option>
+                                <option value="GROUP_TOP_2">Top 2 from Each Group</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                     <div class="bg-gray-50 px-6 py-3 border-b border-gray-200 flex items-center gap-2">
+                        <span class="text-blue-600 font-bold text-lg">05.</span>
+                        <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Points System</h3>
+                    </div>
+                    <div class="p-4 grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[9px] font-bold text-green-600 uppercase mb-1">Win</label>
+                            <input type="number" value="2" class="w-full border border-gray-200 rounded p-2 text-center font-bold text-sm outline-none focus:ring-1 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-bold text-blue-600 uppercase mb-1">Tie / NR</label>
+                            <input type="number" value="1" class="w-full border border-gray-200 rounded p-2 text-center font-bold text-sm outline-none focus:ring-1 focus:ring-blue-500">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden animate-slide-up delay-100">
                 <div class="bg-gray-50 px-6 py-3 border-b border-gray-200 flex items-center gap-2">
-                    <span class="text-blue-600 font-bold text-lg">04.</span>
+                    <span class="text-blue-600 font-bold text-lg">06.</span>
                     <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Penalties & Ball Type</h3>
                 </div>
                 
@@ -764,10 +883,10 @@
 
         <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-50">
             <div class="max-w-3xl mx-auto flex justify-between">
-                <button onclick="document.getElementById('tourney-page-2').classList.add('hidden'); document.getElementById('tourney-page-1').classList.remove('hidden');" class="px-6 py-3 text-gray-500 font-bold text-xs uppercase hover:text-gray-900">
+                <button onclick="updateStepper(1); document.getElementById('tourney-page-2').classList.add('hidden'); document.getElementById('tourney-page-1').classList.remove('hidden');" class="px-6 py-3 text-gray-500 font-bold text-xs uppercase hover:text-gray-900">
                     ← Back
                 </button>
-                <button onclick="nextTourneyStep()" class="px-8 py-3 bg-blue-900 text-white font-bold rounded-lg shadow hover:bg-black transition-all active:scale-[0.98] flex items-center gap-2 uppercase tracking-wide text-xs">
+                <button onclick="updateStepper(3); nextTourneyStep()" class="px-8 py-3 bg-blue-900 text-white font-bold rounded-lg shadow hover:bg-black transition-all active:scale-[0.98] flex items-center gap-2 uppercase tracking-wide text-xs">
                     <span>Next: Teams</span>
                     <span>→</span>
                 </button>
@@ -775,33 +894,21 @@
         </div>
     </div>
 
-    <div id="tourney-page-3" class="hidden w-full relative pb-40 animate-pop">
+    <div id="tourney-page-3" class="hidden w-full relative pb-40 animate-slide-up">
         <div class="max-w-3xl mx-auto px-4 mt-8 space-y-8">
             
              <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
                 <div class="bg-gray-50 px-6 py-3 border-b border-gray-200 flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <span class="text-blue-600 font-bold text-lg">05.</span>
+                        <span class="text-blue-600 font-bold text-lg">07.</span>
                         <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Participating Teams</h3>
-                    </div>
-                    <div class="relative">
-                        <select id="tourney-team-count" onchange="renderTournamentSlots()" class="bg-white border border-gray-300 rounded px-3 py-1 text-xs font-bold text-gray-900 outline-none focus:border-blue-600">
-                            <option value="" selected disabled>Select Count</option>
-                            <option value="2">2 Teams</option>
-                            <option value="3">3 Teams</option>
-                            <option value="4">4 Teams</option>
-                            <option value="5">5 Teams</option>
-                            <option value="6">6 Teams</option>
-                            <option value="8">8 Teams</option>
-                            <option value="10">10 Teams</option>
-                        </select>
                     </div>
                 </div>
 
-                <div class="p-6 bg-gray-50/50 min-h-[300px]">
+                <div class="p-6">
                     <div id="tournament-slots-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="col-span-1 md:col-span-2 text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
-                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wide">Select Team Count above to begin</p>
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wide">Select Team Count in 'League Rules' to begin</p>
                         </div>
                     </div>
                 </div>
@@ -810,10 +917,10 @@
 
         <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-50">
             <div class="max-w-3xl mx-auto flex justify-between">
-                <button onclick="document.getElementById('tourney-page-3').classList.add('hidden'); document.getElementById('tourney-page-2').classList.remove('hidden');" class="px-6 py-3 text-gray-500 font-bold text-xs uppercase hover:text-gray-900">
+                <button onclick="updateStepper(2); document.getElementById('tourney-page-3').classList.add('hidden'); document.getElementById('tourney-page-2').classList.remove('hidden');" class="px-6 py-3 text-gray-500 font-bold text-xs uppercase hover:text-gray-900">
                     ← Back
                 </button>
-                <button onclick="nextTourneyStep()" class="px-8 py-3 bg-blue-900 text-white font-bold rounded-lg shadow hover:bg-black transition-all active:scale-[0.98] flex items-center gap-2 uppercase tracking-wide text-xs">
+                <button onclick="updateStepper(4); nextTourneyStep()" class="px-8 py-3 bg-blue-900 text-white font-bold rounded-lg shadow hover:bg-black transition-all active:scale-[0.98] flex items-center gap-2 uppercase tracking-wide text-xs">
                     <span>Next: Schedule</span>
                     <span>→</span>
                 </button>
@@ -821,47 +928,299 @@
         </div>
     </div>
 
-    <div id="tourney-page-4" class="hidden w-full relative pb-40 animate-pop">
-        <div class="max-w-4xl mx-auto px-4 mt-8 pb-32">
+    <div id="tourney-page-4" class="hidden w-full relative pb-40 animate-slide-up">
+        <div class="max-w-5xl mx-auto px-4 mt-6 pb-32">
             
-            <div class="flex justify-between items-center mb-6">
-                <div>
-                    <h3 class="text-lg font-bold text-gray-900 uppercase tracking-wide">Match Fixtures</h3>
-                    <p class="text-xs text-gray-500">Review and finalize the match schedule.</p>
+            <div class="w-full animate-slide-up delay-200">
+                 <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-gray-900 uppercase tracking-wide">Match Schedule</h3>
+                    <div class="flex gap-2">
+                        <button onclick="addScheduleRow('League Match')" class="bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wide hover:bg-gray-50 shadow-sm transition-colors">+ Manual</button>
+                        
+                        <button onclick="generateProfessionalSchedule()" class="bg-blue-600 border border-blue-600 text-white px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wide hover:bg-blue-700 shadow-sm transition-colors flex items-center gap-1">
+                            <span>⚡ Auto Gen</span>
+                        </button>
+                    </div>
                 </div>
-                <div class="flex gap-2">
-                    <button onclick="addScheduleRow('League Match')" class="bg-white border border-gray-300 text-gray-700 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wide hover:bg-gray-50 shadow-sm transition-colors">+ Add Manual</button>
-                    <button onclick="autoGenerateFixtures()" class="bg-blue-600 border border-blue-600 text-white px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wide hover:bg-blue-700 shadow-sm transition-colors">⚡ Auto Generate</button>
-                </div>
-            </div>
 
-            <div id="schedule-rows" class="space-y-3 min-h-[200px]">
-                <div class="text-center py-16 border-2 border-dashed border-gray-300 rounded-lg bg-white">
-                    <p class="text-sm font-bold text-gray-400 uppercase tracking-wide">No Matches Scheduled</p>
-                    <button onclick="autoGenerateFixtures()" class="mt-2 text-blue-600 text-xs font-bold hover:underline">Click here to Auto-Generate Schedule</button>
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm min-h-[400px] p-4 relative">
+                    <div id="schedule-rows" class="space-y-3 h-[400px] overflow-y-auto pr-2 custom-scroll">
+                        <div class="flex flex-col items-center justify-center h-full text-gray-300 space-y-2">
+                            <span class="text-4xl opacity-50">📅</span>
+                            <p class="text-xs font-bold uppercase tracking-wide">No Matches Scheduled</p>
+                            <p class="text-[10px]">Use 'Auto Gen' to create fixtures based on settings.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="absolute bottom-4 left-4 right-4">
+                         <button onclick="addScheduleRow('Final')" class="w-full py-2 bg-yellow-50 text-yellow-800 font-bold rounded border border-yellow-300 uppercase tracking-wide text-[10px] hover:bg-yellow-100 transition shadow-sm border-dashed hover:border-solid">
+                            + Add Final Match Card
+                        </button>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="mt-6 border-t border-gray-200 pt-6">
-                <button onclick="addScheduleRow('Final')" class="w-full py-3 bg-yellow-50 text-yellow-800 font-bold rounded-lg border border-yellow-300 uppercase tracking-wide text-xs hover:bg-yellow-100 transition shadow-sm border-dashed hover:border-solid">
-                    + Add Final Match Card
-                </button>
             </div>
 
         </div>
 
         <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-50">
             <div class="max-w-4xl mx-auto flex justify-between items-center">
-                <button onclick="document.getElementById('tourney-page-4').classList.add('hidden'); document.getElementById('tourney-page-3').classList.remove('hidden');" class="px-6 py-3 text-gray-500 font-bold text-xs uppercase hover:text-gray-900">
+                <button onclick="updateStepper(3); document.getElementById('tourney-page-4').classList.add('hidden'); document.getElementById('tourney-page-3').classList.remove('hidden');" class="px-6 py-3 text-gray-500 font-bold text-xs uppercase hover:text-gray-900">
                     ← Back
                 </button>
-                <button id="btn-create-tourney" onclick="createProfessionalTournament()" class="px-10 py-4 bg-emerald-600 text-white font-bold rounded-lg shadow-lg hover:bg-emerald-700 transition-all active:scale-[0.98] flex items-center gap-3 uppercase tracking-widest text-xs">
-                    <span>Confirm & Create</span>
-                    <span class="bg-white/20 px-2 py-0.5 rounded text-[10px]">✓</span>
+                <button id="btn-create-tourney" onclick="createProfessionalTournament()" class="animate-gradient-x px-12 py-4 bg-gradient-to-r from-emerald-500 via-green-400 to-teal-500 text-white font-black rounded-xl shadow-[0_0_25px_rgba(16,185,129,0.6)] hover:shadow-[0_0_35px_rgba(16,185,129,0.8)] hover:scale-105 transition-all duration-300 active:scale-95 flex flex-col items-center justify-center gap-1 uppercase tracking-widest border border-white/20">
+                    <span class="text-sm drop-shadow-md flex items-center gap-2">Start Playing 🚀</span>
+                    <span class="text-[9px] text-white font-bold tracking-[0.3em] opacity-90 animate-pulse">✨ Let's Crickerr ✨</span>
                 </button>
             </div>
         </div>
     </div>
+    
+    <script>
+        // 1. Wizard Stepper Logic
+        function updateStepper(step) {
+            for(let i=1; i<=4; i++) {
+                const dot = document.getElementById(`wiz-dot-${i}`);
+                const line = document.getElementById(`wiz-line-${i-1}`);
+                if(dot) {
+                    dot.classList.remove('step-active-bg', 'bg-blue-900', 'text-white');
+                    dot.classList.add('bg-gray-200', 'text-gray-400');
+                }
+                if (i > 1 && line) {
+                    line.classList.remove('step-active-line', 'bg-blue-900', 'w-full');
+                    line.classList.add('bg-gray-200', 'w-0');
+                }
+            }
+            for(let i=1; i<=step; i++) {
+                const dot = document.getElementById(`wiz-dot-${i}`);
+                const line = document.getElementById(`wiz-line-${i-1}`);
+                if(dot) {
+                    dot.classList.remove('bg-gray-200', 'text-gray-400');
+                    dot.classList.add('step-active-bg'); 
+                }
+                if (i > 1 && line) {
+                    line.classList.remove('bg-gray-200', 'w-0');
+                    line.classList.add('step-active-line');
+                }
+            }
+        }
+        
+        // 2. Render Team Input Slots (Auto-filled from Page 2 settings)
+        window.renderTournamentSlots = function() {
+            const count = parseInt(document.getElementById('tourney-team-count').value);
+            const container = document.getElementById('tournament-slots-container');
+            const groupModeEl = document.getElementById('tourney-group-mode');
+            const groupMode = groupModeEl ? parseInt(groupModeEl.value) : 1;
+            
+            if (!container || isNaN(count)) return;
+            
+            container.innerHTML = '';
+            
+            // Generate letters A through J (or more) dynamically
+            const allGroups = Array.from({length: 26}, (_, i) => String.fromCharCode(65 + i)); // ['A', 'B', 'C'...]
+
+            // Helper to generate group options
+            const getGroupOptions = (defaultIdx) => {
+                if (groupMode === 1) return ''; 
+                
+                let opts = '';
+                const limit = groupMode; 
+                // Auto-assign logic: 0->A, 1->B, 2->C...
+                const autoGroupChar = allGroups[defaultIdx % limit];
+
+                for(let g=0; g<limit; g++) {
+                    const char = allGroups[g];
+                    const selected = (char === autoGroupChar) ? 'selected' : '';
+                    opts += `<option value="${char}" ${selected}>Group ${char}</option>`;
+                }
+                
+                return `
+                    <div class="w-24 border-l border-gray-200 pl-2">
+                        <label class="block text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Group</label>
+                        <select class="tourney-team-group w-full bg-white border border-gray-300 rounded px-2 py-2 text-xs font-bold text-gray-800 outline-none focus:border-blue-500 cursor-pointer">
+                            ${opts}
+                        </select>
+                    </div>
+                `;
+            };
+
+            for(let i = 0; i < count; i++) {
+                const groupSelectHTML = getGroupOptions(i);
+                
+                container.innerHTML += `
+                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-200 flex items-center gap-3 animate-slide-up" style="animation-delay: ${i*50}ms">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center text-xs shadow-sm flex-shrink-0">${i+1}</div>
+                        <div class="flex-1">
+                            <label class="block text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Team Name</label>
+                            <input type="text" placeholder="Team ${i+1}" class="tourney-team-select w-full bg-white border border-gray-300 rounded px-3 py-2 text-sm font-bold text-gray-900 outline-none focus:border-blue-500 transition-all">
+                        </div>
+                        ${groupSelectHTML}
+                    </div>
+                `;
+            }
+        };
+
+        // 3. Add Schedule Row Helper (Styled for Finals/Semis)
+        window.addScheduleRow = function(matchType, prefill = null) {
+            const container = document.getElementById('schedule-rows');
+            
+            if (container.children.length > 0 && container.children[0].innerText.includes('No Matches')) {
+                container.innerHTML = '';
+            }
+
+            const matchId = 'match-' + new Date().getTime() + Math.random();
+            const t1Val = prefill ? prefill.t1 : '';
+            const t2Val = prefill ? prefill.t2 : '';
+            
+            // Dynamic Styles based on Match Type
+            let cardClass = "bg-white border-gray-200 hover:border-blue-300";
+            let badgeClass = "bg-gray-100 text-gray-400";
+            let inputClass = "bg-gray-50 border-gray-200 focus:border-blue-500";
+            let vsClass = "text-gray-400";
+
+            if (matchType.includes('Final') && !matchType.includes('Semi')) {
+                // Gold Theme for Final
+                cardClass = "bg-gradient-to-r from-yellow-50 via-amber-50 to-yellow-50 border-yellow-300 shadow-md transform scale-[1.02]";
+                badgeClass = "bg-gradient-to-r from-yellow-400 to-orange-400 text-white shadow-sm";
+                inputClass = "bg-white/80 border-yellow-200 focus:border-yellow-500 text-yellow-900 placeholder-yellow-300";
+                vsClass = "text-yellow-500 font-black";
+            } else if (matchType.includes('Semi')) {
+                // Blue/Bronze Theme for Semis
+                cardClass = "bg-gradient-to-r from-slate-50 to-blue-50 border-blue-200 shadow-sm";
+                badgeClass = "bg-blue-100 text-blue-700 border border-blue-200";
+                inputClass = "bg-white border-blue-100 focus:border-blue-400 text-blue-900";
+                vsClass = "text-blue-300 font-black";
+            } else if (matchType.includes('Quarter')) {
+                // Slight highlight for QF
+                cardClass = "bg-gray-50 border-gray-300";
+                badgeClass = "bg-gray-200 text-gray-600";
+            }
+
+            const rowHtml = `
+            <div id="${matchId}" class="schedule-card ${cardClass} border rounded-xl p-4 mb-3 animate-slide-up relative group transition-all">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${badgeClass}">${matchType}</span>
+                    <button onclick="document.getElementById('${matchId}').remove()" class="text-gray-300 hover:text-red-500 transition-colors px-2">×</button>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="flex-1 relative">
+                        ${matchType.includes('Final') ? '<span class="absolute -top-2 -left-1 text-[8px] text-yellow-600 font-bold uppercase tracking-wider">Home</span>' : ''}
+                        <input type="text" placeholder="Team A" value="${t1Val}" class="match-team-a w-full ${inputClass} border rounded-lg px-3 py-2.5 text-xs font-bold outline-none transition-all shadow-sm">
+                    </div>
+                    <span class="text-[10px] ${vsClass}">VS</span>
+                    <div class="flex-1 relative">
+                        ${matchType.includes('Final') ? '<span class="absolute -top-2 -right-1 text-[8px] text-yellow-600 font-bold uppercase tracking-wider">Away</span>' : ''}
+                        <input type="text" placeholder="Team B" value="${t2Val}" class="match-team-b w-full ${inputClass} border rounded-lg px-3 py-2.5 text-xs font-bold outline-none transition-all shadow-sm">
+                    </div>
+                </div>
+            </div>`;
+            
+            container.insertAdjacentHTML('beforeend', rowHtml);
+        };
+
+        // 4. Auto-Generate Schedule Logic (Knockout Aware)
+        window.generateProfessionalSchedule = function() {
+            // Get Config
+            const matchesPerTeam = parseInt(document.getElementById('tourney-rounds-count').value) || 1;
+            const qualifyRule = document.getElementById('tourney-qualify-rule').value;
+            const groupModeEl = document.getElementById('tourney-group-mode');
+            const numGroups = groupModeEl ? parseInt(groupModeEl.value) : 1;
+            
+            // Get Teams from Inputs
+            const teams = [];
+            document.querySelectorAll('.tourney-team-select').forEach(sel => {
+                if(sel.value.trim() !== "") teams.push(sel.value);
+                else teams.push(sel.placeholder); 
+            });
+
+            if (teams.length < 2) {
+                alert("Please enter at least 2 teams to generate a schedule.");
+                return;
+            }
+
+            // Clear Table
+            const container = document.getElementById('schedule-rows');
+            container.innerHTML = '';
+
+            // --- A. Generate League Matches (Single Group Round Robin) ---
+            // Note: For multi-group, ideally we'd split teams. For now, we generate basic fixtures
+            // and append the correct knockout structure based on the rule selected.
+            
+            let pool = [...teams];
+            if (pool.length % 2 !== 0) pool.push(null); 
+
+            const totalTeams = pool.length;
+            const half = totalTeams / 2;
+            const roundsInSet = totalTeams - 1; 
+
+            for (let set = 0; set < matchesPerTeam; set++) {
+                for (let r = 0; r < roundsInSet; r++) {
+                    for (let i = 0; i < half; i++) {
+                        const t1 = pool[i];
+                        const t2 = pool[totalTeams - 1 - i];
+
+                        if (t1 && t2) {
+                            const home = (set % 2 === 0) ? t1 : t2;
+                            const away = (set % 2 === 0) ? t2 : t1;
+                            addScheduleRow(`League Match`, { t1: home, t2: away });
+                        }
+                    }
+                    const fixed = pool[0];
+                    const rotated = pool.slice(1);
+                    const last = rotated.pop();
+                    rotated.unshift(last);
+                    pool = [fixed, ...rotated];
+                }
+            }
+
+            // --- B. Generate Knockouts (Auto-Fill based on Rule) ---
+            
+            if (qualifyRule === 'TOP_4') {
+                if (teams.length >= 4) {
+                    addScheduleRow('Semi Final 1', { t1: "1st Place", t2: "4th Place" });
+                    addScheduleRow('Semi Final 2', { t1: "2nd Place", t2: "3rd Place" });
+                    addScheduleRow('Final', { t1: "Winner SF1", t2: "Winner SF2" });
+                } else {
+                    addScheduleRow('Final', { t1: "1st Place", t2: "2nd Place" });
+                }
+            } 
+            else if (qualifyRule === 'TOP_2') {
+                addScheduleRow('Final', { t1: "1st Place", t2: "2nd Place" });
+            }
+            else if (qualifyRule === 'TOP_8' && teams.length >= 8) {
+                addScheduleRow('Quarter Final 1', { t1: "1st", t2: "8th" });
+                addScheduleRow('Quarter Final 2', { t1: "2nd", t2: "7th" });
+                addScheduleRow('Quarter Final 3', { t1: "3rd", t2: "6th" });
+                addScheduleRow('Quarter Final 4', { t1: "4th", t2: "5th" });
+                addScheduleRow('Semi Final 1', { t1: "Winner QF1", t2: "Winner QF4" });
+                addScheduleRow('Semi Final 2', { t1: "Winner QF2", t2: "Winner QF3" });
+                addScheduleRow('Final', { t1: "Winner SF1", t2: "Winner SF2" });
+            }
+            else if (qualifyRule === 'GROUP_TOP') {
+                if (numGroups === 2) {
+                    addScheduleRow('Final', { t1: "Winner Group A", t2: "Winner Group B" });
+                } else if (numGroups === 4) {
+                    addScheduleRow('Semi Final 1', { t1: "Winner Group A", t2: "Winner Group D" });
+                    addScheduleRow('Semi Final 2', { t1: "Winner Group B", t2: "Winner Group C" });
+                    addScheduleRow('Final', { t1: "Winner SF1", t2: "Winner SF2" });
+                } else {
+                    // Generic fallback
+                    addScheduleRow('Final', { t1: "Top Ranked 1", t2: "Top Ranked 2" });
+                }
+            }
+            else if (qualifyRule === 'GROUP_TOP_2') {
+                if (numGroups === 2) {
+                    addScheduleRow('Semi Final 1', { t1: "A1 (Winner A)", t2: "B2 (Runner B)" });
+                    addScheduleRow('Semi Final 2', { t1: "B1 (Winner B)", t2: "A2 (Runner A)" });
+                    addScheduleRow('Final', { t1: "Winner SF1", t2: "Winner SF2" });
+                } else {
+                     addScheduleRow('Final', { t1: "Qualifier 1", t2: "Qualifier 2" });
+                }
+            }
+        };
+
+        // Initialize Step 1
+        updateStepper(1);
+    </script>
 </div>
 
 <div id="tournament-dashboard" class="setup-step hidden w-full h-full md:h-[80vh] flex flex-col md:flex-row bg-gray-100 rounded-2xl overflow-hidden border border-gray-200">
@@ -5340,13 +5699,17 @@ function createProfessionalTournament() {
         };
     });
 
+    // Validated Ball Type ID
+    const ballTypeEl = document.getElementById('tourney-ball-type');
+    const ballTypeVal = ballTypeEl ? ballTypeEl.value : 'Soft Ball';
+
     const tournamentData = {
         meta: { id: tourneyId, name, country, startDate, createdAt: Date.now() },
         rules: {
             overs: parseInt(document.getElementById('tourney-overs').value),
             players: parseInt(document.getElementById('tourney-players').value),
             ptsWin: 2, ptsTie: 1,
-            ballType: document.getElementById('tourney-ball').value,
+            ballType: ballTypeVal, // FIXED ID HERE
             matchType: "LIMITED"
         },
         teams: optimizedTeams,
@@ -5367,8 +5730,12 @@ function createProfessionalTournament() {
             tournamentState.id = tourneyId;
             tournamentState.data = tournamentData;
             tournamentState.active = true;
-            document.getElementById('tournament-schedule-step').classList.add('hidden');
-            document.getElementById('tournament-schedule-step').classList.remove('active');
+            // Clean up old UI steps if they exist
+            const schedStep = document.getElementById('tournament-schedule-step');
+            if(schedStep) {
+                schedStep.classList.add('hidden');
+                schedStep.classList.remove('active');
+            }
             loadTournamentDashboard();
         })
         .catch(err => {
@@ -5526,7 +5893,7 @@ function openAddMatchModal() {
     openModal('add-match-modal');
 }
 
-// 6. MAIN RENDERER (The Kanban Board)
+// 6. MAIN RENDERER (Professional Match Center)
 function renderFixtures() {
     const board = document.getElementById('kanban-board');
     if(!board) return;
@@ -5534,87 +5901,160 @@ function renderFixtures() {
 
     const fixtures = tournamentState.data.fixtures || [];
     if(fixtures.length === 0) {
-        board.innerHTML = '<div class="text-center text-gray-400 font-bold p-10">No matches scheduled</div>';
+        board.innerHTML = '<div class="text-center text-gray-400 font-bold p-10 flex flex-col items-center gap-2"><span class="text-4xl">📅</span><span>No matches scheduled</span></div>';
         return;
     }
 
-    // 1. Group by Stage
     const grouped = {};
-    const order = TOURNAMENT_ROUNDS;
+    const order = (typeof TOURNAMENT_ROUNDS !== 'undefined') ? TOURNAMENT_ROUNDS : ["League Match", "Semi Final", "Final"];
     
-    // Sort logic
+    // 1. Group Fixtures
     fixtures.sort((a,b) => (a.matchNo || 999) - (b.matchNo || 999));
-
     fixtures.forEach(f => {
         if(!grouped[f.stage]) grouped[f.stage] = [];
         grouped[f.stage].push(f);
     });
 
-    // 2. Render Groups Vertically
-    Object.keys(grouped).sort((a, b) => order.indexOf(a) - order.indexOf(b)).forEach(stage => {
+    // 2. Sort Stages Robustly
+    const getStageIndex = (name) => {
+        const idx = order.findIndex(o => name.includes(o));
+        return idx === -1 ? 999 : idx;
+    };
+    const sortedKeys = Object.keys(grouped).sort((a, b) => getStageIndex(a) - getStageIndex(b));
+
+    // 3. Render
+    let knockoutHeaderAdded = false;
+
+    sortedKeys.forEach(stage => {
+        // --- SEPARATOR LOGIC ---
+        const isKnockout = stage.includes('Final') || stage.includes('Semi') || stage.includes('Qualifier') || stage.includes('Eliminator');
+        
+        if (isKnockout && !knockoutHeaderAdded) {
+            const divider = document.createElement('div');
+            divider.className = "flex items-center gap-4 my-8 opacity-80";
+            divider.innerHTML = `
+                <div class="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent flex-1"></div>
+                <div class="flex items-center gap-2 text-gray-400">
+                    <span class="text-lg">🏆</span>
+                    <span class="text-xs font-black uppercase tracking-[0.2em]">Knockout Stage</span>
+                </div>
+                <div class="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent flex-1"></div>
+            `;
+            board.appendChild(divider);
+            knockoutHeaderAdded = true;
+        }
+
         const stageGroup = document.createElement('div');
-        stageGroup.className = "mb-6";
+        stageGroup.className = "mb-8 animate-slide-up";
+        
+        // Dynamic Header Color (Blue for League, Gold for Knockout)
+        const headerColor = isKnockout ? "bg-gradient-to-b from-yellow-500 to-orange-500" : "bg-gradient-to-b from-purple-600 to-blue-600";
         
         stageGroup.innerHTML = `
-            <div class="flex items-center gap-3 mb-3 px-2">
-                <div class="h-4 w-1 bg-purple-600 rounded-full"></div>
-                <h4 class="font-black text-gray-800 uppercase text-sm tracking-wide">${stage}</h4>
-                <span class="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">${grouped[stage].length} Matches</span>
+            <div class="flex items-center gap-3 mb-4 px-2">
+                <div class="h-5 w-1.5 ${headerColor} rounded-full shadow-sm"></div>
+                <h4 class="font-black text-gray-800 uppercase text-sm tracking-widest">${stage}</h4>
+                <span class="text-[9px] font-bold text-gray-500 bg-white border border-gray-200 px-2 py-0.5 rounded-md shadow-sm">${grouped[stage].length} Games</span>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" id="group-${stage.replace(/\s/g,'-')}"></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="group-${stage.replace(/\s/g,'-')}"></div>
         `;
         
         const container = stageGroup.querySelector('div[id^="group-"]');
 
         grouped[stage].forEach(f => {
-            // Helper to find Logo
+            const isPlaceholder = (name) => !name || name === 'TBD' || name.includes('Winner') || name.includes('Place') || name.includes('Qualifier');
+
+            // LOGO FINDER
             const getTeamLogo = (tName) => {
-                const team = tournamentState.data.teams.find(t => t.name === tName);
-                if(team && team.logo) return `<img src="${team.logo}" class="w-8 h-8 rounded-full border border-gray-100 object-cover">`;
-                return `<div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-bold text-[10px] text-gray-500">${tName.substring(0,2)}</div>`;
+                if (isPlaceholder(tName)) {
+                    return `<div class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center font-bold text-[10px] text-gray-400 border border-gray-200 border-dashed">?</div>`;
+                }
+                
+                let team = tournamentState.data.teams.find(t => t.name === tName);
+                if (team && team.logo) return `<img src="${team.logo}" class="w-10 h-10 rounded-full border-2 border-white shadow-md object-cover bg-white">`;
+                
+                if (typeof savedTeamsData !== 'undefined') {
+                    const saved = savedTeamsData.find(t => t.name === tName);
+                    if (saved && saved.logo) return `<img src="${saved.logo}" class="w-10 h-10 rounded-full border-2 border-white shadow-md object-cover bg-white">`;
+                }
+
+                return `<div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-bold text-xs text-white border-2 border-white shadow-md">${tName.substring(0,2)}</div>`;
             };
 
             const t1Logo = getTeamLogo(f.t1);
             const t2Logo = getTeamLogo(f.t2);
             const status = f.status || 'UPCOMING';
             
+            // ACTION BUTTON & STATUS
             let actionBtn = '';
+            let statusBadge = '';
+
             if(status === 'COMPLETED') {
-                actionBtn = `<span class="text-[10px] font-bold text-green-600 bg-green-50 px-3 py-1 rounded-lg uppercase border border-green-100 block w-full text-center">${f.result}</span>`;
-            } else if (status === 'LIVE') {
-                actionBtn = `<button onclick="resumeMatch('${f.broadcastId}')" class="w-full py-2 bg-red-500 text-white font-bold text-xs rounded-lg uppercase animate-pulse shadow-red-200 shadow-lg">Watch Live ◉</button>`;
-            } else {
-                 if (f.t1 !== 'TBD' && f.t2 !== 'TBD') {
-                    actionBtn = `<button onclick="startTournamentMatch('${f.id}')" class="w-full py-2 bg-gray-900 text-white font-bold text-xs rounded-lg uppercase shadow-lg active:scale-95 transition-transform">Start Match ▶</button>`;
-                 } else {
-                    actionBtn = `<button disabled class="w-full py-2 bg-gray-100 text-gray-400 font-bold text-xs rounded-lg uppercase cursor-not-allowed">Waiting...</button>`;
-                 }
+                statusBadge = `<span class="bg-gray-100 text-gray-500 text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider">Finished</span>`;
+                actionBtn = `<div class="mt-4 p-2 bg-green-50 rounded-lg border border-green-100 text-center"><span class="text-[10px] font-bold text-green-700 uppercase tracking-wide block">${f.result}</span></div>`;
+            } 
+            else if (status === 'LIVE') {
+                statusBadge = `<span class="bg-red-100 text-red-600 text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider flex items-center gap-1"><span class="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse"></span> LIVE</span>`;
+                actionBtn = `
+                    <div class="mt-4 w-full py-3 bg-gradient-to-r from-red-500 to-pink-600 rounded-xl shadow-lg shadow-red-200 flex items-center justify-center gap-2 animate-pulse cursor-pointer hover:scale-[1.02] transition-transform" onclick="startTournamentMatch('${f.id}')">
+                        <span class="text-lg text-white">●</span>
+                        <span class="text-xs font-black text-white uppercase tracking-widest">Match In Progress</span>
+                    </div>`;
+            } 
+            else {
+                statusBadge = `<span class="bg-blue-50 text-blue-600 text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider">Upcoming</span>`;
+                
+                // Show "Pending" if teams aren't ready
+                if (isPlaceholder(f.t1) || isPlaceholder(f.t2)) {
+                    actionBtn = `<div class="mt-4 w-full py-3 bg-gray-50 border border-gray-200 text-gray-400 font-bold text-[10px] rounded-xl uppercase text-center flex items-center justify-center gap-2">
+                        <span>Waiting for Qualification</span>
+                    </div>`;
+                } else {
+                    actionBtn = `<button onclick="startTournamentMatch('${f.id}')" class="mt-4 w-full py-3 bg-gray-900 text-white font-bold text-xs rounded-xl uppercase shadow-md hover:bg-black transition-all active:scale-95 flex items-center justify-center gap-2"><span>Start Match</span> <span>▶</span></button>`;
+                }
             }
 
+            const getNameClass = (name) => isPlaceholder(name) ? "text-gray-400 italic" : "text-gray-800 group-hover/team:text-blue-600";
+
             const card = document.createElement('div');
-            card.className = "bg-white p-4 rounded-2xl shadow-sm border border-gray-100 relative group transition-all hover:shadow-md";
+            card.className = "bg-white p-5 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100 relative group transition-all hover:shadow-lg hover:border-blue-100";
             
+            // Special Gold Border for Finals
+            if(stage.includes('Final')) {
+                card.classList.add('border-yellow-200', 'shadow-yellow-100');
+            }
+
             card.innerHTML = `
-                <div class="flex justify-between items-start mb-4 border-b border-gray-50 pb-2">
-                    <div>
-                        <span class="block text-[10px] font-black text-gray-400 uppercase tracking-wider">Match #${f.matchNo}</span>
-                        <span class="block text-[10px] font-bold text-gray-500">${f.ground || 'Main Ground'} • ${f.time || 'TBD'}</span>
+                <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-50">
+                    <div class="flex flex-col">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-[9px] font-black text-gray-400 uppercase tracking-wider">#${f.matchNo}</span>
+                            ${statusBadge}
+                        </div>
+                        <span class="text-[10px] font-bold text-gray-500 truncate max-w-[120px]">${f.ground || 'Main Ground'}</span>
                     </div>
-                    <div class="flex gap-2">
-                        <button onclick="openEditMatchModal('${f.id}')" class="text-gray-300 hover:text-blue-500">✎</button>
-                        <button onclick="deleteFixture('${f.id}')" class="text-gray-300 hover:text-red-500">×</button>
-                    </div>
+                    
+                    ${status !== 'LIVE' && status !== 'COMPLETED' ? `
+                    <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onclick="openEditMatchModal('${f.id}')" class="p-1.5 hover:bg-blue-50 rounded text-gray-400 hover:text-blue-600 transition-colors">✎</button>
+                        <button onclick="deleteFixture('${f.id}')" class="p-1.5 hover:bg-red-50 rounded text-gray-400 hover:text-red-600 transition-colors">×</button>
+                    </div>` : ''}
                 </div>
 
-                <div class="flex items-center justify-between mb-6">
-                    <div class="flex flex-col items-center gap-1 w-[40%] text-center">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex flex-col items-center gap-2 w-[40%] text-center group/team">
                         ${t1Logo}
-                        <span class="text-[10px] font-black text-gray-800 uppercase leading-tight">${f.t1}</span>
+                        <span class="text-[10px] font-black uppercase leading-tight transition-colors ${getNameClass(f.t1)}">${f.t1}</span>
                     </div>
-                    <div class="font-black text-gray-300 text-xs">VS</div>
-                    <div class="flex flex-col items-center gap-1 w-[40%] text-center">
+                    
+                    <div class="flex flex-col items-center gap-1">
+                        <span class="text-xs font-black text-gray-300">VS</span>
+                        <span class="text-[9px] font-bold text-gray-400 bg-gray-50 px-1.5 rounded">${f.overs || 16} Ov</span>
+                    </div>
+
+                    <div class="flex flex-col items-center gap-2 w-[40%] text-center group/team">
                         ${t2Logo}
-                        <span class="text-[10px] font-black text-gray-800 uppercase leading-tight">${f.t2}</span>
+                        <span class="text-[10px] font-black uppercase leading-tight transition-colors ${getNameClass(f.t2)}">${f.t2}</span>
                     </div>
                 </div>
                 
@@ -5934,54 +6374,131 @@ function recalculateStandings() {
     });
 }
 
+// 7. PROFESSIONAL STATS ENGINE
 function recalculatePlayerStats() {
-    // We aggregate from matchStatsLog (which is now reliable)
-    // This function runs on dashboard load and post-match
-    
     const logs = tournamentState.data.matchStatsLog || [];
-    const aggStats = {}; // Key: PlayerName_TeamName
+    const aggStats = {}; 
 
     logs.forEach(log => {
         const key = `${log.name}_${log.team}`;
         if(!aggStats[key]) {
-            aggStats[key] = { name: log.name, team: log.team, runs: 0, balls: 0, wkts: 0, rc: 0, bb: 0 };
+            aggStats[key] = { 
+                name: log.name, 
+                team: log.team, 
+                matches: 0,
+                runs: 0, 
+                balls: 0, 
+                wkts: 0, 
+                rc: 0, 
+                bb: 0,
+                innings: 0
+            };
         }
         const p = aggStats[key];
-        p.runs += (log.runs || 0);
-        p.balls += (log.balls || 0);
-        p.wkts += (log.wkts || 0);
-        p.rc += (log.runsConceded || 0);
-        p.bb += (log.ballsBowled || 0);
+        p.matches++; // Increment matches played
+        
+        // Batting Accumulation
+        if(log.balls > 0) {
+            p.runs += (log.runs || 0);
+            p.balls += (log.balls || 0);
+            p.innings++;
+        }
+        
+        // Bowling Accumulation
+        if(log.ballsBowled > 0) {
+            p.wkts += (log.wkts || 0);
+            p.rc += (log.runsConceded || 0);
+            p.bb += (log.ballsBowled || 0);
+        }
     });
     
-    // We don't save aggStats to DB to save space, we just use it for rendering UI
-    // Render logic (renderStats) needs to use this aggregation
     renderStatsUI(Object.values(aggStats));
 }
 
 function renderStatsUI(players) {
-    // Top Run Scorers
-    const topRuns = [...players].sort((a,b) => b.runs - a.runs).slice(0, 5);
+    const bpo = tournamentState.data.rules.ballType === 'Leather' ? 6 : (tournamentState.data.rules.ballsPerOver || 6);
+
+    // --- RENDER TOP RUN SCORERS (Orange Cap Style) ---
+    const topRuns = [...players].filter(p => p.runs > 0).sort((a,b) => b.runs - a.runs).slice(0, 8);
     const runContainer = document.getElementById('stats-runs');
+    
     if(runContainer) {
-        runContainer.innerHTML = topRuns.map(p => `
-            <div class="flex justify-between items-center border-b border-gray-100 py-2">
-                <div><div class="text-xs font-bold text-gray-800">${p.name}</div><div class="text-[9px] text-gray-400">${p.team}</div></div>
-                <div class="text-sm font-black text-blue-600">${p.runs}</div>
-            </div>
-        `).join('');
+        let html = `
+        <table class="w-full text-left text-[10px]">
+            <thead class="bg-orange-50 text-orange-800 uppercase font-black">
+                <tr>
+                    <th class="p-2 rounded-l-lg">Player</th>
+                    <th class="p-2 text-center">Mat</th>
+                    <th class="p-2 text-center">SR</th>
+                    <th class="p-2 text-center rounded-r-lg">Runs</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">`;
+            
+        html += topRuns.map((p, i) => {
+            const sr = p.balls > 0 ? ((p.runs / p.balls) * 100).toFixed(0) : 0;
+            return `
+            <tr class="hover:bg-gray-50 transition-colors">
+                <td class="p-3">
+                    <div class="flex items-center gap-2">
+                        <span class="font-mono text-gray-300 font-bold text-xs w-4">${i+1}</span>
+                        <div>
+                            <div class="font-bold text-gray-800 text-xs">${p.name}</div>
+                            <div class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">${p.team.substring(0,15)}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="p-2 text-center font-medium text-gray-500">${p.matches}</td>
+                <td class="p-2 text-center font-medium text-gray-500">${sr}</td>
+                <td class="p-2 text-center font-black text-orange-600 text-sm">${p.runs}</td>
+            </tr>`;
+        }).join('');
+        
+        html += `</tbody></table>`;
+        runContainer.innerHTML = html;
     }
 
-    // Top Wicket Takers
-    const topWkts = [...players].sort((a,b) => b.wkts - a.wkts).slice(0, 5);
+    // --- RENDER TOP WICKET TAKERS (Purple Cap Style) ---
+    const topWkts = [...players].filter(p => p.wkts > 0).sort((a,b) => b.wkts - a.wkts || a.rc - b.rc).slice(0, 8);
     const wktContainer = document.getElementById('stats-wickets');
+    
     if(wktContainer) {
-        wktContainer.innerHTML = topWkts.map(p => `
-            <div class="flex justify-between items-center border-b border-gray-100 py-2">
-                <div><div class="text-xs font-bold text-gray-800">${p.name}</div><div class="text-[9px] text-gray-400">${p.team}</div></div>
-                <div class="text-sm font-black text-orange-600">${p.wkts}</div>
-            </div>
-        `).join('');
+        let html = `
+        <table class="w-full text-left text-[10px]">
+            <thead class="bg-blue-50 text-blue-800 uppercase font-black">
+                <tr>
+                    <th class="p-2 rounded-l-lg">Player</th>
+                    <th class="p-2 text-center">Overs</th>
+                    <th class="p-2 text-center">Econ</th>
+                    <th class="p-2 text-center rounded-r-lg">Wkts</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">`;
+            
+        html += topWkts.map((p, i) => {
+            const overs = Math.floor(p.bb / bpo) + '.' + (p.bb % bpo);
+            const totalOversDec = p.bb / bpo;
+            const econ = totalOversDec > 0 ? (p.rc / totalOversDec).toFixed(1) : "0.0";
+            
+            return `
+            <tr class="hover:bg-gray-50 transition-colors">
+                <td class="p-3">
+                    <div class="flex items-center gap-2">
+                        <span class="font-mono text-gray-300 font-bold text-xs w-4">${i+1}</span>
+                        <div>
+                            <div class="font-bold text-gray-800 text-xs">${p.name}</div>
+                            <div class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">${p.team.substring(0,15)}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="p-2 text-center font-medium text-gray-500">${overs}</td>
+                <td class="p-2 text-center font-medium text-gray-500">${econ}</td>
+                <td class="p-2 text-center font-black text-blue-600 text-sm">${p.wkts}</td>
+            </tr>`;
+        }).join('');
+        
+        html += `</tbody></table>`;
+        wktContainer.innerHTML = html;
     }
 }
 
