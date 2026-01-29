@@ -931,6 +931,26 @@
     <div id="tourney-page-4" class="hidden w-full relative pb-40 animate-slide-up">
         <div class="max-w-5xl mx-auto px-4 mt-6 pb-32">
             
+            <div class="w-full mb-8 bg-white border border-gray-200 rounded-xl shadow-sm p-5 animate-slide-up">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h3 class="text-sm font-black text-gray-900 uppercase tracking-wide">Tournament Share Link</h3>
+                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-1">Anyone with this link can view standings & schedule</p>
+                    </div>
+                    <div class="flex items-center gap-2 w-full md:w-auto">
+                        <div class="flex-grow md:w-80 relative">
+                            <input type="text" id="public-tourney-link" readonly value="Generating..." class="w-full bg-gray-50 border border-gray-200 text-gray-600 text-xs font-bold rounded-lg px-3 py-2.5 outline-none select-all">
+                        </div>
+                        <button onclick="copyTourneyLink()" class="bg-gray-100 hover:bg-gray-200 text-gray-600 border border-gray-200 px-3 py-2.5 rounded-lg text-xs font-bold uppercase transition-colors">
+                            Copy
+                        </button>
+                        <button onclick="openTourneyLink()" class="bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 px-3 py-2.5 rounded-lg text-xs font-bold uppercase transition-colors">
+                            Open
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <div class="w-full animate-slide-up delay-200">
                  <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-bold text-gray-900 uppercase tracking-wide">Match Schedule</h3>
@@ -1117,7 +1137,7 @@
             container.insertAdjacentHTML('beforeend', rowHtml);
         };
 
-        // 4. Auto-Generate Schedule Logic (Knockout Aware)
+        // 4. Auto-Generate Schedule Logic (Knockout Aware & Persist Placeholders)
         window.generateProfessionalSchedule = function() {
             // Get Config
             const matchesPerTeam = parseInt(document.getElementById('tourney-rounds-count').value) || 1;
@@ -1141,79 +1161,96 @@
             const container = document.getElementById('schedule-rows');
             container.innerHTML = '';
 
-            // --- A. Generate League Matches (Single Group Round Robin) ---
-            // Note: For multi-group, ideally we'd split teams. For now, we generate basic fixtures
-            // and append the correct knockout structure based on the rule selected.
-            
+            // --- A. Generate League Matches (Standard Circle Method) ---
             let pool = [...teams];
-            if (pool.length % 2 !== 0) pool.push(null); 
+            if (pool.length % 2 !== 0) pool.push(null); // Add dummy for Bye
 
             const totalTeams = pool.length;
             const half = totalTeams / 2;
-            const roundsInSet = totalTeams - 1; 
 
-            for (let set = 0; set < matchesPerTeam; set++) {
-                for (let r = 0; r < roundsInSet; r++) {
-                    for (let i = 0; i < half; i++) {
-                        const t1 = pool[i];
-                        const t2 = pool[totalTeams - 1 - i];
+            for (let round = 0; round < matchesPerTeam; round++) {
+                for (let i = 0; i < half; i++) {
+                    const t1 = pool[i];
+                    const t2 = pool[totalTeams - 1 - i];
 
-                        if (t1 && t2) {
-                            const home = (set % 2 === 0) ? t1 : t2;
-                            const away = (set % 2 === 0) ? t2 : t1;
-                            addScheduleRow(`League Match`, { t1: home, t2: away });
-                        }
+                    if (t1 && t2) {
+                        const home = (round % 2 === 0) ? t1 : t2;
+                        const away = (round % 2 === 0) ? t2 : t1;
+                        addScheduleRow(`League Match`, { t1: home, t2: away });
                     }
-                    const fixed = pool[0];
-                    const rotated = pool.slice(1);
-                    const last = rotated.pop();
-                    rotated.unshift(last);
-                    pool = [fixed, ...rotated];
                 }
+
+                // Rotate Pool
+                const fixed = pool[0];
+                const rotated = pool.slice(1);
+                const last = rotated.pop();
+                rotated.unshift(last);
+                pool = [fixed, ...rotated];
             }
 
-            // --- B. Generate Knockouts (Auto-Fill based on Rule) ---
+            // --- B. Generate Knockouts with Force-Injected Placeholders ---
+            // This ensures "Winner SF1" etc. are saved as valid teams instead of being cleared.
+
+            const addKnockoutRow = (type, t1Text, t2Text) => {
+                addScheduleRow(type, { t1: t1Text, t2: t2Text });
+                
+                // FORCE INJECT OPTIONS: The default dropdowns wipe unknown values.
+                // We must re-inject these placeholders so they pass validation when saving.
+                const lastCard = container.lastElementChild;
+                if(lastCard) {
+                    const inject = (sel, val) => {
+                        if(val && val !== "TBD" && !Array.from(sel.options).some(o => o.value === val)) {
+                            const opt = document.createElement('option');
+                            opt.value = val;
+                            opt.text = val;
+                            sel.add(opt);
+                            sel.value = val; // Force selection
+                        }
+                    };
+                    inject(lastCard.querySelector('.sch-t1'), t1Text);
+                    inject(lastCard.querySelector('.sch-t2'), t2Text);
+                }
+            };
             
             if (qualifyRule === 'TOP_4') {
                 if (teams.length >= 4) {
-                    addScheduleRow('Semi Final 1', { t1: "1st Place", t2: "4th Place" });
-                    addScheduleRow('Semi Final 2', { t1: "2nd Place", t2: "3rd Place" });
-                    addScheduleRow('Final', { t1: "Winner SF1", t2: "Winner SF2" });
+                    addKnockoutRow('Semi Final 1', "1st Place", "4th Place");
+                    addKnockoutRow('Semi Final 2', "2nd Place", "3rd Place");
+                    addKnockoutRow('Final', "Winner SF1", "Winner SF2");
                 } else {
-                    addScheduleRow('Final', { t1: "1st Place", t2: "2nd Place" });
+                    addKnockoutRow('Final', "1st Place", "2nd Place");
                 }
             } 
             else if (qualifyRule === 'TOP_2') {
-                addScheduleRow('Final', { t1: "1st Place", t2: "2nd Place" });
+                addKnockoutRow('Final', "1st Place", "2nd Place");
             }
             else if (qualifyRule === 'TOP_8' && teams.length >= 8) {
-                addScheduleRow('Quarter Final 1', { t1: "1st", t2: "8th" });
-                addScheduleRow('Quarter Final 2', { t1: "2nd", t2: "7th" });
-                addScheduleRow('Quarter Final 3', { t1: "3rd", t2: "6th" });
-                addScheduleRow('Quarter Final 4', { t1: "4th", t2: "5th" });
-                addScheduleRow('Semi Final 1', { t1: "Winner QF1", t2: "Winner QF4" });
-                addScheduleRow('Semi Final 2', { t1: "Winner QF2", t2: "Winner QF3" });
-                addScheduleRow('Final', { t1: "Winner SF1", t2: "Winner SF2" });
+                addKnockoutRow('Quarter Final 1', "1st", "8th");
+                addKnockoutRow('Quarter Final 2', "2nd", "7th");
+                addKnockoutRow('Quarter Final 3', "3rd", "6th");
+                addKnockoutRow('Quarter Final 4', "4th", "5th");
+                addKnockoutRow('Semi Final 1', "Winner QF1", "Winner QF4");
+                addKnockoutRow('Semi Final 2', "Winner QF2", "Winner QF3");
+                addKnockoutRow('Final', "Winner SF1", "Winner SF2");
             }
             else if (qualifyRule === 'GROUP_TOP') {
                 if (numGroups === 2) {
-                    addScheduleRow('Final', { t1: "Winner Group A", t2: "Winner Group B" });
+                    addKnockoutRow('Final', "Winner Group A", "Winner Group B");
                 } else if (numGroups === 4) {
-                    addScheduleRow('Semi Final 1', { t1: "Winner Group A", t2: "Winner Group D" });
-                    addScheduleRow('Semi Final 2', { t1: "Winner Group B", t2: "Winner Group C" });
-                    addScheduleRow('Final', { t1: "Winner SF1", t2: "Winner SF2" });
+                    addKnockoutRow('Semi Final 1', "Winner Group A", "Winner Group D");
+                    addKnockoutRow('Semi Final 2', "Winner Group B", "Winner Group C");
+                    addKnockoutRow('Final', "Winner SF1", "Winner SF2");
                 } else {
-                    // Generic fallback
-                    addScheduleRow('Final', { t1: "Top Ranked 1", t2: "Top Ranked 2" });
+                    addKnockoutRow('Final', "Top Ranked 1", "Top Ranked 2");
                 }
             }
             else if (qualifyRule === 'GROUP_TOP_2') {
                 if (numGroups === 2) {
-                    addScheduleRow('Semi Final 1', { t1: "A1 (Winner A)", t2: "B2 (Runner B)" });
-                    addScheduleRow('Semi Final 2', { t1: "B1 (Winner B)", t2: "A2 (Runner A)" });
-                    addScheduleRow('Final', { t1: "Winner SF1", t2: "Winner SF2" });
+                    addKnockoutRow('Semi Final 1', "A1 (Winner A)", "B2 (Runner B)");
+                    addKnockoutRow('Semi Final 2', "B1 (Winner B)", "A2 (Runner A)");
+                    addKnockoutRow('Final', "Winner SF1", "Winner SF2");
                 } else {
-                     addScheduleRow('Final', { t1: "Qualifier 1", t2: "Qualifier 2" });
+                     addKnockoutRow('Final', "Qualifier 1", "Qualifier 2");
                 }
             }
         };
@@ -5193,6 +5230,9 @@ let tournamentState = {
 
 // --- TOURNAMENT SETUP FUNCTIONS ---
 
+// Global variable for pre-generated ID
+let pendingTourneyId = null;
+
 function nextTourneyStep() {
     const p1 = document.getElementById('tourney-page-1');
     const p2 = document.getElementById('tourney-page-2');
@@ -5252,7 +5292,30 @@ function nextTourneyStep() {
         
         // Initialize Schedule
         updateScheduleDropdowns();
+        
+        // --- NEW: GENERATE PUBLIC ID ---
+        if (!pendingTourneyId) {
+            const randomPart = Math.random().toString(36).substr(2, 6).toUpperCase();
+            pendingTourneyId = `TX_${randomPart}`;
+        }
+        
+        // Update the UI Input
+        const viewerUrl = `${window.location.origin}/tournament.html?id=${pendingTourneyId}`;
+        document.getElementById('public-tourney-link').value = viewerUrl;
     }
+}
+
+// Helpers for the Share Link
+function copyTourneyLink() {
+    const el = document.getElementById('public-tourney-link');
+    el.select();
+    document.execCommand('copy');
+    showCustomAlert("Link Copied", "Share this URL with players and fans.", "green");
+}
+
+function openTourneyLink() {
+    const url = document.getElementById('public-tourney-link').value;
+    if(url && !url.includes('Generating')) window.open(url, '_blank');
 }
 
 function setBallType(type, card) {
@@ -5644,13 +5707,15 @@ function handleScheduleSelection(selectElement) {
 function createProfessionalTournament() {
     const name = document.getElementById('tourney-name').value;
     const startDate = document.getElementById('tourney-start-date').value || new Date().toISOString().split('T')[0];
-    const country = "Unknown"; 
+    const country = document.getElementById('tourney-country') ? document.getElementById('tourney-country').value : "Unknown";
 
     if(!name) { showCustomAlert("Error", "Tournament Name is required", "red"); return; }
 
     const cards = document.getElementById('schedule-rows').querySelectorAll('.sch-card');
     const fixtures = [];
-    const tourneyId = "T_" + Math.random().toString(36).substr(2, 6).toUpperCase();
+    
+    // --- USE PRE-GENERATED ID OR FALLBACK ---
+    const tourneyId = pendingTourneyId || "T_" + Math.random().toString(36).substr(2, 6).toUpperCase();
 
     cards.forEach((card, index) => {
         const t1 = card.querySelector('.sch-t1').value;
@@ -5702,9 +5767,13 @@ function createProfessionalTournament() {
     // Validated Ball Type ID
     const ballTypeEl = document.getElementById('tourney-ball-type');
     const ballTypeVal = ballTypeEl ? ballTypeEl.value : 'Soft Ball';
+    
+    // Category
+    const categoryEl = document.getElementById('tourney-category');
+    const category = categoryEl ? categoryEl.value : "Open";
 
     const tournamentData = {
-        meta: { id: tourneyId, name, country, startDate, createdAt: Date.now() },
+        meta: { id: tourneyId, name, country, category, organizer: document.getElementById('organizer-name').value || "Community", startDate, createdAt: Date.now() },
         rules: {
             overs: parseInt(document.getElementById('tourney-overs').value),
             players: parseInt(document.getElementById('tourney-players').value),
@@ -6088,10 +6157,7 @@ function renderStandings() {
 }
 
 function renderStats() {
-    // Simple mock aggregation (Real implementation requires storing player stats after every match)
-    // For now, placeholder
-    document.getElementById('stats-runs').innerHTML = '<div class="text-xs text-gray-400 italic">Stats populate after matches complete</div>';
-    document.getElementById('stats-wickets').innerHTML = '<div class="text-xs text-gray-400 italic">Stats populate after matches complete</div>';
+    recalculatePlayerStats(); // Triggers Live + History Aggregation immediately
 }
 
 function switchDashTab(tab) {
@@ -6104,6 +6170,8 @@ function switchDashTab(tab) {
     });
     document.getElementById(`tab-${tab}`).classList.remove('text-gray-500');
     document.getElementById(`tab-${tab}`).classList.add('bg-purple-50', 'text-purple-700');
+    
+    if(tab === 'stats') renderStats(); // Refresh stats on tab switch
 }
 
 function exitTournament() {
@@ -6231,7 +6299,7 @@ function updateTournamentStatsAfterMatch() {
     const fixture = tournamentState.data.fixtures.find(f => f.id === state.fixtureId);
     if (!fixture) return;
 
-    // 1. Calculate Winner Logic (Same as before but strict)
+    // 1. Calculate Winner Logic
     const t1 = state.team1;
     const t2 = state.team2;
     let winner = null;
@@ -6247,7 +6315,6 @@ function updateTournamentStatsAfterMatch() {
     } else {
         resultText = "Match Tied";
         if(state.isSuperOver) {
-            // Super over result override logic if needed
              if (t1.score > t2.score) winner = t1.name;
              else winner = t2.name;
         }
@@ -6258,24 +6325,45 @@ function updateTournamentStatsAfterMatch() {
     fixture.result = resultText;
     fixture.winner = winner;
     
-    // Save NRR data
+    // Save Stats
     const getDec = (o, b) => o + (b/6);
     fixture.stats = {
         t1: { name: t1.name, score: t1.score, overs: getDec(t1.overs, t1.balls) },
         t2: { name: t2.name, score: t2.score, overs: getDec(t2.overs, t2.balls) }
     };
 
-    // 3. Save Player Stats to Log (IDEMPOTENT: Remove old stats for this matchID first)
+    // 3. Extract Fielding Stats (Catches/Stumpings) before saving
+    const fieldingMap = {};
+    const processFielding = (fieldingTeamKey, battingTeamKey) => {
+        Object.values(state[battingTeamKey].playerStats).forEach(p => {
+             if (p.dismissal) {
+                 const cMatch = p.dismissal.match(/^c\.\s(.*?)\sb\./);
+                 const stMatch = p.dismissal.match(/^st\.\s(.*?)\sb\./);
+                 if(cMatch) {
+                     const fName = cMatch[1];
+                     if(!fieldingMap[fName]) fieldingMap[fName] = { c: 0, st: 0 };
+                     fieldingMap[fName].c++;
+                 }
+                 if(stMatch) {
+                     const fName = stMatch[1];
+                     if(!fieldingMap[fName]) fieldingMap[fName] = { c: 0, st: 0 };
+                     fieldingMap[fName].st++;
+                 }
+             }
+        });
+    };
+    processFielding('team1', 'team2'); // Team 1 fielders vs Team 2 batters
+    processFielding('team2', 'team1'); // Team 2 fielders vs Team 1 batters
+
+    // 4. Save Player Stats to Log
     if(!tournamentState.data.matchStatsLog) tournamentState.data.matchStatsLog = [];
-    
-    // Filter out previous logs for this specific match ID to prevent duplicates
     tournamentState.data.matchStatsLog = tournamentState.data.matchStatsLog.filter(log => log.matchId !== fixture.id);
 
-    // Push new stats
     ['team1', 'team2'].forEach(key => {
         Object.values(state[key].playerStats).forEach(p => {
-             // Only save if they played
-             if(p.balls > 0 || p.ballsBowled > 0 || p.dismissal) {
+             // Save if played OR has fielding stats
+             const fStats = fieldingMap[p.name] || { c: 0, st: 0 };
+             if(p.balls > 0 || p.ballsBowled > 0 || p.dismissal || fStats.c > 0 || fStats.st > 0) {
                  tournamentState.data.matchStatsLog.push({
                      matchId: fixture.id,
                      name: p.name,
@@ -6284,52 +6372,77 @@ function updateTournamentStatsAfterMatch() {
                      balls: p.balls,
                      wkts: p.wickets,
                      runsConceded: p.runsConceded,
-                     ballsBowled: p.ballsBowled
+                     ballsBowled: p.ballsBowled,
+                     catches: fStats.c,
+                     stumpings: fStats.st
                  });
              }
         });
     });
 
-    // 4. Trigger Recalculations
-    autoFillKnockouts(fixture);
+    // 5. Trigger Recalculations
     recalculateStandings();
+    autoFillKnockouts(fixture);
     recalculatePlayerStats();
 
-    // 5. Save
+    // 6. Save
     saveTournamentData();
     showCustomAlert("Tournament Update", "Standings, Stats & Schedule Updated!", "green");
 }
 
 function autoFillKnockouts(completedFixture) {
-    const winner = completedFixture.winner;
-    if(!winner) return;
-    
-    const stage = completedFixture.stage;
     const fixtures = tournamentState.data.fixtures;
+    
+    // 1. Get Sorted Standings (Points Table)
+    const standings = [...tournamentState.data.standings].sort((a,b) => b.pts - a.pts || b.nrr - a.nrr);
+    
+    // 2. Build Resolver Map (Placeholders -> Real Teams)
+    const map = {};
 
-    // Helper to find next match
-    const setTeam = (stageName, slot, teamName) => {
-        const next = fixtures.find(f => f.stage === stageName && f.status !== 'COMPLETED');
-        if(next) {
-            if(slot === 1 && next.t1 === 'TBD') next.t1 = teamName;
-            else if(slot === 2 && next.t2 === 'TBD') next.t2 = teamName;
-        }
-    };
-
-    // Auto-Progression Logic
-    if(stage.includes("Semi Final")) {
-        // Find if it's SF1 or SF2 based on match order or name
-        // Simple heuristic: If it's the first SF found in array, assume slot 1
-        // Better: Check match number or explicit naming
-        if(stage === "Semi Final 1") setTeam("Final", 1, winner);
-        if(stage === "Semi Final 2") setTeam("Final", 2, winner);
-    } 
-    else if(stage.includes("Quarter")) {
-         if(stage === "Quarter Final 1") setTeam("Semi Final 1", 1, winner);
-         if(stage === "Quarter Final 2") setTeam("Semi Final 2", 1, winner);
-         if(stage === "Quarter Final 3") setTeam("Semi Final 1", 2, winner);
-         if(stage === "Quarter Final 4") setTeam("Semi Final 2", 2, winner);
+    // League Standings Mappings
+    if(standings[0]) { 
+        map["1st Place"] = standings[0].name; 
+        map["1st"] = standings[0].name; 
+        map["Winner Group A"] = standings[0].name; 
+        map["Qualifier 1"] = standings[0].name; 
+        map["Top Ranked 1"] = standings[0].name; 
     }
+    if(standings[1]) { 
+        map["2nd Place"] = standings[1].name; 
+        map["2nd"] = standings[1].name; 
+        map["Winner Group B"] = standings[1].name; 
+        map["Qualifier 2"] = standings[1].name; 
+        map["Top Ranked 2"] = standings[1].name; 
+    }
+    if(standings[2]) { map["3rd Place"] = standings[2].name; map["3rd"] = standings[2].name; }
+    if(standings[3]) { map["4th Place"] = standings[3].name; map["4th"] = standings[3].name; }
+
+    // Knockout Mappings (Winners of previous stages)
+    fixtures.forEach(f => {
+        if(f.status === 'COMPLETED' && f.winner) {
+            // Map exact stage name to Winner Key
+            if(f.stage === 'Semi Final 1') map["Winner SF1"] = f.winner;
+            if(f.stage === 'Semi Final 2') map["Winner SF2"] = f.winner;
+            if(f.stage === 'Quarter Final 1') map["Winner QF1"] = f.winner;
+            if(f.stage === 'Quarter Final 2') map["Winner QF2"] = f.winner;
+            if(f.stage === 'Quarter Final 3') map["Winner QF3"] = f.winner;
+            if(f.stage === 'Quarter Final 4') map["Winner QF4"] = f.winner;
+            
+            // Map by Match Number (Fallback)
+            map[`Winner Match ${f.matchNo}`] = f.winner;
+        }
+    });
+
+    // 3. Sweep Upcoming Fixtures & Replace Placeholders
+    let updatesMade = false;
+    fixtures.forEach(f => {
+        if(f.status !== 'COMPLETED' && f.status !== 'LIVE') {
+            if(map[f.t1]) { f.t1 = map[f.t1]; updatesMade = true; }
+            if(map[f.t2]) { f.t2 = map[f.t2]; updatesMade = true; }
+        }
+    });
+    
+    if(updatesMade) console.log("Knockout fixtures updated automatically.");
 }
 
 function recalculateStandings() {
@@ -6374,132 +6487,291 @@ function recalculateStandings() {
     });
 }
 
-// 7. PROFESSIONAL STATS ENGINE
+// 7. PROFESSIONAL STATS ENGINE (Smart Cric Theme - Full Width Fix)
 function recalculatePlayerStats() {
     const logs = tournamentState.data.matchStatsLog || [];
     const aggStats = {}; 
+    
+    // Helper to init
+    const initPlayerStat = (key, name, team) => {
+        aggStats[key] = {
+            name: name, team: team, matches: 0, innings: 0,
+            runs: 0, balls: 0, fours: 0, sixes: 0,
+            wkts: 0, rc: 0, bb: 0,
+            catches: 0, stumpings: 0
+        };
+    };
 
+    // 1. Process Historical Logs
     logs.forEach(log => {
         const key = `${log.name}_${log.team}`;
-        if(!aggStats[key]) {
-            aggStats[key] = { 
-                name: log.name, 
-                team: log.team, 
-                matches: 0,
-                runs: 0, 
-                balls: 0, 
-                wkts: 0, 
-                rc: 0, 
-                bb: 0,
-                innings: 0
-            };
-        }
+        if(!aggStats[key]) initPlayerStat(key, log.name, log.team);
+        
         const p = aggStats[key];
-        p.matches++; // Increment matches played
-        
-        // Batting Accumulation
-        if(log.balls > 0) {
-            p.runs += (log.runs || 0);
-            p.balls += (log.balls || 0);
-            p.innings++;
-        }
-        
-        // Bowling Accumulation
-        if(log.ballsBowled > 0) {
-            p.wkts += (log.wkts || 0);
-            p.rc += (log.runsConceded || 0);
-            p.bb += (log.ballsBowled || 0);
-        }
+        p.matches++;
+        p.runs += (log.runs || 0);
+        p.balls += (log.balls || 0);
+        p.wkts += (log.wkts || 0);
+        p.rc += (log.runsConceded || 0);
+        p.bb += (log.ballsBowled || 0);
+        p.catches += (log.catches || 0);
+        p.stumpings += (log.stumpings || 0);
+        if(log.balls > 0) p.innings++;
     });
+
+    // 2. Process LIVE Match (Real-Time Aggregation)
+    if (state.matchType === 'TOURNAMENT' && state.tournamentId === tournamentState.id && state.active) {
+        ['team1', 'team2'].forEach(teamKey => {
+            const teamName = state[teamKey].name;
+            Object.values(state[teamKey].playerStats).forEach(liveP => {
+                const key = `${liveP.name}_${teamName}`;
+                if(!aggStats[key]) initPlayerStat(key, liveP.name, teamName);
+                
+                const p = aggStats[key];
+                p.runs += (liveP.runs || 0);
+                p.balls += (liveP.balls || 0);
+                p.wkts += (liveP.wickets || 0);
+                p.rc += (liveP.runsConceded || 0);
+                p.bb += (liveP.ballsBowled || 0);
+                
+                p.matches++;
+                if(liveP.balls > 0) p.innings++;
+            });
+        });
+
+        const processLiveFielding = (fieldingTeamKey, battingTeamKey) => {
+             const teamName = state[fieldingTeamKey].name;
+             Object.values(state[battingTeamKey].playerStats).forEach(p => {
+                 if (p.dismissal) {
+                     const cMatch = p.dismissal.match(/^c\.\s(.*?)\sb\./);
+                     const stMatch = p.dismissal.match(/^st\.\s(.*?)\sb\./);
+                     if(cMatch) {
+                         const fName = cMatch[1];
+                         const key = `${fName}_${teamName}`;
+                         if(!aggStats[key]) initPlayerStat(key, fName, teamName);
+                         aggStats[key].catches++;
+                     }
+                     if(stMatch) {
+                         const fName = stMatch[1];
+                         const key = `${fName}_${teamName}`;
+                         if(!aggStats[key]) initPlayerStat(key, fName, teamName);
+                         aggStats[key].stumpings++;
+                     }
+                 }
+             });
+        };
+        processLiveFielding('team1', 'team2');
+        processLiveFielding('team2', 'team1');
+    }
     
-    renderStatsUI(Object.values(aggStats));
+    // Save to global for UI interactions
+    window.latestPlayerStats = Object.values(aggStats);
+    renderStatsUI(window.latestPlayerStats);
 }
 
 function renderStatsUI(players) {
+    // 1. Hydrate Data & State
+    if (!players && window.latestPlayerStats) players = window.latestPlayerStats;
+    if (!players) return;
+    if (!window.statsTabState) window.statsTabState = { tab: 'batsman', team: 'All Teams' };
+
     const bpo = tournamentState.data.rules.ballType === 'Leather' ? 6 : (tournamentState.data.rules.ballsPerOver || 6);
 
-    // --- RENDER TOP RUN SCORERS (Orange Cap Style) ---
-    const topRuns = [...players].filter(p => p.runs > 0).sort((a,b) => b.runs - a.runs).slice(0, 8);
-    const runContainer = document.getElementById('stats-runs');
-    
-    if(runContainer) {
-        let html = `
-        <table class="w-full text-left text-[10px]">
-            <thead class="bg-orange-50 text-orange-800 uppercase font-black">
-                <tr>
-                    <th class="p-2 rounded-l-lg">Player</th>
-                    <th class="p-2 text-center">Mat</th>
-                    <th class="p-2 text-center">SR</th>
-                    <th class="p-2 text-center rounded-r-lg">Runs</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-50">`;
-            
-        html += topRuns.map((p, i) => {
-            const sr = p.balls > 0 ? ((p.runs / p.balls) * 100).toFixed(0) : 0;
-            return `
-            <tr class="hover:bg-gray-50 transition-colors">
-                <td class="p-3">
-                    <div class="flex items-center gap-2">
-                        <span class="font-mono text-gray-300 font-bold text-xs w-4">${i+1}</span>
-                        <div>
-                            <div class="font-bold text-gray-800 text-xs">${p.name}</div>
-                            <div class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">${p.team.substring(0,15)}</div>
-                        </div>
-                    </div>
-                </td>
-                <td class="p-2 text-center font-medium text-gray-500">${p.matches}</td>
-                <td class="p-2 text-center font-medium text-gray-500">${sr}</td>
-                <td class="p-2 text-center font-black text-orange-600 text-sm">${p.runs}</td>
-            </tr>`;
-        }).join('');
-        
-        html += `</tbody></table>`;
-        runContainer.innerHTML = html;
+    // 2. CHECK & WIPE OLD LAYOUT (Fixes Duplication & Width)
+    // We check for the main 'stats-runs' container (Legacy hook)
+    let runsAnchor = document.getElementById('stats-runs');
+    let wktsAnchor = document.getElementById('stats-wickets');
+    let parentContainer = null;
+
+    if (runsAnchor) {
+        parentContainer = runsAnchor.parentNode;
+        // WIPE THE PARENT CLEAN. This removes 'stats-runs' AND 'stats-wickets'
+        parentContainer.innerHTML = ''; 
+        // Force Full Width - No max-width, no grid.
+        parentContainer.className = "w-full flex flex-col gap-4"; 
+        parentContainer.id = "stats-main-wrapper"; // Tag it so we don't wipe it next time
+    } else if (wktsAnchor) {
+        // Fallback if runs anchor already gone but wickets remains
+        parentContainer = wktsAnchor.parentNode;
+        parentContainer.innerHTML = '';
+        parentContainer.className = "w-full flex flex-col gap-4";
+        parentContainer.id = "stats-main-wrapper";
+    } else {
+        // If anchors are gone, look for our new wrapper
+        parentContainer = document.getElementById('stats-main-wrapper');
     }
 
-    // --- RENDER TOP WICKET TAKERS (Purple Cap Style) ---
-    const topWkts = [...players].filter(p => p.wkts > 0).sort((a,b) => b.wkts - a.wkts || a.rc - b.rc).slice(0, 8);
-    const wktContainer = document.getElementById('stats-wickets');
-    
-    if(wktContainer) {
-        let html = `
-        <table class="w-full text-left text-[10px]">
-            <thead class="bg-blue-50 text-blue-800 uppercase font-black">
-                <tr>
-                    <th class="p-2 rounded-l-lg">Player</th>
-                    <th class="p-2 text-center">Overs</th>
-                    <th class="p-2 text-center">Econ</th>
-                    <th class="p-2 text-center rounded-r-lg">Wkts</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-50">`;
-            
-        html += topWkts.map((p, i) => {
-            const overs = Math.floor(p.bb / bpo) + '.' + (p.bb % bpo);
-            const totalOversDec = p.bb / bpo;
-            const econ = totalOversDec > 0 ? (p.rc / totalOversDec).toFixed(1) : "0.0";
-            
-            return `
-            <tr class="hover:bg-gray-50 transition-colors">
-                <td class="p-3">
-                    <div class="flex items-center gap-2">
-                        <span class="font-mono text-gray-300 font-bold text-xs w-4">${i+1}</span>
-                        <div>
-                            <div class="font-bold text-gray-800 text-xs">${p.name}</div>
-                            <div class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">${p.team.substring(0,15)}</div>
-                        </div>
-                    </div>
-                </td>
-                <td class="p-2 text-center font-medium text-gray-500">${overs}</td>
-                <td class="p-2 text-center font-medium text-gray-500">${econ}</td>
-                <td class="p-2 text-center font-black text-blue-600 text-sm">${p.wkts}</td>
-            </tr>`;
-        }).join('');
-        
-        html += `</tbody></table>`;
-        wktContainer.innerHTML = html;
+    if (!parentContainer) return; // Should not happen if HTML matches
+
+    // 3. Create Widget if Missing
+    let widget = document.getElementById('stats-widget-container');
+    if (!widget) {
+        widget = document.createElement('div');
+        widget.id = 'stats-widget-container';
+        widget.className = "bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden w-full"; // Added w-full
+        parentContainer.appendChild(widget);
     }
+
+    // 4. Render Skeleton (Header, Tabs, Filter) if empty
+    if (widget.innerHTML === '') {
+        widget.innerHTML = `
+            <div class="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-3 bg-gray-50">
+                <h3 class="font-black text-gray-800 uppercase tracking-wide text-sm flex items-center gap-2">
+                    🏆 Tournament Leaderboard
+                </h3>
+                <select id="stats-team-filter" onchange="updateStatsTeam(this.value)" class="w-full md:w-auto bg-white border border-gray-200 text-gray-700 text-xs font-bold rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 shadow-sm">
+                    <option value="All Teams">All Teams</option>
+                </select>
+            </div>
+            
+            <div class="flex border-b border-gray-100 overflow-x-auto no-scrollbar">
+                <button onclick="updateStatsTab('batsman')" id="tab-batsman" class="flex-1 py-3 px-4 text-xs font-bold text-center border-b-2 transition-colors whitespace-nowrap">
+                    🏏 Best Batsman
+                </button>
+                <button onclick="updateStatsTab('bowler')" id="tab-bowler" class="flex-1 py-3 px-4 text-xs font-bold text-center border-b-2 transition-colors whitespace-nowrap">
+                    🥎 Best Bowler
+                </button>
+                <button onclick="updateStatsTab('fielder')" id="tab-fielder" class="flex-1 py-3 px-4 text-xs font-bold text-center border-b-2 transition-colors whitespace-nowrap">
+                    🧤 Best Fielder
+                </button>
+            </div>
+
+            <div id="stats-table-area" class="overflow-x-auto min-h-[350px] bg-white w-full"></div>
+        `;
+        
+        // Attach Globals
+        window.updateStatsTab = (t) => { window.statsTabState.tab = t; renderStatsUI(window.latestPlayerStats); };
+        window.updateStatsTeam = (t) => { window.statsTabState.team = t; renderStatsUI(window.latestPlayerStats); };
+    }
+
+    // 5. Update Dropdown Options
+    const teamSelect = document.getElementById('stats-team-filter');
+    if (teamSelect) {
+        const teams = [...new Set(players.map(p => p.team))].sort();
+        if (teamSelect.options.length !== teams.length + 1) {
+            const current = window.statsTabState.team;
+            teamSelect.innerHTML = `<option value="All Teams">All Teams</option>` + 
+                teams.map(t => `<option value="${t}" ${t===current?'selected':''}>${t}</option>`).join('');
+        }
+    }
+
+    // 6. Update Active Tab Styling
+    const tabs = {
+        batsman: { color: 'border-orange-500 text-orange-600 bg-orange-50', inactive: 'border-transparent text-gray-400 hover:text-gray-600' },
+        bowler: { color: 'border-indigo-500 text-indigo-600 bg-indigo-50', inactive: 'border-transparent text-gray-400 hover:text-gray-600' },
+        fielder: { color: 'border-teal-500 text-teal-600 bg-teal-50', inactive: 'border-transparent text-gray-400 hover:text-gray-600' }
+    };
+    Object.keys(tabs).forEach(k => {
+        const btn = document.getElementById(`tab-${k}`);
+        if(btn) {
+            btn.className = `flex-1 py-3 px-4 text-xs font-bold text-center border-b-2 transition-colors whitespace-nowrap ${window.statsTabState.tab === k ? tabs[k].color : tabs[k].inactive}`;
+        }
+    });
+
+    // 7. Filter & Process Data
+    let data = window.statsTabState.team === 'All Teams' ? players : players.filter(p => p.team === window.statsTabState.team);
+    const activeTab = window.statsTabState.tab;
+    let html = '';
+
+    if (activeTab === 'batsman') {
+        data = data.filter(p => p.runs > 0).sort((a,b) => b.runs - a.runs || ((b.runs/b.balls)-(a.runs/a.balls))).slice(0,20);
+        html = `
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-orange-600 text-white text-[10px] uppercase font-bold tracking-wider">
+                        <th class="p-3">#</th>
+                        <th class="p-3 w-1/2">Player</th>
+                        <th class="p-3 text-center">Mat</th>
+                        <th class="p-3 text-center">SR</th>
+                        <th class="p-3 text-right">Runs</th>
+                    </tr>
+                </thead>
+                <tbody class="text-xs divide-y divide-gray-100">
+                    ${data.map((p,i) => {
+                        const sr = p.balls > 0 ? ((p.runs/p.balls)*100).toFixed(0) : 0;
+                        return `
+                        <tr class="odd:bg-white even:bg-gray-50 hover:bg-orange-50 transition-colors">
+                            <td class="p-3 font-mono text-gray-400 font-bold">${i+1}</td>
+                            <td class="p-3">
+                                <div class="font-bold text-gray-800 text-xs">${p.name}</div>
+                                <div class="text-[9px] text-gray-400 uppercase font-semibold">${p.team}</div>
+                            </td>
+                            <td class="p-3 text-center font-medium text-gray-500">${p.matches}</td>
+                            <td class="p-3 text-center font-medium text-gray-500">${sr}</td>
+                            <td class="p-3 text-right font-black text-orange-600 text-sm">${p.runs}</td>
+                        </tr>`;
+                    }).join('')}
+                </tbody>
+            </table>`;
+    } 
+    else if (activeTab === 'bowler') {
+        data = data.filter(p => p.wkts > 0 || p.bb > 0).sort((a,b) => b.wkts - a.wkts || (a.rc/(a.bb||1))-(b.rc/(b.bb||1))).slice(0,20);
+        html = `
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-indigo-600 text-white text-[10px] uppercase font-bold tracking-wider">
+                        <th class="p-3">#</th>
+                        <th class="p-3 w-1/2">Player</th>
+                        <th class="p-3 text-center">Ov</th>
+                        <th class="p-3 text-center">Econ</th>
+                        <th class="p-3 text-right">Wkts</th>
+                    </tr>
+                </thead>
+                <tbody class="text-xs divide-y divide-gray-100">
+                    ${data.map((p,i) => {
+                        const ov = Math.floor(p.bb/bpo) + '.' + (p.bb%bpo);
+                        const ec = (p.bb>0 ? (p.rc/(p.bb/bpo)) : 0).toFixed(1);
+                        return `
+                        <tr class="odd:bg-white even:bg-gray-50 hover:bg-indigo-50 transition-colors">
+                            <td class="p-3 font-mono text-gray-400 font-bold">${i+1}</td>
+                            <td class="p-3">
+                                <div class="font-bold text-gray-800 text-xs">${p.name}</div>
+                                <div class="text-[9px] text-gray-400 uppercase font-semibold">${p.team}</div>
+                            </td>
+                            <td class="p-3 text-center font-medium text-gray-500">${ov}</td>
+                            <td class="p-3 text-center font-medium text-gray-500">${ec}</td>
+                            <td class="p-3 text-right font-black text-indigo-600 text-sm">${p.wkts}</td>
+                        </tr>`;
+                    }).join('')}
+                </tbody>
+            </table>`;
+    }
+    else {
+        data = data.filter(p => p.catches > 0 || p.stumpings > 0).sort((a,b) => b.catches - a.catches).slice(0,20);
+        html = `
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-teal-600 text-white text-[10px] uppercase font-bold tracking-wider">
+                        <th class="p-3">#</th>
+                        <th class="p-3 w-1/2">Player</th>
+                        <th class="p-3 text-center">Mat</th>
+                        <th class="p-3 text-center">St</th>
+                        <th class="p-3 text-right">Catches</th>
+                    </tr>
+                </thead>
+                <tbody class="text-xs divide-y divide-gray-100">
+                    ${data.map((p,i) => {
+                        return `
+                        <tr class="odd:bg-white even:bg-gray-50 hover:bg-teal-50 transition-colors">
+                            <td class="p-3 font-mono text-gray-400 font-bold">${i+1}</td>
+                            <td class="p-3">
+                                <div class="font-bold text-gray-800 text-xs">${p.name}</div>
+                                <div class="text-[9px] text-gray-400 uppercase font-semibold">${p.team}</div>
+                            </td>
+                            <td class="p-3 text-center font-medium text-gray-500">${p.matches}</td>
+                            <td class="p-3 text-center font-medium text-gray-500">${p.stumpings}</td>
+                            <td class="p-3 text-right font-black text-teal-600 text-sm">${p.catches}</td>
+                        </tr>`;
+                    }).join('')}
+                </tbody>
+            </table>`;
+    }
+
+    if(data.length === 0) {
+        html = `<div class="p-8 text-center text-gray-400 text-xs italic">No stats available for ${window.statsTabState.team} yet.</div>`;
+    }
+
+    document.getElementById('stats-table-area').innerHTML = html;
 }
 
 function saveTournamentData() {
