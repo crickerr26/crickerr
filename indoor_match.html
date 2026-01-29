@@ -537,160 +537,156 @@
     </div>
 </div>
 
-<div id="tournament-setup" class="setup-step hidden w-full max-w-lg mx-auto pb-0">
+<div id="tournament-setup" class="setup-step hidden w-full md:max-w-5xl mx-auto bg-[#F8F9FA] min-h-screen font-sans">
     
-    <div id="tourney-page-1" class="w-full relative pb-40">
-        <div class="sticky top-0 z-40 bg-[#f3f4f6]/95 backdrop-blur-md pt-4 pb-4 px-1 mb-6 border-b border-gray-200/50">
-            <div class="flex items-center justify-between mb-4">
-                <button onclick="backToModeSelect()" class="text-[10px] font-bold text-gray-400 hover:text-gray-800 uppercase tracking-widest flex items-center gap-1 transition-colors">
-                    <span class="text-base">←</span> Cancel
-                </button>
-                <div class="flex gap-1.5">
-                    <div class="h-1 w-6 bg-black rounded-full"></div>
-                    <div class="h-1 w-6 bg-gray-300 rounded-full"></div>
-                </div>
-            </div>
-            <h2 class="text-3xl font-black text-center uppercase tracking-tighter leading-none text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 animate-gradient-x drop-shadow-sm pb-1">
-                Tournament Info
-            </h2>
-        </div>
-
-        <div class="wizard-section animate-pop">
-            <div class="wizard-header">
-                <h3 class="text-sm font-bold text-black uppercase tracking-wide flex-grow">General Config</h3>
-                <span class="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded">STEP 1</span>
-            </div>
-            
-            <div class="mobile-input-group">
-                <label class="mobile-label">Tournament Name <span class="text-red-500">*</span></label>
-                <input type="text" id="tourney-name" placeholder="e.g. Winter League 2026" class="mobile-input">
-            </div>
-
-            <div class="mobile-input-group">
-                <label class="mobile-label">Category</label>
-                <div class="relative">
-                    <select id="tourney-category" class="mobile-input appearance-none cursor-pointer">
-                        <option value="" disabled selected>-- Select --</option>
-                        <option value="Open">Open</option>
-                        <option value="Corporate">Corporate</option>
-                        <option value="Community">Community</option>
-                        <option value="School">School</option>
-                        <option value="College">College</option>
-                        <option value="University">University</option>
-                        <option value="Series">Series</option>
-                        <option value="Other">Other</option>
-                    </select>
-                    <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-500">▼</div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div class="mobile-input-group">
-                    <label class="mobile-label">Organizer <span class="text-red-500">*</span></label>
-                    <input type="text" id="organizer-name" placeholder="e.g. Royal Sports" class="mobile-input">
-                </div>
-                <div class="mobile-input-group">
-                    <label class="mobile-label">Org. Code</label>
-                    <input type="text" id="organizer-code" readonly class="mobile-input bg-gray-50 text-gray-500 cursor-not-allowed select-all font-mono" title="Auto-Generated Unique Code">
-                </div>
-            </div>
-
-            <div class="mobile-input-group">
-                <label class="mobile-label">Host Country <span class="text-red-500">*</span></label>
-                <div class="relative">
-                    <select id="tourney-country" onchange="renderTournamentSlots()" class="mobile-input appearance-none cursor-pointer">
-                        <option value="" disabled selected>-- Select --</option>
-                        <option value="India">🇮🇳 India</option>
-                        <option value="Australia">🇦🇺 Australia</option>
-                        <option value="England">🇬🇧 England</option>
-                        <option value="Pakistan">🇵🇰 Pakistan</option>
-                        <option value="Sri Lanka">🇱🇰 Sri Lanka</option>
-                        <option value="Bangladesh">🇧🇩 Bangladesh</option>
-                        <option value="South Africa">🇿🇦 South Africa</option>
-                        <option value="New Zealand">🇳🇿 New Zealand</option>
-                        <option value="Afghanistan">🇦🇫 Afghanistan</option>
-                        <option value="West Indies">🌴 West Indies</option>
-                        <option value="UAE">🇦🇪 UAE</option>
-                        <option value="USA">🇺🇸 USA</option>
-                        <option value="Canada">🇨🇦 Canada</option>
-                        <option value="Other">🌍 Other</option>
-                    </select>
-                    <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-500">▼</div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div class="mobile-input-group">
-                    <label class="mobile-label">Start Date</label>
-                    <input type="date" id="tourney-start-date" class="mobile-input">
-                </div>
-                <div class="mobile-input-group">
-                    <label class="mobile-label">Venues</label>
-                    <div class="relative">
-                        <select id="tourney-ground-count" onchange="renderGroundInputs()" class="mobile-input appearance-none cursor-pointer">
-                            <option value="1" selected>1 Ground</option>
-                            <option value="2">2 Grounds</option>
-                            <option value="3">3 Grounds</option>
-                            <option value="4">4 Grounds</option>
-                            <option value="5">5 Grounds</option>
-                            <option value="6">6 Grounds</option>
-                            <option value="7">7 Grounds</option>
-                            <option value="8">8 Grounds</option>
-                            <option value="9">9 Grounds</option>
-                            <option value="10">10 Grounds</option>
-                            <option value="11">11 Grounds</option>
-                            <option value="12">12 Grounds</option>
-                            <option value="13">13 Grounds</option>
-                            <option value="14">14 Grounds</option>
-                            <option value="15">15 Grounds</option>
-                        </select>
-                        <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-500">▼</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div id="dynamic-grounds-container" class="space-y-3 pt-2"></div>
-        </div>
-
-        <div class="sticky-footer">
-            <button onclick="nextTourneyStep()" class="w-full py-4 bg-black text-white font-bold rounded-xl shadow-lg uppercase tracking-widest text-xs flex items-center justify-center gap-3 active:scale-95 transition-transform">
-                <span>Next: Configure Rules</span>
-                <span class="bg-white/20 px-2 py-0.5 rounded text-[10px]">➜</span>
+    <div class="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+            <button onclick="backToModeSelect()" class="group flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors px-2 py-1 rounded hover:bg-gray-100">
+                <span class="text-lg">←</span>
+                <span class="text-xs font-bold uppercase tracking-wider">Dashboard</span>
             </button>
+            
+            <div class="flex items-center gap-2">
+                 <div class="flex items-center gap-1">
+                    <div id="step-dot-1" class="w-6 h-6 rounded-full bg-blue-900 text-white text-[10px] font-bold flex items-center justify-center">1</div>
+                    <div class="w-8 h-0.5 bg-gray-200 rounded-full">
+                        <div id="step-line-1" class="h-full bg-blue-900 w-0 transition-all duration-500"></div>
+                    </div>
+                 </div>
+                 <div class="flex items-center gap-1">
+                    <div id="step-dot-2" class="w-6 h-6 rounded-full bg-gray-200 text-gray-500 text-[10px] font-bold flex items-center justify-center transition-colors">2</div>
+                    <div class="w-8 h-0.5 bg-gray-200 rounded-full">
+                        <div id="step-line-2" class="h-full bg-blue-900 w-0 transition-all duration-500"></div>
+                    </div>
+                 </div>
+                 <div class="flex items-center gap-1">
+                    <div id="step-dot-3" class="w-6 h-6 rounded-full bg-gray-200 text-gray-500 text-[10px] font-bold flex items-center justify-center transition-colors">3</div>
+                    <div class="w-8 h-0.5 bg-gray-200 rounded-full">
+                        <div id="step-line-3" class="h-full bg-blue-900 w-0 transition-all duration-500"></div>
+                    </div>
+                 </div>
+                 <div id="step-dot-4" class="w-6 h-6 rounded-full bg-gray-200 text-gray-500 text-[10px] font-bold flex items-center justify-center transition-colors">4</div>
+            </div>
+            
+            <div class="w-20 text-right">
+                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">SETUP</span>
+            </div>
         </div>
     </div>
 
-
-    <div id="tourney-page-2" class="hidden w-full relative pb-40">
-        <div class="sticky top-0 z-40 bg-[#f3f4f6]/95 backdrop-blur-md pt-4 pb-4 px-1 mb-6 border-b border-gray-200/50">
-            <div class="flex items-center justify-between mb-4">
-                <button onclick="document.getElementById('tourney-page-2').classList.add('hidden'); document.getElementById('tourney-page-1').classList.remove('hidden');" class="text-[10px] font-bold text-gray-400 hover:text-gray-800 uppercase tracking-widest flex items-center gap-1 transition-colors">
-                    <span class="text-base">←</span> Back
-                </button>
-                <div class="flex gap-1.5">
-                    <div class="h-1 w-6 bg-gray-300 rounded-full"></div>
-                    <div class="h-1 w-6 bg-black rounded-full"></div>
+    <div id="tourney-page-1" class="w-full relative pb-40 animate-pop">
+        <div class="max-w-3xl mx-auto px-4 mt-8 space-y-8">
+            
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <div class="bg-gray-50 px-6 py-3 border-b border-gray-200 flex items-center gap-2">
+                    <span class="text-blue-600 font-bold text-lg">01.</span>
+                    <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide">General Information</h3>
+                </div>
+                
+                <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Tournament Name <span class="text-red-500">*</span></label>
+                        <input type="text" id="tourney-name" placeholder="e.g. Winter Cup 2026" 
+                            class="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm font-bold text-gray-900 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition-all placeholder-gray-400">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Category</label>
+                        <div class="relative">
+                            <select id="tourney-category" class="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm font-bold text-gray-900 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none appearance-none cursor-pointer">
+                                <option value="Open" selected>Open Tournament</option>
+                                <option value="Corporate">Corporate League</option>
+                                <option value="Community">Community Cup</option>
+                                <option value="School">School / University</option>
+                                <option value="Series">Bilateral Series</option>
+                            </select>
+                            <div class="absolute right-4 top-3.5 pointer-events-none text-gray-500 text-xs">▼</div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <h2 class="text-3xl font-black text-center text-black uppercase tracking-tighter leading-none pb-1">
-                Match Rules
-            </h2>
+
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <div class="bg-gray-50 px-6 py-3 border-b border-gray-200 flex items-center gap-2">
+                    <span class="text-blue-600 font-bold text-lg">02.</span>
+                    <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Logistics</h3>
+                </div>
+                
+                <div class="p-6 space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Organizer</label>
+                            <input type="text" id="organizer-name" placeholder="Organization Name" 
+                                class="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm font-bold text-gray-900 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Host Country</label>
+                            <div class="relative">
+                                <select id="tourney-country" class="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm font-bold text-gray-900 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none appearance-none cursor-pointer">
+                                    <option value="India">🇮🇳 India</option>
+                                    <option value="Australia">🇦🇺 Australia</option>
+                                    <option value="England">🇬🇧 England</option>
+                                    <option value="Pakistan">🇵🇰 Pakistan</option>
+                                    <option value="Sri Lanka">🇱🇰 Sri Lanka</option>
+                                    <option value="South Africa">🇿🇦 South Africa</option>
+                                    <option value="Canada">🇨🇦 Canada</option>
+                                    <option value="USA">🇺🇸 USA</option>
+                                    <option value="UAE">🇦🇪 UAE</option>
+                                    <option value="Other">🌍 Other</option>
+                                </select>
+                                <div class="absolute right-4 top-3.5 pointer-events-none text-gray-500 text-xs">▼</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                         <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Start Date</label>
+                            <input type="date" id="tourney-start-date" class="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm font-bold text-gray-900 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none">
+                        </div>
+                        <div>
+                             <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Venues</label>
+                             <div class="relative">
+                                <select id="tourney-ground-count" onchange="renderGroundInputs()" class="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm font-bold text-gray-900 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none appearance-none cursor-pointer">
+                                    <option value="1" selected>1 Ground</option>
+                                    <option value="2">2 Grounds</option>
+                                    <option value="3">3 Grounds</option>
+                                    <option value="4">4 Grounds</option>
+                                    <option value="5">5 Grounds</option>
+                                </select>
+                                <div class="absolute right-4 top-3.5 pointer-events-none text-gray-500 text-xs">▼</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="dynamic-grounds-container" class="space-y-3 pt-2"></div>
+                </div>
+            </div>
+            
+            <input type="hidden" id="organizer-code">
         </div>
 
-        <div class="wizard-section animate-pop">
-            <div class="wizard-header">
-                <h3 class="text-sm font-bold text-black uppercase tracking-wide flex-grow">Game Settings</h3>
-                <span class="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded">STEP 2</span>
+        <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-50">
+            <div class="max-w-3xl mx-auto flex justify-end">
+                <button onclick="nextTourneyStep()" class="px-8 py-3 bg-blue-900 text-white font-bold rounded-lg shadow hover:bg-black transition-all active:scale-[0.98] flex items-center gap-2 uppercase tracking-wide text-xs">
+                    <span>Next: Rules</span>
+                    <span>→</span>
+                </button>
             </div>
+        </div>
+    </div>
 
-            <div class="grid grid-cols-2 gap-4">
-                <div class="mobile-input-group">
-                    <label class="mobile-label">Overs / Innings</label>
-                    <div class="relative">
-                        <select id="tourney-overs" class="mobile-input appearance-none cursor-pointer">
-                            <option value="2">2 Overs</option>
-                            <option value="4">4 Overs</option>
-                            <option value="5">5 Overs</option>
+    <div id="tourney-page-2" class="hidden w-full relative pb-40 animate-pop">
+        <div class="max-w-3xl mx-auto px-4 mt-8 space-y-8">
+            
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <div class="bg-gray-50 px-6 py-3 border-b border-gray-200 flex items-center gap-2">
+                    <span class="text-blue-600 font-bold text-lg">03.</span>
+                    <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Match Format</h3>
+                </div>
+                <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="relative p-4 border border-gray-200 rounded-lg hover:border-blue-500 transition-colors bg-gray-50">
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Overs Per Innings</label>
+                        <select id="tourney-overs" onchange="document.getElementById('disp-overs').innerText = this.value" class="w-full bg-transparent text-2xl font-black text-gray-900 outline-none cursor-pointer z-10 relative py-2">
                             <option value="6" selected>6 Overs</option>
                             <option value="8">8 Overs</option>
                             <option value="10">10 Overs</option>
@@ -698,330 +694,173 @@
                             <option value="15">15 Overs</option>
                             <option value="20">20 Overs</option>
                         </select>
-                        <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-500">▼</div>
+                         <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 text-xs">▼</div>
                     </div>
-                </div>
-                <div class="mobile-input-group">
-                    <label class="mobile-label">Wickets / Team</label>
-                    <div class="relative">
-                        <select id="tourney-wickets" class="mobile-input appearance-none cursor-pointer">
-                            <option value="10" selected>10 Wickets</option>
-                            <option value="8">8 Wickets</option>
-                            <option value="6">6 Wickets</option>
-                            <option value="11">All Play</option>
-                        </select>
-                        <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-500">▼</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div class="mobile-input-group">
-                    <label class="mobile-label">Wide Runs</label>
-                    <input type="number" id="tourney-wide-runs" value="1" class="mobile-input text-center">
-                </div>
-                <div class="mobile-input-group">
-                    <label class="mobile-label">No Ball Runs</label>
-                    <input type="number" id="tourney-noball-runs" value="1" class="mobile-input text-center">
-                </div>
-            </div>
-
-            <div class="mobile-input-group">
-                <label class="mobile-label">Ball Type</label>
-                <div class="relative">
-                    <select id="tourney-ball-type" class="mobile-input appearance-none cursor-pointer">
-                        <option value="Tennis" selected>🎾 Tennis Ball</option>
-                        <option value="Leather">🏏 Leather Ball</option>
-                        <option value="Tape">⚪ Tape Ball</option>
-                    </select>
-                    <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-500">▼</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="sticky-footer">
-            <button onclick="saveTournament()" class="w-full py-4 bg-green-600 text-white font-bold rounded-xl shadow-lg uppercase tracking-widest text-xs flex items-center justify-center gap-3 active:scale-95 transition-transform hover:bg-green-700">
-                <span>Generate Fixtures</span>
-                <span class="bg-white/20 px-2 py-0.5 rounded text-[10px]">✓</span>
-            </button>
-        </div>
-    </div>
-
-</div>
-
-    <div id="tourney-page-2" class="hidden animate-pop">
-        <div class="wizard-section">
-            <div class="wizard-header">
-                <div class="wizard-icon bg-orange-100 text-orange-600">⚖️</div>
-                <h3 class="text-base font-black text-gray-800 uppercase tracking-wide">Match Rules</h3>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-5 mb-5">
-                <div class="mobile-input-group">
-                    <label class="mobile-label">Overs per Innings <span class="text-red-500">*</span></label>
-                    <div class="relative">
-                        <select id="tourney-overs" class="mobile-input appearance-none text-center cursor-pointer">
-                            <option value="" disabled selected>Select</option>
-                            <option value="3">3 Overs</option>
-                            <option value="4">4 Overs</option>
-                            <option value="5">5 Overs</option>
-                            <option value="6">6 Overs</option>
-                            <option value="7">7 Overs</option>
-                            <option value="8">8 Overs</option>
-                            <option value="9">9 Overs</option>
-                            <option value="10">10 Overs</option>
-                            <option value="11">11 Overs</option>
-                            <option value="12">12 Overs</option>
-                            <option value="13">13 Overs</option>
-                            <option value="14">14 Overs</option>
-                            <option value="15">15 Overs</option>
-                            <option value="16">16 Overs</option>
-                            <option value="17">17 Overs</option>
-                            <option value="18">18 Overs</option>
-                            <option value="19">19 Overs</option>
-                            <option value="20">20 Overs</option>
-                            <option value="25">25 Overs</option>
-                            <option value="30">30 Overs</option>
-                            <option value="40">40 Overs</option>
-                            <option value="45">45 Overs</option>
-                            <option value="50">50 Overs</option>
-                        </select>
-                        <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-400">▼</div>
-                    </div>
-                </div>
-                <div class="mobile-input-group">
-                    <label class="mobile-label">Players per Side <span class="text-red-500">*</span></label>
-                    <div class="relative">
-                        <select id="tourney-players" class="mobile-input appearance-none text-center cursor-pointer">
-                            <option value="" disabled selected>Select</option>
-                            <option value="3">3 Players</option>
-                            <option value="4">4 Players</option>
-                            <option value="5">5 Players</option>
+                    
+                    <div class="relative p-4 border border-gray-200 rounded-lg hover:border-blue-500 transition-colors bg-gray-50">
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Squad Size</label>
+                        <select id="tourney-players" onchange="document.getElementById('disp-players').innerText = this.value" class="w-full bg-transparent text-2xl font-black text-gray-900 outline-none cursor-pointer z-10 relative py-2">
+                            <option value="8" selected>8 Players</option>
                             <option value="6">6 Players</option>
                             <option value="7">7 Players</option>
-                            <option value="8">8 Players</option>
                             <option value="9">9 Players</option>
-                            <option value="10">10 Players</option>
                             <option value="11">11 Players</option>
                         </select>
-                        <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-400">▼</div>
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 text-xs">▼</div>
+                        <div class="hidden" id="disp-overs"></div><div class="hidden" id="disp-players"></div>
                     </div>
                 </div>
+                 <input type="hidden" id="tourney-wickets" value="10">
             </div>
-            
-            <div class="mobile-input-group">
-                <label class="mobile-label mb-2">Ball Type <span class="text-red-500">*</span></label>
-                <input type="hidden" id="tourney-ball" value="">
+
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <div class="bg-gray-50 px-6 py-3 border-b border-gray-200 flex items-center gap-2">
+                    <span class="text-blue-600 font-bold text-lg">04.</span>
+                    <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Penalties & Ball Type</h3>
+                </div>
                 
-                <div class="option-card-grid">
-                    <div onclick="selectBallType('TENNIS_HARD', this)" class="option-card group">
-                        <span class="option-check">✓</span>
-                        <span class="option-card-icon">🎾</span>
-                        <span class="option-card-label text-green-700">Hard Tennis</span>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-red-50/50 rounded-lg p-4 border border-red-100 flex justify-between items-center">
+                            <div>
+                                <span class="block text-xs font-bold text-red-600 uppercase mb-1">Wide Ball</span>
+                            </div>
+                            <div class="relative w-32">
+                                <select id="tourney-wide-runs" class="w-full bg-white rounded border border-red-200 px-3 py-2 text-sm font-bold text-gray-900 outline-none focus:border-red-500">
+                                    <option value="-1">-1</option>
+                                    <option value="0">0</option>
+                                    <option value="1" selected>+1 Run</option>
+                                    <option value="2">+2 Runs</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="bg-red-50/50 rounded-lg p-4 border border-red-100 flex justify-between items-center">
+                            <div>
+                                <span class="block text-xs font-bold text-red-600 uppercase mb-1">No Ball</span>
+                            </div>
+                            <div class="relative w-32">
+                                <select id="tourney-noball-runs" class="w-full bg-white rounded border border-red-200 px-3 py-2 text-sm font-bold text-gray-900 outline-none focus:border-red-500">
+                                    <option value="-1">-1</option>
+                                    <option value="0">0</option>
+                                    <option value="1" selected>+1 Run</option>
+                                    <option value="2">+2 Runs</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
-                    <div onclick="selectBallType('TENNIS_SOFT', this)" class="option-card group">
-                        <span class="option-check">✓</span>
-                        <span class="option-card-icon">🎾</span>
-                        <span class="option-card-label text-yellow-600">Soft Tennis</span>
+
+                    <input type="hidden" id="tourney-ball-type" value="Soft Ball">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Select Ball Type</label>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <button onclick="setBallType('Soft Ball', this)" class="ball-card selected border-2 border-blue-600 bg-blue-50 text-blue-900 rounded-lg p-3 text-sm font-bold transition-all">Soft Ball</button>
+                        <button onclick="setBallType('Tape Ball', this)" class="ball-card border border-gray-200 bg-white text-gray-600 rounded-lg p-3 text-sm font-bold hover:border-blue-400 transition-all">Tape Ball</button>
+                        <button onclick="setBallType('MRI', this)" class="ball-card border border-gray-200 bg-white text-gray-600 rounded-lg p-3 text-sm font-bold hover:border-blue-400 transition-all">MRI</button>
+                        <button onclick="setBallType('Leather Ball', this)" class="ball-card border border-gray-200 bg-white text-gray-600 rounded-lg p-3 text-sm font-bold hover:border-blue-400 transition-all">Leather</button>
                     </div>
-                    <div onclick="selectBallType('LEATHER', this)" class="option-card group">
-                        <span class="option-check">✓</span>
-                        <span class="option-card-icon">🔴</span>
-                        <span class="option-card-label text-red-700">Leather</span>
+                    <div class="check-icon hidden"></div> 
+                </div>
+            </div>
+        </div>
+
+        <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-50">
+            <div class="max-w-3xl mx-auto flex justify-between">
+                <button onclick="document.getElementById('tourney-page-2').classList.add('hidden'); document.getElementById('tourney-page-1').classList.remove('hidden');" class="px-6 py-3 text-gray-500 font-bold text-xs uppercase hover:text-gray-900">
+                    ← Back
+                </button>
+                <button onclick="nextTourneyStep()" class="px-8 py-3 bg-blue-900 text-white font-bold rounded-lg shadow hover:bg-black transition-all active:scale-[0.98] flex items-center gap-2 uppercase tracking-wide text-xs">
+                    <span>Next: Teams</span>
+                    <span>→</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="tourney-page-3" class="hidden w-full relative pb-40 animate-pop">
+        <div class="max-w-3xl mx-auto px-4 mt-8 space-y-8">
+            
+             <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <div class="bg-gray-50 px-6 py-3 border-b border-gray-200 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="text-blue-600 font-bold text-lg">05.</span>
+                        <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Participating Teams</h3>
+                    </div>
+                    <div class="relative">
+                        <select id="tourney-team-count" onchange="renderTournamentSlots()" class="bg-white border border-gray-300 rounded px-3 py-1 text-xs font-bold text-gray-900 outline-none focus:border-blue-600">
+                            <option value="" selected disabled>Select Count</option>
+                            <option value="2">2 Teams</option>
+                            <option value="3">3 Teams</option>
+                            <option value="4">4 Teams</option>
+                            <option value="5">5 Teams</option>
+                            <option value="6">6 Teams</option>
+                            <option value="8">8 Teams</option>
+                            <option value="10">10 Teams</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="p-6 bg-gray-50/50 min-h-[300px]">
+                    <div id="tournament-slots-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="col-span-1 md:col-span-2 text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wide">Select Team Count above to begin</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="wizard-section">
-            <div class="wizard-header">
-                <div class="wizard-icon bg-blue-100 text-blue-600">👥</div>
-                <div class="flex-grow">
-                    <h3 class="text-base font-black text-gray-800 uppercase tracking-wide">Participating Teams</h3>
+        <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-50">
+            <div class="max-w-3xl mx-auto flex justify-between">
+                <button onclick="document.getElementById('tourney-page-3').classList.add('hidden'); document.getElementById('tourney-page-2').classList.remove('hidden');" class="px-6 py-3 text-gray-500 font-bold text-xs uppercase hover:text-gray-900">
+                    ← Back
+                </button>
+                <button onclick="nextTourneyStep()" class="px-8 py-3 bg-blue-900 text-white font-bold rounded-lg shadow hover:bg-black transition-all active:scale-[0.98] flex items-center gap-2 uppercase tracking-wide text-xs">
+                    <span>Next: Schedule</span>
+                    <span>→</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="tourney-page-4" class="hidden w-full relative pb-40 animate-pop">
+        <div class="max-w-4xl mx-auto px-4 mt-8 pb-32">
+            
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900 uppercase tracking-wide">Match Fixtures</h3>
+                    <p class="text-xs text-gray-500">Review and finalize the match schedule.</p>
                 </div>
-                <div class="relative">
-                    <select id="tourney-team-count" onchange="renderTournamentSlots()" class="mobile-input w-28 py-2 px-3 text-sm appearance-none cursor-pointer text-center bg-blue-50 border-blue-100 text-blue-800">
-                        <option value="" selected disabled>Select</option>
-                        <option value="2">2 Teams</option>
-                        <option value="3">3 Teams</option>
-                        <option value="4">4 Teams</option>
-                        <option value="5">5 Teams</option>
-                        <option value="6">6 Teams</option>
-                        <option value="7">7 Teams</option>
-                        <option value="8">8 Teams</option>
-                        <option value="9">9 Teams</option>
-                        <option value="10">10 Teams</option>
-                        <option value="11">11 Teams</option>
-                        <option value="12">12 Teams</option>
-                        <option value="13">13 Teams</option>
-                        <option value="14">14 Teams</option>
-                        <option value="15">15 Teams</option>
-                        <option value="16">16 Teams</option>
-                        <option value="17">17 Teams</option>
-                        <option value="18">18 Teams</option>
-                        <option value="19">19 Teams</option>
-                        <option value="20">20 Teams</option>
-                        <option value="21">21 Teams</option>
-                        <option value="22">22 Teams</option>
-                        <option value="23">23 Teams</option>
-                        <option value="24">24 Teams</option>
-                        <option value="25">25 Teams</option>
-                        <option value="26">26 Teams</option>
-                        <option value="27">27 Teams</option>
-                        <option value="28">28 Teams</option>
-                        <option value="29">29 Teams</option>
-                        <option value="30">30 Teams</option>
-                        <option value="31">31 Teams</option>
-                        <option value="32">32 Teams</option>
-                        <option value="33">33 Teams</option>
-                        <option value="34">34 Teams</option>
-                        <option value="35">35 Teams</option>
-                    </select>
-                    <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-blue-400">▼</div>
+                <div class="flex gap-2">
+                    <button onclick="addScheduleRow('League Match')" class="bg-white border border-gray-300 text-gray-700 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wide hover:bg-gray-50 shadow-sm transition-colors">+ Add Manual</button>
+                    <button onclick="autoGenerateFixtures()" class="bg-blue-600 border border-blue-600 text-white px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wide hover:bg-blue-700 shadow-sm transition-colors">⚡ Auto Generate</button>
+                </div>
+            </div>
+
+            <div id="schedule-rows" class="space-y-3 min-h-[200px]">
+                <div class="text-center py-16 border-2 border-dashed border-gray-300 rounded-lg bg-white">
+                    <p class="text-sm font-bold text-gray-400 uppercase tracking-wide">No Matches Scheduled</p>
+                    <button onclick="autoGenerateFixtures()" class="mt-2 text-blue-600 text-xs font-bold hover:underline">Click here to Auto-Generate Schedule</button>
                 </div>
             </div>
             
-            <div id="tournament-slots-container" class="space-y-3 mt-4">
-                <div class="text-center p-6 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
-                    <span class="text-3xl block mb-2">🏏</span>
-                    <p class="text-xs font-bold text-gray-400 uppercase">Select number of teams above to begin</p>
-                </div>
+            <div class="mt-6 border-t border-gray-200 pt-6">
+                <button onclick="addScheduleRow('Final')" class="w-full py-3 bg-yellow-50 text-yellow-800 font-bold rounded-lg border border-yellow-300 uppercase tracking-wide text-xs hover:bg-yellow-100 transition shadow-sm border-dashed hover:border-solid">
+                    + Add Final Match Card
+                </button>
+            </div>
+
+        </div>
+
+        <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-50">
+            <div class="max-w-4xl mx-auto flex justify-between items-center">
+                <button onclick="document.getElementById('tourney-page-4').classList.add('hidden'); document.getElementById('tourney-page-3').classList.remove('hidden');" class="px-6 py-3 text-gray-500 font-bold text-xs uppercase hover:text-gray-900">
+                    ← Back
+                </button>
+                <button id="btn-create-tourney" onclick="createProfessionalTournament()" class="px-10 py-4 bg-emerald-600 text-white font-bold rounded-lg shadow-lg hover:bg-emerald-700 transition-all active:scale-[0.98] flex items-center gap-3 uppercase tracking-widest text-xs">
+                    <span>Confirm & Create</span>
+                    <span class="bg-white/20 px-2 py-0.5 rounded text-[10px]">✓</span>
+                </button>
             </div>
         </div>
-
-        <div class="sticky-footer grid grid-cols-3 gap-3">
-            <button onclick="prevTourneyStep()" class="col-span-1 py-4 bg-gray-200 text-gray-600 font-bold rounded-2xl uppercase tracking-widest text-sm">
-                Back
-            </button>
-            <button onclick="goToTournamentSchedule()" class="col-span-2 py-4 bg-gradient-to-r from-gray-900 to-gray-800 text-white font-black rounded-2xl shadow-xl uppercase tracking-widest text-sm flex items-center justify-center gap-3 active:scale-95 transition-transform hover:shadow-2xl">
-                <span>Generate Fixtures</span>
-                <span class="bg-white/20 px-2 py-0.5 rounded text-xs">➜</span>
-            </button>
-        </div>
-    </div>
-
-    <script>
-        // 1. Auto-Generate Organizer Code on Load
-        function generateOrgCode() {
-            const randomStr = Math.random().toString(36).substring(2, 6).toUpperCase();
-            const year = new Date().getFullYear();
-            const code = `ORG-${year}-${randomStr}`;
-            const input = document.getElementById('organizer-code');
-            if(input && !input.value) input.value = code;
-        }
-        
-        // 2. Updated Ground Inputs (Professional & Compact)
-        function renderGroundInputs() {
-            const count = parseInt(document.getElementById('tourney-ground-count').value);
-            const container = document.getElementById('dynamic-grounds-container');
-            container.innerHTML = '';
-            
-            for(let i=0; i<count; i++) {
-                const wrapper = document.createElement('div');
-                wrapper.className = "bg-gray-50 p-2.5 rounded-lg border border-gray-200 animate-pop mb-2";
-
-                const nameInput = document.createElement('input');
-                nameInput.type = 'text';
-                nameInput.id = `ground-${i+1}`;
-                nameInput.placeholder = `Ground ${i+1} Name`;
-                // Use specific inline styles for generated inputs to match the new strict theme
-                nameInput.className = "ground-input w-full p-2.5 bg-white border border-gray-300 rounded-md font-bold text-sm text-gray-800 outline-none focus:border-blue-500 mb-2";
-                
-                const addrInput = document.createElement('input');
-                addrInput.type = 'text';
-                addrInput.id = `ground-addr-${i+1}`;
-                addrInput.placeholder = "📍 Address / Location";
-                addrInput.setAttribute('autocomplete', 'street-address');
-                addrInput.className = "ground-addr-input w-full p-2.5 bg-white border border-gray-300 rounded-md text-xs font-medium text-gray-600 outline-none focus:border-blue-500 transition-colors";
-
-                wrapper.appendChild(nameInput);
-                wrapper.appendChild(addrInput);
-                container.appendChild(wrapper);
-            }
-        }
-
-        // 3. Page Navigation Logic
-        function nextTourneyStep() {
-            // Validation
-            const name = document.getElementById('tourney-name').value.trim();
-            const org = document.getElementById('organizer-name').value.trim();
-            const country = document.getElementById('tourney-country').value;
-            const cat = document.getElementById('tourney-category').value;
-            
-            // Check Ground 1 at minimum
-            const g1 = document.getElementById('ground-1') ? document.getElementById('ground-1').value : '';
-
-            if(!name || !org || !country || !cat || country.includes("--") || cat.includes("--")) {
-                alert("Please complete all Tournament Info fields.");
-                return;
-            }
-
-            // UI Switch
-            document.getElementById('tourney-page-1').classList.add('hidden');
-            document.getElementById('tourney-page-2').classList.remove('hidden');
-            document.getElementById('tourney-page-title').textContent = "Rules & Teams";
-            
-            // Indicators
-            document.getElementById('ind-1').classList.replace('bg-blue-600', 'bg-gray-300');
-            document.getElementById('ind-2').classList.replace('bg-gray-300', 'bg-blue-600');
-            
-            // Scroll Top
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function prevTourneyStep() {
-            document.getElementById('tourney-page-2').classList.add('hidden');
-            document.getElementById('tourney-page-1').classList.remove('hidden');
-            document.getElementById('tourney-page-title').textContent = "Tournament Info";
-            
-            document.getElementById('ind-2').classList.replace('bg-blue-600', 'bg-gray-300');
-            document.getElementById('ind-1').classList.replace('bg-gray-300', 'bg-blue-600');
-        }
-
-        // Init functionality
-        document.addEventListener('DOMContentLoaded', () => {
-            generateOrgCode();
-            renderGroundInputs(); // Init with 1 ground
-        });
-        
-        // Ensure code generates if navigating back/forth
-        setTimeout(generateOrgCode, 500);
-    </script>
-</div>
-
-    </div>
-
-<div id="tournament-schedule-step" class="setup-step hidden w-full max-w-lg mx-auto pb-32">
-    <div class="flex items-center justify-between mb-6 pt-2 px-1">
-        <button onclick="backToTournamentSetup()" class="text-xs font-bold text-white uppercase tracking-wider bg-gradient-to-r from-red-500 to-orange-500 shadow-md shadow-orange-200 px-5 py-2.5 rounded-xl hover:scale-105 transition-transform flex items-center gap-2">
-            <span>←</span> Back
-        </button>
-        <span class="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-3 py-1 rounded-full border border-blue-100">Step 2 of 2</span>
-    </div>
-
-    <div class="mb-6 px-1">
-        <h2 class="text-2xl font-black text-gray-900 uppercase leading-none">Schedule</h2>
-        <p class="text-xs text-gray-500 font-medium mt-1">Create fixtures. Drag to reorder.</p>
-    </div>
-
-    <div class="grid grid-cols-2 gap-3 mb-6">
-        <button onclick="autoGenerateFixtures()" class="py-3 bg-purple-50 text-purple-700 font-bold text-xs rounded-xl border border-purple-100 uppercase tracking-wide hover:bg-purple-100 transition">⚡ Auto-Gen</button>
-        <button onclick="addScheduleRow('League Match')" class="py-3 bg-blue-50 text-blue-700 font-bold text-xs rounded-xl border border-blue-100 uppercase tracking-wide hover:bg-blue-100 transition">+ Add Match</button>
-    </div>
-
-    <div id="schedule-rows" class="space-y-4 min-h-[200px]">
-        </div>
-    
-    <div class="h-24"></div>
-
-    <div class="sticky-footer flex flex-col gap-3">
-        <button onclick="addScheduleRow('Final')" class="w-full py-3 bg-yellow-50 text-yellow-700 font-bold rounded-xl border border-yellow-200 uppercase tracking-wide text-xs hover:bg-yellow-100 transition">
-            + Add Final Match
-        </button>
-        <button id="btn-create-tourney" onclick="createProfessionalTournament()" class="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-black rounded-xl shadow-lg uppercase tracking-widest text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform">
-            <span>Create Tournament</span>
-            <span class="bg-white/20 px-2 py-0.5 rounded text-xs">✓</span>
-        </button>
     </div>
 </div>
 
@@ -1880,6 +1719,7 @@ function broadcastMatchResult() {
             const today = new Date();
             ui.matchDateInput.value = today.toISOString().split('T')[0];
             
+            // 1. Single Match Dropdowns
             const oversSelect = document.getElementById('total-overs');
             const defOvers = document.createElement('option'); defOvers.value = ""; defOvers.text = "Select Overs..."; defOvers.selected = true; defOvers.disabled = true;
             oversSelect.appendChild(defOvers);
@@ -1895,7 +1735,31 @@ function broadcastMatchResult() {
                 const opt = document.createElement('option'); opt.value = i; opt.text = i + ' Players';
                 playersSelect.appendChild(opt);
             }
+
+            // 2. Tournament Dropdowns (Step 2)
+            const tOvers = document.getElementById('tourney-overs');
+            if (tOvers) {
+                tOvers.innerHTML = ""; // Clear default
+                for(let i=2; i<=20; i++) {
+                    const opt = document.createElement('option'); 
+                    opt.value = i; opt.text = i + ' Overs';
+                    if(i === 6) opt.selected = true; // Default
+                    tOvers.appendChild(opt);
+                }
+            }
+
+            const tPlayers = document.getElementById('tourney-players');
+            if (tPlayers) {
+                tPlayers.innerHTML = ""; // Clear default
+                for(let i=4; i<=15; i++) {
+                    const opt = document.createElement('option'); 
+                    opt.value = i; opt.text = i + ' Players';
+                    if(i === 8) opt.selected = true; // Default
+                    tPlayers.appendChild(opt);
+                }
+            }
             
+            // 3. Rules Dropdowns
             const wicketSelect = document.getElementById('rule-wicket');
             for(let i=0; i<=6; i++) {
                 const opt = document.createElement('option'); 
@@ -1909,6 +1773,7 @@ function broadcastMatchResult() {
             showScreen('setup-screen');
             setupGlobalEnterNavigation(); // Initialize Global Navigation
         };
+
 
         // --- GLOBAL KEYBOARD NAVIGATION (PROFESSIONAL UX) ---
         function setupGlobalEnterNavigation() {
@@ -4969,9 +4834,83 @@ let tournamentState = {
 
 // --- TOURNAMENT SETUP FUNCTIONS ---
 
-// --- TOURNAMENT SETUP FUNCTIONS ---
+function nextTourneyStep() {
+    const p1 = document.getElementById('tourney-page-1');
+    const p2 = document.getElementById('tourney-page-2');
+    const p3 = document.getElementById('tourney-page-3');
+    const p4 = document.getElementById('tourney-page-4');
 
-// --- TOURNAMENT SETUP FUNCTIONS ---
+    if (!p1.classList.contains('hidden')) {
+        // Step 1: Validation
+        const name = document.getElementById('tourney-name').value;
+        if (!name) { 
+            showCustomAlert("Missing Info", "Please enter a <b>Tournament Name</b>.", "red"); 
+            return; 
+        }
+        // Move 1 -> 2
+        p1.classList.add('hidden');
+        p2.classList.remove('hidden');
+        window.scrollTo(0,0);
+    } 
+    else if (!p2.classList.contains('hidden')) {
+        // Step 2: Move 2 -> 3
+        p2.classList.add('hidden');
+        p3.classList.remove('hidden');
+        window.scrollTo(0,0);
+    } 
+    else if (!p3.classList.contains('hidden')) {
+        // Step 3: Validation
+        const tCount = document.getElementById('tourney-team-count').value;
+        if(!tCount) {
+             showCustomAlert("Missing Info", "Please select the number of teams.", "red");
+             return;
+        }
+        
+        // Check for duplicates
+        const selects = document.querySelectorAll('.tourney-team-select');
+        const selectedValues = [];
+        let hasDupes = false;
+        selects.forEach(s => {
+            if(s.value) {
+                if(selectedValues.includes(s.value)) hasDupes = true;
+                selectedValues.push(s.value);
+            }
+        });
+
+        if(selectedValues.length < 2) {
+             showCustomAlert("Error", "Please select at least 2 teams.", "red");
+             return;
+        }
+        if(hasDupes) {
+             showCustomAlert("Error", "Duplicate teams selected.", "red");
+             return;
+        }
+
+        // Move 3 -> 4
+        p3.classList.add('hidden');
+        p4.classList.remove('hidden');
+        window.scrollTo(0,0);
+        
+        // Initialize Schedule
+        updateScheduleDropdowns();
+    }
+}
+
+function setBallType(type, card) {
+    document.getElementById('tourney-ball-type').value = type;
+    
+    document.querySelectorAll('.ball-card').forEach(c => {
+        c.classList.remove('selected', 'bg-gradient-to-br', 'from-emerald-50', 'to-teal-50', 'border-emerald-500');
+        c.classList.add('bg-white', 'border-gray-100');
+        c.querySelector('.check-icon').classList.add('hidden');
+        c.querySelector('.check-icon').classList.remove('flex');
+    });
+
+    card.classList.remove('bg-white', 'border-gray-100');
+    card.classList.add('selected', 'bg-gradient-to-br', 'from-emerald-50', 'to-teal-50', 'border-emerald-500');
+    card.querySelector('.check-icon').classList.remove('hidden');
+    card.querySelector('.check-icon').classList.add('flex');
+}
 
 function renderGroundInputs() {
     const count = parseInt(document.getElementById('tourney-ground-count').value);
