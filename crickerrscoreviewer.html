@@ -143,6 +143,7 @@
             <button onclick="switchHomeTab('local')" id="ht-local" class="tab-btn active">Local</button>
             <button onclick="switchHomeTab('intl')" id="ht-intl" class="tab-btn">International</button>
             <button onclick="switchHomeTab('news')" id="ht-news" class="tab-btn">News</button>
+            <button onclick="switchHomeTab('tourn')" id="ht-tourn" class="tab-btn">Tournaments</button>
         </div>
 
         <div id="search-container" class="relative mb-6">
@@ -171,6 +172,59 @@
         <div id="section-news" class="hidden">
             <h2 class="text-2xl font-bold text-gray-900 mb-4 px-1">Top Stories</h2>
             <div id="news-container" class="grid grid-cols-1 gap-4"></div>
+        </div>
+
+        <div id="section-tourn" class="hidden">
+            <div class="flex justify-between items-center mb-4 px-1">
+                <h2 class="text-2xl font-bold text-gray-900">Tournaments</h2>
+            </div>
+            
+            <div class="glass-card p-3 mb-6 flex gap-2">
+                <input type="text" id="tourn-search-id" placeholder="Enter Tournament ID..." class="bg-gray-50/50 border-none rounded-lg px-4 py-2 w-full text-sm outline-none focus:bg-white transition">
+                <button onclick="fetchTournament()" class="bg-blue-600 text-white rounded-lg px-4 font-bold text-xs uppercase tracking-wide shadow-lg shadow-blue-200">Load</button>
+            </div>
+
+            <div id="tourn-loader" class="hidden text-center py-12">
+                <div class="inline-block w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+            </div>
+
+            <div id="tourn-content" class="hidden space-y-6">
+                
+                <div class="glass-card p-6 text-center relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
+                    <div id="t-status" class="inline-block bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-3">UPCOMING</div>
+                    <h1 id="t-name" class="text-2xl font-black text-gray-900 uppercase leading-tight tracking-tight mb-2">Tournament Name</h1>
+                    <div class="flex items-center justify-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wide">
+                        <span id="t-category">Category</span> • <span id="t-location">Location</span>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 px-1">Standings</h3>
+                    <div class="glass-card overflow-hidden p-0">
+                        <div class="overflow-x-auto hide-scroll">
+                            <table class="w-full text-left whitespace-nowrap">
+                                <thead>
+                                    <tr class="bg-gray-50/50 border-b border-gray-100 text-[9px] font-black uppercase text-gray-400 tracking-wider">
+                                        <th class="p-3 pl-4">Team</th>
+                                        <th class="p-3 text-center">P</th>
+                                        <th class="p-3 text-center">W</th>
+                                        <th class="p-3 text-center">L</th>
+                                        <th class="p-3 text-center">NRR</th>
+                                        <th class="p-3 pr-4 text-center text-blue-600">PTS</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="standings-body" class="text-xs font-bold text-gray-700 divide-y divide-gray-50"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 px-1">Schedule</h3>
+                    <div id="schedule-list" class="space-y-3"></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -311,13 +365,16 @@
         function switchHomeTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(`ht-${tab}`).classList.add('active');
-            ['local','intl','news'].forEach(t => document.getElementById(`section-${t}`).classList.add('hidden'));
+            // Added 'tourn' to the hidden list
+            ['local','intl','news', 'tourn'].forEach(t => document.getElementById(`section-${t}`).classList.add('hidden'));
             const sec = document.getElementById(`section-${tab}`);
             sec.classList.remove('hidden');
             sec.classList.add('page-enter');
             
             if(tab === 'intl') loadIntlMatches();
             if(tab === 'news') loadNews();
+            // Optional: Auto load a demo tournament if you wish
+            // if(tab === 'tourn') fetchTournament('DEMO_ID'); 
         }
 
         // --- LOCAL MATCHES ---
@@ -691,6 +748,111 @@
                 closePin();
                 loadMatchList();
             } else alert('Invalid PIN');
+        }
+
+        // --- TOURNAMENT VIEWER LOGIC ---
+        function fetchTournament() {
+            const id = document.getElementById('tourn-search-id').value.trim();
+            if(!id) return alert("Please enter a Tournament ID");
+
+            document.getElementById('tourn-loader').classList.remove('hidden');
+            document.getElementById('tourn-content').classList.add('hidden');
+
+            db.collection("tournaments").doc(id).get().then(doc => {
+                document.getElementById('tourn-loader').classList.add('hidden');
+                if (!doc.exists) {
+                    alert("Tournament not found");
+                } else {
+                    renderTournamentData(doc.data());
+                    document.getElementById('tourn-content').classList.remove('hidden');
+                    document.getElementById('tourn-content').classList.add('page-enter');
+                }
+            }).catch(e => {
+                document.getElementById('tourn-loader').classList.add('hidden');
+                alert("Error loading data");
+            });
+        }
+
+        function renderTournamentData(data) {
+            // 1. Header
+            const meta = data.meta || {};
+            document.getElementById('t-name').textContent = meta.name || "Tournament";
+            document.getElementById('t-category').textContent = meta.category || "Open";
+            document.getElementById('t-location').textContent = meta.country || "Global";
+
+            const completedCount = (data.fixtures || []).filter(f => f.status === 'COMPLETED').length;
+            const totalCount = (data.fixtures || []).length;
+            const statusEl = document.getElementById('t-status');
+
+            if (completedCount === totalCount && totalCount > 0) {
+                statusEl.textContent = "COMPLETED";
+                statusEl.className = "inline-block bg-green-50 text-green-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-3";
+            } else if (completedCount > 0) {
+                statusEl.textContent = "LIVE NOW";
+                statusEl.className = "inline-block bg-red-50 text-red-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-3 animate-pulse";
+            } else {
+                statusEl.textContent = "UPCOMING";
+                statusEl.className = "inline-block bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-3";
+            }
+
+            // 2. Standings
+            const tbody = document.getElementById('standings-body');
+            const sortedStandings = (data.standings || []).sort((a,b) => b.pts - a.pts || b.nrr - a.nrr);
+            
+            tbody.innerHTML = sortedStandings.length ? sortedStandings.map((t, i) => `
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="p-3 pl-4 flex items-center gap-3">
+                        <span class="font-mono text-gray-300 text-[10px]">${i+1}</span>
+                        <span class="font-bold text-gray-800">${t.name}</span>
+                    </td>
+                    <td class="p-3 text-center text-gray-400 font-mono">${t.p}</td>
+                    <td class="p-3 text-center text-green-600 font-bold bg-green-50/50 rounded-lg">${t.w}</td>
+                    <td class="p-3 text-center text-red-400 font-medium">${t.l}</td>
+                    <td class="p-3 text-center text-gray-500 font-mono text-[10px]">${t.nrr ? t.nrr.toFixed(3) : '0.000'}</td>
+                    <td class="p-3 pr-4 text-center text-sm font-black text-blue-900 bg-blue-50/50 rounded-lg">${t.pts}</td>
+                </tr>
+            `).join('') : `<tr><td colspan="6" class="text-center p-4 text-gray-400 italic">No standings available</td></tr>`;
+
+            // 3. Schedule
+            const list = document.getElementById('schedule-list');
+            const fixtures = (data.fixtures || []).sort((a,b) => a.matchNo - b.matchNo);
+            
+            list.innerHTML = fixtures.map((f, i) => {
+                let badge = "";
+                let resultRow = "";
+                
+                if (f.status === 'COMPLETED') {
+                    badge = `<span class="bg-gray-100 text-gray-500 text-[9px] font-black px-2 py-0.5 rounded uppercase">Finished</span>`;
+                    resultRow = `<div class="mt-3 text-center text-[10px] font-bold text-green-600 uppercase bg-green-50 py-1.5 rounded border border-green-100">${f.result}</div>`;
+                } else if (f.status === 'LIVE') {
+                    badge = `<span class="bg-red-100 text-red-600 text-[9px] font-black px-2 py-0.5 rounded uppercase animate-pulse">● LIVE</span>`;
+                } else {
+                    badge = `<span class="bg-blue-50 text-blue-600 text-[9px] font-black px-2 py-0.5 rounded uppercase">${f.time || 'Upcoming'}</span>`;
+                }
+
+                const isFinal = (f.stage || '').includes('Final');
+                const delay = i * 50; // Stagger animation
+
+                return `
+                <div class="glass-card p-4 relative group stagger-item" style="animation-delay: ${delay}ms">
+                    ${isFinal ? '<div class="absolute top-0 left-0 w-1 h-full bg-yellow-400"></div>' : ''}
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-[9px] font-black text-gray-400 uppercase tracking-wider">${f.stage || 'Match ' + f.matchNo} • ${f.ground || 'TBA'}</span>
+                        ${badge}
+                    </div>
+                    <div class="flex justify-between items-center px-1">
+                        <div class="w-5/12 text-center">
+                            <div class="text-xs font-black text-gray-900 uppercase truncate">${f.t1}</div>
+                        </div>
+                        <div class="text-[10px] font-black text-gray-300">VS</div>
+                        <div class="w-5/12 text-center">
+                            <div class="text-xs font-black text-gray-900 uppercase truncate">${f.t2}</div>
+                        </div>
+                    </div>
+                    ${resultRow}
+                </div>
+                `;
+            }).join('');
         }
     </script>
 </body>
