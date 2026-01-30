@@ -17,12 +17,39 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
 <style>
     /* --- Base Styles --- */
-    body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; color: #000000; }
+    body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; color: #000000; overscroll-behavior-y: none; }
     
     /* Professional Typography Resets */
     ::placeholder { font-size: 0.95em; color: #e6e8eb; font-weight: 300; opacity: 0.5; } /* Ultra Light Grey */
     input, select, textarea { color: #ff0000 !important; -webkit-text-fill-color: #393939 !important; }
     
+    /* --- PROFESSIONAL SCROLLING UTILITIES (Mobile First) --- */
+    
+    /* 1. Hide Scrollbars but keep functionality */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* 2. Horizontal Sliding & Snapping */
+    .snap-x { scroll-snap-type: x mandatory; }
+    .snap-start { scroll-snap-align: start; }
+    .snap-center { scroll-snap-align: center; }
+    
+    /* 3. Smooth Momentum Scrolling for iOS */
+    .custom-scroll { -webkit-overflow-scrolling: touch; scroll-behavior: smooth; }
+    
+    /* Desktop Scrollbar (Visible only on larger screens) */
+    @media (min-width: 768px) {
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    }
+    /* Mobile: Hide scrollbars by default for cleaner look */
+    @media (max-width: 768px) {
+        .custom-scroll::-webkit-scrollbar { display: none; }
+        .custom-scroll { scrollbar-width: none; }
+    }
+
     /* Title Animation */
     @keyframes gradient-x {
         0% { background-position: 0% 50%; }
@@ -40,7 +67,6 @@
         
         /* Flatten the setup card on mobile */
         #setup-screen {
-            /* display: block !important;  <-- REMOVED THIS LINE so JS can hide it */
             width: 100%; 
             padding: 0 !important;
             background-color: #f8fafc !important;
@@ -58,13 +84,16 @@
             background-color: transparent !important;
         }
 
-        /* Prevent nested scrolling issues */
-        .overflow-y-auto { overflow-y: visible !important; height: auto !important; max-height: none !important; }
+        /* Prevent nested scrolling issues - Allow natural scrolling in containers */
+        .overflow-y-auto { 
+            overflow-y: auto !important; 
+            -webkit-overflow-scrolling: touch;
+        }
         
-        #app { overflow: hidden; }
-        #app > .flex-grow { padding: 8px; display: flex; flex-direction: column; }
-        #scoreboard { padding: 0; }
-        #batting-table th, #batting-table td, #bowling-table th, #bowling-table td { padding: 4px 2px; font-size: 0.75rem; }
+        #app { overflow: hidden; height: 100vh; }
+        #app > .flex-grow { padding: 4px; display: flex; flex-direction: column; overflow: hidden; }
+        #scoreboard { padding: 0; margin-bottom: 4px; }
+        #batting-table th, #batting-table td, #bowling-table th, #bowling-table td { padding: 4px 6px; font-size: 0.75rem; }
     }
 
    /* --- Mobile Wizard Components (Production Grade) --- */
@@ -251,9 +280,6 @@
     .ball-w { background-color: #ef4444; color: white; }
     .ball-wd, .ball-nb { background-color: #f59e0b; color: white; }
 
-    .custom-scroll::-webkit-scrollbar { width: 6px; }
-    .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
-    .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     .opacity-60 { filter: grayscale(100%); opacity: 0.6; }
 
     /* iOS Toggle */
@@ -6607,41 +6633,37 @@ function renderStatsUI(players) {
     const bpo = tournamentState.data.rules.ballType === 'Leather' ? 6 : (tournamentState.data.rules.ballsPerOver || 6);
 
     // 2. CHECK & WIPE OLD LAYOUT (Fixes Duplication & Width)
-    // We check for the main 'stats-runs' container (Legacy hook)
     let runsAnchor = document.getElementById('stats-runs');
     let wktsAnchor = document.getElementById('stats-wickets');
     let parentContainer = null;
 
     if (runsAnchor) {
         parentContainer = runsAnchor.parentNode;
-        // WIPE THE PARENT CLEAN. This removes 'stats-runs' AND 'stats-wickets'
         parentContainer.innerHTML = ''; 
-        // Force Full Width - No max-width, no grid.
         parentContainer.className = "w-full flex flex-col gap-4"; 
-        parentContainer.id = "stats-main-wrapper"; // Tag it so we don't wipe it next time
+        parentContainer.id = "stats-main-wrapper";
     } else if (wktsAnchor) {
-        // Fallback if runs anchor already gone but wickets remains
         parentContainer = wktsAnchor.parentNode;
         parentContainer.innerHTML = '';
         parentContainer.className = "w-full flex flex-col gap-4";
         parentContainer.id = "stats-main-wrapper";
     } else {
-        // If anchors are gone, look for our new wrapper
         parentContainer = document.getElementById('stats-main-wrapper');
     }
 
-    if (!parentContainer) return; // Should not happen if HTML matches
+    if (!parentContainer) return; 
 
     // 3. Create Widget if Missing
     let widget = document.getElementById('stats-widget-container');
     if (!widget) {
         widget = document.createElement('div');
         widget.id = 'stats-widget-container';
-        widget.className = "bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden w-full"; // Added w-full
+        widget.className = "bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden w-full"; 
         parentContainer.appendChild(widget);
     }
 
     // 4. Render Skeleton (Header, Tabs, Filter) if empty
+    // UPDATED: Added 'overflow-x-auto no-scrollbar snap-x snap-mandatory' for professional sliding tabs
     if (widget.innerHTML === '') {
         widget.innerHTML = `
             <div class="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-3 bg-gray-50">
@@ -6653,19 +6675,19 @@ function renderStatsUI(players) {
                 </select>
             </div>
             
-            <div class="flex border-b border-gray-100 overflow-x-auto no-scrollbar">
-                <button onclick="updateStatsTab('batsman')" id="tab-batsman" class="flex-1 py-3 px-4 text-xs font-bold text-center border-b-2 transition-colors whitespace-nowrap">
+            <div class="flex border-b border-gray-100 overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-smooth">
+                <button onclick="updateStatsTab('batsman')" id="tab-batsman" class="flex-none w-1/3 min-w-[120px] snap-start py-3 px-4 text-xs font-bold text-center border-b-2 transition-colors whitespace-nowrap">
                     🏏 Best Batsman
                 </button>
-                <button onclick="updateStatsTab('bowler')" id="tab-bowler" class="flex-1 py-3 px-4 text-xs font-bold text-center border-b-2 transition-colors whitespace-nowrap">
+                <button onclick="updateStatsTab('bowler')" id="tab-bowler" class="flex-none w-1/3 min-w-[120px] snap-start py-3 px-4 text-xs font-bold text-center border-b-2 transition-colors whitespace-nowrap">
                     🥎 Best Bowler
                 </button>
-                <button onclick="updateStatsTab('fielder')" id="tab-fielder" class="flex-1 py-3 px-4 text-xs font-bold text-center border-b-2 transition-colors whitespace-nowrap">
+                <button onclick="updateStatsTab('fielder')" id="tab-fielder" class="flex-none w-1/3 min-w-[120px] snap-start py-3 px-4 text-xs font-bold text-center border-b-2 transition-colors whitespace-nowrap">
                     🧤 Best Fielder
                 </button>
             </div>
 
-            <div id="stats-table-area" class="overflow-x-auto min-h-[350px] bg-white w-full"></div>
+            <div id="stats-table-area" class="overflow-x-auto no-scrollbar min-h-[350px] bg-white w-full custom-scroll"></div>
         `;
         
         // Attach Globals
@@ -6693,7 +6715,7 @@ function renderStatsUI(players) {
     Object.keys(tabs).forEach(k => {
         const btn = document.getElementById(`tab-${k}`);
         if(btn) {
-            btn.className = `flex-1 py-3 px-4 text-xs font-bold text-center border-b-2 transition-colors whitespace-nowrap ${window.statsTabState.tab === k ? tabs[k].color : tabs[k].inactive}`;
+            btn.className = `flex-none w-1/3 min-w-[120px] snap-start py-3 px-4 text-xs font-bold text-center border-b-2 transition-colors whitespace-nowrap ${window.statsTabState.tab === k ? tabs[k].color : tabs[k].inactive}`;
         }
     });
 
@@ -6705,11 +6727,11 @@ function renderStatsUI(players) {
     if (activeTab === 'batsman') {
         data = data.filter(p => p.runs > 0).sort((a,b) => b.runs - a.runs || ((b.runs/b.balls)-(a.runs/a.balls))).slice(0,20);
         html = `
-            <table class="w-full text-left border-collapse">
+            <table class="w-full text-left border-collapse min-w-[350px]">
                 <thead>
                     <tr class="bg-orange-600 text-white text-[10px] uppercase font-bold tracking-wider">
-                        <th class="p-3">#</th>
-                        <th class="p-3 w-1/2">Player</th>
+                        <th class="p-3 sticky left-0 bg-orange-600 z-10">#</th>
+                        <th class="p-3 w-1/2 sticky left-8 bg-orange-600 z-10">Player</th>
                         <th class="p-3 text-center">Mat</th>
                         <th class="p-3 text-center">SR</th>
                         <th class="p-3 text-right">Runs</th>
@@ -6720,8 +6742,8 @@ function renderStatsUI(players) {
                         const sr = p.balls > 0 ? ((p.runs/p.balls)*100).toFixed(0) : 0;
                         return `
                         <tr class="odd:bg-white even:bg-gray-50 hover:bg-orange-50 transition-colors">
-                            <td class="p-3 font-mono text-gray-400 font-bold">${i+1}</td>
-                            <td class="p-3">
+                            <td class="p-3 font-mono text-gray-400 font-bold sticky left-0 bg-inherit z-10">${i+1}</td>
+                            <td class="p-3 sticky left-8 bg-inherit z-10 border-r border-gray-100">
                                 <div class="font-bold text-gray-800 text-xs">${p.name}</div>
                                 <div class="text-[9px] text-gray-400 uppercase font-semibold">${p.team}</div>
                             </td>
@@ -6736,11 +6758,11 @@ function renderStatsUI(players) {
     else if (activeTab === 'bowler') {
         data = data.filter(p => p.wkts > 0 || p.bb > 0).sort((a,b) => b.wkts - a.wkts || (a.rc/(a.bb||1))-(b.rc/(b.bb||1))).slice(0,20);
         html = `
-            <table class="w-full text-left border-collapse">
+            <table class="w-full text-left border-collapse min-w-[350px]">
                 <thead>
                     <tr class="bg-indigo-600 text-white text-[10px] uppercase font-bold tracking-wider">
-                        <th class="p-3">#</th>
-                        <th class="p-3 w-1/2">Player</th>
+                        <th class="p-3 sticky left-0 bg-indigo-600 z-10">#</th>
+                        <th class="p-3 w-1/2 sticky left-8 bg-indigo-600 z-10">Player</th>
                         <th class="p-3 text-center">Ov</th>
                         <th class="p-3 text-center">Econ</th>
                         <th class="p-3 text-right">Wkts</th>
@@ -6752,8 +6774,8 @@ function renderStatsUI(players) {
                         const ec = (p.bb>0 ? (p.rc/(p.bb/bpo)) : 0).toFixed(1);
                         return `
                         <tr class="odd:bg-white even:bg-gray-50 hover:bg-indigo-50 transition-colors">
-                            <td class="p-3 font-mono text-gray-400 font-bold">${i+1}</td>
-                            <td class="p-3">
+                            <td class="p-3 font-mono text-gray-400 font-bold sticky left-0 bg-inherit z-10">${i+1}</td>
+                            <td class="p-3 sticky left-8 bg-inherit z-10 border-r border-gray-100">
                                 <div class="font-bold text-gray-800 text-xs">${p.name}</div>
                                 <div class="text-[9px] text-gray-400 uppercase font-semibold">${p.team}</div>
                             </td>
@@ -6768,11 +6790,11 @@ function renderStatsUI(players) {
     else {
         data = data.filter(p => p.catches > 0 || p.stumpings > 0).sort((a,b) => b.catches - a.catches).slice(0,20);
         html = `
-            <table class="w-full text-left border-collapse">
+            <table class="w-full text-left border-collapse min-w-[350px]">
                 <thead>
                     <tr class="bg-teal-600 text-white text-[10px] uppercase font-bold tracking-wider">
-                        <th class="p-3">#</th>
-                        <th class="p-3 w-1/2">Player</th>
+                        <th class="p-3 sticky left-0 bg-teal-600 z-10">#</th>
+                        <th class="p-3 w-1/2 sticky left-8 bg-teal-600 z-10">Player</th>
                         <th class="p-3 text-center">Mat</th>
                         <th class="p-3 text-center">St</th>
                         <th class="p-3 text-right">Catches</th>
@@ -6782,8 +6804,8 @@ function renderStatsUI(players) {
                     ${data.map((p,i) => {
                         return `
                         <tr class="odd:bg-white even:bg-gray-50 hover:bg-teal-50 transition-colors">
-                            <td class="p-3 font-mono text-gray-400 font-bold">${i+1}</td>
-                            <td class="p-3">
+                            <td class="p-3 font-mono text-gray-400 font-bold sticky left-0 bg-inherit z-10">${i+1}</td>
+                            <td class="p-3 sticky left-8 bg-inherit z-10 border-r border-gray-100">
                                 <div class="font-bold text-gray-800 text-xs">${p.name}</div>
                                 <div class="text-[9px] text-gray-400 uppercase font-semibold">${p.team}</div>
                             </td>
