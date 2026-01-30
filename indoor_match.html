@@ -6433,16 +6433,44 @@ function autoFillKnockouts(completedFixture) {
         }
     });
 
-    // 3. Sweep Upcoming Fixtures & Replace Placeholders
+    // 3. Sweep Upcoming Fixtures & Replace Placeholders (With Auto-Correction Logic)
     let updatesMade = false;
     fixtures.forEach(f => {
         if(f.status !== 'COMPLETED' && f.status !== 'LIVE') {
-            if(map[f.t1]) { f.t1 = map[f.t1]; updatesMade = true; }
-            if(map[f.t2]) { f.t2 = map[f.t2]; updatesMade = true; }
+            
+            // AUTO-REPAIR: If it's a Final, force source linking to fix previous errors
+            if(f.stage === 'Final') {
+                if(!f.t1_source) f.t1_source = "Winner SF1";
+                if(!f.t2_source) f.t2_source = "Winner SF2";
+            }
+
+            // CHECK TEAM 1 (Using Source Tag if available to allow updates)
+            const t1Key = f.t1_source || f.t1;
+            if(map[t1Key]) { 
+                if (f.t1 !== map[t1Key]) {
+                    f.t1_source = t1Key; // Save the placeholder
+                    f.t1 = map[t1Key];   // Update the Team
+                    updatesMade = true; 
+                }
+            }
+
+            // CHECK TEAM 2
+            const t2Key = f.t2_source || f.t2; 
+            if(map[t2Key]) { 
+                if (f.t2 !== map[t2Key]) {
+                    f.t2_source = t2Key; // Save the placeholder
+                    f.t2 = map[t2Key];   // Update the Team
+                    updatesMade = true; 
+                }
+            }
         }
     });
     
-    if(updatesMade) console.log("Knockout fixtures updated automatically.");
+    if(updatesMade) {
+        console.log("Knockout fixtures updated automatically.");
+        saveTournamentData(); // Save changes to DB
+        renderFixtures();     // Refresh UI
+    }
 }
 
 function recalculateStandings() {
