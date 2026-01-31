@@ -979,33 +979,45 @@
             </div>
 
             <div class="w-full animate-slide-up delay-200">
-                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-bold text-gray-900 uppercase tracking-wide">Match Schedule</h3>
-                    <div class="flex gap-2">
-                        <button onclick="addScheduleRow('League Match')" class="bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wide hover:bg-gray-50 shadow-sm transition-colors">+ Manual</button>
-                        
-                        <button onclick="generateProfessionalSchedule()" class="bg-blue-600 border border-blue-600 text-white px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wide hover:bg-blue-700 shadow-sm transition-colors flex items-center gap-1">
-                            <span>⚡ Auto Gen</span>
-                        </button>
-                    </div>
-                </div>
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold text-gray-900 uppercase tracking-wide">Match Schedule</h3>
+        <div class="flex gap-2">
+            <button onclick="addScheduleRow('League Match')" class="bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wide hover:bg-gray-50 shadow-sm transition-colors">+ Manual</button>
+            <button onclick="generateProfessionalSchedule()" class="bg-blue-600 border border-blue-600 text-white px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wide hover:bg-blue-700 shadow-sm transition-colors flex items-center gap-1">
+                <span>⚡ Auto Gen</span>
+            </button>
+        </div>
+    </div>
 
-                <div class="bg-white border border-gray-200 rounded-xl shadow-sm min-h-[400px] p-4 relative">
-                    <div id="schedule-rows" class="space-y-3 h-[400px] overflow-y-auto pr-2 custom-scroll">
-                        <div class="flex flex-col items-center justify-center h-full text-gray-300 space-y-2">
-                            <span class="text-4xl opacity-50">📅</span>
-                            <p class="text-xs font-bold uppercase tracking-wide">No Matches Scheduled</p>
-                            <p class="text-[10px]">Use 'Auto Gen' to create fixtures based on settings.</p>
-                        </div>
-                    </div>
-                    
-                    <div class="absolute bottom-4 left-4 right-4">
-                         <button onclick="addScheduleRow('Final')" class="w-full py-2 bg-yellow-50 text-yellow-800 font-bold rounded border border-yellow-300 uppercase tracking-wide text-[10px] hover:bg-yellow-100 transition shadow-sm border-dashed hover:border-solid">
-                            + Add Final Match Card
-                        </button>
-                    </div>
-                </div>
+    <div id="flow-selector-container" class="hidden mb-6 bg-gray-50 border border-blue-200 rounded-xl p-4 animate-pop relative">
+        <div class="flex justify-between items-start mb-4">
+            <div>
+                <h4 class="text-sm font-black text-blue-900 uppercase">Select Tournament Structure</h4>
+                <p class="text-[10px] text-gray-500 font-bold">Based on your team count, choose a format:</p>
             </div>
+            <button onclick="document.getElementById('flow-selector-container').classList.add('hidden')" class="text-gray-400 hover:text-red-500 font-bold">✕</button>
+        </div>
+        
+        <div id="flow-options-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            </div>
+    </div>
+
+    <div class="bg-white border border-gray-200 rounded-xl shadow-sm min-h-[400px] p-4 relative">
+        <div id="schedule-rows" class="space-y-3 h-[400px] overflow-y-auto pr-2 custom-scroll">
+            <div class="flex flex-col items-center justify-center h-full text-gray-300 space-y-2">
+                <span class="text-4xl opacity-50">📅</span>
+                <p class="text-xs font-bold uppercase tracking-wide">No Matches Scheduled</p>
+                <p class="text-[10px]">Click 'Auto Gen' to see tournament structure options.</p>
+            </div>
+        </div>
+        
+        <div class="absolute bottom-4 left-4 right-4">
+                <button onclick="addScheduleRow('Final')" class="w-full py-2 bg-yellow-50 text-yellow-800 font-bold rounded border border-yellow-300 uppercase tracking-wide text-[10px] hover:bg-yellow-100 transition shadow-sm border-dashed hover:border-solid">
+                + Add Final Match Card
+            </button>
+        </div>
+    </div>
+</div>
 
         </div>
 
@@ -1164,123 +1176,167 @@
             container.insertAdjacentHTML('beforeend', rowHtml);
         };
 
-        // 4. Auto-Generate Schedule Logic (Knockout Aware & Persist Placeholders)
-        window.generateProfessionalSchedule = function() {
-            // Get Config
-            const matchesPerTeam = parseInt(document.getElementById('tourney-rounds-count').value) || 1;
-            const qualifyRule = document.getElementById('tourney-qualify-rule').value;
-            const groupModeEl = document.getElementById('tourney-group-mode');
-            const numGroups = groupModeEl ? parseInt(groupModeEl.value) : 1;
-            
-            // Get Teams from Inputs
-            const teams = [];
-            document.querySelectorAll('.tourney-team-select').forEach(sel => {
-                if(sel.value.trim() !== "") teams.push(sel.value);
-                else teams.push(sel.placeholder); 
-            });
+        // 4. Auto-Generate Schedule Logic (Visual Flow)
+window.generateProfessionalSchedule = function(selectedFlow = null) {
+    // Get Teams from Inputs
+    const teams = [];
+    document.querySelectorAll('.tourney-team-select').forEach(sel => {
+        if(sel.value.trim() !== "") teams.push(sel.value);
+        else teams.push(sel.placeholder); 
+    });
 
-            if (teams.length < 2) {
-                alert("Please enter at least 2 teams to generate a schedule.");
-                return;
-            }
+    if (teams.length < 2) {
+        showCustomAlert("Error", "Please enter at least 2 teams to generate a schedule.", "red");
+        return;
+    }
 
-            // Clear Table
-            const container = document.getElementById('schedule-rows');
-            container.innerHTML = '';
+    // Step 1: If no flow selected, Show Visual Options
+    if (!selectedFlow) {
+        const flowContainer = document.getElementById('flow-selector-container');
+        const flowGrid = document.getElementById('flow-options-grid');
+        const matchesPerTeam = parseInt(document.getElementById('tourney-rounds-count').value) || 1;
+        
+        flowGrid.innerHTML = ''; // Clear previous options
+        flowContainer.classList.remove('hidden');
 
-            // --- A. Generate League Matches (Standard Circle Method) ---
-            let pool = [...teams];
-            if (pool.length % 2 !== 0) pool.push(null); // Add dummy for Bye
+        // Define Diagram Generators
+        const createDiagram = (title, desc, type, icon, details) => `
+            <button onclick="generateProfessionalSchedule('${type}')" class="group relative flex flex-col items-center bg-white p-4 rounded-xl border-2 border-transparent hover:border-blue-500 hover:shadow-lg transition-all text-left w-full">
+                <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-2xl mb-3 group-hover:scale-110 transition-transform">${icon}</div>
+                <h5 class="font-black text-gray-800 uppercase text-xs tracking-wider mb-1">${title}</h5>
+                <p class="text-[10px] text-gray-400 font-medium text-center mb-3 leading-relaxed">${desc}</p>
+                <div class="w-full bg-gray-50 rounded p-2 text-[9px] font-mono text-gray-500 border border-gray-100">
+                    ${details}
+                </div>
+            </button>
+        `;
 
-            const totalTeams = pool.length;
-            const half = totalTeams / 2;
+        // OPTION A: Round Robin / League
+        const totalLeagueMatches = Math.floor((teams.length * (teams.length - 1)) / 2) * matchesPerTeam;
+        flowGrid.innerHTML += createDiagram(
+            "League + Knockout",
+            "Every team plays each other. Top teams qualify for finals.",
+            "LEAGUE",
+            "🏆",
+            `• ${teams.length} Teams<br>• ${totalLeagueMatches} League Matches<br>• Semi-Finals & Final`
+        );
 
-            for (let round = 0; round < matchesPerTeam; round++) {
-                for (let i = 0; i < half; i++) {
-                    const t1 = pool[i];
-                    const t2 = pool[totalTeams - 1 - i];
+        // OPTION B: Pure Knockout (If team count > 2)
+        if (teams.length > 2) {
+            flowGrid.innerHTML += createDiagram(
+                "Knockout Cup",
+                "Do-or-die format. Loser goes home immediately.",
+                "KNOCKOUT",
+                "⚡",
+                `• Quarter / Semis / Final<br>• Fast Tournament<br>• No Second Chances`
+            );
+        }
 
-                    if (t1 && t2) {
-                        const home = (round % 2 === 0) ? t1 : t2;
-                        const away = (round % 2 === 0) ? t2 : t1;
-                        addScheduleRow(`League Match`, { t1: home, t2: away });
-                    }
-                }
+        // OPTION C: Groups (If team count > 5)
+        if (teams.length > 5) {
+            flowGrid.innerHTML += createDiagram(
+                "Group Stage",
+                "Split into 2 Groups (A & B). Top 2 from each cross over.",
+                "GROUPS",
+                "📊",
+                `• 2 Groups of ${Math.ceil(teams.length/2)}<br>• Shorter League Phase<br>• Semi-Final Cross`
+            );
+        }
 
-                // Rotate Pool
-                const fixed = pool[0];
-                const rotated = pool.slice(1);
-                const last = rotated.pop();
-                rotated.unshift(last);
-                pool = [fixed, ...rotated];
-            }
+        return; // Stop here and wait for user click
+    }
 
-            // --- B. Generate Knockouts with Force-Injected Placeholders ---
-            // This ensures "Winner SF1" etc. are saved as valid teams instead of being cleared.
-
-            const addKnockoutRow = (type, t1Text, t2Text) => {
-                addScheduleRow(type, { t1: t1Text, t2: t2Text });
-                
-                // FORCE INJECT OPTIONS: The default dropdowns wipe unknown values.
-                // We must re-inject these placeholders so they pass validation when saving.
-                const lastCard = container.lastElementChild;
-                if(lastCard) {
-                    const inject = (sel, val) => {
-                        if(val && val !== "TBD" && !Array.from(sel.options).some(o => o.value === val)) {
-                            const opt = document.createElement('option');
-                            opt.value = val;
-                            opt.text = val;
-                            sel.add(opt);
-                            sel.value = val; // Force selection
-                        }
-                    };
-                    inject(lastCard.querySelector('.sch-t1'), t1Text);
-                    inject(lastCard.querySelector('.sch-t2'), t2Text);
+    // Step 2: Hide Selector & Generate based on Selection
+    document.getElementById('flow-selector-container').classList.add('hidden');
+    const container = document.getElementById('schedule-rows');
+    container.innerHTML = '';
+    
+    // -- Generation Helpers --
+    const matchesPerTeam = parseInt(document.getElementById('tourney-rounds-count').value) || 1;
+    
+    // Helper to add row (Standardized)
+    const addRow = (type, t1Text, t2Text) => {
+        addScheduleRow(type, { t1: t1Text, t2: t2Text });
+        // Force Inject TBD values
+        const lastCard = container.lastElementChild;
+        if(lastCard) {
+            const inject = (sel, val) => {
+                if(val && val !== "TBD" && !Array.from(sel.options).some(o => o.value === val)) {
+                    const opt = document.createElement('option'); opt.value = val; opt.text = val; sel.add(opt); sel.value = val;
                 }
             };
-            
-            if (qualifyRule === 'TOP_4') {
-                if (teams.length >= 4) {
-                    addKnockoutRow('Semi Final 1', "1st Place", "4th Place");
-                    addKnockoutRow('Semi Final 2', "2nd Place", "3rd Place");
-                    addKnockoutRow('Final', "Winner SF1", "Winner SF2");
-                } else {
-                    addKnockoutRow('Final', "1st Place", "2nd Place");
-                }
-            } 
-            else if (qualifyRule === 'TOP_2') {
-                addKnockoutRow('Final', "1st Place", "2nd Place");
+            inject(lastCard.querySelector('.sch-t1'), t1Text);
+            inject(lastCard.querySelector('.sch-t2'), t2Text);
+        }
+    };
+
+    // --- LOGIC BRANCHES ---
+
+    if (selectedFlow === 'LEAGUE') {
+        // Round Robin Generation
+        let pool = [...teams];
+        if (pool.length % 2 !== 0) pool.push(null); // Dummy
+        const total = pool.length; const half = total / 2;
+
+        for (let round = 0; round < matchesPerTeam; round++) {
+            for (let i = 0; i < half; i++) {
+                const t1 = pool[i];
+                const t2 = pool[total - 1 - i];
+                if (t1 && t2) addRow('League Match', (round%2===0?t1:t2), (round%2===0?t2:t1));
             }
-            else if (qualifyRule === 'TOP_8' && teams.length >= 8) {
-                addKnockoutRow('Quarter Final 1', "1st", "8th");
-                addKnockoutRow('Quarter Final 2', "2nd", "7th");
-                addKnockoutRow('Quarter Final 3', "3rd", "6th");
-                addKnockoutRow('Quarter Final 4', "4th", "5th");
-                addKnockoutRow('Semi Final 1', "Winner QF1", "Winner QF4");
-                addKnockoutRow('Semi Final 2', "Winner QF2", "Winner QF3");
-                addKnockoutRow('Final', "Winner SF1", "Winner SF2");
-            }
-            else if (qualifyRule === 'GROUP_TOP') {
-                if (numGroups === 2) {
-                    addKnockoutRow('Final', "Winner Group A", "Winner Group B");
-                } else if (numGroups === 4) {
-                    addKnockoutRow('Semi Final 1', "Winner Group A", "Winner Group D");
-                    addKnockoutRow('Semi Final 2', "Winner Group B", "Winner Group C");
-                    addKnockoutRow('Final', "Winner SF1", "Winner SF2");
-                } else {
-                    addKnockoutRow('Final', "Top Ranked 1", "Top Ranked 2");
-                }
-            }
-            else if (qualifyRule === 'GROUP_TOP_2') {
-                if (numGroups === 2) {
-                    addKnockoutRow('Semi Final 1', "A1 (Winner A)", "B2 (Runner B)");
-                    addKnockoutRow('Semi Final 2', "B1 (Winner B)", "A2 (Runner A)");
-                    addKnockoutRow('Final', "Winner SF1", "Winner SF2");
-                } else {
-                     addKnockoutRow('Final', "Qualifier 1", "Qualifier 2");
+            // Rotate
+            pool = [pool[0], ...pool.slice(1).slice(-1), ...pool.slice(1, -1)];
+        }
+        // Finals
+        if(teams.length >= 4) {
+            addRow('Semi Final 1', "1st Place", "4th Place");
+            addRow('Semi Final 2', "2nd Place", "3rd Place");
+            addRow('Final', "Winner SF1", "Winner SF2");
+        } else {
+            addRow('Final', "1st Place", "2nd Place");
+        }
+    } 
+    
+    else if (selectedFlow === 'KNOCKOUT') {
+        // Pure Knockout Logic
+        const shuffle = teams.sort(() => 0.5 - Math.random());
+        // Simple logic for < 8 teams: Quarter or Semi direct
+        if (teams.length > 4) {
+            addRow('Quarter Final 1', shuffle[0]||"TBD", shuffle[1]||"TBD");
+            addRow('Quarter Final 2', shuffle[2]||"TBD", shuffle[3]||"TBD");
+            addRow('Quarter Final 3', shuffle[4]||"TBD", shuffle[5]||"TBD");
+            addRow('Quarter Final 4', shuffle[6]||"TBD", shuffle[7]||"TBD");
+            addRow('Semi Final 1', "Winner QF1", "Winner QF4");
+            addRow('Semi Final 2', "Winner QF2", "Winner QF3");
+        } else {
+            addRow('Semi Final 1', shuffle[0]||"TBD", shuffle[1]||"TBD");
+            addRow('Semi Final 2', shuffle[2]||"TBD", shuffle[3]||"TBD");
+        }
+        addRow('Final', "Winner SF1", "Winner SF2");
+    }
+
+    else if (selectedFlow === 'GROUPS') {
+        // Simple 2 Group Split
+        const grpA = teams.filter((_,i) => i % 2 === 0);
+        const grpB = teams.filter((_,i) => i % 2 !== 0);
+        
+        // Generate intra-group matches
+        const genGroup = (grp, gName) => {
+            for(let i=0; i<grp.length; i++) {
+                for(let j=i+1; j<grp.length; j++) {
+                     addRow(`Group ${gName} Match`, grp[i], grp[j]);
                 }
             }
         };
+        genGroup(grpA, "A");
+        genGroup(grpB, "B");
+        
+        // Crossover Semis
+        addRow('Semi Final 1', "Winner Group A", "Runner Up Group B");
+        addRow('Semi Final 2', "Winner Group B", "Runner Up Group A");
+        addRow('Final', "Winner SF1", "Winner SF2");
+    }
+};
 
         // Initialize Step 1
         updateStepper(1);
@@ -1320,36 +1376,32 @@
         </div>
 </div>
 
-        <div id="view-standings" class="dash-view hidden">
-            <h3 class="text-2xl font-black text-gray-800 mb-6 uppercase">Points Table</h3>
-            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+        <div id="view-standings" class="dash-view hidden w-full h-full flex flex-col">
+            <div id="standings-header-container" class="mb-6"></div>
+            
+            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm animate-slide-up">
                 <table class="w-full text-left text-xs">
-                    <thead class="bg-gray-100 border-b">
-                        <tr>
-                            <th class="p-4 font-black text-gray-500">TEAM</th>
-                            <th class="p-4 font-black text-gray-500 text-center">P</th>
-                            <th class="p-4 font-black text-gray-500 text-center">W</th>
-                            <th class="p-4 font-black text-gray-500 text-center">L</th>
-                            <th class="p-4 font-black text-gray-500 text-center">NRR</th>
-                            <th class="p-4 font-black text-purple-600 text-center">PTS</th>
+                    <thead class="bg-gray-50 border-b border-gray-100">
+                        <tr class="text-xs uppercase tracking-wider text-gray-500">
+                            <th class="p-4 font-black">Team</th>
+                            <th class="p-4 font-black text-center">P</th>
+                            <th class="p-4 font-black text-center">W</th>
+                            <th class="p-4 font-black text-center">L</th>
+                            <th class="p-4 font-black text-center">NRR</th>
+                            <th class="p-4 font-black text-purple-600 text-center">Pts</th>
                         </tr>
                     </thead>
-                    <tbody id="standings-body"></tbody>
+                    <tbody id="standings-body" class="divide-y divide-gray-50"></tbody>
                 </table>
             </div>
         </div>
 
-        <div id="view-stats" class="dash-view hidden">
-            <h3 class="text-2xl font-black text-gray-800 mb-6 uppercase">Tournament Stats</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                    <h4 class="text-xs font-black text-orange-500 uppercase tracking-widest mb-4">Top Run Scorers</h4>
-                    <div id="stats-runs" class="space-y-2"></div>
-                </div>
-                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                    <h4 class="text-xs font-black text-blue-500 uppercase tracking-widest mb-4">Top Wicket Takers</h4>
-                    <div id="stats-wickets" class="space-y-2"></div>
-                </div>
+        <div id="view-stats" class="dash-view hidden w-full h-full flex flex-col">
+            <div id="stats-header-container" class="mb-6"></div>
+            
+            <div id="stats-main-wrapper" class="w-full flex-grow flex flex-col gap-4">
+                 <div id="stats-runs" class="hidden"></div>
+                 <div id="stats-wickets" class="hidden"></div>
             </div>
         </div>
     </div>
@@ -5872,8 +5924,36 @@ function loadTournamentDashboard() {
     setTimeout(() => dash.classList.add('active'), 10);
 
     if (tournamentState.data && tournamentState.data.meta) {
+        // Sidebar Info
         document.getElementById('dashboard-title').textContent = tournamentState.data.meta.name;
         document.getElementById('dashboard-id').textContent = tournamentState.id;
+
+        // Render Stats Header (Reusing the professional style)
+        const meta = tournamentState.data.meta;
+        const rules = tournamentState.data.rules;
+        const statsHeaderHTML = `
+            <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 animate-slide-up">
+                <div class="flex items-center gap-4 w-full md:w-auto">
+                    <div class="w-12 h-12 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center text-xl shadow-sm border border-purple-100 shrink-0">📊</div>
+                    <div>
+                        <h2 class="text-lg md:text-xl font-black text-gray-900 uppercase leading-none mb-1">Tournament Stats</h2>
+                        <div class="flex flex-wrap items-center gap-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                            <span>${meta.name}</span>
+                            <span class="hidden md:inline w-1 h-1 rounded-full bg-gray-300"></span>
+                            <span>${meta.organizer}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between w-full md:w-auto gap-4 border-t md:border-t-0 border-gray-100 pt-3 md:pt-0">
+                    <div class="text-right">
+                        <span class="block text-[9px] text-gray-400 font-bold uppercase tracking-wider">Format</span>
+                        <span class="block text-xs font-black text-gray-800 uppercase">${rules.overs} Overs • ${rules.ballType}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        const statsHeaderContainer = document.getElementById('stats-header-container');
+        if(statsHeaderContainer) statsHeaderContainer.innerHTML = statsHeaderHTML;
     }
 
     renderFixtures();
@@ -6164,23 +6244,58 @@ function renderFixtures() {
 }
 
 function renderStandings() {
+    // 1. Render Tournament Metadata Header
+    const meta = tournamentState.data.meta;
+    const rules = tournamentState.data.rules;
+    const headerHTML = `
+        <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 animate-slide-up">
+            <div class="flex items-center gap-4 w-full md:w-auto">
+                <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl shadow-sm border border-blue-100 shrink-0">🏆</div>
+                <div>
+                    <h2 class="text-lg md:text-xl font-black text-gray-900 uppercase leading-none mb-1">${meta.name}</h2>
+                    <div class="flex flex-wrap items-center gap-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                        <span class="flex items-center gap-1">👤 ${meta.organizer}</span>
+                        <span class="hidden md:inline w-1 h-1 rounded-full bg-gray-300"></span>
+                        <span class="flex items-center gap-1">🌍 ${meta.country}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center justify-between w-full md:w-auto gap-4 border-t md:border-t-0 border-gray-100 pt-3 md:pt-0">
+                <div class="text-right">
+                    <span class="block text-[9px] text-gray-400 font-bold uppercase tracking-wider">Format</span>
+                    <span class="block text-xs font-black text-gray-800 uppercase">${rules.overs} Overs • ${rules.ballType}</span>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-lg border border-gray-100 text-gray-400">🏏</div>
+            </div>
+        </div>
+    `;
+    const headerContainer = document.getElementById('standings-header-container');
+    if(headerContainer) headerContainer.innerHTML = headerHTML;
+
+    // 2. Render Table Rows with Logos
     const tbody = document.getElementById('standings-body');
-    // Sort by Points, then NRR
     const sorted = [...tournamentState.data.standings].sort((a,b) => b.pts - a.pts || b.nrr - a.nrr);
     
-    tbody.innerHTML = sorted.map((t, i) => `
-        <tr class="border-b last:border-0 hover:bg-gray-50">
-            <td class="p-4 font-bold text-gray-800 flex items-center gap-2">
-                <span class="text-gray-300 font-mono text-xs">${i+1}</span>
-                ${t.name}
+    tbody.innerHTML = sorted.map((t, i) => {
+        // Find logo
+        const teamData = tournamentState.data.teams.find(tm => tm.name === t.name);
+        const logo = teamData && teamData.logo ? `<img src="${teamData.logo}" class="w-8 h-8 rounded-full object-cover border border-gray-100 shadow-sm bg-white">` 
+                                               : `<div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-500 border border-gray-200">${t.name.substring(0,2)}</div>`;
+        
+        return `
+        <tr class="hover:bg-blue-50/30 transition-colors group">
+            <td class="p-4 font-bold text-gray-800 flex items-center gap-3">
+                <span class="text-gray-300 font-mono text-xs w-4">${i+1}</span>
+                ${logo}
+                <span class="group-hover:text-blue-700 transition-colors">${t.name}</span>
             </td>
-            <td class="p-4 text-center text-gray-600 font-mono">${t.p}</td>
-            <td class="p-4 text-center text-green-600 font-bold">${t.w}</td>
-            <td class="p-4 text-center text-red-400">${t.l}</td>
-            <td class="p-4 text-center font-mono text-xs">${t.nrr.toFixed(3)}</td>
+            <td class="p-4 text-center text-gray-600 font-mono font-bold">${t.p}</td>
+            <td class="p-4 text-center text-green-600 font-bold bg-green-50/30 rounded-lg">${t.w}</td>
+            <td class="p-4 text-center text-red-400 font-bold">${t.l}</td>
+            <td class="p-4 text-center font-mono text-xs font-bold text-gray-600">${t.nrr.toFixed(3)}</td>
             <td class="p-4 text-center font-black text-purple-700 text-lg">${t.pts}</td>
         </tr>
-    `).join('');
+    `}).join('');
 }
 
 function renderStats() {
@@ -6420,31 +6535,38 @@ function updateTournamentStatsAfterMatch() {
 function autoFillKnockouts(completedFixture) {
     const fixtures = tournamentState.data.fixtures;
     
-    // 1. Get Sorted Standings (Points Table)
+    // 1. Check if League Stage is COMPLETE
+    // We only assign league positions (1st, 2nd) when the table is final to prevent changing opponents.
+    const leagueMatches = fixtures.filter(f => f.stage === 'League Match' || f.stage.includes('Group'));
+    const isLeagueComplete = leagueMatches.length > 0 && leagueMatches.every(f => f.status === 'COMPLETED');
+
+    // 2. Get Sorted Standings (Points Table)
     const standings = [...tournamentState.data.standings].sort((a,b) => b.pts - a.pts || b.nrr - a.nrr);
     
-    // 2. Build Resolver Map (Placeholders -> Real Teams)
+    // 3. Build Resolver Map (Placeholders -> Real Teams)
     const map = {};
 
-    // League Standings Mappings
-    if(standings[0]) { 
-        map["1st Place"] = standings[0].name; 
-        map["1st"] = standings[0].name; 
-        map["Winner Group A"] = standings[0].name; 
-        map["Qualifier 1"] = standings[0].name; 
-        map["Top Ranked 1"] = standings[0].name; 
+    // Map League Positions ONLY if League is Complete (or pure knockout)
+    if (isLeagueComplete || leagueMatches.length === 0) {
+        if(standings[0]) { 
+            map["1st Place"] = standings[0].name; 
+            map["1st"] = standings[0].name; 
+            map["Winner Group A"] = standings[0].name; 
+            map["Qualifier 1"] = standings[0].name; 
+            map["Top Ranked 1"] = standings[0].name; 
+        }
+        if(standings[1]) { 
+            map["2nd Place"] = standings[1].name; 
+            map["2nd"] = standings[1].name; 
+            map["Winner Group B"] = standings[1].name; 
+            map["Qualifier 2"] = standings[1].name; 
+            map["Top Ranked 2"] = standings[1].name; 
+        }
+        if(standings[2]) { map["3rd Place"] = standings[2].name; map["3rd"] = standings[2].name; }
+        if(standings[3]) { map["4th Place"] = standings[3].name; map["4th"] = standings[3].name; }
     }
-    if(standings[1]) { 
-        map["2nd Place"] = standings[1].name; 
-        map["2nd"] = standings[1].name; 
-        map["Winner Group B"] = standings[1].name; 
-        map["Qualifier 2"] = standings[1].name; 
-        map["Top Ranked 2"] = standings[1].name; 
-    }
-    if(standings[2]) { map["3rd Place"] = standings[2].name; map["3rd"] = standings[2].name; }
-    if(standings[3]) { map["4th Place"] = standings[3].name; map["4th"] = standings[3].name; }
 
-    // Knockout Mappings (Winners of previous stages)
+    // Knockout Mappings (Winners of previous stages) - Always Valid
     fixtures.forEach(f => {
         if(f.status === 'COMPLETED' && f.winner) {
             // Map exact stage name to Winner Key
@@ -6460,23 +6582,27 @@ function autoFillKnockouts(completedFixture) {
         }
     });
 
-    // 3. Sweep Upcoming Fixtures & Replace Placeholders (With Auto-Correction Logic)
+    // 4. Sweep Upcoming Fixtures & Replace Placeholders
     let updatesMade = false;
     fixtures.forEach(f => {
         if(f.status !== 'COMPLETED' && f.status !== 'LIVE') {
             
-            // AUTO-REPAIR: If it's a Final, force source linking to fix previous errors
-            if(f.stage === 'Final') {
-                if(!f.t1_source) f.t1_source = "Winner SF1";
-                if(!f.t2_source) f.t2_source = "Winner SF2";
+            // AUTO-REPAIR: If it's a Final, check context to link sources correctly
+            if(f.stage === 'Final' && !f.t1_source) {
+                const hasSemis = fixtures.some(x => x.stage.includes('Semi'));
+                if(hasSemis) {
+                    f.t1_source = "Winner SF1"; f.t2_source = "Winner SF2";
+                } else {
+                    f.t1_source = "1st Place"; f.t2_source = "2nd Place";
+                }
             }
 
-            // CHECK TEAM 1 (Using Source Tag if available to allow updates)
+            // CHECK TEAM 1
             const t1Key = f.t1_source || f.t1;
             if(map[t1Key]) { 
                 if (f.t1 !== map[t1Key]) {
-                    f.t1_source = t1Key; // Save the placeholder
-                    f.t1 = map[t1Key];   // Update the Team
+                    f.t1_source = t1Key; // Persist source
+                    f.t1 = map[t1Key];   // Update Team
                     updatesMade = true; 
                 }
             }
@@ -6485,8 +6611,8 @@ function autoFillKnockouts(completedFixture) {
             const t2Key = f.t2_source || f.t2; 
             if(map[t2Key]) { 
                 if (f.t2 !== map[t2Key]) {
-                    f.t2_source = t2Key; // Save the placeholder
-                    f.t2 = map[t2Key];   // Update the Team
+                    f.t2_source = t2Key; // Persist source
+                    f.t2 = map[t2Key];   // Update Team
                     updatesMade = true; 
                 }
             }
@@ -6632,25 +6758,8 @@ function renderStatsUI(players) {
 
     const bpo = tournamentState.data.rules.ballType === 'Leather' ? 6 : (tournamentState.data.rules.ballsPerOver || 6);
 
-    // 2. CHECK & WIPE OLD LAYOUT (Fixes Duplication & Width)
-    let runsAnchor = document.getElementById('stats-runs');
-    let wktsAnchor = document.getElementById('stats-wickets');
-    let parentContainer = null;
-
-    if (runsAnchor) {
-        parentContainer = runsAnchor.parentNode;
-        parentContainer.innerHTML = ''; 
-        parentContainer.className = "w-full flex flex-col gap-4"; 
-        parentContainer.id = "stats-main-wrapper";
-    } else if (wktsAnchor) {
-        parentContainer = wktsAnchor.parentNode;
-        parentContainer.innerHTML = '';
-        parentContainer.className = "w-full flex flex-col gap-4";
-        parentContainer.id = "stats-main-wrapper";
-    } else {
-        parentContainer = document.getElementById('stats-main-wrapper');
-    }
-
+    // 2. CHECK & WIPE OLD LAYOUT
+    let parentContainer = document.getElementById('stats-main-wrapper');
     if (!parentContainer) return; 
 
     // 3. Create Widget if Missing
@@ -6658,12 +6767,12 @@ function renderStatsUI(players) {
     if (!widget) {
         widget = document.createElement('div');
         widget.id = 'stats-widget-container';
-        widget.className = "bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden w-full"; 
+        widget.className = "bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden w-full animate-slide-up"; 
+        parentContainer.innerHTML = ''; // Clear legacy IDs
         parentContainer.appendChild(widget);
     }
 
-    // 4. Render Skeleton (Header, Tabs, Filter) if empty
-    // UPDATED: Added 'overflow-x-auto no-scrollbar snap-x snap-mandatory' for professional sliding tabs
+    // 4. Render Skeleton
     if (widget.innerHTML === '') {
         widget.innerHTML = `
             <div class="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-3 bg-gray-50">
@@ -6695,7 +6804,7 @@ function renderStatsUI(players) {
         window.updateStatsTeam = (t) => { window.statsTabState.team = t; renderStatsUI(window.latestPlayerStats); };
     }
 
-    // 5. Update Dropdown Options
+    // 5. Update Dropdown
     const teamSelect = document.getElementById('stats-team-filter');
     if (teamSelect) {
         const teams = [...new Set(players.map(p => p.team))].sort();
@@ -6724,14 +6833,44 @@ function renderStatsUI(players) {
     const activeTab = window.statsTabState.tab;
     let html = '';
 
+    // --- ROBUST HELPER TO GET PLAYER IMAGE ---
+    const getPlayerImage = (pName, tName) => {
+        // 1. Find Team (Case Insensitive + Trim)
+        if(!tournamentState.data.teams) return fallback(pName);
+        const teamData = tournamentState.data.teams.find(tm => 
+            tm.name.trim().toLowerCase() === tName.trim().toLowerCase()
+        );
+        
+        if (!teamData || !teamData.players) return fallback(pName);
+
+        // 2. Find Player (Handles Strings & Objects, Case Insensitive)
+        const playerData = teamData.players.find(pl => {
+            const storedName = (typeof pl === 'string') ? pl : pl.name;
+            return storedName.trim().toLowerCase() === pName.trim().toLowerCase();
+        });
+
+        // 3. Return Image if exists
+        if(playerData && typeof playerData === 'object' && playerData.image) {
+            return `<img src="${playerData.image}" class="w-8 h-8 rounded-full object-cover border border-gray-200 shadow-sm bg-white">`;
+        }
+        
+        return fallback(pName);
+    };
+
+    const fallback = (name) => `
+        <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-500 border border-gray-200">
+            ${name.substring(0,2).toUpperCase()}
+        </div>
+    `;
+
     if (activeTab === 'batsman') {
         data = data.filter(p => p.runs > 0).sort((a,b) => b.runs - a.runs || ((b.runs/b.balls)-(a.runs/a.balls))).slice(0,20);
         html = `
             <table class="w-full text-left border-collapse min-w-[350px]">
                 <thead>
                     <tr class="bg-orange-600 text-white text-[10px] uppercase font-bold tracking-wider">
-                        <th class="p-3 sticky left-0 bg-orange-600 z-10">#</th>
-                        <th class="p-3 w-1/2 sticky left-8 bg-orange-600 z-10">Player</th>
+                        <th class="p-3 sticky left-0 bg-orange-600 z-10 w-10">#</th>
+                        <th class="p-3 w-1/2 sticky left-10 bg-orange-600 z-10">Player</th>
                         <th class="p-3 text-center">Mat</th>
                         <th class="p-3 text-center">SR</th>
                         <th class="p-3 text-right">Runs</th>
@@ -6740,12 +6879,16 @@ function renderStatsUI(players) {
                 <tbody class="text-xs divide-y divide-gray-100">
                     ${data.map((p,i) => {
                         const sr = p.balls > 0 ? ((p.runs/p.balls)*100).toFixed(0) : 0;
+                        const avatar = getPlayerImage(p.name, p.team);
                         return `
-                        <tr class="odd:bg-white even:bg-gray-50 hover:bg-orange-50 transition-colors">
-                            <td class="p-3 font-mono text-gray-400 font-bold sticky left-0 bg-inherit z-10">${i+1}</td>
-                            <td class="p-3 sticky left-8 bg-inherit z-10 border-r border-gray-100">
-                                <div class="font-bold text-gray-800 text-xs">${p.name}</div>
-                                <div class="text-[9px] text-gray-400 uppercase font-semibold">${p.team}</div>
+                        <tr class="odd:bg-white even:bg-gray-50 hover:bg-orange-50 transition-colors group">
+                            <td class="p-3 font-mono text-gray-400 font-bold sticky left-0 bg-inherit z-10 border-r border-transparent">${i+1}</td>
+                            <td class="p-3 sticky left-10 bg-inherit z-10 border-r border-gray-100 flex items-center gap-3">
+                                ${avatar}
+                                <div>
+                                    <div class="font-bold text-gray-800 text-xs group-hover:text-orange-700 transition-colors">${p.name}</div>
+                                    <div class="text-[9px] text-gray-400 uppercase font-semibold">${p.team}</div>
+                                </div>
                             </td>
                             <td class="p-3 text-center font-medium text-gray-500">${p.matches}</td>
                             <td class="p-3 text-center font-medium text-gray-500">${sr}</td>
@@ -6761,8 +6904,8 @@ function renderStatsUI(players) {
             <table class="w-full text-left border-collapse min-w-[350px]">
                 <thead>
                     <tr class="bg-indigo-600 text-white text-[10px] uppercase font-bold tracking-wider">
-                        <th class="p-3 sticky left-0 bg-indigo-600 z-10">#</th>
-                        <th class="p-3 w-1/2 sticky left-8 bg-indigo-600 z-10">Player</th>
+                        <th class="p-3 sticky left-0 bg-indigo-600 z-10 w-10">#</th>
+                        <th class="p-3 w-1/2 sticky left-10 bg-indigo-600 z-10">Player</th>
                         <th class="p-3 text-center">Ov</th>
                         <th class="p-3 text-center">Econ</th>
                         <th class="p-3 text-right">Wkts</th>
@@ -6772,12 +6915,16 @@ function renderStatsUI(players) {
                     ${data.map((p,i) => {
                         const ov = Math.floor(p.bb/bpo) + '.' + (p.bb%bpo);
                         const ec = (p.bb>0 ? (p.rc/(p.bb/bpo)) : 0).toFixed(1);
+                        const avatar = getPlayerImage(p.name, p.team);
                         return `
-                        <tr class="odd:bg-white even:bg-gray-50 hover:bg-indigo-50 transition-colors">
-                            <td class="p-3 font-mono text-gray-400 font-bold sticky left-0 bg-inherit z-10">${i+1}</td>
-                            <td class="p-3 sticky left-8 bg-inherit z-10 border-r border-gray-100">
-                                <div class="font-bold text-gray-800 text-xs">${p.name}</div>
-                                <div class="text-[9px] text-gray-400 uppercase font-semibold">${p.team}</div>
+                        <tr class="odd:bg-white even:bg-gray-50 hover:bg-indigo-50 transition-colors group">
+                            <td class="p-3 font-mono text-gray-400 font-bold sticky left-0 bg-inherit z-10 border-r border-transparent">${i+1}</td>
+                            <td class="p-3 sticky left-10 bg-inherit z-10 border-r border-gray-100 flex items-center gap-3">
+                                ${avatar}
+                                <div>
+                                    <div class="font-bold text-gray-800 text-xs group-hover:text-indigo-700 transition-colors">${p.name}</div>
+                                    <div class="text-[9px] text-gray-400 uppercase font-semibold">${p.team}</div>
+                                </div>
                             </td>
                             <td class="p-3 text-center font-medium text-gray-500">${ov}</td>
                             <td class="p-3 text-center font-medium text-gray-500">${ec}</td>
@@ -6793,8 +6940,8 @@ function renderStatsUI(players) {
             <table class="w-full text-left border-collapse min-w-[350px]">
                 <thead>
                     <tr class="bg-teal-600 text-white text-[10px] uppercase font-bold tracking-wider">
-                        <th class="p-3 sticky left-0 bg-teal-600 z-10">#</th>
-                        <th class="p-3 w-1/2 sticky left-8 bg-teal-600 z-10">Player</th>
+                        <th class="p-3 sticky left-0 bg-teal-600 z-10 w-10">#</th>
+                        <th class="p-3 w-1/2 sticky left-10 bg-teal-600 z-10">Player</th>
                         <th class="p-3 text-center">Mat</th>
                         <th class="p-3 text-center">St</th>
                         <th class="p-3 text-right">Catches</th>
@@ -6802,12 +6949,16 @@ function renderStatsUI(players) {
                 </thead>
                 <tbody class="text-xs divide-y divide-gray-100">
                     ${data.map((p,i) => {
+                        const avatar = getPlayerImage(p.name, p.team);
                         return `
-                        <tr class="odd:bg-white even:bg-gray-50 hover:bg-teal-50 transition-colors">
-                            <td class="p-3 font-mono text-gray-400 font-bold sticky left-0 bg-inherit z-10">${i+1}</td>
-                            <td class="p-3 sticky left-8 bg-inherit z-10 border-r border-gray-100">
-                                <div class="font-bold text-gray-800 text-xs">${p.name}</div>
-                                <div class="text-[9px] text-gray-400 uppercase font-semibold">${p.team}</div>
+                        <tr class="odd:bg-white even:bg-gray-50 hover:bg-teal-50 transition-colors group">
+                            <td class="p-3 font-mono text-gray-400 font-bold sticky left-0 bg-inherit z-10 border-r border-transparent">${i+1}</td>
+                            <td class="p-3 sticky left-10 bg-inherit z-10 border-r border-gray-100 flex items-center gap-3">
+                                ${avatar}
+                                <div>
+                                    <div class="font-bold text-gray-800 text-xs group-hover:text-teal-700 transition-colors">${p.name}</div>
+                                    <div class="text-[9px] text-gray-400 uppercase font-semibold">${p.team}</div>
+                                </div>
                             </td>
                             <td class="p-3 text-center font-medium text-gray-500">${p.matches}</td>
                             <td class="p-3 text-center font-medium text-gray-500">${p.stumpings}</td>
