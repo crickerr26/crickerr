@@ -323,33 +323,35 @@
             </div>
 
             <div class="relative">
-                <div id="mode-selection-screen" class="setup-step active w-full max-w-4xl mx-auto text-center py-10">
-    <div class="mb-10">
-        <h1 class="text-2xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 mb-4">CRICKERR MATCH SETUP</h1>
-        <p class="text-gray-500 font-bold uppercase tracking-[0.2em] text-xs">Select the game Mode</p>
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-        <button onclick="selectGameMode('SINGLE')" class="group relative p-8 bg-white border-2 border-gray-100 rounded-3xl hover:border-blue-400 hover:shadow-2xl transition-all text-left overflow-hidden">
-            <div class="absolute right-0 top-0 w-32 h-32 bg-blue-50 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-110"></div>
-            <div class="relative z-10">
-                <span class="text-4xl mb-4 block">🏏</span>
-                <h3 class="text-1xl font-black text-gray-800 mb-2 uppercase italic">Single Match Mode</h3>
-                <p class="text-xs text-gray-500 font-medium leading-relaxed">Quick play mode. Set up two teams, toss, and score immediately.</p>
-            </div>
-        </button>
+                <div id="mode-selection-screen" class="setup-step active w-full max-w-4xl mx-auto text-center h-full flex flex-col">
+    <div class="flex-grow overflow-y-auto py-10 pb-32 no-scrollbar">
+        <div class="mb-10">
+            <h1 class="text-2xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 mb-4">CRICKERR MATCH SETUP</h1>
+            <p class="text-gray-500 font-bold uppercase tracking-[0.2em] text-xs">Select the game Mode</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto px-2">
+            <button onclick="selectGameMode('SINGLE')" class="group relative p-8 bg-white border-2 border-gray-100 rounded-3xl hover:border-blue-400 hover:shadow-2xl transition-all text-left overflow-hidden">
+                <div class="absolute right-0 top-0 w-32 h-32 bg-blue-50 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-110"></div>
+                <div class="relative z-10">
+                    <span class="text-4xl mb-4 block">🏏</span>
+                    <h3 class="text-1xl font-black text-gray-800 mb-2 uppercase italic">Single Match Mode</h3>
+                    <p class="text-xs text-gray-500 font-medium leading-relaxed">Quick play mode. Set up two teams, toss, and score immediately.</p>
+                </div>
+            </button>
 
-        <button onclick="selectGameMode('TOURNAMENT')" class="group relative p-8 bg-white border-2 border-gray-100 rounded-3xl hover:border-purple-400 hover:shadow-2xl transition-all text-left overflow-hidden">
-            <div class="absolute right-0 top-0 w-32 h-32 bg-purple-50 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-110"></div>
-            <div class="relative z-10">
-                <span class="text-4xl mb-4 block">🏆</span>
-                <h3 class="text-1xl font-black text-gray-800 mb-2 uppercase italic">Tournament Mode</h3>
-                <p class="text-xs text-gray-500 font-medium leading-relaxed">Leagues & Knockouts. Auto-fixtures, points tables, NRR & MVP stats.</p>
-            </div>
-        </button>
+            <button onclick="selectGameMode('TOURNAMENT')" class="group relative p-8 bg-white border-2 border-gray-100 rounded-3xl hover:border-purple-400 hover:shadow-2xl transition-all text-left overflow-hidden">
+                <div class="absolute right-0 top-0 w-32 h-32 bg-purple-50 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-110"></div>
+                <div class="relative z-10">
+                    <span class="text-4xl mb-4 block">🏆</span>
+                    <h3 class="text-1xl font-black text-gray-800 mb-2 uppercase italic">Tournament Mode</h3>
+                    <p class="text-xs text-gray-500 font-medium leading-relaxed">Leagues & Knockouts. Auto-fixtures, points tables, NRR & MVP stats.</p>
+                </div>
+            </button>
+        </div>
     </div>
     
-    <div class="mt-12 max-w-md mx-auto">
-        <div class="flex items-center gap-2 bg-gray-50 p-2 rounded-xl border border-gray-200">
+    <div class="fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-sm border-t border-gray-100 z-50 md:relative md:bg-transparent md:border-none md:p-0 md:mt-8 max-w-md mx-auto w-full">
+        <div class="flex items-center gap-2 bg-gray-50 p-2 rounded-xl border border-gray-200 shadow-lg md:shadow-none">
             <input type="text" id="tournament-load-id" placeholder="Enter Tournament ID to Resume" class="bg-transparent flex-grow px-4 py-2 text-sm font-bold uppercase outline-none text-gray-700">
             <button onclick="loadTournament()" class="bg-purple-600 text-white px-6 py-2 rounded-lg text-xs font-bold uppercase hover:bg-purple-700 transition">Load</button>
         </div>
