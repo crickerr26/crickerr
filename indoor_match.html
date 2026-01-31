@@ -1600,9 +1600,6 @@ window.generateProfessionalSchedule = function(selectedFlow = null) {
     
     <header class="text-center mb-6">
         <h1 class="text-2xl font-black text-gray-800 uppercase">Build Formation</h1>
-        <p class="text-xs text-blue-600 font-bold uppercase tracking-wider bg-blue-50 inline-block px-3 py-1 rounded-full mt-2">
-            ⇅ Drag players to set Batting Order
-        </p>
     </header>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="bg-white rounded-xl shadow-sm border border-blue-200 h-full flex flex-col">
@@ -2871,12 +2868,9 @@ function broadcastMatchResult() {
                 // Add 'data-id' so Sortable knows which player this is
                 row.setAttribute('data-id', player.id);
                 row.className = `roster-row ${isSelected ? 'selected' : ''} ${extraClass}`;
+                row.style.gridTemplateColumns = "auto 1fr auto"; // Override grid to 3 columns since we removed drag handle
                 
                 row.innerHTML = `
-                    <div class="drag-handle" title="Drag to reorder">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                    </div>
-
                     <div class="flex items-center gap-2">
                         <input type="checkbox" class="w-5 h-5 text-blue-600 rounded cursor-pointer" 
                             onchange="togglePlayerSelection(this, '${teamKey}', '${player.id}')" ${isSelected ? 'checked' : ''}>
@@ -3092,7 +3086,7 @@ function generateBroadcastCode() {
                 
                 // 1. Batting Stats
                 const batting = [];
-                let extrasTotal = 0; // You can enhance this with specific wide/nb counts later
+                let extrasTotal = 0;
                 
                 Object.values(team.playerStats).forEach(p => {
                      // Include if they played any part
@@ -3142,15 +3136,26 @@ function generateBroadcastCode() {
                 };
             };
 
+            // --- PREPARE FLAT DATA FOR BROADCASTER ---
+            // Safely get objects or defaults
+            const s = state.striker || { name: "", runs: 0, balls: 0 };
+            const ns = state.nonStriker || { name: "", runs: 0, balls: 0 };
+            const b = state.bowler || { name: "", wickets: 0, runsConceded: 0, ballsBowled: 0 };
+            
+            // Calculate Bowler Overs for display (e.g., "2.4")
+            const bBalls = b.ballsBowled || 0;
+            const bpo = state.ballsPerOver || 6;
+            const bOversDisplay = Math.floor(bBalls / bpo) + "." + (bBalls % bpo);
+
             // --- Prepare Payload ---
             const payload = {
                 // Security & Session
                 adminPin: "2626", 
                 lastUpdatedBy: Date.now(),
 
-                // Game State (CRITICAL FOR HANDOVER)
-                currentInnings: state.innings,       // Save that we are in Innings 2
-                activeBattingTeam: state.battingTeam, // Save 'team1' or 'team2' key
+                // Game State
+                currentInnings: state.innings,
+                activeBattingTeam: state.battingTeam,
                 target: state.target || 0,
 
                 // Basic Info
@@ -3164,10 +3169,25 @@ function generateBroadcastCode() {
                 currentOver: state.currentOver.map(b => b.event),
                 timeline: state.timeline || [],
 
-                // Player Names
-                striker: state.striker || { name: "", runs: 0, balls: 0 },
-                nonStriker: state.nonStriker || { name: "", runs: 0, balls: 0 },
-                bowler: state.bowler || { name: "", wkts: 0, runs: 0, balls: 0 },
+                // --- VIEWER COMPATIBILITY FIX ---
+                // We send the NAME property explicitly so the viewer sees text, not [object Object]
+                striker: s.name,           
+                strikerRuns: s.runs,
+                strikerBalls: s.balls,
+                
+                nonStriker: ns.name,
+                nonStrikerRuns: ns.runs,
+                nonStrikerBalls: ns.balls,
+
+                bowler: b.name,
+                bowlerWickets: b.wickets || 0,
+                bowlerRuns: b.runsConceded || 0,
+                bowlerOvers: bOversDisplay,
+
+                // We also keep the full objects in case you need them for resuming functionality
+                strikerObj: s,
+                nonStrikerObj: ns,
+                bowlerObj: b,
                 
                 // Full Scorecards
                 scorecard: {
@@ -3189,18 +3209,18 @@ function generateBroadcastCode() {
 
             if (lastAction) payload.lastAction = { id: Date.now(), type: lastAction };
 
-            // --- CRITICAL: DATA ISOLATION FIX ---
+            // --- DUAL SYNC: Fixes Tournament Broadcast ---
+            // 1. If Tournament, Write to Tournament Collection
             if (state.matchType === 'TOURNAMENT' && state.tournamentId && state.fixtureId) {
-                // 1. TOURNAMENT MODE -> Write to Isolated Tournament Collection
                 db.collection("tournaments").doc(state.tournamentId)
                   .collection("matches").doc(state.fixtureId)
                   .set(payload, { merge: true })
                   .catch(err => console.error("Tournament Sync Error:", err));
-            } else {
-                // 2. SINGLE MATCH MODE -> Write to Global Live Collection
-                db.collection("live_matches").doc(broadcastId).set(payload, { merge: true })
-                    .catch(err => console.error("Sync Error:", err));
-            }
+            } 
+            
+            // 2. ALWAYS Write to Global Live Collection (Broadcast Viewer reads from here)
+            db.collection("live_matches").doc(broadcastId).set(payload, { merge: true })
+                .catch(err => console.error("Sync Error:", err));
         }
         
         function checkStartReady() {
