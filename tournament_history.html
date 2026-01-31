@@ -8,6 +8,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
+        /* Custom Scrollbar */
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body class="bg-gray-100 antialiased">
@@ -15,18 +20,120 @@
         <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl mx-auto flex flex-col">
             <div class="flex justify-between items-center p-4 border-b">
                 <h3 class="text-2xl font-bold text-gray-800">Tournament History</h3>
-                <a href="index.html" class="text-sm font-semibold py-2 px-3 rounded-md text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-colors">Back to Home</a>
+                <a href="86.html" class="text-sm font-semibold py-2 px-3 rounded-md text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-colors">Back to Home</a>
             </div>
-            <div id="tournament-history-list" class="p-4 space-y-4 overflow-y-auto" style="max-height: 80vh;">
-                <!-- Completed tournaments will be rendered here -->
-                <p class="text-center text-gray-500 py-12">No completed tournaments found in your history.</p>
-            </div>
+            
+            <div id="tournament-history-list" class="p-4 space-y-6 overflow-y-auto custom-scroll" style="max-height: 80vh;">
+                </div>
         </div>
     </div>
     <script>
-        // TODO: Implement logic to load from localStorage['completedTournaments']
-        // and render the list. Each item should have a "View Details" button.
-        // The button will save the tournament ID to localStorage['tournamentToView'] and redirect.
+        document.addEventListener('DOMContentLoaded', () => {
+            renderHistory();
+        });
+
+        function renderHistory() {
+            const list = document.getElementById('tournament-history-list');
+            let history = [];
+            
+            try {
+                history = JSON.parse(localStorage.getItem('completedTournaments') || '[]');
+            } catch(e) {
+                console.error("Error parsing history:", e);
+                history = [];
+            }
+
+            if (history.length === 0) {
+                list.innerHTML = `
+                    <div class="text-center py-16 opacity-50">
+                        <div class="text-6xl mb-4">🏆</div>
+                        <h3 class="text-lg font-bold text-gray-400 uppercase tracking-widest">No History Yet</h3>
+                        <p class="text-xs text-gray-400 mt-2">Complete a tournament final to see it here.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = '';
+            
+            history.forEach(t => {
+                const card = document.createElement('div');
+                card.className = "bg-white border border-gray-200 rounded-2xl p-0 overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1";
+                
+                // Safe check for stats properties
+                const topScorerName = t.stats && t.stats.topScorer ? t.stats.topScorer.name : 'N/A';
+                const topScorerRuns = t.stats && t.stats.topScorer ? t.stats.topScorer.runs : 0;
+                const topBowlerName = t.stats && t.stats.topBowler ? t.stats.topBowler.name : 'N/A';
+                const topBowlerWkts = t.stats && t.stats.topBowler ? t.stats.topBowler.wkts : 0;
+
+                card.innerHTML = `
+                    <div class="bg-gradient-to-r from-slate-900 to-slate-800 p-4 flex justify-between items-center">
+                        <div>
+                            <span class="text-[10px] font-black text-yellow-400 uppercase tracking-[0.2em] mb-1 block">Tournament Complete</span>
+                            <h2 class="text-xl font-black text-white uppercase leading-none">${t.name}</h2>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-[10px] text-gray-400 font-bold uppercase">${t.date}</div>
+                            <div class="text-[10px] text-gray-400 font-bold uppercase">${t.organizer}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6">
+                        <div class="flex flex-col md:flex-row gap-6 items-center justify-center mb-8">
+                            <div class="flex flex-col items-center text-center">
+                                <div class="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center text-3xl shadow-lg border-4 border-white mb-2 relative">
+                                    🏆
+                                    <div class="absolute -bottom-2 bg-yellow-500 text-white text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider">Winner</div>
+                                </div>
+                                <h3 class="text-lg font-black text-gray-800 uppercase">${t.winner}</h3>
+                            </div>
+
+                            <div class="text-gray-300 font-black text-2xl hidden md:block">VS</div>
+
+                            <div class="flex flex-col items-center text-center opacity-75">
+                                <div class="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center text-2xl shadow-inner border-4 border-white mb-2">
+                                    🥈
+                                </div>
+                                <h3 class="text-sm font-bold text-gray-600 uppercase">${t.runnerUp}</h3>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 bg-gray-50 rounded-xl p-4 border border-gray-100">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-lg">🏏</div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Golden Bat</div>
+                                    <div class="text-sm font-bold text-gray-800">${topScorerName}</div>
+                                    <div class="text-xs font-mono text-orange-600 font-bold">${topScorerRuns} Runs</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-lg">🥎</div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Golden Ball</div>
+                                    <div class="text-sm font-bold text-gray-800">${topBowlerName}</div>
+                                    <div class="text-xs font-mono text-blue-600 font-bold">${topBowlerWkts} Wickets</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 pt-4 border-t border-gray-100 flex justify-between items-center">
+                            <span class="text-xs font-bold text-gray-400 uppercase tracking-wide">${t.totalTeams} Teams Participated</span>
+                            <button onclick="loadHistoryItem('${t.id}')" class="bg-slate-900 text-white px-5 py-2 rounded-lg text-xs font-bold uppercase hover:bg-black transition-colors shadow-lg flex items-center gap-2">
+                                <span>Load Data</span> ➜
+                            </button>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        function loadHistoryItem(id) {
+            // Logic to redirect back to main app and load this ID
+            // Redirects to '86.html' with a query parameter
+            window.location.href = `86.html?loadTourney=${id}`;
+        }
     </script>
 </body>
 </html>
