@@ -2207,92 +2207,92 @@ window.generateProfessionalSchedule = function(selectedFlow = null) {
         // --- ADD THIS FUNCTION TO YOUR CONTROLLER SCRIPT (51 - .html) ---
 
 function broadcastMatchResult() {
-            if (!broadcastId) {
-                showCustomAlert("Broadcast Error", "Broadcast is not active!<br>Please generate a code in Setup first.", "red");
-                return;
-            }
+    if (!broadcastId) {
+        showCustomAlert("Broadcast Error", "Broadcast is not active!<br>Please generate a code in Setup first.", "red");
+        return;
+    }
 
-            const t1 = state.team1;
-            const t2 = state.team2;
-            let resultMain = "MATCH TIED";
-            let resultSub = "Scores Level";
+    const t1 = state.team1;
+    const t2 = state.team2;
+    let resultMain = "MATCH TIED";
+    let resultSub = "Scores Level";
 
-            // 1. Calculate Winner Text
-            if (t1.score > t2.score) {
-                resultMain = `${t1.name} WINS`;
-                resultSub = `WON BY ${t1.score - t2.score} RUNS`;
-            } else if (t2.score > t1.score) {
-                resultMain = `${t2.name} WINS`;
-                const wicketsLeft = (state.playersPerSide - 1) - (t2.wickets || 0); 
-                resultSub = `WON BY ${Math.max(1, wicketsLeft)} WICKETS`;
-            }
+    // 1. Calculate Winner Text
+    if (t1.score > t2.score) {
+        resultMain = `${t1.name} WINS`;
+        resultSub = `WON BY ${t1.score - t2.score} RUNS`;
+    } else if (t2.score > t1.score) {
+        resultMain = `${t2.name} WINS`;
+        const wicketsLeft = (state.playersPerSide - 1) - (t2.wickets || 0); 
+        resultSub = `WON BY ${Math.max(1, wicketsLeft)} WICKETS`;
+    }
 
-            // 2. Get Man of the Match from Radio Button
-            const pomId = document.querySelector('input[name="pom"]:checked')?.value;
-            let pomData = null;
-            if (pomId) {
-                let p = state.team1.playerStats[pomId] || state.team2.playerStats[pomId];
-                if (p) {
-                    pomData = { 
-                        name: p.name, 
-                        stats: `${p.runs} Runs • ${p.wickets} Wickets` 
-                    };
-                }
-            }
-
-            // 3. Prepare Top Stats Lists
-            const allPlayers = [];
-            ['team1', 'team2'].forEach(tk => {
-                Object.values(state[tk].playerStats).forEach(p => {
-                    p.teamName = state[tk].name;
-                    allPlayers.push(p);
-                });
-            });
-
-            const topBatters = [...allPlayers].sort((a,b) => b.runs - a.runs).slice(0, 3).map(p => ({
-                name: p.name, team: p.teamName, runs: p.runs, balls: p.balls
-            }));
-
-            const topBowlers = [...allPlayers].sort((a,b) => (b.wickets - a.wickets) || (a.runsConceded - b.runsConceded)).slice(0, 3).map(p => ({
-                name: p.name, team: p.teamName, wickets: p.wickets, runs: p.runsConceded, balls: p.ballsBowled
-            }));
-
-            // 4. Send to Firebase (ISOATED LOGIC)
-            const resultPayload = {
-                matchStatus: "COMPLETE",
-                showSquad: false,
-                showBattingCard: false,
-                showBowlingCard: false,
-                showRunRate: false,
-                resultMain: resultMain,
-                resultSub: resultSub,
-                resultT1: { 
-                    name: t1.name, 
-                    score: `${t1.score}/${t1.wickets}`, 
-                    overs: `${t1.overs}.${t1.balls}` 
-                },
-                resultT2: { 
-                    name: t2.name, 
-                    score: `${t2.score}/${t2.wickets}`, 
-                    overs: `${t2.overs}.${t2.balls}` 
-                },
-                pom: pomData,
-                topBatters: topBatters,
-                topBowlers: topBowlers
+    // 2. Get Man of the Match from Radio Button
+    const pomId = document.querySelector('input[name="pom"]:checked')?.value;
+    let pomData = null;
+    if (pomId) {
+        let p = state.team1.playerStats[pomId] || state.team2.playerStats[pomId];
+        if (p) {
+            pomData = { 
+                name: p.name, 
+                stats: `${p.runs} Runs • ${p.wickets} Wickets` 
             };
-
-            // FIX: Check mode to select collection
-            let dbRef;
-            if (state.matchType === 'TOURNAMENT' && state.tournamentId && state.fixtureId) {
-                dbRef = db.collection("tournaments").doc(state.tournamentId).collection("matches").doc(state.fixtureId);
-            } else {
-                dbRef = db.collection("live_matches").doc(broadcastId);
-            }
-
-            dbRef.set(resultPayload, { merge: true }).then(() => {
-                showCustomAlert("Success", "Match Result has been broadcasted to the big screen!", "green");
-            }).catch(err => console.error("Broadcast Error", err));
         }
+    }
+
+    // 3. Prepare Top Stats Lists
+    const allPlayers = [];
+    ['team1', 'team2'].forEach(tk => {
+        Object.values(state[tk].playerStats).forEach(p => {
+            p.teamName = state[tk].name;
+            allPlayers.push(p);
+        });
+    });
+
+    const topBatters = [...allPlayers].sort((a,b) => b.runs - a.runs).slice(0, 3).map(p => ({
+        name: p.name, team: p.teamName, runs: p.runs, balls: p.balls
+    }));
+
+    const topBowlers = [...allPlayers].sort((a,b) => (b.wickets - a.wickets) || (a.runsConceded - b.runsConceded)).slice(0, 3).map(p => ({
+        name: p.name, team: p.teamName, wickets: p.wickets, runs: p.runsConceded, balls: p.ballsBowled
+    }));
+
+    // 4. Send to Firebase (FIXED: DUAL WRITE)
+    const resultPayload = {
+        matchStatus: "COMPLETE",
+        showSquad: false,
+        showBattingCard: false,
+        showBowlingCard: false,
+        showRunRate: false,
+        resultMain: resultMain,
+        resultSub: resultSub,
+        resultT1: { 
+            name: t1.name, 
+            score: `${t1.score}/${t1.wickets}`, 
+            overs: `${t1.overs}.${t1.balls}` 
+        },
+        resultT2: { 
+            name: t2.name, 
+            score: `${t2.score}/${t2.wickets}`, 
+            overs: `${t2.overs}.${t2.balls}` 
+        },
+        pom: pomData,
+        topBatters: topBatters,
+        topBowlers: topBowlers
+    };
+
+    // 1. Write to Tournament History (if applicable)
+    if (state.matchType === 'TOURNAMENT' && state.tournamentId && state.fixtureId) {
+        db.collection("tournaments").doc(state.tournamentId).collection("matches").doc(state.fixtureId)
+          .set(resultPayload, { merge: true });
+    }
+    
+    // 2. ALWAYS Write to Live Broadcast Channel (This fixes the screen)
+    db.collection("live_matches").doc(broadcastId)
+      .set(resultPayload, { merge: true }).then(() => {
+        showCustomAlert("Success", "Match Result has been broadcasted to the big screen!", "green");
+    }).catch(err => console.error("Broadcast Error", err));
+}
         // --- FIREBASE CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyBqcD59IAPpKqk98oDZkgzgkoVZ8b8LGgY",
@@ -7216,6 +7216,70 @@ function saveTournamentData() {
         db.collection("tournaments").doc(tournamentState.id).set(tournamentState.data, { merge: true });
     }
 }
+// --- AUTO-SYNC FIX: Forces Tournament Data to Broadcast Screen ---
+setInterval(function() {
+    // Only run if we have a broadcast code and active teams
+    if (!broadcastId || !state.team1 || !state.team2) return;
+    
+    // 1. Get Current Batting/Bowling Data
+    const battingTeamData = state[state.battingTeam];
+    const bowlingTeamData = state[state.bowlingTeam];
+    if (!battingTeamData || !bowlingTeamData) return;
+
+    // 2. Extract Striker Stats (Name + Runs + Balls)
+    let sName = "", sRuns = 0, sBalls = 0;
+    if (state.striker && battingTeamData.playerStats[state.striker]) {
+        const p = battingTeamData.playerStats[state.striker];
+        sName = p.name; sRuns = p.runs; sBalls = p.balls;
+    }
+
+    // 3. Extract Non-Striker Stats (Name + Runs + Balls)
+    let nsName = "", nsRuns = 0, nsBalls = 0;
+    if (state.nonStriker && battingTeamData.playerStats[state.nonStriker]) {
+        const p = battingTeamData.playerStats[state.nonStriker];
+        nsName = p.name; nsRuns = p.runs; nsBalls = p.balls;
+    }
+
+    // 4. Extract Bowler Stats (Name + Wickets + Runs + Overs)
+    let bName = "", bWkts = 0, bRuns = 0, bBallsTotal = 0;
+    if (state.bowler && bowlingTeamData.playerStats[state.bowler]) {
+        const p = bowlingTeamData.playerStats[state.bowler];
+        bName = p.name; bWkts = p.wickets; bRuns = p.runsConceded; bBallsTotal = p.ballsBowled;
+    }
+    // Calculate Overs for display (e.g., 1.2)
+    const bOversDisplay = Math.floor(bBallsTotal / 6) + "." + (bBallsTotal % 6);
+
+    // 5. Construct Live Payload (FLAT FORMAT for 57.html)
+    const liveData = {
+        t1: state.team1.name,
+        t2: state.team2.name,
+        t1Logo: state.team1.logo,
+        t2Logo: state.team2.logo,
+        score: battingTeamData.score || 0,
+        wickets: battingTeamData.wickets || 0,
+        overs: battingTeamData.overs || 0,
+        balls: battingTeamData.balls || 0,
+        target: state.target || 0,
+        
+        // Exact keys required by 57.html
+        striker: sName,
+        strikerRuns: sRuns,
+        strikerBalls: sBalls,
+        
+        nonStriker: nsName,
+        nonStrikerRuns: nsRuns,
+        nonStrikerBalls: nsBalls,
+        
+        bowler: bName,
+        bowlerWickets: bWkts,
+        bowlerRuns: bRuns,
+        bowlerOvers: bOversDisplay
+    };
+
+    // 6. Force Update to Live Matches Collection
+    db.collection("live_matches").doc(broadcastId).set(liveData, { merge: true });
+
+}, 1500); // Syncs every 1.5 seconds automatically
     </script>
 </body>
 </html>
