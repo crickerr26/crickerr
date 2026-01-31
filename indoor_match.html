@@ -656,14 +656,15 @@
                 <div class="p-6 space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Organizer</label>
+                            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Organizer <span class="text-red-500">*</span></label>
                             <input type="text" id="organizer-name" placeholder="Organization Name" 
                                 class="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm font-bold text-gray-900 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition-all">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Host Country</label>
+                            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Host Country <span class="text-red-500">*</span></label>
                             <div class="relative">
                                 <select id="tourney-country" class="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm font-bold text-gray-900 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none appearance-none cursor-pointer">
+                                    <option value="" disabled selected>Select Country</option>
                                     <option value="India">🇮🇳 India</option>
                                     <option value="Australia">🇦🇺 Australia</option>
                                     <option value="England">🇬🇧 England</option>
@@ -682,11 +683,11 @@
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                          <div>
-                            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Start Date</label>
+                            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Start Date <span class="text-red-500">*</span></label>
                             <input type="date" id="tourney-start-date" class="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm font-bold text-gray-900 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none">
                         </div>
                         <div>
-                             <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Venues</label>
+                             <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Venues <span class="text-red-500">*</span></label>
                              <div class="relative">
                                 <select id="tourney-ground-count" onchange="renderGroundInputs()" class="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm font-bold text-gray-900 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none appearance-none cursor-pointer">
                                     <option value="1" selected>1 Ground</option>
@@ -712,7 +713,7 @@
                 
                 <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Total Teams</label>
+                        <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Total Teams <span class="text-red-500">*</span></label>
                         <div class="relative">
                             <select id="tourney-team-count" onchange="renderTournamentSlots()" class="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm font-bold text-gray-900 focus:ring-2 focus:ring-blue-600 outline-none appearance-none cursor-pointer">
                                 <option value="" selected disabled>Select...</option>
@@ -736,7 +737,7 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Squad Size</label>
+                        <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Squad Size <span class="text-red-500">*</span></label>
                         <div class="relative">
                             <select id="tourney-players" class="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm font-bold text-gray-900 focus:ring-2 focus:ring-blue-600 outline-none appearance-none cursor-pointer">
                                 <option value="8" selected>8 Players</option>
@@ -751,7 +752,7 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Max Overs per Innings</label>
+                        <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Max Overs per Innings <span class="text-red-500">*</span></label>
                         <div class="relative">
                             <select id="tourney-overs" class="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm font-bold text-gray-900 focus:ring-2 focus:ring-blue-600 outline-none appearance-none cursor-pointer">
                                 <option value="" disabled selected>Select Overs...</option>
@@ -1664,24 +1665,34 @@ window.generateProfessionalSchedule = function(selectedFlow = null) {
                         </button>
                     </div>
 
-                    <div class="mb-8">
-                         <button id="btn-broadcast-enable" onclick="generateBroadcastCode()" class="group relative w-full py-5 bg-white border-2 border-gray-100 text-gray-600 rounded-2xl shadow-sm hover:shadow-xl hover:border-green-400 transition-all duration-300 active:scale-95 flex flex-col items-center justify-center overflow-hidden">
-                            <div class="absolute inset-0 bg-gradient-to-r from-emerald-50 to-teal-50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            <div class="relative z-10 flex items-center gap-3">
-                                <span class="text-3xl filter grayscale group-hover:grayscale-0 transition-all">📡</span>
-                                <div class="text-left">
-                                    <span class="block text-base font-black tracking-wide group-hover:text-green-700 uppercase">Enable Live Broadcast</span>
-                                    <span class="block text-[10px] text-gray-400 font-bold group-hover:text-green-600 uppercase tracking-wider">Required to start</span>
+                    <div class="mb-10 bg-white rounded-2xl border border-gray-200 p-1 shadow-md overflow-hidden max-w-sm mx-auto w-full">
+                        <div class="bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-50 rounded-xl p-5 border border-emerald-100">
+                            
+                            <div class="flex flex-col items-center justify-center mb-5 text-center">
+                                <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-lg mb-2 shadow-sm border border-emerald-200 animate-pulse">📡</div>
+                                <div>
+                                    <h3 class="text-sm font-black text-emerald-900 uppercase tracking-widest">Live Broadcast</h3>
+                                    <p class="text-[9px] text-emerald-600 font-bold uppercase tracking-wide opacity-80">Share this code to start streaming</p>
                                 </div>
                             </div>
-                        </button>
-                        
-                        <div id="broadcast-display" class="hidden mt-6 animate-pop">
-                            <div class="bg-gradient-to-br from-gray-900 to-black rounded-3xl p-6 shadow-2xl flex flex-col items-center border border-gray-800 ring-4 ring-gray-100">
-                                <p class="text-[10px] text-emerald-400 font-bold uppercase mb-2 tracking-[0.3em]">Camera Code</p>
-                                <div id="match-code-box" class="text-6xl font-mono font-black text-white tracking-widest cursor-pointer hover:text-emerald-300 transition-colors drop-shadow-[0_0_10px_rgba(52,211,153,0.5)]" onclick="copyBroadcastLink()">0000</div>
-                                <p id="copy-feedback" class="text-xs text-gray-500 font-bold mt-3 hidden">Copied to clipboard!</p>
+
+                            <div onclick="copyBroadcastLink()" class="relative bg-white border-2 border-emerald-300 border-dashed rounded-xl p-4 flex items-center justify-between gap-4 cursor-pointer hover:bg-emerald-50 hover:border-emerald-500 transition-all group shadow-sm">
+                                <div class="flex flex-col items-start">
+                                    <span class="text-[9px] text-gray-400 font-bold uppercase tracking-[0.2em] mb-1 group-hover:text-emerald-600 transition-colors">Match Code</span>
+                                    <span id="match-code-box" class="text-2xl font-mono font-black text-gray-800 tracking-widest leading-none group-hover:scale-105 transition-transform origin-left">...</span>
+                                </div>
+                                
+                                <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-400 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                    </svg>
+                                </div>
                             </div>
+                            
+                            <p id="copy-feedback" class="text-center text-[10px] text-emerald-600 font-bold mt-3 hidden animate-bounce bg-emerald-100/50 py-1 rounded-lg">Code copied to clipboard! ✅</p>
+                            
+                            <div id="broadcast-display" class="hidden"></div>
+                            <button id="btn-broadcast-enable" class="hidden"></button>
                         </div>
                     </div>
 
@@ -2246,8 +2257,8 @@ function broadcastMatchResult() {
                 name: p.name, team: p.teamName, wickets: p.wickets, runs: p.runsConceded, balls: p.ballsBowled
             }));
 
-            // 4. Send to Firebase
-            db.collection("live_matches").doc(broadcastId).set({
+            // 4. Send to Firebase (ISOATED LOGIC)
+            const resultPayload = {
                 matchStatus: "COMPLETE",
                 showSquad: false,
                 showBattingCard: false,
@@ -2268,7 +2279,17 @@ function broadcastMatchResult() {
                 pom: pomData,
                 topBatters: topBatters,
                 topBowlers: topBowlers
-            }, { merge: true }).then(() => {
+            };
+
+            // FIX: Check mode to select collection
+            let dbRef;
+            if (state.matchType === 'TOURNAMENT' && state.tournamentId && state.fixtureId) {
+                dbRef = db.collection("tournaments").doc(state.tournamentId).collection("matches").doc(state.fixtureId);
+            } else {
+                dbRef = db.collection("live_matches").doc(broadcastId);
+            }
+
+            dbRef.set(resultPayload, { merge: true }).then(() => {
                 showCustomAlert("Success", "Match Result has been broadcasted to the big screen!", "green");
             }).catch(err => console.error("Broadcast Error", err));
         }
@@ -2350,25 +2371,23 @@ function broadcastMatchResult() {
                 playersSelect.appendChild(opt);
             }
 
-            // 2. Tournament Dropdowns (Step 2)
+            // 2. Tournament Dropdowns
             const tOvers = document.getElementById('tourney-overs');
             if (tOvers) {
-                tOvers.innerHTML = ""; // Clear default
+                tOvers.innerHTML = '<option value="" disabled selected>Select Overs...</option>';
                 for(let i=2; i<=20; i++) {
                     const opt = document.createElement('option'); 
                     opt.value = i; opt.text = i + ' Overs';
-                    if(i === 6) opt.selected = true; // Default
                     tOvers.appendChild(opt);
                 }
             }
 
             const tPlayers = document.getElementById('tourney-players');
             if (tPlayers) {
-                tPlayers.innerHTML = ""; // Clear default
+                tPlayers.innerHTML = '<option value="" disabled selected>Select Players...</option>';
                 for(let i=4; i<=15; i++) {
                     const opt = document.createElement('option'); 
                     opt.value = i; opt.text = i + ' Players';
-                    if(i === 8) opt.selected = true; // Default
                     tPlayers.appendChild(opt);
                 }
             }
@@ -2386,6 +2405,16 @@ function broadcastMatchResult() {
             loadSavedTeams();
             showScreen('setup-screen');
             setupGlobalEnterNavigation(); // Initialize Global Navigation
+
+            // --- CHECK URL PARAMS FOR HISTORY LOAD ---
+            const urlParams = new URLSearchParams(window.location.search);
+            const loadId = urlParams.get('loadTourney');
+            if (loadId) {
+                document.getElementById('tournament-load-id').value = loadId;
+                // Auto-click tournament mode and load
+                selectGameMode('TOURNAMENT');
+                setTimeout(() => loadTournament(), 500);
+            }
         };
 
 
@@ -2775,10 +2804,16 @@ function broadcastMatchResult() {
             
             ui.progressBar.style.width = `${step * 33}%`;
 
+            // --- STEP 4 (TOSS SCREEN) LOGIC ---
             if(step === 4) {
                 if(isEditMatchMode) {
                     saveEditChanges();
                     return;
+                }
+
+                // NEW: AUTO-GENERATE BROADCAST ID IMMEDIATELY
+                if (!broadcastId) {
+                    generateBroadcastCode();
                 }
 
                 ui.tossTeam1Name.textContent = state.team1.name;
@@ -3011,28 +3046,16 @@ function broadcastMatchResult() {
             showScreen('app');
         }
 function generateBroadcastCode() {
-            // 1. Generate Robust ID (e.g., MATCH_9X2Y5) to prevent collisions
-            // Generates a random alphanumeric string (base 36)
-            const randomPart = Math.random().toString(36).substring(2, 7).toUpperCase();
-            broadcastId = `MATCH_${randomPart}`;
+            // 1. Generate ID (Fixed Format: Crickerr_XXXXXX)
+            // Unified for both Single & Tournament modes to keep it short
+            const randomNum = Math.floor(100000 + Math.random() * 900000);
+            broadcastId = `Crickerr_${randomNum}`;
 
-            const display = document.getElementById('broadcast-display');
+            // 2. Update UI (New Compact Design)
             const codeBox = document.getElementById('match-code-box');
+            if(codeBox) codeBox.textContent = broadcastId;
             
-            display.classList.remove('hidden');
-            
-            // 2. Adjust font size for longer ID so it fits on mobile
-            codeBox.classList.remove('text-6xl');
-            codeBox.classList.add('text-3xl', 'md:text-4xl'); 
-            
-            codeBox.textContent = broadcastId;
-            
-            const btn = document.getElementById('btn-broadcast-enable');
-            btn.classList.remove('bg-blue-50', 'text-blue-700');
-            btn.classList.add('bg-green-100', 'text-green-800', 'border-green-300');
-            btn.innerHTML = `<span class="text-lg">✅ BROADCAST LIVE</span><span class="text-xs font-normal">Code: ${broadcastId}</span>`;
-            
-            // FIX: Check readiness FIRST, then sync. This prevents the logic gap.
+            // 3. Auto-Sync State
             checkStartReady();
             syncToLiveDB();
         }
@@ -3166,8 +3189,18 @@ function generateBroadcastCode() {
 
             if (lastAction) payload.lastAction = { id: Date.now(), type: lastAction };
 
-            db.collection("live_matches").doc(broadcastId).set(payload, { merge: true })
-                .catch(err => console.error("Sync Error:", err));
+            // --- CRITICAL: DATA ISOLATION FIX ---
+            if (state.matchType === 'TOURNAMENT' && state.tournamentId && state.fixtureId) {
+                // 1. TOURNAMENT MODE -> Write to Isolated Tournament Collection
+                db.collection("tournaments").doc(state.tournamentId)
+                  .collection("matches").doc(state.fixtureId)
+                  .set(payload, { merge: true })
+                  .catch(err => console.error("Tournament Sync Error:", err));
+            } else {
+                // 2. SINGLE MATCH MODE -> Write to Global Live Collection
+                db.collection("live_matches").doc(broadcastId).set(payload, { merge: true })
+                    .catch(err => console.error("Sync Error:", err));
+            }
         }
         
         function checkStartReady() {
@@ -5460,10 +5493,24 @@ function nextTourneyStep() {
     if (!p1.classList.contains('hidden')) {
         // Step 1: Validation
         const name = document.getElementById('tourney-name').value;
-        if (!name) { 
-            showCustomAlert("Missing Info", "Please enter a <b>Tournament Name</b>.", "red"); 
-            return; 
-        }
+        const organizer = document.getElementById('organizer-name').value;
+        const country = document.getElementById('tourney-country').value;
+        const startDate = document.getElementById('tourney-start-date').value;
+        
+        // Match Settings Validations (Since they are on Page 1)
+        const totalTeams = document.getElementById('tourney-team-count').value;
+        const squadSize = document.getElementById('tourney-players').value;
+        const maxOvers = document.getElementById('tourney-overs').value;
+
+        if (!name) { showCustomAlert("Missing Info", "Please enter a <b>Tournament Name</b>.", "red"); return; }
+        if (!organizer) { showCustomAlert("Missing Info", "Please enter an <b>Organizer Name</b>.", "red"); return; }
+        if (!country) { showCustomAlert("Missing Info", "Please select a <b>Host Country</b>.", "red"); return; }
+        if (!startDate) { showCustomAlert("Missing Info", "Please select a <b>Start Date</b>.", "red"); return; }
+        
+        if (!totalTeams) { showCustomAlert("Missing Info", "Please select <b>Total Teams</b>.", "red"); return; }
+        if (!squadSize) { showCustomAlert("Missing Info", "Please select <b>Squad Size</b>.", "red"); return; }
+        if (!maxOvers) { showCustomAlert("Missing Info", "Please select <b>Max Overs per Innings</b>.", "red"); return; }
+
         // Move 1 -> 2
         p1.classList.add('hidden');
         p2.classList.remove('hidden');
@@ -5476,8 +5523,9 @@ function nextTourneyStep() {
         window.scrollTo(0,0);
     } 
     else if (!p3.classList.contains('hidden')) {
-        // Step 3: Validation
+        // Step 3: Validation (Teams Selection)
         const tCount = document.getElementById('tourney-team-count').value;
+        // Basic check just in case
         if(!tCount) {
              showCustomAlert("Missing Info", "Please select the number of teams.", "red");
              return;
@@ -6664,7 +6712,59 @@ function updateTournamentStatsAfterMatch() {
 
     // 6. Save
     saveTournamentData();
-    showCustomAlert("Tournament Update", "Standings, Stats & Schedule Updated!", "green");
+
+    // --- NEW: ARCHIVE TO HISTORY IF FINAL ---
+    if (fixture.stage.toLowerCase() === 'final' || fixture.stage.toLowerCase() === 'grand final') {
+        generateAndArchiveSummary(fixture, winner);
+        showCustomAlert("Tournament Complete", "🏆 Tournament Archived to History!", "purple");
+    } else {
+        showCustomAlert("Tournament Update", "Standings, Stats & Schedule Updated!", "green");
+    }
+}
+
+// --- NEW: TOURNAMENT ARCHIVER ---
+function generateAndArchiveSummary(finalFixture, winnerName) {
+    const data = tournamentState.data;
+    const logs = data.matchStatsLog || [];
+    
+    // 1. Calculate MVP Stats across whole tournament
+    const playerTotals = {};
+    logs.forEach(log => {
+        const key = `${log.name}_${log.team}`;
+        if(!playerTotals[key]) playerTotals[key] = { name: log.name, team: log.team, runs: 0, wkts: 0 };
+        playerTotals[key].runs += (log.runs || 0);
+        playerTotals[key].wkts += (log.wkts || 0);
+    });
+
+    const players = Object.values(playerTotals);
+    
+    // Top Scorer (Golden Bat)
+    const topBat = players.sort((a,b) => b.runs - a.runs)[0] || { name: 'N/A', runs: 0 };
+    // Top Bowler (Golden Ball)
+    const topBowl = players.sort((a,b) => b.wkts - a.wkts)[0] || { name: 'N/A', wkts: 0 };
+
+    // 2. Build Summary Object
+    const historyItem = {
+        id: data.meta.id,
+        name: data.meta.name,
+        organizer: data.meta.organizer,
+        date: new Date().toLocaleDateString(),
+        winner: winnerName,
+        runnerUp: (winnerName === finalFixture.t1) ? finalFixture.t2 : finalFixture.t1,
+        totalTeams: data.teams.length,
+        stats: {
+            topScorer: topBat,
+            topBowler: topBowl
+        },
+        badgeColor: "bg-purple-600"
+    };
+
+    // 3. Save to LocalStorage
+    const history = JSON.parse(localStorage.getItem('completedTournaments') || '[]');
+    // Remove if exists (update) then push
+    const filtered = history.filter(h => h.id !== historyItem.id);
+    filtered.unshift(historyItem); // Add to top
+    localStorage.setItem('completedTournaments', JSON.stringify(filtered));
 }
 
 function autoFillKnockouts(completedFixture) {
