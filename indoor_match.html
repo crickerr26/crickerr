@@ -29,7 +29,7 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     
-    /* 2. Horizontal Sliding & Snapping */
+    /* 2. Horizontal Sliding & Snapping *
     .snap-x { scroll-snap-type: x mandatory; }
     .snap-start { scroll-snap-align: start; }
     .snap-center { scroll-snap-align: center; }
@@ -703,6 +703,178 @@
                     <div id="dynamic-grounds-container" class="space-y-3 pt-2"></div>
                 </div>
             </div>
+
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden animate-slide-up delay-100">
+                <div class="bg-gray-50 px-6 py-3 border-b border-gray-200 flex items-center gap-2">
+                    <span class="text-blue-600 font-bold text-lg">03.</span>
+                    <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Match Settings</h3>
+                </div>
+                
+                <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Total Teams</label>
+                        <div class="relative">
+                            <select id="tourney-team-count" onchange="renderTournamentSlots()" class="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm font-bold text-gray-900 focus:ring-2 focus:ring-blue-600 outline-none appearance-none cursor-pointer">
+                                <option value="" selected disabled>Select...</option>
+                                <option value="2">2 Teams</option>
+                                <option value="3">3 Teams</option>
+                                <option value="4">4 Teams</option>
+                                <option value="5">5 Teams</option>
+                                <option value="6">6 Teams</option>
+                                <option value="8">8 Teams</option>
+                                <option value="10">10 Teams</option>
+                                <option value="12">12 Teams</option>
+                                <option value="14">14 Teams</option>
+                                <option value="16">16 Teams</option>
+                                <option value="18">18 Teams</option>
+                                <option value="20">20 Teams</option>
+                                <option value="24">24 Teams</option>
+                                <option value="32">32 Teams</option>
+                            </select>
+                            <div class="absolute right-4 top-3.5 pointer-events-none text-gray-500 text-xs">▼</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Squad Size</label>
+                        <div class="relative">
+                            <select id="tourney-players" class="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm font-bold text-gray-900 focus:ring-2 focus:ring-blue-600 outline-none appearance-none cursor-pointer">
+                                <option value="8" selected>8 Players</option>
+                                <option value="6">6 Players</option>
+                                <option value="7">7 Players</option>
+                                <option value="9">9 Players</option>
+                                <option value="11">11 Players</option>
+                                <option value="12">12 Players</option>
+                            </select>
+                            <div class="absolute right-4 top-3.5 pointer-events-none text-gray-500 text-xs">▼</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Max Overs per Innings</label>
+                        <div class="relative">
+                            <select id="tourney-overs" class="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm font-bold text-gray-900 focus:ring-2 focus:ring-blue-600 outline-none appearance-none cursor-pointer">
+                                <option value="" disabled selected>Select Overs...</option>
+                                <option value="3">3 Overs</option><option value="4">4 Overs</option><option value="5">5 Overs</option>
+                                <option value="6">6 Overs</option><option value="7">7 Overs</option><option value="8">8 Overs</option>
+                                <option value="9">9 Overs</option><option value="10">10 Overs</option><option value="11">11 Overs</option>
+                                <option value="12">12 Overs</option><option value="13">13 Overs</option><option value="14">14 Overs</option>
+                                <option value="15">15 Overs</option><option value="16">16 Overs</option><option value="17">17 Overs</option>
+                                <option value="18">18 Overs</option><option value="19">19 Overs</option><option value="20">20 Overs</option>
+                                <option value="25">25 Overs</option><option value="30">30 Overs</option><option value="35">35 Overs</option>
+                                <option value="40">40 Overs</option><option value="45">45 Overs</option><option value="50">50 Overs</option>
+                            </select>
+                            <div class="absolute right-4 top-3.5 pointer-events-none text-gray-500 text-xs">▼</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Balls Per Over</label>
+                        <div class="relative">
+                            <select id="tourney-balls-per-over" class="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm font-bold text-gray-900 focus:ring-2 focus:ring-blue-600 outline-none appearance-none cursor-pointer">
+                                <option value="6" selected>6 Balls</option>
+                                <option value="5">5 Balls</option>
+                                <option value="4">4 Balls</option>
+                                <option value="3">3 Balls</option>
+                            </select>
+                            <div class="absolute right-4 top-3.5 pointer-events-none text-gray-500 text-xs">▼</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden animate-slide-up delay-200">
+                <div class="bg-gray-50 px-6 py-3 border-b border-gray-200 flex items-center gap-2">
+                    <span class="text-blue-600 font-bold text-lg">04.</span>
+                    <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Groups & Fixtures</h3>
+                </div>
+                
+                <div class="p-6 space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Format</label>
+                            <div class="relative">
+                                <select id="tourney-format" class="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm font-bold text-gray-900 focus:ring-2 focus:ring-blue-600 outline-none appearance-none cursor-pointer">
+                                    <option value="LEAGUE" selected>League / Round Robin</option>
+                                    <option value="KNOCKOUT">Knockout Only</option>
+                                    <option value="GROUPS">Group Stage + Knockout</option>
+                                </select>
+                                <div class="absolute right-4 top-3.5 pointer-events-none text-gray-500 text-xs">▼</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Groups</label>
+                            <div class="relative">
+                                <select id="tourney-group-mode" class="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm font-bold text-gray-900 focus:ring-2 focus:ring-blue-600 outline-none appearance-none cursor-pointer">
+                                    <option value="1" selected>1 Single Group</option>
+                                    <option value="2">2 Groups</option>
+                                    <option value="3">3 Groups</option>
+                                    <option value="4">4 Groups</option>
+                                    <option value="5">5 Groups</option>
+                                    <option value="6">6 Groups</option>
+                                    <option value="8">8 Groups</option>
+                                    <option value="10">10 Groups</option>
+                                </select>
+                                <div class="absolute right-4 top-3.5 pointer-events-none text-gray-500 text-xs">▼</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Matches / Team</label>
+                            <div class="relative">
+                                <select id="tourney-rounds-count" class="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm font-bold text-gray-900 focus:ring-2 focus:ring-blue-600 outline-none appearance-none cursor-pointer">
+                                    <option value="1" selected>1 Match</option><option value="2">2 Matches</option>
+                                    <option value="3">3 Matches</option><option value="4">4 Matches</option>
+                                    <option value="5">5 Matches</option><option value="6">6 Matches</option>
+                                    <option value="7">7 Matches</option><option value="8">8 Matches</option>
+                                    <option value="9">9 Matches</option><option value="10">10 Matches</option>
+                                    <option value="12">12 Matches</option><option value="14">14 Matches</option>
+                                    <option value="16">16 Matches</option><option value="18">18 Matches</option>
+                                    <option value="20">20 Matches</option>
+                                </select>
+                                <div class="absolute right-4 top-3.5 pointer-events-none text-gray-500 text-xs">▼</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden animate-slide-up delay-300">
+                <div class="bg-gray-50 px-6 py-3 border-b border-gray-200 flex items-center gap-2">
+                    <span class="text-blue-600 font-bold text-lg">05.</span>
+                    <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Points Rules</h3>
+                </div>
+                
+                <div class="p-6">
+                    <div class="grid grid-cols-3 md:grid-cols-5 gap-4 text-center">
+                        <div class="bg-green-50 rounded-lg p-2 border border-green-100">
+                            <label class="block text-[10px] font-bold text-green-700 uppercase mb-1">Win</label>
+                            <input type="number" id="pts-win" value="2" class="w-full bg-white border border-green-200 rounded text-center font-bold text-gray-800 py-2 outline-none focus:ring-2 focus:ring-green-400">
+                        </div>
+                        
+                        <div class="bg-red-50 rounded-lg p-2 border border-red-100">
+                            <label class="block text-[10px] font-bold text-red-700 uppercase mb-1">Loss</label>
+                            <input type="number" id="pts-loss" value="0" class="w-full bg-white border border-red-200 rounded text-center font-bold text-gray-800 py-2 outline-none focus:ring-2 focus:ring-red-400">
+                        </div>
+
+                        <div class="bg-blue-50 rounded-lg p-2 border border-blue-100">
+                            <label class="block text-[10px] font-bold text-blue-700 uppercase mb-1">Tie</label>
+                            <input type="number" id="pts-tie" value="1" class="w-full bg-white border border-blue-200 rounded text-center font-bold text-gray-800 py-2 outline-none focus:ring-2 focus:ring-blue-400">
+                        </div>
+
+                        <div class="bg-gray-50 rounded-lg p-2 border border-gray-200">
+                            <label class="block text-[10px] font-bold text-gray-600 uppercase mb-1">No Result</label>
+                            <input type="number" id="pts-nr" value="1" class="w-full bg-white border border-gray-300 rounded text-center font-bold text-gray-800 py-2 outline-none focus:ring-2 focus:ring-gray-400">
+                        </div>
+
+                        <div class="bg-orange-50 rounded-lg p-2 border border-orange-100">
+                            <label class="block text-[10px] font-bold text-orange-700 uppercase mb-1">All Out</label>
+                            <input type="number" id="pts-allout" value="-1" class="w-full bg-white border border-orange-200 rounded text-center font-bold text-gray-800 py-2 outline-none focus:ring-2 focus:ring-orange-400">
+                        </div>
+                    </div>
+                </div>
+            </div>
             
             <input type="hidden" id="organizer-code">
         </div>
@@ -722,146 +894,28 @@
             
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
                 <div class="bg-gray-50 px-6 py-3 border-b border-gray-200 flex items-center gap-2">
-                    <span class="text-blue-600 font-bold text-lg">03.</span>
-                    <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Match Format</h3>
+                    <span class="text-blue-600 font-bold text-lg">06.</span>
+                    <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Qualification & Rules</h3>
                 </div>
-                <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="relative p-4 border border-gray-200 rounded-lg hover:border-blue-500 transition-colors bg-gray-50">
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Overs Per Innings</label>
-                        <select id="tourney-overs" onchange="document.getElementById('disp-overs').innerText = this.value" class="w-full bg-transparent text-2xl font-black text-gray-900 outline-none cursor-pointer z-10 relative py-2">
-                            <option value="6" selected>6 Overs</option>
-                            <option value="8">8 Overs</option>
-                            <option value="10">10 Overs</option>
-                            <option value="12">12 Overs</option>
-                            <option value="15">15 Overs</option>
-                            <option value="20">20 Overs</option>
+                <div class="p-6">
+                    <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Qualification Rule</label>
+                    <div class="relative">
+                        <select id="tourney-qualify-rule" class="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm font-bold text-gray-900 focus:ring-2 focus:ring-blue-600 outline-none appearance-none cursor-pointer">
+                            <option value="TOP_4">Top 4 Teams Qualify (Semis)</option>
+                            <option value="TOP_2">Top 2 Teams Qualify (Final)</option>
+                            <option value="TOP_8">Top 8 Teams Qualify (Quarters)</option>
+                            <option value="TOP_1">Table Topper Declared Winner</option>
+                            <option value="GROUP_TOP">Group Toppers Only</option>
+                            <option value="GROUP_TOP_2">Top 2 from Each Group</option>
                         </select>
-                         <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 text-xs">▼</div>
-                    </div>
-                    
-                    <div class="relative p-4 border border-gray-200 rounded-lg hover:border-blue-500 transition-colors bg-gray-50">
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Squad Size</label>
-                        <select id="tourney-players" onchange="document.getElementById('disp-players').innerText = this.value" class="w-full bg-transparent text-2xl font-black text-gray-900 outline-none cursor-pointer z-10 relative py-2">
-                            <option value="8" selected>8 Players</option>
-                            <option value="6">6 Players</option>
-                            <option value="7">7 Players</option>
-                            <option value="9">9 Players</option>
-                            <option value="11">11 Players</option>
-                        </select>
-                        <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 text-xs">▼</div>
-                        <div class="hidden" id="disp-overs"></div><div class="hidden" id="disp-players"></div>
-                    </div>
-                </div>
-                 <input type="hidden" id="tourney-wickets" value="10">
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="bg-gray-50 px-6 py-3 border-b border-gray-200 flex items-center gap-2">
-                        <span class="text-blue-600 font-bold text-lg">04.</span>
-                        <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide">League Configuration</h3>
-                    </div>
-                    <div class="p-4 space-y-4">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Total Teams</label>
-                                <select id="tourney-team-count" onchange="renderTournamentSlots()" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs font-bold text-gray-800 outline-none focus:border-blue-500">
-                                    <option value="" selected disabled>Select...</option>
-                                    <option value="2">2 Teams</option>
-                                    <option value="3">3 Teams</option>
-                                    <option value="4">4 Teams</option>
-                                    <option value="5">5 Teams</option>
-                                    <option value="6">6 Teams</option>
-                                    <option value="8">8 Teams</option>
-                                    <option value="10">10 Teams</option>
-                                    <option value="12">12 Teams</option>
-                                    <option value="14">14 Teams</option>
-                                    <option value="16">16 Teams</option>
-                                    <option value="18">18 Teams</option>
-                                    <option value="20">20 Teams</option>
-                                    <option value="24">24 Teams</option>
-                                    <option value="32">32 Teams</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Group Stage</label>
-                                <select id="tourney-group-mode" onchange="renderTournamentSlots()" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs font-bold text-gray-800 outline-none focus:border-blue-500">
-                                    <option value="1" selected>1 Single Group</option>
-                                    <option value="2">2 Groups (A-B)</option>
-                                    <option value="3">3 Groups (A-C)</option>
-                                    <option value="4">4 Groups (A-D)</option>
-                                    <option value="5">5 Groups (A-E)</option>
-                                    <option value="6">6 Groups (A-F)</option>
-                                    <option value="8">8 Groups (A-H)</option>
-                                    <option value="10">10 Groups (A-J)</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Matches Per Team</label>
-                            <div class="relative">
-                                <select id="tourney-rounds-count" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs font-bold text-gray-800 outline-none focus:border-blue-500 appearance-none">
-                                    <option value="1" selected>1 Match</option>
-                                    <option value="2">2 Matches</option>
-                                    <option value="3">3 Matches</option>
-                                    <option value="4">4 Matches</option>
-                                    <option value="5">5 Matches</option>
-                                    <option value="6">6 Matches</option>
-                                    <option value="7">7 Matches</option>
-                                    <option value="8">8 Matches</option>
-                                    <option value="9">9 Matches</option>
-                                    <option value="10">10 Matches</option>
-                                    <option value="11">11 Matches</option>
-                                    <option value="12">12 Matches</option>
-                                    <option value="13">13 Matches</option>
-                                    <option value="14">14 Matches</option>
-                                    <option value="15">15 Matches</option>
-                                    <option value="16">16 Matches</option>
-                                    <option value="17">17 Matches</option>
-                                    <option value="18">18 Matches</option>
-                                    <option value="19">19 Matches</option>
-                                    <option value="20">20 Matches</option>
-                                </select>
-                                <div class="absolute right-3 top-2.5 pointer-events-none text-gray-400 text-[10px]">▼</div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Qualification Rule</label>
-                            <select id="tourney-qualify-rule" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs font-bold text-gray-800 outline-none focus:border-blue-500">
-                                <option value="TOP_4">Top 4 Teams Qualify (Semis)</option>
-                                <option value="TOP_2">Top 2 Teams Qualify (Final)</option>
-                                <option value="TOP_8">Top 8 Teams Qualify (Quarters)</option>
-                                <option value="TOP_1">Table Topper Declared Winner</option>
-                                <option value="GROUP_TOP">Group Toppers Only</option>
-                                <option value="GROUP_TOP_2">Top 2 from Each Group</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                     <div class="bg-gray-50 px-6 py-3 border-b border-gray-200 flex items-center gap-2">
-                        <span class="text-blue-600 font-bold text-lg">05.</span>
-                        <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Points System</h3>
-                    </div>
-                    <div class="p-4 grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-[9px] font-bold text-green-600 uppercase mb-1">Win</label>
-                            <input type="number" value="2" class="w-full border border-gray-200 rounded p-2 text-center font-bold text-sm outline-none focus:ring-1 focus:ring-green-500">
-                        </div>
-                        <div>
-                            <label class="block text-[9px] font-bold text-blue-600 uppercase mb-1">Tie / NR</label>
-                            <input type="number" value="1" class="w-full border border-gray-200 rounded p-2 text-center font-bold text-sm outline-none focus:ring-1 focus:ring-blue-500">
-                        </div>
+                        <div class="absolute right-4 top-3.5 pointer-events-none text-gray-500 text-xs">▼</div>
                     </div>
                 </div>
             </div>
 
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden animate-slide-up delay-100">
                 <div class="bg-gray-50 px-6 py-3 border-b border-gray-200 flex items-center gap-2">
-                    <span class="text-blue-600 font-bold text-lg">06.</span>
+                    <span class="text-blue-600 font-bold text-lg">07.</span>
                     <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Penalties & Ball Type</h3>
                 </div>
                 
@@ -1063,35 +1117,98 @@
             }
         }
         
-        // 2. Render Team Input Slots (Auto-filled from Page 2 settings)
+        // 2. Render Team Input Slots (Filtered by Country & Validated)
+        window.preventDuplicateTeams = function(changedSelect) {
+            const selects = document.querySelectorAll('.tourney-team-select');
+            const selectedValues = Array.from(selects).map(s => s.value).filter(v => v);
+
+            selects.forEach(sel => {
+                const currentVal = sel.value;
+                Array.from(sel.options).forEach(opt => {
+                    if (!opt.value) return; 
+                    // Disable if selected elsewhere AND not currently selected by this dropdown
+                    if (selectedValues.includes(opt.value) && opt.value !== currentVal) {
+                        opt.disabled = true;
+                        opt.innerText = `${opt.value} (Taken)`;
+                    } else {
+                        opt.disabled = false;
+                        opt.innerText = opt.value;
+                    }
+                });
+            });
+            // Update UI Logo if supported
+            if(typeof updateSlotLogo === 'function' && changedSelect) updateSlotLogo(changedSelect);
+        };
+
+        // --- 1. DUPLICATE PREVENTION LOGIC ---
+        window.preventDuplicateTeams = function(changedSelect) {
+            const selects = document.querySelectorAll('.tourney-team-select');
+            const selectedValues = Array.from(selects).map(s => s.value).filter(v => v);
+
+            selects.forEach(sel => {
+                const currentVal = sel.value;
+                Array.from(sel.options).forEach(opt => {
+                    if (!opt.value) return; 
+                    // Disable if selected elsewhere AND not currently selected by this dropdown
+                    if (selectedValues.includes(opt.value) && opt.value !== currentVal) {
+                        opt.disabled = true;
+                        opt.innerText = `${opt.value} (Taken)`;
+                    } else {
+                        opt.disabled = false;
+                        opt.innerText = opt.value;
+                    }
+                });
+            });
+            // Update UI Logo if supported
+            if(typeof updateSlotLogo === 'function' && changedSelect) updateSlotLogo(changedSelect);
+        };
+
+        // --- 2. SLOT RENDERER (Fixed Logic: Shows All Teams) ---
         window.renderTournamentSlots = function() {
-            const count = parseInt(document.getElementById('tourney-team-count').value);
+            // Get Elements
+            const countEl = document.getElementById('tourney-team-count');
             const container = document.getElementById('tournament-slots-container');
             const groupModeEl = document.getElementById('tourney-group-mode');
+            
+            // Safety Checks
+            if (!container) return;
+            const count = parseInt(countEl ? countEl.value : 0);
             const groupMode = groupModeEl ? parseInt(groupModeEl.value) : 1;
-            
-            if (!container || isNaN(count)) return;
-            
-            container.innerHTML = '';
-            
-            // Generate letters A through J (or more) dynamically
-            const allGroups = Array.from({length: 26}, (_, i) => String.fromCharCode(65 + i)); // ['A', 'B', 'C'...]
 
-            // Helper to generate group options
+            // Stop if no valid count (keeps placeholder ONLY if count is invalid)
+            if (isNaN(count) || count < 2) return;
+
+            // Wipe the container (Removes the 'SELECT TEAM COUNT...' placeholder)
+            container.innerHTML = '';
+
+            // Use ALL saved teams (Removed Country Filtering to prevent empty lists)
+            let allTeams = [];
+            if (typeof savedTeamsData !== 'undefined' && savedTeamsData.length > 0) {
+                allTeams = savedTeamsData;
+            }
+
+            // Build Dropdown Options
+            let teamOptionsHTML = '<option value="">Select Team...</option>';
+            if (allTeams.length > 0) {
+                allTeams.forEach(t => {
+                    teamOptionsHTML += `<option value="${t.name}">${t.name}</option>`;
+                });
+            } else {
+                teamOptionsHTML += `<option value="" disabled>No saved teams found (Create teams in Single Match first)</option>`;
+            }
+            
+            // Group Helper
+            const allGroups = Array.from({length: 26}, (_, i) => String.fromCharCode(65 + i)); 
             const getGroupOptions = (defaultIdx) => {
                 if (groupMode === 1) return ''; 
-                
                 let opts = '';
                 const limit = groupMode; 
-                // Auto-assign logic: 0->A, 1->B, 2->C...
                 const autoGroupChar = allGroups[defaultIdx % limit];
-
                 for(let g=0; g<limit; g++) {
                     const char = allGroups[g];
                     const selected = (char === autoGroupChar) ? 'selected' : '';
                     opts += `<option value="${char}" ${selected}>Group ${char}</option>`;
                 }
-                
                 return `
                     <div class="w-24 border-l border-gray-200 pl-2">
                         <label class="block text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Group</label>
@@ -1102,6 +1219,7 @@
                 `;
             };
 
+            // Generate EXACT Slots
             for(let i = 0; i < count; i++) {
                 const groupSelectHTML = getGroupOptions(i);
                 
@@ -1109,14 +1227,35 @@
                     <div class="bg-gray-50 p-3 rounded-lg border border-gray-200 flex items-center gap-3 animate-slide-up" style="animation-delay: ${i*50}ms">
                         <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center text-xs shadow-sm flex-shrink-0">${i+1}</div>
                         <div class="flex-1">
-                            <label class="block text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Team Name</label>
-                            <input type="text" placeholder="Team ${i+1}" class="tourney-team-select w-full bg-white border border-gray-300 rounded px-3 py-2 text-sm font-bold text-gray-900 outline-none focus:border-blue-500 transition-all">
+                            <label class="block text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Select Team</label>
+                            <select onchange="preventDuplicateTeams(this)" class="tourney-team-select w-full bg-white border border-gray-300 rounded px-3 py-2 text-sm font-bold text-gray-900 outline-none focus:border-blue-500 cursor-pointer">
+                                ${teamOptionsHTML}
+                            </select>
                         </div>
                         ${groupSelectHTML}
                     </div>
                 `;
             }
         };
+
+        // --- 3. AUTO-FIXER (Solves the "I see nothing" bug) ---
+        // This watches the screen. If Page 3 is visible but empty, it forces a render.
+        setInterval(() => {
+            const p3 = document.getElementById('tourney-page-3');
+            const container = document.getElementById('tournament-slots-container');
+            
+            // If we are on Page 3 (not hidden) AND the container text says "Select Team Count" (placeholder)
+            if (p3 && !p3.classList.contains('hidden') && container) {
+                if (container.innerText.includes('Select Team Count') || container.innerHTML.trim() === "") {
+                     // Check if we actually have a count set
+                     const count = document.getElementById('tourney-team-count').value;
+                     if(count) {
+                         console.log("Auto-fixing missing slots...");
+                         window.renderTournamentSlots();
+                     }
+                }
+            }
+        }, 800);
 
         // 3. Add Schedule Row Helper (Styled for Finals/Semis)
         window.addScheduleRow = function(matchType, prefill = null) {
@@ -5442,7 +5581,6 @@ function renderGroundInputs() {
 
 function renderTournamentSlots() {
     const totalTeams = parseInt(document.getElementById('tourney-team-count').value);
-    const selectedCountry = document.getElementById('tourney-country').value;
     const container = document.getElementById('tournament-slots-container');
     
     // Don't render if selection is invalid/empty
@@ -5453,19 +5591,16 @@ function renderTournamentSlots() {
 
     container.innerHTML = '';
     
-    // 1. Filter Teams by Country
-    let filteredTeams = savedTeamsData;
-    if (selectedCountry) {
-        filteredTeams = savedTeamsData.filter(t => t.country === selectedCountry);
-    }
-
+    // 1. Use ALL saved teams (Fix for empty dropdowns)
+    let teamOptions = savedTeamsData || [];
+    
     // 2. Build Options
     let optionsHTML = '<option value="">-- Select Team --</option>';
-    filteredTeams.forEach(t => {
+    teamOptions.forEach(t => {
         optionsHTML += `<option value="${t.name}">${t.name}</option>`;
     });
 
-    // 3. Render Cards with Logo Logic
+    // 3. Render Cards
     for (let i = 0; i < totalTeams; i++) {
         const div = document.createElement('div');
         div.className = "mobile-card flex items-center gap-3 p-4";
