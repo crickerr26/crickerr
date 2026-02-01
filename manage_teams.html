@@ -414,14 +414,38 @@
                         state.editingTeamId = directTeamId;
                         state.captainType = 'direct'; // Flag for save logic
                         
-                        document.getElementById('main-scroll-area').innerHTML = `
-                             <div class="flex flex-col items-center justify-center h-full p-6 text-center">
-                                <div class="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mb-4 text-4xl">👑</div>
-                                <h2 class="text-xl font-bold text-gray-800 mb-2">Captain Portal</h2>
-                                <p class="text-sm text-gray-500 mb-6">Update your squad and logo.</p>
-                                <button onclick="loadDirectCaptainTeam('${directTeamId}')" class="px-8 py-3 bg-[#007AFF] text-white font-bold rounded-full shadow-lg">Edit Team</button>
-                            </div>
-                        `;
+                        // Fetch Team Details for Landing Page
+                        document.getElementById('main-scroll-area').innerHTML = '<div class="flex items-center justify-center h-full"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#007AFF]"></div></div>';
+                        
+                        db.collection("teams").doc(directTeamId).get().then(doc => {
+                            if (!doc.exists) {
+                                document.getElementById('main-scroll-area').innerHTML = `<div class="p-10 text-center text-gray-500">Team not found</div>`;
+                                return;
+                            }
+                            const t = doc.data();
+                            
+                            // Check link validity visually
+                            if(t.captainToken !== state.token) {
+                                 document.getElementById('main-scroll-area').innerHTML = `<div class="flex flex-col items-center justify-center h-full text-center p-6"><h2 class="text-xl font-bold text-red-500">Link Expired</h2><p class="text-sm text-gray-400 mt-2">This link is invalid or has been used.</p></div>`;
+                                 return;
+                            }
+
+                            const logoDisplay = t.logo 
+                                ? `<img src="${t.logo}" class="w-full h-full object-cover">` 
+                                : `<span class="text-4xl">👑</span>`;
+
+                            document.getElementById('main-scroll-area').innerHTML = `
+                                 <div class="flex flex-col items-center justify-center h-full p-6 text-center animate-scale-in">
+                                    <div class="w-28 h-28 bg-orange-50 rounded-full flex items-center justify-center mb-6 shadow-sm overflow-hidden border-4 border-white">
+                                        ${logoDisplay}
+                                    </div>
+                                    <h2 class="text-2xl font-bold text-gray-900 mb-1">${t.name}</h2>
+                                    <p class="text-sm font-bold text-[#007AFF] uppercase tracking-wide mb-2">Captain Portal</p>
+                                    <p class="text-sm text-gray-500 mb-8 max-w-[220px]">Update your squad and logo.</p>
+                                    <button onclick="loadDirectCaptainTeam('${directTeamId}')" class="px-10 py-3 bg-[#007AFF] text-white font-bold rounded-full shadow-lg text-sm transform active:scale-95 transition-transform">Edit Team</button>
+                                </div>
+                            `;
+                        });
                     } else {
                         // Existing Tournament Logic
                         state.tournamentId = params.get('tournamentId');
@@ -954,10 +978,15 @@
                          captainToken: null // Invalidate token
                      }).then(() => {
                         document.getElementById('team-editor-view').innerHTML = `
-                            <div class="flex flex-col items-center justify-center h-full text-center p-6">
-                                <div class="text-6xl mb-4">✅</div>
-                                <h2 class="text-2xl font-bold text-gray-800">Saved!</h2>
-                                <p class="text-gray-500 mt-2">Team details updated. You can close this page.</p>
+                            <div class="flex flex-col items-center justify-center h-full text-center p-6 animate-scale-in">
+                                <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 shadow-sm">
+                                    <svg class="w-10 h-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                </div>
+                                <h2 class="text-2xl font-bold text-black mb-2 leading-tight">${name}<br>Saved Successfully!</h2>
+                                <p class="text-base text-gray-500 mb-8 max-w-xs leading-relaxed">
+                                    Your squad is ready. Good luck for your matches!<br>
+                                    <span class="text-xs font-bold text-[#007AFF] mt-4 block">- From Cricker</span>
+                                </p>
                             </div>
                         `;
                      }).catch(err => {
