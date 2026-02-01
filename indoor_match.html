@@ -2835,6 +2835,10 @@ function broadcastMatchResult() {
                     generateBroadcastCode();
                 }
 
+                // FIX: Ensure button state is updated whenever we enter this screen
+                // This prevents the "Start Match" button from staying disabled if returning from Step 2
+                checkStartReady();
+
                 ui.tossTeam1Name.textContent = state.team1.name;
                 if (state.team1.logo) {
                     ui.tossTeam1LogoContainer.innerHTML = `<img src="${state.team1.logo}" class="w-full h-full object-cover rounded-full border-2 border-white shadow-sm">`;
@@ -3171,6 +3175,41 @@ function generateBroadcastCode() {
             const bpo = state.ballsPerOver || 6;
             const bOversDisplay = Math.floor(bBalls / bpo) + "." + (bBalls % bpo);
 
+            // FIX: Indicate OUT players immediately on broadcast
+            let sNameDisplay = s.name;
+            let nsNameDisplay = ns.name;
+            
+            if (s.dismissal) sNameDisplay += " (OUT)";
+            if (ns.dismissal) nsNameDisplay += " (OUT)";
+
+            // --- NEW: Calculate Professional Chase Equation (ICC Standard) ---
+            let statusText = "LIVE";
+            let need = 0;
+            let remBalls = 0;
+            
+            if (state.innings === 2 || state.innings === 4) {
+                const bt = state[state.battingTeam];
+                const target = state.target || 0;
+                const score = bt.score || 0;
+                need = Math.max(0, target - score);
+                
+                // CORRECT FIX: Trust the global state (verified correct by Scoreboard UI)
+                const bpo = state.ballsPerOver || 6;
+                const totalOvers = state.totalOvers || 10;
+
+                const totalBalls = totalOvers * bpo;
+                const ballsBowled = (bt.overs * bpo) + bt.balls;
+                remBalls = Math.max(0, totalBalls - ballsBowled);
+
+                if (score >= target) {
+                    statusText = "VICTORY";
+                } else {
+                    statusText = `${need} Runs - ${remBalls} Balls`;
+                }
+            } else {
+                statusText = `1st INNINGS`;
+            }
+
             // --- Prepare Payload ---
             const payload = {
                 // Security & Session
@@ -3181,11 +3220,16 @@ function generateBroadcastCode() {
                 currentInnings: state.innings,
                 activeBattingTeam: state.battingTeam,
                 target: state.target || 0,
+                totalOvers: state.totalOvers || 0, // <--- ADDED: Fixes broadcast assuming 20 overs
+                requiredRuns: need,           // <--- ADDED: Explicit equation data
+                remainingBalls: remBalls,     // <--- ADDED: Explicit equation data
 
                 // Basic Info
                 venue: state.venue || "Unknown Venue",
                 matchDate: document.getElementById('match-date-input').value,
-                matchStatus: state.innings === 2 && state.team2.score > state.team1.score ? "COMPLETE" : "LIVE",
+                
+                // FIX: Send the Equation string as matchStatus for Broadcast to display
+                matchStatus: statusText,
                 
                 isSuperOver: state.isSuperOver || false, 
                 
@@ -3195,11 +3239,11 @@ function generateBroadcastCode() {
 
                 // --- VIEWER COMPATIBILITY FIX ---
                 // We send the NAME property explicitly so the viewer sees text, not [object Object]
-                striker: s.name,           
+                striker: sNameDisplay,           
                 strikerRuns: s.runs,
                 strikerBalls: s.balls,
                 
-                nonStriker: ns.name,
+                nonStriker: nsNameDisplay,
                 nonStrikerRuns: ns.runs,
                 nonStrikerBalls: ns.balls,
 
@@ -3222,6 +3266,10 @@ function generateBroadcastCode() {
                 // Legacy
                 t1: state.team1.name, t2: state.team2.name,
                 t1Logo: state.team1.logo, t2Logo: state.team2.logo, 
+                
+                // --- NEW: SQUAD DATA FOR BROADCAST ---
+                t1Squad: state.team1.players || [],
+                t2Squad: state.team2.players || [],
                 
                 score: state[state.battingTeam].score || 0,
                 wickets: state[state.battingTeam].wickets || 0,
@@ -3427,7 +3475,21 @@ function generateBroadcastCode() {
             const battingTeam = state[battingTeamKey];
             const bowlingTeam = state[bowlingTeamKey];
 
+            // 1. CAPTURE OLD VALUES BEFORE UPDATE (For Smooth Animation)
+            const getOldRuns = (tName) => {
+                const safeId = tName.replace(/[^a-zA-Z0-9]/g, '');
+                const el = document.getElementById(`score-val-${safeId}`);
+                if(el) {
+                    return parseInt(el.innerText.split('/')[0]) || 0;
+                }
+                return null;
+            };
+
+            const oldBatRuns = getOldRuns(battingTeam.name);
+            const oldBowlRuns = getOldRuns(bowlingTeam.name);
+
             const createTeamRow = (team, isBatting, isFirstInnings) => {
+                const safeId = team.name.replace(/[^a-zA-Z0-9]/g, ''); // Generate ID for animation targeting
                 const logoSrc = team.logo || '';
                 const logoHTML = logoSrc ? `<img src="${logoSrc}" class="w-8 h-8 rounded-full object-cover border border-gray-200">` : `<div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-xs" style="background-color: #3b82f6;">${getTeamInitials(team.name)}</div>`;
                 let rightSideHTML = '';
@@ -3437,22 +3499,87 @@ function generateBroadcastCode() {
                 const overs = team.overs || 0;
                 const balls = team.balls || 0;
                 
+                let targetInfoHTML = "";
+
                 if (isBatting) {
-                    rightSideHTML = `<div class="text-right"><div class="text-xl font-bold text-gray-900 leading-none">${score}/${wkts}</div><div class="text-xs text-gray-500 font-medium mt-0.5">(${overs}.${balls} / ${state.totalOvers} ov)</div></div>`;
+                    // Added ID to score div for animation
+                    rightSideHTML = `<div class="text-right"><div id="score-val-${safeId}" class="text-xl font-bold text-gray-900 leading-none">${score}/${wkts}</div><div class="text-xs text-gray-500 font-medium mt-0.5">(${overs}.${balls} / ${state.totalOvers} ov)</div></div>`;
+                    
+                    // --- NEW: Target & Rate Calculation (Innings 2 or 4) ---
+                    if (state.innings === 2 || state.innings === 4) {
+                        const target = state.target || 0;
+                        const need = Math.max(0, target - score);
+                        const bpo = state.ballsPerOver || 6;
+                        const ballsBowled = (overs * bpo) + balls;
+                        const totalBalls = state.totalOvers * bpo;
+                        const remBalls = Math.max(0, totalBalls - ballsBowled);
+                        
+                        // Run Rates Calculation
+                        const crr = ballsBowled > 0 ? ((score * bpo) / ballsBowled).toFixed(2) : "0.00";
+                        const rrr = remBalls > 0 ? ((need * bpo) / remBalls).toFixed(2) : "0.00";
+
+                        targetInfoHTML = `
+                            <div class="text-[9px] font-bold text-blue-600 mt-1 uppercase tracking-wide leading-tight">
+                                Need ${need} Runs in ${remBalls} Balls • CRR: ${crr} • RRR: ${rrr}
+                            </div>
+                        `;
+                    }
+
                 } else {
                     if (isFirstInnings) rightSideHTML = `<div class="text-sm font-bold text-gray-400 uppercase tracking-wide">Yet to bat</div>`;
-                    else rightSideHTML = `<div class="text-right"><div class="text-lg font-bold text-gray-700 leading-none">${score}/${wkts}</div><div class="text-xs text-gray-400">(${overs}.${balls} ov)</div></div>`;
+                    // Added ID to score div here too
+                    else rightSideHTML = `<div class="text-right"><div id="score-val-${safeId}" class="text-lg font-bold text-gray-700 leading-none">${score}/${wkts}</div><div class="text-xs text-gray-400">(${overs}.${balls} ov)</div></div>`;
                 }
 
                 const containerClass = isBatting ? "flex items-center justify-between py-3 border-b border-gray-100 bg-white px-2" : "flex items-center justify-between py-3 bg-gray-50/50 opacity-60 px-2";
                 const nameClass = isBatting ? "text-base font-black text-gray-800 uppercase tracking-tight" : "text-base font-bold text-gray-500 uppercase tracking-tight";
 
-                return `<div class="${containerClass}"><div class="flex items-center gap-3">${logoHTML}<span class="${nameClass}">${team.name}</span></div>${rightSideHTML}</div>`;
+                // Layout: Stack Name and Target Info on the left
+                return `
+                <div class="${containerClass}">
+                    <div>
+                        <div class="flex items-center gap-3">
+                            ${logoHTML}
+                            <span class="${nameClass}">${team.name}</span>
+                        </div>
+                        ${targetInfoHTML}
+                    </div>
+                    ${rightSideHTML}
+                </div>`;
             };
 
             const row1 = createTeamRow(battingTeam, true, state.innings === 1);
             const row2 = createTeamRow(bowlingTeam, false, state.innings === 1);
             document.getElementById('team-scores-container').innerHTML = row1 + row2;
+
+            // 2. RUN SMOOTH ANIMATION POST-UPDATE
+            const runAnim = (tName, oldVal, newVal, suffix) => {
+                 // Only animate if value changed and exists
+                 if(oldVal !== null && oldVal !== newVal) {
+                     const safeId = tName.replace(/[^a-zA-Z0-9]/g, '');
+                     const el = document.getElementById(`score-val-${safeId}`);
+                     if(el) {
+                         const duration = 600; // 600ms smooth transition
+                         const start = oldVal;
+                         const end = newVal;
+                         let startTimestamp = null;
+                         
+                         const step = (timestamp) => {
+                            if (!startTimestamp) startTimestamp = timestamp;
+                            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                            // Easing logic could go here, but linear is fast and clean
+                            const current = Math.floor(progress * (end - start) + start);
+                            el.innerHTML = `${current}${suffix}`;
+                            if (progress < 1) window.requestAnimationFrame(step);
+                            else el.innerHTML = `${end}${suffix}`; // Ensure final value is exact
+                         };
+                         window.requestAnimationFrame(step);
+                     }
+                 }
+            };
+
+            runAnim(battingTeam.name, oldBatRuns, battingTeam.score, `/${battingTeam.wickets||0}`);
+            runAnim(bowlingTeam.name, oldBowlRuns, bowlingTeam.score, `/${bowlingTeam.wickets||0}`);
         }
 
         function selectOpeningPair(callback) {
@@ -4092,20 +4219,30 @@ function generateBroadcastCode() {
             if (bwl && type !== 'Run Out' && type !== 'Retired Out' && type !== 'Other') { bwl.wickets++; }
             if (bwl) { bwl.ballsBowled++; }
 
+            // FIX: Process Ball FIRST to ensure state is consistent before syncing
+            processBall(0, 'W', true, true);
+
+            // FIX: Show Popup (triggers Sync with 'W' and updated stats)
             showEventPopup("OUT", "text-red-600");
             
-            // FIX: Pass 'true' as 4th argument (isDismissal)
-            processBall(0, 'W', true, true);
             updateUI();
 
+            // --- FIX: Managed Broadcast Card Timers ---
             if (victim && broadcastId) {
-                setTimeout(() => {
+                // Clear any existing timers to prevent overlapping/freezing
+                if (window.wicketTimer) clearTimeout(window.wicketTimer);
+                if (window.wicketHideTimer) clearTimeout(window.wicketHideTimer);
+
+                window.wicketTimer = setTimeout(() => {
                     const cardData = {
                         name: victim.name, score: victim.runs, balls: victim.balls,
                         howOut: dismissalText.toUpperCase(), teamLogo: state[state.battingTeam].logo
                     };
                     db.collection("live_matches").doc(broadcastId).set({ showDismissalCard: true, dismissalData: cardData }, { merge: true });
-                    setTimeout(() => { db.collection("live_matches").doc(broadcastId).set({ showDismissalCard: false }, { merge: true }); }, 7000);
+                    
+                    window.wicketHideTimer = setTimeout(() => { 
+                        db.collection("live_matches").doc(broadcastId).set({ showDismissalCard: false }, { merge: true }); 
+                    }, 7000);
                 }, 1500);
             }
 
@@ -4122,16 +4259,30 @@ function generateBroadcastCode() {
                     endInnings(); 
                 }, 1200);
             } else {
-                // FIX: Modified flow for last ball wicket
+                // FIX: Modified flow for last ball wicket to ensure Bowler Selection works
                 setTimeout(() => { 
                     selectPlayer(roleKey, () => {
                         updateUI();
-                        // AFTER batter is selected, check if that wicket ended the over
-                        // If ball count is 0 and overs > 0, the over just finished
+                        
+                        // Check if the wicket happened on the last ball of the over
+                        // Logic: If balls is 0 (reset by processBall) but we are not at end of innings
                         if (bt.balls === 0 && bt.overs > 0 && bt.overs < state.totalOvers) {
+                            
+                            // 1. Swap Strikers (End of Over Rule)
                             swapStrikers();
+                            
+                            // 2. Clear Current Over Timeline
                             state.currentOver = [];
-                            selectPlayer('bowler', updateUI);
+                            
+                            // 3. FORCE BOWLER SELECTION POPUP
+                            // We use a small timeout to ensure the previous popup (Batsman) is fully closed
+                            setTimeout(() => {
+                                selectPlayer('bowler', () => {
+                                    updateUI();
+                                    // Ensure the new bowler name is synced to broadcast
+                                    syncToLiveDB(); 
+                                });
+                            }, 300);
                         }
                     }); 
                 }, 1200);
@@ -4311,6 +4462,7 @@ function generateBroadcastCode() {
         }
 
         function showEventPopup(text, colorClass) {
+            // 1. Local Controller Overlay (Keep existing functionality)
             let animType = null;
             if (text === "4") animType = "4";
             if (text === "6") animType = "6";
@@ -4323,6 +4475,44 @@ function generateBroadcastCode() {
             textEl.className = `text-9xl font-black drop-shadow-2xl animate-pop ${colorClass}`;
             overlay.classList.remove('hidden');
             setTimeout(() => { overlay.classList.add('hidden'); }, 1200);
+
+            // 2. Broadcast Screen Animation (New Logic)
+            if (!broadcastId) return;
+
+            // Trigger Entrance: Logo -> Text
+            db.collection("live_matches").doc(broadcastId).set({
+                eventPopup: {
+                    show: true,
+                    text: text,
+                    color: colorClass,
+                    animState: "in",      // Tells broadcast to play Intro Animation
+                    timestamp: Date.now()
+                }
+            }, { merge: true });
+
+            // Trigger Exit: Text -> Logo -> Gone (after 3s)
+            setTimeout(() => {
+                db.collection("live_matches").doc(broadcastId).set({
+                    eventPopup: {
+                        show: true,
+                        text: text,
+                        color: colorClass,
+                        animState: "out"  // Tells broadcast to play Outro Animation
+                    }
+                }, { merge: true });
+
+                // Cleanup (Remove from DOM)
+                setTimeout(() => {
+                    db.collection("live_matches").doc(broadcastId).set({
+                        eventPopup: {
+                            show: false,
+                            text: "",
+                            color: "",
+                            animState: "none"
+                        }
+                    }, { merge: true });
+                }, 1500); 
+            }, 3000);
         }
 
         function addExtra(type, runs) {
@@ -7360,70 +7550,8 @@ function saveTournamentData() {
         db.collection("tournaments").doc(tournamentState.id).set(tournamentState.data, { merge: true });
     }
 }
-// --- AUTO-SYNC FIX: Forces Tournament Data to Broadcast Screen ---
-setInterval(function() {
-    // Only run if we have a broadcast code and active teams
-    if (!broadcastId || !state.team1 || !state.team2) return;
-    
-    // 1. Get Current Batting/Bowling Data
-    const battingTeamData = state[state.battingTeam];
-    const bowlingTeamData = state[state.bowlingTeam];
-    if (!battingTeamData || !bowlingTeamData) return;
-
-    // 2. Extract Striker Stats (Name + Runs + Balls)
-    let sName = "", sRuns = 0, sBalls = 0;
-    if (state.striker && battingTeamData.playerStats[state.striker]) {
-        const p = battingTeamData.playerStats[state.striker];
-        sName = p.name; sRuns = p.runs; sBalls = p.balls;
-    }
-
-    // 3. Extract Non-Striker Stats (Name + Runs + Balls)
-    let nsName = "", nsRuns = 0, nsBalls = 0;
-    if (state.nonStriker && battingTeamData.playerStats[state.nonStriker]) {
-        const p = battingTeamData.playerStats[state.nonStriker];
-        nsName = p.name; nsRuns = p.runs; nsBalls = p.balls;
-    }
-
-    // 4. Extract Bowler Stats (Name + Wickets + Runs + Overs)
-    let bName = "", bWkts = 0, bRuns = 0, bBallsTotal = 0;
-    if (state.bowler && bowlingTeamData.playerStats[state.bowler]) {
-        const p = bowlingTeamData.playerStats[state.bowler];
-        bName = p.name; bWkts = p.wickets; bRuns = p.runsConceded; bBallsTotal = p.ballsBowled;
-    }
-    // Calculate Overs for display (e.g., 1.2)
-    const bOversDisplay = Math.floor(bBallsTotal / 6) + "." + (bBallsTotal % 6);
-
-    // 5. Construct Live Payload (FLAT FORMAT for 57.html)
-    const liveData = {
-        t1: state.team1.name,
-        t2: state.team2.name,
-        t1Logo: state.team1.logo,
-        t2Logo: state.team2.logo,
-        score: battingTeamData.score || 0,
-        wickets: battingTeamData.wickets || 0,
-        overs: battingTeamData.overs || 0,
-        balls: battingTeamData.balls || 0,
-        target: state.target || 0,
-        
-        // Exact keys required by 57.html
-        striker: sName,
-        strikerRuns: sRuns,
-        strikerBalls: sBalls,
-        
-        nonStriker: nsName,
-        nonStrikerRuns: nsRuns,
-        nonStrikerBalls: nsBalls,
-        
-        bowler: bName,
-        bowlerWickets: bWkts,
-        bowlerRuns: bRuns,
-        bowlerOvers: bOversDisplay
-    };
-
-    // 6. Force Update to Live Matches Collection
-    db.collection("live_matches").doc(broadcastId).set(liveData, { merge: true });
-
-}, 1500); // Syncs every 1.5 seconds automatically
+// --- AUTO-SYNC REMOVED: Rely on Event-Driven Sync to prevent freezing ---
+// setInterval has been removed to stop write conflicts.
     </script>
 </body>
 </html>
