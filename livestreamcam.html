@@ -308,7 +308,7 @@
     <div id="setup-screen">
         <h1 style="font-family: 'Anton'; font-size: 3rem; color: white; margin-bottom: 0.5rem; letter-spacing: 2px;">BROADCAST UNIT</h1>
         <p style="color: #94a3b8; font-size: 0.9rem; font-weight: bold; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px; font-family: 'Roboto';">Enter Match Code</p>
-        <input type="text" id="match-id" class="input-field" placeholder="MATCH_XXXXX" oninput="this.value = this.value.toUpperCase()">
+        <input type="text" id="match-id" class="input-field" placeholder="Crickerr_XXXXXX" oninput="if(this.value.length >= 15) connectToMatch()">
         <button onclick="connectToMatch()" class="start-btn" id="btn-start">Start Camera</button>
     </div>
 
@@ -872,11 +872,11 @@ async function toggleLiveStream() {
     const btn = document.getElementById('live-button');
     const txt = document.getElementById('live-text');
     const matchIdInput = document.getElementById('match-id');
-    const matchId = matchIdInput ? matchIdInput.value.trim().toUpperCase() : "";
+    // FIX: Removed .toUpperCase() so mixed-case IDs (Crickerr_...) work correctly
+    const matchId = matchIdInput ? matchIdInput.value.trim() : "";
 
     // 1. Validation (Log errors to console instead of Alert to prevent freezing)
     if (!matchId) { console.warn("No Match ID"); return; }
-    if (!currentStream) { console.warn("Camera not started"); return; }
 
     // 2. Stop Stream (Immediate stop, no popup confirmation)
     if (isLive) {
@@ -1000,35 +1000,88 @@ function goLiveOnDB(matchId, peerId) {
 
         // --- DATABASE LOGIC ---
         function listenToDB(id) {
-            db.collection("live_matches").doc(id).onSnapshot(doc => {
-                if(doc.exists) {
-                    const data = doc.data();
-                    match = { ...match, ...data };
-                    
-                    let desiredType = null;
-                    if (data.showSquad) desiredType = "SQUAD";
-                    else if (data.showBattingCard) desiredType = "BATTING"; 
-                    else if (data.showBowlingCard) desiredType = "BOWLING";
-                    else if (data.showRunRate) desiredType = "RUN_RATE";
-                    else if (data.matchStatus === "COMPLETE") desiredType = "MATCH_RESULT";
+    db.collection("live_matches").doc(id).onSnapshot(doc => {
+        if (doc.exists) {
+            const data = doc.data();
 
-                    match.desiredOverlay = desiredType; 
+            // 1. Merge Basic Data
+            match = { ...match, ...data };
 
-                    if(data.t1Logo && (!team1Logo || team1Logo.src !== data.t1Logo)) { team1Logo = new Image(); team1Logo.crossOrigin = "anonymous"; team1Logo.src = data.t1Logo; }
-                    if(data.t2Logo && (!team2Logo || team2Logo.src !== data.t2Logo)) { team2Logo = new Image(); team2Logo.crossOrigin = "anonymous"; team2Logo.src = data.t2Logo; }
-                    if(data.t1CaptainImg && (!t1CapImg || t1CapImg.src !== data.t1CaptainImg)) { t1CapImg = new Image(); t1CapImg.crossOrigin = "anonymous"; t1CapImg.src = data.t1CaptainImg; }
-                    if(data.t2CaptainImg && (!t2CapImg || t2CapImg.src !== data.t2CaptainImg)) { t2CapImg = new Image(); t2CapImg.crossOrigin = "anonymous"; t2CapImg.src = data.t2CaptainImg; }
+            // 2. [CRITICAL FIX] RECONSTRUCT PLAYERS FOR BROADCAST
+            // If data comes in "flat" from the new Controller, we build the objects needed by the display.
 
-                    if (data.lastAction && data.lastAction.id !== lastActionId) { 
-                        lastActionId = data.lastAction.id; 
-                        triggerAudio(data.lastAction.type);
-                        if(['4', '6', 'W'].includes(data.lastAction.type)) {
-                            setTimeout(() => triggerReplay(data.lastAction.type), 4000); 
-                        }
-                    }
+            // --- Reconstruct Striker ---
+            if (data.striker && typeof data.striker === 'string') {
+                match.striker = {
+                    name: data.striker,
+                    runs: data.strikerRuns || 0,
+                    balls: data.strikerBalls || 0
+                };
+            }
+
+            // --- Reconstruct Non-Striker ---
+            if (data.nonStriker && typeof data.nonStriker === 'string') {
+                match.nonStriker = {
+                    name: data.nonStriker,
+                    runs: data.nonStrikerRuns || 0,
+                    balls: data.nonStrikerBalls || 0
+                };
+            }
+
+            // --- Reconstruct Bowler ---
+            if (data.bowler && typeof data.bowler === 'string') {
+                // Convert "1.2" overs string back to total balls for the display logic
+                let totalBalls = 0;
+                if (data.bowlerOvers) {
+                    const parts = String(data.bowlerOvers).split('.');
+                    const o = parseInt(parts[0]) || 0;
+                    const b = parseInt(parts[1]) || 0;
+                    totalBalls = (o * 6) + b;
                 }
-            });
+
+                match.bowler = {
+                    name: data.bowler,
+                    wkts: data.bowlerWickets || 0,
+                    runs: data.bowlerRuns || 0,
+                    balls: totalBalls
+                };
+            }
+
+            // 3. Determine Active Overlay
+            let desiredType = null;
+            if (data.showSquad) desiredType = "SQUAD";
+            else if (data.showBattingCard) desiredType = "BATTING";
+            else if (data.showBowlingCard) desiredType = "BOWLING";
+            else if (data.showRunRate) desiredType = "RUN_RATE";
+            else if (data.matchStatus === "COMPLETE") desiredType = "MATCH_RESULT";
+
+            match.desiredOverlay = desiredType;
+
+            // 4. Update Images (Logos & Captains)
+            if (data.t1Logo && (!team1Logo || team1Logo.src !== data.t1Logo)) {
+                team1Logo = new Image(); team1Logo.crossOrigin = "anonymous"; team1Logo.src = data.t1Logo;
+            }
+            if (data.t2Logo && (!team2Logo || team2Logo.src !== data.t2Logo)) {
+                team2Logo = new Image(); team2Logo.crossOrigin = "anonymous"; team2Logo.src = data.t2Logo;
+            }
+            if (data.t1CaptainImg && (!t1CapImg || t1CapImg.src !== data.t1CaptainImg)) {
+                t1CapImg = new Image(); t1CapImg.crossOrigin = "anonymous"; t1CapImg.src = data.t1CaptainImg;
+            }
+            if (data.t2CaptainImg && (!t2CapImg || t2CapImg.src !== data.t2CaptainImg)) {
+                t2CapImg = new Image(); t2CapImg.crossOrigin = "anonymous"; t2CapImg.src = data.t2CaptainImg;
+            }
+
+            // 5. Trigger Audio & Animations (4, 6, OUT)
+            if (data.lastAction && data.lastAction.id !== lastActionId) {
+                lastActionId = data.lastAction.id;
+                triggerAudio(data.lastAction.type);
+                if (['4', '6', 'W'].includes(data.lastAction.type)) {
+                    setTimeout(() => triggerReplay(data.lastAction.type), 4000);
+                }
+            }
         }
+    });
+}
 
         function triggerAudio(type) {
             triggerAnim(type); 
@@ -1288,7 +1341,15 @@ function goLiveOnDB(matchId, peerId) {
             c.restore();
         }
 
-        function safeStr(val) { if (val === null || val === undefined) return ""; if (typeof val === 'string') return val; return String(val); }
+        function safeStr(val) {
+    // 1. Handle Objects (like {name: "Player"})
+    if (typeof val === 'object' && val !== null) {
+        return val.name || val.toString();
+    }
+    // 2. Handle standard values
+    if (val === undefined || val === null || val === "") return "0";
+    return val.toString();
+}
         function safeTeamName(t) { if (typeof t === 'object' && t !== null && t.name) return safeStr(t.name); if (typeof t === 'string') return t; return "TEAM"; }
 
         function drawFinalResult(c, w, h) {
