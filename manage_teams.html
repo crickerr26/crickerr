@@ -424,9 +424,12 @@
                             }
                             const t = doc.data();
                             
-                            // Check link validity visually
-                            if(t.captainToken !== state.token) {
-                                 document.getElementById('main-scroll-area').innerHTML = `<div class="flex flex-col items-center justify-center h-full text-center p-6"><h2 class="text-xl font-bold text-red-500">Link Expired</h2><p class="text-sm text-gray-400 mt-2">This link is invalid or has been used.</p></div>`;
+                            // Check link validity (Token match + Time Expiry)
+                            const now = Date.now();
+                            const isExpired = t.captainLinkExpiry && now > t.captainLinkExpiry;
+
+                            if(t.captainToken !== state.token || isExpired) {
+                                 document.getElementById('main-scroll-area').innerHTML = `<div class="flex flex-col items-center justify-center h-full text-center p-6"><h2 class="text-xl font-bold text-red-500">Link Expired</h2><p class="text-sm text-gray-400 mt-2">This link has expired (24h limit) or is invalid.</p></div>`;
                                  return;
                             }
 
@@ -576,7 +579,7 @@
         // ==========================================
         function showiOSAlert(title, message) {
             document.getElementById('alert-title').textContent = title;
-            document.getElementById('alert-message').textContent = message;
+            document.getElementById('alert-message').innerHTML = message; // Changed to innerHTML for formatting
             document.getElementById('ios-alert-modal').classList.remove('hidden');
         }
         function closeiOSAlert() { document.getElementById('ios-alert-modal').classList.add('hidden'); }
@@ -974,8 +977,8 @@
                          players: data.players,
                          captain: data.captain,
                          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                         captainCompleted: true,
-                         captainToken: null // Invalidate token
+                         captainCompleted: true
+                         // Removed 'captainToken: null' to keep link active for 24h
                      }).then(() => {
                         document.getElementById('team-editor-view').innerHTML = `
                             <div class="flex flex-col items-center justify-center h-full text-center p-6 animate-scale-in">
@@ -985,7 +988,7 @@
                                 <h2 class="text-2xl font-bold text-black mb-2 leading-tight">${name}<br>Saved Successfully!</h2>
                                 <p class="text-base text-gray-500 mb-8 max-w-xs leading-relaxed">
                                     Your squad is ready. Good luck for your matches!<br>
-                                    <span class="text-xs font-bold text-[#007AFF] mt-4 block">- From Cricker</span>
+                                    <span class="text-xs font-bold text-[#007AFF] mt-4 block">- From CriCKERR</span>
                                 </p>
                             </div>
                         `;
@@ -1064,15 +1067,27 @@
                 return v.toString(16);
             });
 
-            // Save token to Firestore then copy link
+            const expiry = Date.now() + (24 * 60 * 60 * 1000); // 24 Hours from now
+
+            // Save token & expiry to Firestore then copy link
             db.collection("teams").doc(teamId).update({
                 captainToken: token,
-                captainAccess: true,
-                captainCompleted: false
+                captainLinkExpiry: expiry, 
+                captainAccess: true
             }).then(() => {
                 const url = `${window.location.origin}${window.location.pathname}?mode=captain&teamId=${teamId}&token=${token}`;
                 navigator.clipboard.writeText(url).then(() => {
-                    showiOSAlert("Link Copied!", `Share this link with the captain of ${teamName}. They can add players and upload a logo.`);
+                    // Professional Message
+                    const msg = `
+                        <div class="mt-2">
+                            <p class="text-[15px] font-semibold text-black mb-2">${teamName} Link Ready</p>
+                            <p class="text-[13px] text-gray-600 mb-4">Link copied to clipboard. Share it with your captain to edit the squad.</p>
+                            <div class="bg-blue-50 text-[#007AFF] text-[11px] font-bold py-1 px-3 rounded-full inline-block">
+                                ⏳ Active for 24 Hours
+                            </div>
+                        </div>
+                    `;
+                    showiOSAlert("Link Copied", msg);
                 });
             }).catch(err => showiOSAlert("Error", "Could not generate link"));
         }
@@ -1083,15 +1098,16 @@
                 const data = doc.data();
                 data.id = doc.id;
 
-                // Security Check
-                if (data.captainToken !== state.token) {
-                    showiOSAlert("Access Denied", "This link is invalid or has expired.");
+                // Security & Expiry Check
+                const now = Date.now();
+                const isExpired = data.captainLinkExpiry && now > data.captainLinkExpiry;
+
+                if (data.captainToken !== state.token || isExpired) {
+                    showiOSAlert("Access Denied", "This link has expired.");
                     return;
                 }
-                if (data.captainCompleted) {
-                    showiOSAlert("Completed", "This team has already been submitted.");
-                    return;
-                }
+                
+                // Note: removed 'captainCompleted' check to allow re-editing within 24h
 
                 openEditor(data);
                 
