@@ -1087,15 +1087,17 @@
             });
 
             const expiry = Date.now() + (24 * 60 * 60 * 1000); // 24 Hours from now
+            const url = `${window.location.origin}${window.location.pathname}?mode=captain&teamId=${teamId}&token=${token}`;
 
-            // Save token & expiry to Firestore then copy link
-            db.collection("teams").doc(teamId).update({
-                captainToken: token,
-                captainLinkExpiry: expiry, 
-                captainAccess: true
-            }).then(() => {
-                const url = `${window.location.origin}${window.location.pathname}?mode=captain&teamId=${teamId}&token=${token}`;
-                navigator.clipboard.writeText(url).then(() => {
+            // FIX: Copy to clipboard FIRST (required for Mobile Safari/Chrome), THEN save to database
+            navigator.clipboard.writeText(url).then(() => {
+                
+                // Now save token to Firestore
+                db.collection("teams").doc(teamId).update({
+                    captainToken: token,
+                    captainLinkExpiry: expiry, 
+                    captainAccess: true
+                }).then(() => {
                     // Professional Message
                     const msg = `
                         <div class="mt-2">
@@ -1107,8 +1109,15 @@
                         </div>
                     `;
                     showiOSAlert("Link Copied", msg);
+                }).catch(err => {
+                    // Even if DB fails, the user has the link, but it won't work.
+                    showiOSAlert("Connection Error", "Link copied, but could not activate it. Please check internet.");
                 });
-            }).catch(err => showiOSAlert("Error", "Could not generate link"));
+
+            }).catch(err => {
+                console.error("Clipboard Error:", err);
+                showiOSAlert("Error", "Could not copy link. Please allow clipboard permissions.");
+            });
         }
 
         function loadDirectCaptainTeam(teamId) {
