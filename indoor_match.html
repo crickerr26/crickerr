@@ -3577,6 +3577,12 @@ function generateBroadcastCode() {
             const teamKey = (role === 'bowler') ? state.bowlingTeam : state.battingTeam;
             const newPlayer = state[teamKey].playerStats[selectedId];
 
+            if (!newPlayer) {
+                console.error("Critical: Player not found in stats registry", selectedId);
+                closeModal('player-modal');
+                return;
+            }
+
             // --- NEW: Strict Validation ---
             if (newPlayer.status === 'DISQUALIFIED') {
                 showCustomAlert("Action Denied", "This player has been disqualified and cannot participate.", "red");
@@ -3818,9 +3824,12 @@ function generateBroadcastCode() {
             } else {
                 // Active / Selectable Styling
                 btn.className = "flex flex-col items-center justify-center p-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-500 hover:bg-blue-50 transition-all";
-                btn.onclick = () => {
-                    document.getElementById('player-select').value = p.id;
-                    document.getElementById('player-save-btn').click();
+                // FIX: Removed closure reliance, ensuring ID is passed correctly
+                btn.onclick = function() {
+                    const selector = document.getElementById('player-select');
+                    if(selector) selector.value = p.id;
+                    const saveBtn = document.getElementById('player-save-btn');
+                    if(saveBtn) saveBtn.click();
                 };
             }
 
