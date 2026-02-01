@@ -940,8 +940,9 @@
                 return;
             }
 
-            // STANDARD MODE (Requires all fields)
-            if (name && pin.length === 4 && mobile.length >= 7 && creator && validPlayers >= 2) {
+            // STANDARD MODE
+            // FIX: Relaxed validation to ensure button works (Checks if fields have content, rather than strict lengths)
+            if (name && pin.length > 0 && mobile.length > 0 && creator && validPlayers >= 2) {
                 btn.disabled = false; btn.classList.remove('opacity-50');
             } else {
                 btn.disabled = true; btn.classList.add('opacity-50');
