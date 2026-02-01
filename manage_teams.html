@@ -395,30 +395,63 @@
                 state.currentUserUid = userCred.user.uid;
                 document.getElementById('connection-status').textContent = "ONLINE";
                 document.getElementById('connection-status').className = "text-[10px] font-bold text-green-500 uppercase";
-                resetAndLoadTeams();
-            }).catch(e => { console.error(e); resetAndLoadTeams(); });
+                
+                // --- CAPTAIN MODE CHECK ---
+                const params = new URLSearchParams(window.location.search);
+                if (params.get('mode') === 'captain') {
+                    state.captainMode = true;
+                    state.tournamentId = params.get('tournamentId');
+                    state.slotId = params.get('slotId');
+                    state.token = params.get('token');
+                    
+                    // 1. Lock UI
+                    document.querySelector('.ios-header .flex.items-center.gap-3').style.display = 'none'; // Hide add button
+                    document.querySelector('.ios-search-container').style.display = 'none'; // Hide search
+                    document.querySelector('.segmented-control').style.display = 'none'; // Hide tabs
+                    document.getElementById('main-scroll-area').innerHTML = `
+                        <div class="flex flex-col items-center justify-center h-full p-6 text-center">
+                            <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-4 text-4xl">👑</div>
+                            <h2 class="text-xl font-bold text-gray-800 mb-2">Captain Portal</h2>
+                            <p class="text-sm text-gray-500 mb-6">You have been invited to register your team for the tournament.</p>
+                            <button onclick="openEditor()" class="px-8 py-3 bg-[#007AFF] text-white font-bold rounded-full shadow-lg">Create Team</button>
+                        </div>
+                    `;
+                    
+                    // 2. Override Editor Behavior
+                    document.getElementById('editor-title').textContent = "Complete Your Team";
+                    // Hide Cancel button in editor to force flow or close tab
+                    const cancelBtn = document.querySelector('#team-editor-view .ios-header button:first-child');
+                    if(cancelBtn) cancelBtn.style.visibility = 'hidden';
 
-            // Search Listener (Debounced)
-            let searchTimeout;
-            document.getElementById('search-teams').addEventListener('input', (e) => {
-                clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(() => {
-                    const term = e.target.value.trim();
-                    if(term.length > 0) {
-                        performSearch(term);
-                    } else {
-                        resetAndLoadTeams();
-                    }
-                }, 600);
-            });
-
-            // Infinite Scroll Listener
-            const scrollArea = document.getElementById('main-scroll-area');
-            scrollArea.addEventListener('scroll', () => {
-                if (scrollArea.scrollTop + scrollArea.clientHeight >= scrollArea.scrollHeight - 50) {
-                    loadMoreTeams();
+                    // 3. Auto-Open Editor if needed (Optional, but button above handles it)
+                    // openEditor(); 
+                } else {
+                    // Normal Mode
+                    resetAndLoadTeams();
                 }
-            });
+
+            }).catch(e => { console.error(e); if(!state.captainMode) resetAndLoadTeams(); });
+
+            if (!state.captainMode) {
+                // Search Listener (Debounced)
+                let searchTimeout;
+                document.getElementById('search-teams').addEventListener('input', (e) => {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        const term = e.target.value.trim();
+                        if(term.length > 0) performSearch(term);
+                        else resetAndLoadTeams();
+                    }, 600);
+                });
+
+                // Infinite Scroll Listener
+                const scrollArea = document.getElementById('main-scroll-area');
+                scrollArea.addEventListener('scroll', () => {
+                    if (scrollArea.scrollTop + scrollArea.clientHeight >= scrollArea.scrollHeight - 50) {
+                        loadMoreTeams();
+                    }
+                });
+            }
 
             document.getElementById('editor-team-logo-upload').onchange = (e) => handleImageUpload(e, 'logo');
         });
@@ -882,10 +915,56 @@
                 players: validPlayers, 
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp() 
             };
-            if (!state.editMode && state.currentUserUid) data.ownerId = state.currentUserUid;
-
+            
             const saveBtn = document.getElementById('save-btn');
             saveBtn.textContent = "...";
+            saveBtn.disabled = true;
+
+            // --- CAPTAIN MODE LOGIC ---
+            if (state.captainMode) {
+                // 1. Verify Slot & Token
+                const slotRef = db.collection("tournaments").doc(state.tournamentId).collection("team_slots").doc(state.slotId);
+                
+                slotRef.get().then(doc => {
+                    if(!doc.exists) throw new Error("Invalid Slot ID");
+                    const slotData = doc.data();
+                    if(slotData.tokenUsed) throw new Error("This invite link has already been used.");
+                    if(slotData.captainToken !== state.token) throw new Error("Invalid Security Token");
+
+                    // 2. Create Team
+                    data.createdBy = "CAPTAIN";
+                    data.tournamentId = state.tournamentId;
+                    data.slotId = state.slotId;
+                    
+                    return db.collection("teams").add(data).then(newTeamRef => {
+                        // 3. Update Slot
+                        return slotRef.update({
+                            status: "COMPLETED",
+                            teamId: newTeamRef.id,
+                            teamName: data.name, // Store name for quick display
+                            tokenUsed: true,
+                            completedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    });
+                }).then(() => {
+                    showiOSAlert("Success", "Team Registered for Tournament! You can close this page.");
+                    document.getElementById('team-editor-view').innerHTML = `
+                        <div class="flex flex-col items-center justify-center h-full text-center p-6">
+                            <div class="text-6xl mb-4">✅</div>
+                            <h2 class="text-2xl font-bold text-gray-800">All Set!</h2>
+                            <p class="text-gray-500 mt-2">Team <b>${name}</b> has been registered.</p>
+                        </div>
+                    `;
+                }).catch(err => {
+                    showiOSAlert("Registration Failed", err.message);
+                    saveBtn.textContent = "Try Again";
+                    saveBtn.disabled = false;
+                });
+                return; // Stop standard flow
+            }
+
+            // --- STANDARD FLOW ---
+            if (!state.editMode && state.currentUserUid) data.ownerId = state.currentUserUid;
 
             const promise = state.editMode 
                 ? db.collection("teams").doc(state.editingTeamId).update(data)
@@ -898,6 +977,7 @@
                 showiOSAlert("Error", err.message);
             }).finally(() => {
                 saveBtn.textContent = "Done";
+                saveBtn.disabled = false;
             });
         }
 
