@@ -1166,41 +1166,49 @@
             if(typeof updateSlotLogo === 'function' && changedSelect) updateSlotLogo(changedSelect);
         };
 
-        // --- 2. SLOT RENDERER (Fixed Logic: Shows All Teams) ---
+        // --- 2. SLOT RENDERER (Updated with Captain Mode Toggle) ---
+        window.isCaptainMode = false; // Global State
+
+        window.toggleCaptainMode = function(el) {
+            window.isCaptainMode = el.checked;
+            window.renderTournamentSlots();
+        }
+
         window.renderTournamentSlots = function() {
             // Get Elements
             const countEl = document.getElementById('tourney-team-count');
             const container = document.getElementById('tournament-slots-container');
             const groupModeEl = document.getElementById('tourney-group-mode');
             
-            // Safety Checks
             if (!container) return;
             const count = parseInt(countEl ? countEl.value : 0);
             const groupMode = groupModeEl ? parseInt(groupModeEl.value) : 1;
 
-            // Stop if no valid count (keeps placeholder ONLY if count is invalid)
             if (isNaN(count) || count < 2) return;
 
-            // Wipe the container (Removes the 'SELECT TEAM COUNT...' placeholder)
-            container.innerHTML = '';
+            // --- HEADER TOGGLE ---
+            let headerHTML = `
+                <div class="col-span-1 md:col-span-2 flex items-center justify-between mb-2 bg-blue-50 p-3 rounded-lg border border-blue-100">
+                    <div>
+                        <h4 class="text-xs font-black text-blue-900 uppercase">Captain Invite Mode</h4>
+                        <p class="text-[10px] text-blue-600">Send links to captains to fill their own squads.</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" class="sr-only peer" onchange="toggleCaptainMode(this)" ${window.isCaptainMode ? 'checked' : ''}>
+                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                </div>
+            `;
 
-            // Use ALL saved teams (Removed Country Filtering to prevent empty lists)
-            let allTeams = [];
-            if (typeof savedTeamsData !== 'undefined' && savedTeamsData.length > 0) {
-                allTeams = savedTeamsData;
-            }
+            container.innerHTML = headerHTML;
 
+            // Use ALL saved teams
+            let allTeams = (typeof savedTeamsData !== 'undefined' && savedTeamsData.length > 0) ? savedTeamsData : [];
+            
             // Build Dropdown Options
             let teamOptionsHTML = '<option value="">Select Team...</option>';
-            if (allTeams.length > 0) {
-                allTeams.forEach(t => {
-                    teamOptionsHTML += `<option value="${t.name}">${t.name}</option>`;
-                });
-            } else {
-                teamOptionsHTML += `<option value="" disabled>No saved teams found (Create teams in Single Match first)</option>`;
-            }
-            
-            // Group Helper
+            allTeams.forEach(t => { teamOptionsHTML += `<option value="${t.name}">${t.name}</option>`; });
+
             const allGroups = Array.from({length: 26}, (_, i) => String.fromCharCode(65 + i)); 
             const getGroupOptions = (defaultIdx) => {
                 if (groupMode === 1) return ''; 
@@ -1222,19 +1230,35 @@
                 `;
             };
 
-            // Generate EXACT Slots
             for(let i = 0; i < count; i++) {
                 const groupSelectHTML = getGroupOptions(i);
                 
-                container.innerHTML += `
-                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-200 flex items-center gap-3 animate-slide-up" style="animation-delay: ${i*50}ms">
-                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center text-xs shadow-sm flex-shrink-0">${i+1}</div>
+                let inputHTML = '';
+                if(window.isCaptainMode) {
+                    inputHTML = `
+                        <div class="flex-1 flex items-center justify-between">
+                            <div>
+                                <label class="block text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Slot ${i+1}</label>
+                                <span class="text-sm font-bold text-gray-500 italic">Waiting for Captain Link...</span>
+                            </div>
+                            <span class="bg-yellow-100 text-yellow-700 text-[9px] font-bold px-2 py-1 rounded border border-yellow-200 uppercase tracking-wide">Pending</span>
+                        </div>
+                    `;
+                } else {
+                    inputHTML = `
                         <div class="flex-1">
                             <label class="block text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Select Team</label>
                             <select onchange="preventDuplicateTeams(this)" class="tourney-team-select w-full bg-white border border-gray-300 rounded px-3 py-2 text-sm font-bold text-gray-900 outline-none focus:border-blue-500 cursor-pointer">
                                 ${teamOptionsHTML}
                             </select>
                         </div>
+                    `;
+                }
+
+                container.innerHTML += `
+                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-200 flex items-center gap-3 animate-slide-up" style="animation-delay: ${i*50}ms">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center text-xs shadow-sm flex-shrink-0">${i+1}</div>
+                        ${inputHTML}
                         ${groupSelectHTML}
                     </div>
                 `;
@@ -5571,18 +5595,48 @@ function nextTourneyStep() {
             }
         });
 
-        if(selectedValues.length < 2) {
-             showCustomAlert("Error", "Please select at least 2 teams.", "red");
-             return;
-        }
-        if(hasDupes) {
-             showCustomAlert("Error", "Duplicate teams selected.", "red");
-             return;
+        // --- UPDATED VALIDATION FOR CAPTAIN MODE ---
+        if (!window.isCaptainMode) {
+            if(selectedValues.length < 2) {
+                 showCustomAlert("Error", "Please select at least 2 teams.", "red");
+                 return;
+            }
+            if(hasDupes) {
+                 showCustomAlert("Error", "Duplicate teams selected.", "red");
+                 return;
+            }
         }
 
         // Move 3 -> 4
         p3.classList.add('hidden');
         p4.classList.remove('hidden');
+        window.scrollTo(0,0);
+        
+        // --- IF CAPTAIN MODE: SKIP SCHEDULE ---
+        // If in Captain Mode, we don't show the schedule page normally, 
+        // we repurpose the "Start" button to "Initialize Slots"
+        if (window.isCaptainMode) {
+            document.getElementById('schedule-rows').innerHTML = `
+                <div class="flex flex-col items-center justify-center h-[300px] text-center p-6 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50">
+                    <div class="text-4xl mb-4">🔗</div>
+                    <h3 class="text-lg font-black text-gray-800 uppercase">Schedule Pending</h3>
+                    <p class="text-xs text-gray-500 max-w-xs mt-2 mb-4">The match schedule will be generated automatically once all captains have registered their teams.</p>
+                    <div class="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg border border-blue-100 text-xs font-bold">
+                        Click "Create Tournament" to generate invite links.
+                    </div>
+                </div>
+            `;
+            document.getElementById('btn-create-tourney').innerHTML = `
+                <span class="text-sm drop-shadow-md flex items-center gap-2">Create & Get Links 🔗</span>
+            `;
+        } else {
+            // Normal Logic
+            updateScheduleDropdowns();
+            document.getElementById('btn-create-tourney').innerHTML = `
+                <span class="text-sm drop-shadow-md flex items-center gap-2">Start Playing 🚀</span>
+                <span class="text-[9px] text-white font-bold tracking-[0.3em] opacity-90 animate-pulse">✨ Let's Crickerr ✨</span>
+            `;
+        }
         window.scrollTo(0,0);
         
         // Initialize Schedule
@@ -6002,12 +6056,79 @@ function createProfessionalTournament() {
 
     if(!name) { showCustomAlert("Error", "Tournament Name is required", "red"); return; }
 
+    const tourneyId = pendingTourneyId || "T_" + Math.random().toString(36).substr(2, 6).toUpperCase();
+    const btn = document.getElementById('btn-create-tourney');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = "Creating... ⏳";
+    btn.disabled = true;
+
+    // --- CAPTAIN MODE FLOW ---
+    if (window.isCaptainMode) {
+        // 1. Prepare Base Data (Without Teams/Fixtures)
+        const totalTeams = parseInt(document.getElementById('tourney-team-count').value);
+        const ballTypeVal = document.getElementById('tourney-ball-type').value || 'Soft Ball';
+        const category = document.getElementById('tourney-category').value || "Open";
+
+        const tournamentData = {
+            meta: { id: tourneyId, name, country, category, organizer: document.getElementById('organizer-name').value || "Community", startDate, createdAt: Date.now() },
+            rules: {
+                overs: parseInt(document.getElementById('tourney-overs').value),
+                players: parseInt(document.getElementById('tourney-players').value),
+                ptsWin: 2, ptsTie: 1,
+                ballType: ballTypeVal,
+                matchType: "LIMITED",
+                captainMode: true,
+                totalSlots: totalTeams
+            },
+            teams: [], // Empty initially
+            fixtures: [], // Empty initially
+            standings: [],
+            status: "SETUP" // Mark as incomplete
+        };
+
+        // 2. Generate Slots
+        const slotsBatch = db.batch();
+        const slots = [];
+        
+        for(let i=0; i<totalTeams; i++) {
+            const slotId = `slot_${Date.now()}_${i}`;
+            const token = Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10);
+            const slotRef = db.collection("tournaments").doc(tourneyId).collection("team_slots").doc(slotId);
+            
+            slotsBatch.set(slotRef, {
+                slotId: slotId,
+                slotNumber: i + 1,
+                status: "PENDING", // PENDING | COMPLETED
+                teamId: null,
+                captainToken: token,
+                tokenUsed: false,
+                inviteUrl: `${window.location.origin}/Manage_Team.html?mode=captain&tournamentId=${tourneyId}&slotId=${slotId}&token=${token}`
+            });
+        }
+
+        // 3. Save All
+        db.collection("tournaments").doc(tourneyId).set(tournamentData)
+            .then(() => slotsBatch.commit())
+            .then(() => {
+                tournamentState.id = tourneyId;
+                tournamentState.data = tournamentData;
+                tournamentState.active = true;
+                loadTournamentDashboard(); // This will detect SETUP status
+            })
+            .catch(err => {
+                console.error(err);
+                showCustomAlert("Error", "Failed to create slots.", "red");
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+
+        return; // STOP HERE
+    }
+
+    // --- STANDARD FLOW (Existing Code) ---
     const cards = document.getElementById('schedule-rows').querySelectorAll('.sch-card');
     const fixtures = [];
     
-    // --- USE PRE-GENERATED ID OR FALLBACK ---
-    const tourneyId = pendingTourneyId || "T_" + Math.random().toString(36).substr(2, 6).toUpperCase();
-
     cards.forEach((card, index) => {
         const t1 = card.querySelector('.sch-t1').value;
         const t2 = card.querySelector('.sch-t2').value;
@@ -6031,7 +6152,7 @@ function createProfessionalTournament() {
         }
     });
 
-    if(fixtures.length === 0) { showCustomAlert("Error", "Schedule at least one match.", "red"); return; }
+    if(fixtures.length === 0) { showCustomAlert("Error", "Schedule at least one match.", "red"); btn.disabled = false; btn.innerHTML = originalText; return; }
 
     const teamsMap = [];
     const usedNames = new Set();
@@ -6043,7 +6164,7 @@ function createProfessionalTournament() {
         }
     });
     
-    if(teamsMap.length < 2) { showCustomAlert("Error", "Need at least 2 teams.", "red"); return; }
+    if(teamsMap.length < 2) { showCustomAlert("Error", "Need at least 2 teams.", "red"); btn.disabled = false; btn.innerHTML = originalText; return; }
 
     const optimizedTeams = teamsMap.map(t => {
         const full = t.fullData;
@@ -6058,8 +6179,6 @@ function createProfessionalTournament() {
     // Validated Ball Type ID
     const ballTypeEl = document.getElementById('tourney-ball-type');
     const ballTypeVal = ballTypeEl ? ballTypeEl.value : 'Soft Ball';
-    
-    // Category
     const categoryEl = document.getElementById('tourney-category');
     const category = categoryEl ? categoryEl.value : "Open";
 
@@ -6069,7 +6188,7 @@ function createProfessionalTournament() {
             overs: parseInt(document.getElementById('tourney-overs').value),
             players: parseInt(document.getElementById('tourney-players').value),
             ptsWin: 2, ptsTie: 1,
-            ballType: ballTypeVal, // FIXED ID HERE
+            ballType: ballTypeVal, 
             matchType: "LIMITED"
         },
         teams: optimizedTeams,
@@ -6077,20 +6196,16 @@ function createProfessionalTournament() {
         standings: teamsMap.map(t => ({
             name: t.name, p: 0, w: 0, l: 0, t: 0, pts: 0, nrr: 0, runsFor: 0, oversFor: 0, runsAgainst: 0, oversAgainst: 0
         })),
-        matchStatsLog: []
+        matchStatsLog: [],
+        status: "ACTIVE"
     };
-
-    const btn = document.getElementById('btn-create-tourney');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = "Creating... ⏳";
-    btn.disabled = true;
     
     db.collection("tournaments").doc(tourneyId).set(tournamentData)
         .then(() => {
             tournamentState.id = tourneyId;
             tournamentState.data = tournamentData;
             tournamentState.active = true;
-            // Clean up old UI steps if they exist
+            // Clean up old UI steps
             const schedStep = document.getElementById('tournament-schedule-step');
             if(schedStep) {
                 schedStep.classList.add('hidden');
