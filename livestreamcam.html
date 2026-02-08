@@ -492,12 +492,24 @@
         });
 
         function resizeCanvas() {
+            // FIX: Use devicePixelRatio for SHARP rendering on mobile/retina screens
             const dpr = window.devicePixelRatio || 1;
+            
+            // Set Internal Resolution (Physical Pixels) - MATCHES SCREEN EXACTLY
             canvas.width = window.innerWidth * dpr;
             canvas.height = window.innerHeight * dpr;
+            
+            // Scale Context to use Logical Coordinates (CSS Pixels)
             ctx.scale(dpr, dpr);
+            
+            // CSS Display Size (Fit to Screen)
             canvas.style.width = window.innerWidth + 'px';
             canvas.style.height = window.innerHeight + 'px';
+            
+            // High Quality Smoothing
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            
             initParticles(window.innerWidth, window.innerHeight);
         }
 
@@ -664,8 +676,8 @@
             await clearDB();
 
             try {
-                // ALWAYS FRESH STREAM
-                const freshCanvasStream = canvas.captureStream(30);
+                // FIX: Capture at 60fps for smoother sports motion
+                const freshCanvasStream = canvas.captureStream(60);
                 
                 // AUDIO FIX
                 let finalAudioTrack = null;
@@ -688,8 +700,8 @@
                 if (!selectedType) return alert("Recording not supported.");
                 localStorage.setItem("recMimeType", selectedType);
 
-                // 4 Mbps for stability
-                const options = { mimeType: selectedType, videoBitsPerSecond: 4000000 };
+                // FIX: Increased to 8 Mbps (8000000) for high quality video
+                const options = { mimeType: selectedType, videoBitsPerSecond: 8000000 };
                 recorder = new MediaRecorder(combinedStream, options);
 
                 recorder.ondataavailable = (e) => {
@@ -916,7 +928,8 @@ function goLiveOnDB(matchId, peerId) {
     const btn = document.getElementById('live-button');
     const txt = document.getElementById('live-text');
 
-    const stream = canvas.captureStream(30);
+    // FIX: Capture 60 FPS for smoother live broadcast
+    const stream = canvas.captureStream(60);
     
     if (currentStream && currentStream.getAudioTracks().length > 0) {
         stream.addTrack(currentStream.getAudioTracks()[0]);
@@ -1133,14 +1146,12 @@ function goLiveOnDB(matchId, peerId) {
 
         // --- BACKGROUND-SAFE RENDER LOOP ---
         function renderLoop() {
-            // 1. Force Canvas Dimensions (Fixes 0x0 bug)
-            const w = window.innerWidth; 
-            const h = window.innerHeight;
-            if (canvas.width === 0 || canvas.height === 0 || canvas.width !== w) {
-                canvas.width = w; canvas.height = h;
-            }
-
-            // 2. Clear & Draw
+            // FIX: Get Dynamic Logical Resolution (Screen Size)
+            const dpr = window.devicePixelRatio || 1;
+            const w = canvas.width / dpr;
+            const h = canvas.height / dpr;
+            
+            // Clear using logical coordinates
             ctx.clearRect(0, 0, w, h);
 
             try {
@@ -1164,9 +1175,8 @@ function goLiveOnDB(matchId, peerId) {
                 console.error("Render Error:", err);
             }
 
-            // 3. FORCE LOOP (Use setTimeout instead of requestAnimationFrame)
-            // This forces the browser to update even if the tab is backgrounded/split-screen
-            setTimeout(renderLoop, 30); 
+            // 60fps Loop
+            setTimeout(renderLoop, 16); 
         }
 
         function drawVideoObject(vidObj, w, h) {
@@ -1435,7 +1445,10 @@ function goLiveOnDB(matchId, peerId) {
         function drawNewLayout(c, w, h) { 
             const barH = h * 0.095; 
             const marginX = w * 0.03; 
-            const bottomY = h - barH - (h * 0.03); 
+            
+            // FIX: Increase Bottom Margin to 5% (was 3%) to prevent cutoff
+            const bottomY = h - barH - (h * 0.05); 
+            
             const pillW = w - (marginX * 2); 
             const pillX = marginX; 
             
