@@ -2910,7 +2910,7 @@ function broadcastMatchResult() {
 
                     <div class="flex items-center gap-2 overflow-hidden">
                         <div class="relative group cursor-pointer" onclick="triggerImageUpload('${teamKey}', '${player.id}')">
-                            <img id="img-${player.id}" src="${player.image || 'https://placehold.co/40x40/e2e8f0/gray?text=P'}" class="w-8 h-8 rounded-full border object-cover bg-gray-50">
+                            <img id="img-${player.id}" src="${player.image || 'playeravatar.png'}" class="w-8 h-8 rounded-full border object-cover bg-gray-50">
                             <div class="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center rounded-full">
                                 <span class="text-[8px] text-white">📷</span>
                             </div>
@@ -3266,10 +3266,6 @@ function generateBroadcastCode() {
                 // Legacy
                 t1: state.team1.name, t2: state.team2.name,
                 t1Logo: state.team1.logo, t2Logo: state.team2.logo, 
-                
-                // --- NEW: SQUAD DATA FOR BROADCAST ---
-                t1Squad: state.team1.players || [],
-                t2Squad: state.team2.players || [],
                 
                 score: state[state.battingTeam].score || 0,
                 wickets: state[state.battingTeam].wickets || 0,
@@ -3873,9 +3869,7 @@ function generateBroadcastCode() {
         const div = document.createElement('div');
         div.className = `flex flex-col items-center p-2 rounded-2xl bg-white border border-gray-200 shadow-sm transition-all duration-300 cursor-pointer hover:shadow-md select-none relative`;
         
-        const avatar = img 
-            ? `<img src="${img}" class="w-14 h-14 rounded-full object-cover border-2 border-white shadow-md bg-gray-100 mb-2">`
-            : `<div class="w-14 h-14 rounded-full bg-gradient-to-br from-gray-500 to-gray-700 text-white flex items-center justify-center font-black text-lg border-2 border-white shadow-md mb-2">${p.name.substring(0,2)}</div>`;
+        const avatar = `<img src="${img || 'playeravatar.png'}" class="w-14 h-14 rounded-full object-cover border-2 border-white shadow-md bg-gray-100 mb-2">`;
 
         div.innerHTML = `
             ${avatar}
@@ -3944,9 +3938,7 @@ function generateBroadcastCode() {
             const imgSrc = squadMember ? squadMember.image : null;
             
             // Base Avatar HTML
-            let avatarHTML = imgSrc 
-                ? `<img src="${imgSrc}" class="w-10 h-10 rounded-full object-cover border border-gray-200">`
-                : `<div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-500 text-xs">${getTeamInitials(p.name).substring(0,2)}</div>`;
+            let avatarHTML = `<img src="${imgSrc || 'playeravatar.png'}" class="w-10 h-10 rounded-full object-cover border border-gray-200">`;
 
             // If Resting, Add Banner Overlay
             if (isResting) {
@@ -4647,8 +4639,8 @@ function endInnings() {
         const batListEl = document.getElementById('ib-batting-list');
         batListEl.innerHTML = topBatters.length ? topBatters.map(p => {
             const squadMember = battingTeamObj.squad.find(s => s.id === p.id);
-            const imgSrc = squadMember && squadMember.image ? squadMember.image : null;
-            const avatarHTML = imgSrc ? `<img src="${imgSrc}" class="w-8 h-8 rounded-full object-cover border border-blue-500 shadow-sm bg-blue-900">` : `<span class="w-8 h-8 rounded-full bg-blue-900 text-xs text-white flex items-center justify-center font-bold border border-blue-700">${getTeamInitials(p.name).substring(0,1)}</span>`;
+            const imgSrc = squadMember && squadMember.image ? squadMember.image : 'playeravatar.png';
+            const avatarHTML = `<img src="${imgSrc}" class="w-8 h-8 rounded-full object-cover border border-blue-500 shadow-sm bg-blue-900">`;
             return `<div class="flex items-center justify-between group"><div class="flex items-center gap-3">${avatarHTML}<span class="text-sm font-bold text-gray-200 group-hover:text-white transition-colors">${p.name}</span></div><div class="font-mono font-bold text-white text-sm">${p.runs} <span class="text-xs text-gray-500 font-normal">(${p.balls})</span></div></div>`;
         }).join('') : '<div class="text-xs text-gray-500 italic text-center">No batting data available</div>';
 
@@ -4660,8 +4652,8 @@ function endInnings() {
         const bowlListEl = document.getElementById('ib-bowling-list');
         bowlListEl.innerHTML = topBowlers.length ? topBowlers.map(p => {
             const squadMember = bowlingTeamObj.squad.find(s => s.id === p.id);
-            const imgSrc = squadMember && squadMember.image ? squadMember.image : null;
-            const avatarHTML = imgSrc ? `<img src="${imgSrc}" class="w-8 h-8 rounded-full object-cover border border-orange-500 shadow-sm bg-orange-900">` : `<span class="w-8 h-8 rounded-full bg-orange-900 text-xs text-white flex items-center justify-center font-bold border border-orange-700">${getTeamInitials(p.name).substring(0,1)}</span>`;
+            const imgSrc = squadMember && squadMember.image ? squadMember.image : 'playeravatar.png';
+            const avatarHTML = `<img src="${imgSrc}" class="w-8 h-8 rounded-full object-cover border border-orange-500 shadow-sm bg-orange-900">`;
             const bpo = state.ballsPerOver || 6;
             const bOvers = Math.floor(p.ballsBowled / bpo) + '.' + (p.ballsBowled % bpo);
             return `<div class="flex items-center justify-between group"><div class="flex items-center gap-3">${avatarHTML}<span class="text-sm font-bold text-gray-200 group-hover:text-white transition-colors">${p.name}</span></div><div class="font-mono font-bold text-white text-sm">${p.wickets}<span class="text-gray-500 mx-0.5">-</span>${p.runsConceded} <span class="text-xs text-gray-500 font-normal">(${bOvers})</span></div></div>`;
@@ -4799,7 +4791,7 @@ function endInnings() {
             const topBatters = [...allPlayers].sort((a,b) => b.runs - a.runs).slice(0, 3);
             document.getElementById('sum-top-batters').innerHTML = topBatters.map(p => {
                 const img = getPlayerImg(p.id, p.teamKey);
-                const av = img ? `<img src="${img}" class="w-8 h-8 rounded-full object-cover border border-white/30">` : `<div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-[10px] font-bold text-white border border-white/30">${p.name[0]}</div>`;
+                const av = `<img src="${img || 'playeravatar.png'}" class="w-8 h-8 rounded-full object-cover border border-white/30">`;
                 return `
                 <div class="flex justify-between items-center border-b border-white/10 pb-2 last:border-0">
                     <div class="flex items-center gap-3">
@@ -4820,7 +4812,7 @@ function endInnings() {
             const topBowlers = [...allPlayers].sort((a,b) => (b.wickets - a.wickets) || (a.runsConceded - b.runsConceded)).slice(0, 3);
             document.getElementById('sum-top-bowlers').innerHTML = topBowlers.map(p => {
                 const img = getPlayerImg(p.id, p.teamKey);
-                const av = img ? `<img src="${img}" class="w-8 h-8 rounded-full object-cover border border-white/30">` : `<div class="w-8 h-8 rounded-full bg-orange-600 flex items-center justify-center text-[10px] font-bold text-white border border-white/30">${p.name[0]}</div>`;
+                const av = `<img src="${img || 'playeravatar.png'}" class="w-8 h-8 rounded-full object-cover border border-white/30">`;
                 return `
                 <div class="flex justify-between items-center border-b border-white/10 pb-2 last:border-0">
                     <div class="flex items-center gap-3">
@@ -4841,7 +4833,7 @@ function endInnings() {
             const pomCandidates = [...new Set([...topBatters.slice(0,2), ...topBowlers.slice(0,2)])];
             document.getElementById('sum-pom-list').innerHTML = pomCandidates.map((p, i) => {
                 const img = getPlayerImg(p.id, p.teamKey);
-                const av = img ? `<img src="${img}" class="w-10 h-10 rounded-full object-cover border-2 border-yellow-500/50">` : `<div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold text-white border-2 border-yellow-500/50">${p.name[0]}</div>`;
+                const av = `<img src="${img || 'playeravatar.png'}" class="w-10 h-10 rounded-full object-cover border-2 border-yellow-500/50">`;
                 return `
                 <label class="flex items-center gap-3 p-3 bg-white/5 rounded-xl cursor-pointer hover:bg-white/10 transition border border-transparent hover:border-yellow-500/50 group">
                     <input type="radio" name="pom" value="${p.id}" ${i===0?'checked':''} class="w-5 h-5 accent-yellow-500">
@@ -7427,9 +7419,7 @@ function renderStatsUI(players) {
     };
 
     const fallback = (name) => `
-        <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-500 border border-gray-200">
-            ${name.substring(0,2).toUpperCase()}
-        </div>
+        <img src="playeravatar.png" class="w-8 h-8 rounded-full object-cover border border-gray-200 shadow-sm bg-white">
     `;
 
     if (activeTab === 'batsman') {
