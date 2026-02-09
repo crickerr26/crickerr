@@ -2910,7 +2910,7 @@ function broadcastMatchResult() {
 
                     <div class="flex items-center gap-2 overflow-hidden">
                         <div class="relative group cursor-pointer" onclick="triggerImageUpload('${teamKey}', '${player.id}')">
-                            <img id="img-${player.id}" src="${player.image || 'playeravatar.png'}" class="w-8 h-8 rounded-full border object-cover bg-gray-50">
+                            <img id="img-${player.id}" src="${player.image || 'playeravatar.png'}" onerror="this.onerror=null;this.src='playeravatar.png';" class="w-8 h-8 rounded-full border object-cover bg-gray-50">
                             <div class="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center rounded-full">
                                 <span class="text-[8px] text-white">📷</span>
                             </div>
@@ -3869,7 +3869,7 @@ function generateBroadcastCode() {
         const div = document.createElement('div');
         div.className = `flex flex-col items-center p-2 rounded-2xl bg-white border border-gray-200 shadow-sm transition-all duration-300 cursor-pointer hover:shadow-md select-none relative`;
         
-        const avatar = `<img src="${img || 'playeravatar.png'}" class="w-14 h-14 rounded-full object-cover border-2 border-white shadow-md bg-gray-100 mb-2">`;
+        const avatar = `<img src="${img || 'playeravatar.png'}" onerror="this.onerror=null;this.src='playeravatar.png';" class="w-14 h-14 rounded-full object-cover border-2 border-white shadow-md bg-gray-100 mb-2">`;
 
         div.innerHTML = `
             ${avatar}
@@ -3938,7 +3938,7 @@ function generateBroadcastCode() {
             const imgSrc = squadMember ? squadMember.image : null;
             
             // Base Avatar HTML
-            let avatarHTML = `<img src="${imgSrc || 'playeravatar.png'}" class="w-10 h-10 rounded-full object-cover border border-gray-200">`;
+            let avatarHTML = `<img src="${imgSrc || 'playeravatar.png'}" onerror="this.onerror=null;this.src='playeravatar.png';" class="w-10 h-10 rounded-full object-cover border border-gray-200">`;
 
             // If Resting, Add Banner Overlay
             if (isResting) {
@@ -4640,7 +4640,7 @@ function endInnings() {
         batListEl.innerHTML = topBatters.length ? topBatters.map(p => {
             const squadMember = battingTeamObj.squad.find(s => s.id === p.id);
             const imgSrc = squadMember && squadMember.image ? squadMember.image : 'playeravatar.png';
-            const avatarHTML = `<img src="${imgSrc}" class="w-8 h-8 rounded-full object-cover border border-blue-500 shadow-sm bg-blue-900">`;
+            const avatarHTML = `<img src="${imgSrc}" onerror="this.onerror=null;this.src='playeravatar.png';" class="w-8 h-8 rounded-full object-cover border border-blue-500 shadow-sm bg-blue-900">`;
             return `<div class="flex items-center justify-between group"><div class="flex items-center gap-3">${avatarHTML}<span class="text-sm font-bold text-gray-200 group-hover:text-white transition-colors">${p.name}</span></div><div class="font-mono font-bold text-white text-sm">${p.runs} <span class="text-xs text-gray-500 font-normal">(${p.balls})</span></div></div>`;
         }).join('') : '<div class="text-xs text-gray-500 italic text-center">No batting data available</div>';
 
@@ -4653,7 +4653,7 @@ function endInnings() {
         bowlListEl.innerHTML = topBowlers.length ? topBowlers.map(p => {
             const squadMember = bowlingTeamObj.squad.find(s => s.id === p.id);
             const imgSrc = squadMember && squadMember.image ? squadMember.image : 'playeravatar.png';
-            const avatarHTML = `<img src="${imgSrc}" class="w-8 h-8 rounded-full object-cover border border-orange-500 shadow-sm bg-orange-900">`;
+            const avatarHTML = `<img src="${imgSrc}" onerror="this.onerror=null;this.src='playeravatar.png';" class="w-8 h-8 rounded-full object-cover border border-orange-500 shadow-sm bg-orange-900">`;
             const bpo = state.ballsPerOver || 6;
             const bOvers = Math.floor(p.ballsBowled / bpo) + '.' + (p.ballsBowled % bpo);
             return `<div class="flex items-center justify-between group"><div class="flex items-center gap-3">${avatarHTML}<span class="text-sm font-bold text-gray-200 group-hover:text-white transition-colors">${p.name}</span></div><div class="font-mono font-bold text-white text-sm">${p.wickets}<span class="text-gray-500 mx-0.5">-</span>${p.runsConceded} <span class="text-xs text-gray-500 font-normal">(${bOvers})</span></div></div>`;
@@ -4791,7 +4791,7 @@ function endInnings() {
             const topBatters = [...allPlayers].sort((a,b) => b.runs - a.runs).slice(0, 3);
             document.getElementById('sum-top-batters').innerHTML = topBatters.map(p => {
                 const img = getPlayerImg(p.id, p.teamKey);
-                const av = `<img src="${img || 'playeravatar.png'}" class="w-8 h-8 rounded-full object-cover border border-white/30">`;
+                const av = `<img src="${img || 'playeravatar.png'}" onerror="this.onerror=null;this.src='playeravatar.png';" class="w-8 h-8 rounded-full object-cover border border-white/30">`;
                 return `
                 <div class="flex justify-between items-center border-b border-white/10 pb-2 last:border-0">
                     <div class="flex items-center gap-3">
@@ -4812,7 +4812,7 @@ function endInnings() {
             const topBowlers = [...allPlayers].sort((a,b) => (b.wickets - a.wickets) || (a.runsConceded - b.runsConceded)).slice(0, 3);
             document.getElementById('sum-top-bowlers').innerHTML = topBowlers.map(p => {
                 const img = getPlayerImg(p.id, p.teamKey);
-                const av = `<img src="${img || 'playeravatar.png'}" class="w-8 h-8 rounded-full object-cover border border-white/30">`;
+                const av = `<img src="${img || 'playeravatar.png'}" onerror="this.onerror=null;this.src='playeravatar.png';" class="w-8 h-8 rounded-full object-cover border border-white/30">`;
                 return `
                 <div class="flex justify-between items-center border-b border-white/10 pb-2 last:border-0">
                     <div class="flex items-center gap-3">
@@ -4833,7 +4833,7 @@ function endInnings() {
             const pomCandidates = [...new Set([...topBatters.slice(0,2), ...topBowlers.slice(0,2)])];
             document.getElementById('sum-pom-list').innerHTML = pomCandidates.map((p, i) => {
                 const img = getPlayerImg(p.id, p.teamKey);
-                const av = `<img src="${img || 'playeravatar.png'}" class="w-10 h-10 rounded-full object-cover border-2 border-yellow-500/50">`;
+                const av = `<img src="${img || 'playeravatar.png'}" onerror="this.onerror=null;this.src='playeravatar.png';" class="w-10 h-10 rounded-full object-cover border-2 border-yellow-500/50">`;
                 return `
                 <label class="flex items-center gap-3 p-3 bg-white/5 rounded-xl cursor-pointer hover:bg-white/10 transition border border-transparent hover:border-yellow-500/50 group">
                     <input type="radio" name="pom" value="${p.id}" ${i===0?'checked':''} class="w-5 h-5 accent-yellow-500">
