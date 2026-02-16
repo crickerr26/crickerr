@@ -1085,7 +1085,7 @@
     <div class="flex justify-between items-center mb-4">
         <h3 class="text-lg font-bold text-gray-900 uppercase tracking-wide">Match Schedule</h3>
         <div class="flex gap-2">
-            <button onclick="addScheduleRow('League Match')" class="bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wide hover:bg-gray-50 shadow-sm transition-colors">+ Manual</button>
+            <button onclick="openManualScheduleModal()" class="bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wide hover:bg-gray-50 shadow-sm transition-colors">+ Manual</button>
             <button onclick="generateProfessionalSchedule()" class="bg-blue-600 border border-blue-600 text-white px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wide hover:bg-blue-700 shadow-sm transition-colors flex items-center gap-1">
                 <span>⚡ Auto Gen</span>
             </button>
@@ -1105,16 +1105,16 @@
             </div>
     </div>
 
-    <div class="bg-white border border-gray-200 rounded-xl shadow-sm min-h-[400px] p-4 relative">
-        <div id="schedule-rows" class="space-y-3 h-[400px] overflow-y-auto pr-2 custom-scroll">
-            <div class="flex flex-col items-center justify-center h-full text-gray-300 space-y-2">
+    <div class="bg-white border border-gray-200 rounded-xl shadow-sm min-h-[150px] p-4 flex flex-col gap-4">
+        <div id="schedule-rows" class="space-y-3 max-h-[60vh] overflow-y-auto pr-2 custom-scroll h-auto">
+            <div class="flex flex-col items-center justify-center py-10 text-gray-300 space-y-2">
                 <span class="text-4xl opacity-50">📅</span>
                 <p class="text-xs font-bold uppercase tracking-wide">No Matches Scheduled</p>
-                <p class="text-[10px]">Click 'Auto Gen' to see tournament structure options.</p>
+                <p class="text-[10px]">Click 'Auto Gen' or '+ Manual' to create your match structure.</p>
             </div>
         </div>
         
-        <div class="absolute bottom-4 left-4 right-4">
+        <div class="w-full mt-auto pt-2 border-t border-gray-50">
                 <button onclick="addScheduleRow('Final')" class="w-full py-2 bg-yellow-50 text-yellow-800 font-bold rounded border border-yellow-300 uppercase tracking-wide text-[10px] hover:bg-yellow-100 transition shadow-sm border-dashed hover:border-solid">
                 + Add Final Match Card
             </button>
@@ -1387,6 +1387,55 @@
             </div>`;
             
             container.insertAdjacentHTML('beforeend', rowHtml);
+        };
+
+        window.openManualScheduleModal = function() {
+            openModal('manual-schedule-modal');
+        };
+
+        window.generateManualSchedule = function() {
+            const totalMatches = parseInt(document.getElementById('manual-total-matches').value) || 0;
+            const semiFinals = parseInt(document.getElementById('manual-semi-finals').value) || 0;
+            const finals = parseInt(document.getElementById('manual-finals').value) || 0;
+
+            if (totalMatches <= 0) {
+                showCustomAlert("Error", "Total matches must be greater than 0.", "red");
+                return;
+            }
+            if (semiFinals + finals > totalMatches) {
+                showCustomAlert("Error", "Semis and Finals cannot exceed Total Matches.", "red");
+                return;
+            }
+            if (finals < 1) {
+                showCustomAlert("Error", "Please include at least 1 Final.", "red");
+                return;
+            }
+
+            const leagueMatches = totalMatches - semiFinals - finals;
+            const container = document.getElementById('schedule-rows');
+            
+            // Clear placeholder and any existing matches to provide a beautiful clean slate
+            container.innerHTML = '';
+            
+            // 1. Generate League Matches
+            for (let i = 1; i <= leagueMatches; i++) {
+                addScheduleRow('League Match');
+            }
+            
+            // 2. Generate Semi Finals
+            for (let i = 1; i <= semiFinals; i++) {
+                addScheduleRow('Semi Final');
+            }
+            
+            // 3. Generate Finals
+            for (let i = 1; i <= finals; i++) {
+                // Safely handles multiple finals without triggering the duplicate alert
+                if (i === 1) addScheduleRow('Final');
+                else if (i === 2) addScheduleRow('Silver Final');
+                else addScheduleRow('3rd Place Playoff');
+            }
+
+            closeModal('manual-schedule-modal');
         };
 
         // 4. Auto-Generate Schedule Logic (Visual Flow)
@@ -1767,6 +1816,36 @@ window.generateProfessionalSchedule = function(selectedFlow = null) {
             </div>
         </div>
     </div>
+
+    <div id="manual-schedule-modal" class="modal-overlay fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-[60] flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+        <div class="p-5 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+            <h3 class="text-lg font-black text-gray-800 uppercase tracking-tight">Manual Schedule Setup</h3>
+            <button onclick="closeModal('manual-schedule-modal')" class="text-gray-400 hover:text-gray-600 font-bold">✕</button>
+        </div>
+        
+        <div class="p-6 space-y-4">
+            <div>
+                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Total Matches (Including Semis & Finals)</label>
+                <input type="number" id="manual-total-matches" value="12" class="w-full p-3 border rounded-xl font-bold text-sm bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Semi Finals</label>
+                    <input type="number" id="manual-semi-finals" value="2" class="w-full p-3 border rounded-xl font-bold text-sm bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Finals</label>
+                    <input type="number" id="manual-finals" value="1" class="w-full p-3 border rounded-xl font-bold text-sm bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+                </div>
+            </div>
+
+            <button onclick="generateManualSchedule()" class="w-full py-4 bg-blue-600 text-white font-black rounded-xl shadow-lg hover:bg-blue-700 transition-transform active:scale-95 uppercase tracking-widest text-xs mt-4">
+                Generate Match Cards
+            </button>
+        </div>
+    </div>
+</div>
 
     <div id="app" class="h-screen w-full flex flex-col hidden bg-gray-100">
         <div id="match-header" class="bg-white border-b border-gray-200 p-2 text-center shadow-sm z-10"></div>
