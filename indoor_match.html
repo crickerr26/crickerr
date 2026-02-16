@@ -7543,5 +7543,186 @@ function saveTournamentData() {
 // --- AUTO-SYNC REMOVED: Rely on Event-Driven Sync to prevent freezing ---
 // setInterval has been removed to stop write conflicts.
     </script>
+
+    <style>
+        #ios-global-nav {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            background-color: rgba(255, 255, 255, 0.85);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+            padding: 6px 14px;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            bottom: 24px; /* Safe floating distance */
+        }
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            #ios-global-nav {
+                bottom: env(safe-area-inset-bottom, 24px);
+            }
+        }
+        #ios-global-nav button {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            transition: all 0.2s ease;
+        }
+        #ios-global-nav button:active:not(:disabled) {
+            opacity: 0.5;
+            transform: scale(0.92);
+        }
+    </style>
+    
+    <div id="ios-global-nav" class="fixed left-1/2 transform -translate-x-1/2 mb-4 z-[9999] flex items-center gap-2 rounded-full border border-black/5">
+        <button onclick="window.history.back()" id="ios-btn-back" class="text-blue-600 disabled:text-gray-300 p-2 disabled:cursor-not-allowed">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <div class="w-px h-6 bg-gray-200 mx-1"></div>
+        <button onclick="window.history.forward()" id="ios-btn-next" class="text-blue-600 disabled:text-gray-300 p-2 disabled:cursor-not-allowed">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+    </div>
+
+    <script>
+        (function() {
+            // Track all major screen and step wrappers in the app
+            const trackedScreens = [
+                'setup-screen', 'mode-selection-screen', 'setup-step-1', 'setup-step-2', 'setup-step-4',
+                'tournament-setup', 'tourney-page-1', 'tourney-page-2', 'tourney-page-3', 'tourney-page-4',
+                'tournament-dashboard', 'view-fixtures', 'view-standings', 'view-stats', 'app'
+            ];
+
+            let historyStack = [];
+            let currentIndex = -1;
+            let lastDomState = '';
+            let isRestoringHistory = false;
+
+            // Capture the exact visible state of the DOM
+            function getVisibleScreens() {
+                return trackedScreens.filter(id => {
+                    const el = document.getElementById(id);
+                    if (!el) return false;
+                    const style = window.getComputedStyle(el);
+                    return !el.classList.contains('hidden') && style.display !== 'none' && style.opacity !== '0';
+                });
+            }
+
+            // Sync visual button state
+            function updateGlobalNavUI() {
+                const backBtn = document.getElementById('ios-btn-back');
+                const nextBtn = document.getElementById('ios-btn-next');
+                if (backBtn) backBtn.disabled = (currentIndex <= 0);
+                if (nextBtn) nextBtn.disabled = (currentIndex >= historyStack.length - 1);
+            }
+
+            // Visually restore the DOM state accurately on back/forward
+            function restoreDomState(visibleIds) {
+                trackedScreens.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    
+                    if (visibleIds.includes(id)) {
+                        el.classList.remove('hidden');
+                        if (id === 'app') el.classList.add('flex');
+                        else el.classList.add('active');
+                    } else {
+                        el.classList.add('hidden');
+                        if (id === 'app') el.classList.remove('flex');
+                        else el.classList.remove('active');
+                    }
+                });
+            }
+
+            // 1. Initialize State on Load
+            window.addEventListener('load', () => {
+                setTimeout(() => {
+                    const initialState = getVisibleScreens();
+                    currentIndex = 0;
+                    historyStack.push(initialState);
+                    lastDomState = initialState.sort().join('|');
+                    window.history.replaceState({ index: currentIndex, visibleIds: initialState }, "");
+                    updateGlobalNavUI();
+                }, 500); // Wait for splash screen fade
+            });
+
+            // 2. Observer: Silently track when app transitions to a new screen
+            const observer = new MutationObserver((mutations) => {
+                if (isRestoringHistory) return; // Prevent double pushing while browsing back
+                
+                let screenChanged = false;
+                mutations.forEach(m => {
+                    if (m.type === 'attributes' && m.attributeName === 'class') {
+                        if (trackedScreens.includes(m.target.id)) {
+                            screenChanged = true;
+                        }
+                    }
+                });
+
+                if (screenChanged) {
+                    const newState = getVisibleScreens();
+                    const newHash = newState.sort().join('|');
+                    
+                    // If state actually changed, push to Browser History stack
+                    if (newHash !== lastDomState && newState.length > 0) {
+                        currentIndex++;
+                        historyStack.length = currentIndex; // Erase future if navigating away from the past
+                        historyStack.push(newState);
+                        window.history.pushState({ index: currentIndex, visibleIds: newState }, "");
+                        lastDomState = newHash;
+                        updateGlobalNavUI();
+                    }
+                }
+            });
+
+            // Attach observer to UI wrappers
+            trackedScreens.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) observer.observe(el, { attributes: true, attributeFilter: ['class'] });
+            });
+
+            // 3. Handle PopState (Triggers on Physical Back Button / iOS Edge Swipe)
+            window.addEventListener('popstate', (e) => {
+                if (e.state && e.state.visibleIds) {
+                    isRestoringHistory = true;
+                    currentIndex = e.state.index;
+                    restoreDomState(e.state.visibleIds);
+                    lastDomState = e.state.visibleIds.sort().join('|');
+                    updateGlobalNavUI();
+                    
+                    setTimeout(() => { isRestoringHistory = false; }, 100);
+                }
+            });
+
+            // 4. Handle Custom Swipe Gestures safely
+            let touchStartX = 0;
+            let touchEndX = 0;
+            let touchStartY = 0;
+            let touchEndY = 0;
+
+            document.addEventListener('touchstart', e => {
+                touchStartX = e.changedTouches[0].screenX;
+                touchStartY = e.changedTouches[0].screenY;
+            }, {passive: true});
+
+            document.addEventListener('touchend', e => {
+                touchEndX = e.changedTouches[0].screenX;
+                touchEndY = e.changedTouches[0].screenY;
+                handleSwipe();
+            }, {passive: true});
+
+            function handleSwipe() {
+                const xDiff = touchEndX - touchStartX;
+                const yDiff = Math.abs(touchEndY - touchStartY);
+                
+                // Only trigger if horizontal swipe (ignores scrolling)
+                if (yDiff < 50) {
+                    if (xDiff > 80 && currentIndex > 0) {
+                        // Swipe Right -> BACK (Ignores < 50px to let native iOS Safari Edge Swipe handle it)
+                        if (touchStartX > 50) window.history.back();
+                    } else if (xDiff < -80 && currentIndex < historyStack.length - 1) {
+                        // Swipe Left -> NEXT
+                        window.history.forward();
+                    }
+                }
+            }
+        })();
+    </script>
 </body>
 </html>
