@@ -1051,8 +1051,35 @@
                     ← Back
                 </button>
                 <button onclick="updateStepper(4); nextTourneyStep()" class="px-8 py-3 bg-blue-900 text-white font-bold rounded-lg shadow hover:bg-black transition-all active:scale-[0.98] flex items-center gap-2 uppercase tracking-wide text-xs">
-                    <span>Next: Schedule</span>
+                    <span>Next: Continue</span>
                     <span>→</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="tourney-page-groups" class="hidden w-full relative pb-40 animate-slide-up">
+        <div class="max-w-4xl mx-auto px-4 mt-8 space-y-8">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="text-blue-600 font-bold text-lg">08.</span>
+                        <h3 class="text-sm font-black text-gray-800 uppercase tracking-wide">Group Team Allocation</h3>
+                    </div>
+                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Assign all teams</span>
+                </div>
+                <div class="p-6 bg-[#F8F9FA]" id="groups-allocation-container">
+                    </div>
+            </div>
+        </div>
+
+        <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-50">
+            <div class="max-w-4xl mx-auto flex justify-between">
+                <button onclick="document.getElementById('tourney-page-groups').classList.add('hidden'); document.getElementById('tourney-page-3').classList.remove('hidden');" class="px-6 py-3 text-gray-500 font-bold text-xs uppercase hover:text-gray-900">
+                    ← Back
+                </button>
+                <button id="btn-proceed-fixtures" onclick="proceedFromGroupsToFixtures()" class="px-8 py-3 bg-gray-300 text-gray-500 font-bold rounded-lg shadow transition-all flex items-center gap-2 uppercase tracking-wide text-xs cursor-not-allowed" disabled>
+                    <span>Assign all teams</span>
                 </button>
             </div>
         </div>
@@ -1296,7 +1323,6 @@
                 div.innerHTML = `
                     <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center text-xs shadow-sm flex-shrink-0">${i+1}</div>
                     ${inputHTML}
-                    ${groupSelectHTML}
                 `;
                 container.appendChild(div);
             }
@@ -1578,24 +1604,34 @@ window.generateProfessionalSchedule = function(selectedFlow = null) {
     }
 
     else if (selectedFlow === 'GROUPS') {
-        // Simple 2 Group Split
-        const grpA = teams.filter((_,i) => i % 2 === 0);
-        const grpB = teams.filter((_,i) => i % 2 !== 0);
+        const customGroups = window.tournamentGroupAllocation || {};
+        const groupArrays = {};
         
-        // Generate intra-group matches
-        const genGroup = (grp, gName) => {
+        teams.forEach(t => {
+            const gName = customGroups[t] || "A"; // Fallback to A if missing
+            if (!groupArrays[gName]) groupArrays[gName] = [];
+            groupArrays[gName].push(t);
+        });
+        
+        Object.keys(groupArrays).sort().forEach(gName => {
+            const grp = groupArrays[gName];
             for(let i=0; i<grp.length; i++) {
                 for(let j=i+1; j<grp.length; j++) {
                      addRow(`Group ${gName} Match`, grp[i], grp[j]);
                 }
             }
-        };
-        genGroup(grpA, "A");
-        genGroup(grpB, "B");
+        });
         
-        // Crossover Semis
-        addRow('Semi Final 1', "Winner Group A", "Runner Up Group B");
-        addRow('Semi Final 2', "Winner Group B", "Runner Up Group A");
+        const sortedGroups = Object.keys(groupArrays).sort();
+        if (sortedGroups.length >= 2) {
+            const g1 = sortedGroups[0];
+            const g2 = sortedGroups[1];
+            addRow('Semi Final 1', `Winner Group ${g1}`, `Runner Up Group ${g2}`);
+            addRow('Semi Final 2', `Winner Group ${g2}`, `Runner Up Group ${g1}`);
+        } else {
+            addRow('Semi Final 1', "1st Place", "4th Place");
+            addRow('Semi Final 2', "2nd Place", "3rd Place");
+        }
         addRow('Final', "Winner SF1", "Winner SF2");
     }
 };
@@ -5925,20 +5961,192 @@ let tournamentState = {
 // Global variable for pre-generated ID
 let pendingTourneyId = null;
 
+window.prepareFixturesPage = function() {
+    if (window.isCaptainMode) {
+        document.getElementById('schedule-rows').innerHTML = `
+            <div class="flex flex-col items-center justify-center h-[300px] text-center p-6 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50">
+                <div class="text-4xl mb-4">🔗</div>
+                <h3 class="text-lg font-black text-gray-800 uppercase">Schedule Pending</h3>
+                <p class="text-xs text-gray-500 max-w-xs mt-2 mb-4">The match schedule will be generated automatically once all captains have registered their teams.</p>
+                <div class="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg border border-blue-100 text-xs font-bold">
+                    Click "Create Tournament" to generate invite links.
+                </div>
+            </div>
+        `;
+        document.getElementById('btn-create-tourney').innerHTML = `
+            <span class="text-sm drop-shadow-md flex items-center gap-2">Create & Get Links 🔗</span>
+        `;
+    } else {
+        updateScheduleDropdowns();
+        document.getElementById('btn-create-tourney').innerHTML = `
+            <span class="text-sm drop-shadow-md flex items-center gap-2">Start Playing 🚀</span>
+            <span class="text-[9px] text-white font-bold tracking-[0.3em] opacity-90 animate-pulse">✨ Let's Crickerr ✨</span>
+        `;
+    }
+    
+    if (!pendingTourneyId) {
+        const randomPart = Math.random().toString(36).substr(2, 6).toUpperCase();
+        pendingTourneyId = `TX_${randomPart}`;
+    }
+    const viewerUrl = `${window.location.origin}/tournament.html?id=${pendingTourneyId}`;
+    document.getElementById('public-tourney-link').value = viewerUrl;
+};
+
+window.renderGroupAllocationPage = function() {
+    const groupMode = parseInt(document.getElementById('tourney-group-mode').value) || 1;
+    const container = document.getElementById('groups-allocation-container');
+    container.innerHTML = '';
+
+    const selects = document.querySelectorAll('.tourney-team-select');
+    const selectedTeams = [];
+    selects.forEach(s => { if(s.value) selectedTeams.push(s.value); });
+
+    const allGroups = Array.from({length: 26}, (_, i) => String.fromCharCode(65 + i));
+    
+    let gridHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">`;
+    for(let i=0; i<groupMode; i++) {
+        const gChar = allGroups[i];
+        gridHTML += `
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col group-box" data-group="${gChar}">
+                <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
+                    <h3 class="font-black text-gray-800 uppercase tracking-widest text-sm">GROUP ${gChar}</h3>
+                    <span class="text-[10px] font-bold text-gray-500 bg-white border border-gray-200 px-2 py-1 rounded-md shadow-sm group-count-badge">0 Teams</span>
+                </div>
+                <div class="p-3 space-y-2 min-h-[100px] group-list" id="group-list-${gChar}"></div>
+            </div>
+        `;
+    }
+    gridHTML += `</div>`;
+
+    let unassignedHTML = `
+        <div class="mb-6 bg-blue-50 rounded-xl border border-blue-100 p-4">
+            <h3 class="font-black text-blue-900 uppercase tracking-widest text-xs mb-3">Unassigned Teams</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="unassigned-list"></div>
+        </div>
+    `;
+
+    container.innerHTML = unassignedHTML + gridHTML;
+
+    let groupOptions = `<option value="">Assign Group...</option>`;
+    for(let i=0; i<groupMode; i++) {
+        groupOptions += `<option value="${allGroups[i]}">Group ${allGroups[i]}</option>`;
+    }
+
+    const unassignedList = document.getElementById('unassigned-list');
+    
+    selectedTeams.forEach(tName => {
+        let logoSrc = '';
+        if (typeof savedTeamsData !== 'undefined') {
+            const tData = savedTeamsData.find(t => t.name === tName);
+            if (tData && tData.logo) logoSrc = tData.logo;
+        }
+        const logoHTML = logoSrc 
+            ? `<img src="${logoSrc}" class="w-8 h-8 rounded-full border border-gray-200 object-cover bg-white">`
+            : `<div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center text-xs border border-blue-200">${tName.substring(0,2).toUpperCase()}</div>`;
+
+        const card = document.createElement('div');
+        card.className = "team-allocation-card bg-white p-3 rounded-lg border border-gray-200 shadow-sm flex items-center justify-between transition-all";
+        card.dataset.team = tName;
+        
+        card.innerHTML = `
+            <div class="flex items-center gap-3">
+                ${logoHTML}
+                <span class="font-black text-gray-800 text-xs uppercase tracking-wide truncate max-w-[120px]">${tName}</span>
+            </div>
+            <div class="relative w-36 shrink-0">
+                <select class="group-select-dropdown w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 outline-none focus:border-blue-500 uppercase cursor-pointer transition-colors appearance-none" onchange="handleTeamGroupChange(this, '${tName}')">
+                    ${groupOptions}
+                </select>
+                <div class="absolute right-3 top-2.5 pointer-events-none text-gray-400 text-[10px]">▼</div>
+            </div>
+        `;
+        unassignedList.appendChild(card);
+    });
+    
+    updateGroupCounts();
+};
+
+window.handleTeamGroupChange = function(selectEl, teamName) {
+    const card = selectEl.closest('.team-allocation-card');
+    const targetGroup = selectEl.value;
+    
+    if (targetGroup) {
+        document.getElementById(`group-list-${targetGroup}`).appendChild(card);
+    } else {
+        document.getElementById('unassigned-list').appendChild(card);
+    }
+    updateGroupCounts();
+};
+
+window.updateGroupCounts = function() {
+    document.querySelectorAll('.group-box').forEach(box => {
+        const count = box.querySelectorAll('.team-allocation-card').length;
+        box.querySelector('.group-count-badge').innerText = `${count} Teams`;
+    });
+    
+    const unassignedCount = document.getElementById('unassigned-list').querySelectorAll('.team-allocation-card').length;
+    const btn = document.getElementById('btn-proceed-fixtures');
+    if (btn) {
+        if (unassignedCount === 0) {
+            btn.disabled = false;
+            btn.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+            btn.classList.add('bg-blue-900', 'text-white', 'hover:bg-black', 'active:scale-[0.98]');
+            btn.innerHTML = `<span>Proceed to Fixtures</span><span>→</span>`;
+        } else {
+            btn.disabled = true;
+            btn.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+            btn.classList.remove('bg-blue-900', 'text-white', 'hover:bg-black', 'active:scale-[0.98]');
+            btn.innerHTML = `<span>Assign ${unassignedCount} more team(s)</span>`;
+        }
+    }
+};
+
+window.proceedFromGroupsToFixtures = function() {
+    const unassigned = document.querySelectorAll('.group-select-dropdown');
+    let allAssigned = true;
+    unassigned.forEach(sel => { if (!sel.value) allAssigned = false; });
+    
+    if (!allAssigned) {
+        showCustomAlert("Action Required", "Please assign all teams to a group before proceeding.", "red");
+        return;
+    }
+    
+    window.tournamentGroupAllocation = {};
+    document.querySelectorAll('.team-allocation-card').forEach(card => {
+        const tName = card.dataset.team;
+        window.tournamentGroupAllocation[tName] = card.querySelector('.group-select-dropdown').value;
+    });
+
+    document.getElementById('tourney-page-groups').classList.add('hidden');
+    document.getElementById('tourney-page-4').classList.remove('hidden');
+    window.scrollTo(0,0);
+    prepareFixturesPage();
+};
+
+window.goBackFromPage4 = function() {
+    const groupMode = parseInt(document.getElementById('tourney-group-mode').value) || 1;
+    document.getElementById('tourney-page-4').classList.add('hidden');
+    
+    if (groupMode > 1 && !window.isCaptainMode) {
+        document.getElementById('tourney-page-groups').classList.remove('hidden');
+    } else {
+        updateStepper(3); 
+        document.getElementById('tourney-page-3').classList.remove('hidden');
+    }
+};
+
 function nextTourneyStep() {
     const p1 = document.getElementById('tourney-page-1');
     const p2 = document.getElementById('tourney-page-2');
     const p3 = document.getElementById('tourney-page-3');
+    const pGroups = document.getElementById('tourney-page-groups');
     const p4 = document.getElementById('tourney-page-4');
 
     if (!p1.classList.contains('hidden')) {
-        // Step 1: Validation
         const name = document.getElementById('tourney-name').value;
         const organizer = document.getElementById('organizer-name').value;
         const country = document.getElementById('tourney-country').value;
         const startDate = document.getElementById('tourney-start-date').value;
-        
-        // Match Settings Validations (Since they are on Page 1)
         const totalTeams = document.getElementById('tourney-team-count').value;
         const squadSize = document.getElementById('tourney-players').value;
         const maxOvers = document.getElementById('tourney-overs').value;
@@ -5947,32 +6155,23 @@ function nextTourneyStep() {
         if (!organizer) { showCustomAlert("Missing Info", "Please enter an <b>Organizer Name</b>.", "red"); return; }
         if (!country) { showCustomAlert("Missing Info", "Please select a <b>Host Country</b>.", "red"); return; }
         if (!startDate) { showCustomAlert("Missing Info", "Please select a <b>Start Date</b>.", "red"); return; }
-        
         if (!totalTeams) { showCustomAlert("Missing Info", "Please select <b>Total Teams</b>.", "red"); return; }
         if (!squadSize) { showCustomAlert("Missing Info", "Please select <b>Squad Size</b>.", "red"); return; }
         if (!maxOvers) { showCustomAlert("Missing Info", "Please select <b>Max Overs per Innings</b>.", "red"); return; }
 
-        // Move 1 -> 2
         p1.classList.add('hidden');
         p2.classList.remove('hidden');
         window.scrollTo(0,0);
     } 
     else if (!p2.classList.contains('hidden')) {
-        // Step 2: Move 2 -> 3
         p2.classList.add('hidden');
         p3.classList.remove('hidden');
         window.scrollTo(0,0);
     } 
     else if (!p3.classList.contains('hidden')) {
-        // Step 3: Validation (Teams Selection)
         const tCount = document.getElementById('tourney-team-count').value;
-        // Basic check just in case
-        if(!tCount) {
-             showCustomAlert("Missing Info", "Please select the number of teams.", "red");
-             return;
-        }
+        if(!tCount) { showCustomAlert("Missing Info", "Please select the number of teams.", "red"); return; }
         
-        // Check for duplicates
         const selects = document.querySelectorAll('.tourney-team-select');
         const selectedValues = [];
         let hasDupes = false;
@@ -5983,62 +6182,24 @@ function nextTourneyStep() {
             }
         });
 
-        // --- UPDATED VALIDATION FOR CAPTAIN MODE ---
         if (!window.isCaptainMode) {
-            if(selectedValues.length < 2) {
-                 showCustomAlert("Error", "Please select at least 2 teams.", "red");
-                 return;
-            }
-            if(hasDupes) {
-                 showCustomAlert("Error", "Duplicate teams selected.", "red");
-                 return;
-            }
+            if(selectedValues.length < 2) { showCustomAlert("Error", "Please select at least 2 teams.", "red"); return; }
+            if(hasDupes) { showCustomAlert("Error", "Duplicate teams selected.", "red"); return; }
         }
 
-        // Move 3 -> 4
-        p3.classList.add('hidden');
-        p4.classList.remove('hidden');
-        window.scrollTo(0,0);
+        const groupMode = parseInt(document.getElementById('tourney-group-mode').value) || 1;
         
-        // --- IF CAPTAIN MODE: SKIP SCHEDULE ---
-        // If in Captain Mode, we don't show the schedule page normally, 
-        // we repurpose the "Start" button to "Initialize Slots"
-        if (window.isCaptainMode) {
-            document.getElementById('schedule-rows').innerHTML = `
-                <div class="flex flex-col items-center justify-center h-[300px] text-center p-6 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50">
-                    <div class="text-4xl mb-4">🔗</div>
-                    <h3 class="text-lg font-black text-gray-800 uppercase">Schedule Pending</h3>
-                    <p class="text-xs text-gray-500 max-w-xs mt-2 mb-4">The match schedule will be generated automatically once all captains have registered their teams.</p>
-                    <div class="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg border border-blue-100 text-xs font-bold">
-                        Click "Create Tournament" to generate invite links.
-                    </div>
-                </div>
-            `;
-            document.getElementById('btn-create-tourney').innerHTML = `
-                <span class="text-sm drop-shadow-md flex items-center gap-2">Create & Get Links 🔗</span>
-            `;
+        if (groupMode > 1 && !window.isCaptainMode) {
+            p3.classList.add('hidden');
+            pGroups.classList.remove('hidden');
+            window.scrollTo(0,0);
+            renderGroupAllocationPage();
         } else {
-            // Normal Logic
-            updateScheduleDropdowns();
-            document.getElementById('btn-create-tourney').innerHTML = `
-                <span class="text-sm drop-shadow-md flex items-center gap-2">Start Playing 🚀</span>
-                <span class="text-[9px] text-white font-bold tracking-[0.3em] opacity-90 animate-pulse">✨ Let's Crickerr ✨</span>
-            `;
+            p3.classList.add('hidden');
+            p4.classList.remove('hidden');
+            window.scrollTo(0,0);
+            prepareFixturesPage();
         }
-        window.scrollTo(0,0);
-        
-        // Initialize Schedule
-        updateScheduleDropdowns();
-        
-        // --- NEW: GENERATE PUBLIC ID ---
-        if (!pendingTourneyId) {
-            const randomPart = Math.random().toString(36).substr(2, 6).toUpperCase();
-            pendingTourneyId = `TX_${randomPart}`;
-        }
-        
-        // Update the UI Input
-        const viewerUrl = `${window.location.origin}/tournament.html?id=${pendingTourneyId}`;
-        document.getElementById('public-tourney-link').value = viewerUrl;
     }
 }
 
