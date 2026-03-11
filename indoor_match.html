@@ -1144,7 +1144,30 @@
     <div id="tourney-page-4" class="hidden w-full relative pb-40 animate-slide-up">
         <div class="max-w-5xl mx-auto px-4 mt-6 pb-32">
             
-            <div class="w-full mb-8 bg-white border border-gray-200 rounded-xl shadow-sm p-5 animate-slide-up">
+            <div class="w-full flex flex-col items-center justify-center py-12 animate-slide-up delay-100" id="fixture-generation-actions">
+                 <div class="w-24 h-24 bg-gradient-to-tr from-blue-500 to-purple-600 text-white rounded-full flex items-center justify-center text-5xl mb-6 shadow-2xl shadow-blue-500/40 animate-bounce">
+                    🗓️
+                 </div>
+                 <h2 class="text-3xl font-black text-gray-900 uppercase tracking-tight mb-2">Build Schedule</h2>
+                 <p class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-10 text-center">Generate or manually add your tournament fixtures</p>
+                 
+                 <div class="flex flex-col sm:flex-row gap-5 w-full max-w-lg">
+                     <button onclick="openManualScheduleModal('manual')" class="flex-1 py-5 px-6 bg-white text-gray-800 font-black rounded-2xl text-sm uppercase tracking-wider transition-all border-2 border-gray-200 shadow-sm hover:border-blue-500 hover:shadow-xl hover:-translate-y-1 hover:text-blue-600 flex flex-col items-center justify-center gap-3 group">
+                        <div class="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center text-2xl group-hover:bg-blue-50 group-hover:scale-110 transition-all">➕</div>
+                        <span>Manual</span>
+                    </button>
+                    <button onclick="openManualScheduleModal('auto')" class="flex-1 py-5 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black rounded-2xl text-sm uppercase tracking-wider transition-all shadow-lg shadow-blue-600/30 hover:shadow-blue-600/50 hover:-translate-y-1 flex flex-col items-center justify-center gap-3 group">
+                        <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-2xl group-hover:bg-white/30 group-hover:scale-110 transition-all">⚡</div>
+                        <span>Auto Generate</span>
+                    </button>
+                 </div>
+            </div>
+
+            <div class="w-full mb-12">
+                <div id="schedule-rows" class="space-y-3"></div>
+            </div>
+
+            <div class="w-full mb-8 bg-white border border-gray-200 rounded-xl shadow-sm p-5 animate-slide-up delay-200">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h3 class="text-sm font-black text-gray-900 uppercase tracking-wide">Tournament Share Link</h3>
@@ -1164,35 +1187,6 @@
                 </div>
             </div>
 
-            <div class="w-full animate-slide-up delay-200">
-                <div class="bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden mb-8">
-                    <div class="bg-gradient-to-r from-gray-50 to-white px-6 py-5 border-b border-gray-200 flex flex-col md:flex-row items-center justify-between gap-4 relative">
-                        <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-600"></div>
-                        <div>
-                            <h3 class="text-base font-black text-gray-900 uppercase tracking-wider">Match Center</h3>
-                            <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">Drag to Reorder &middot; Tap to Edit</p>
-                        </div>
-                        <div class="flex gap-3 w-full md:w-auto">
-                            <button onclick="openManualScheduleModal()" class="flex-1 md:flex-none px-5 py-2.5 bg-white text-gray-700 font-bold rounded-xl text-xs uppercase tracking-wider hover:bg-gray-50 transition-all border border-gray-200 shadow-sm hover:border-gray-300 hover:shadow flex items-center justify-center gap-2">
-                                <span>➕</span> Manual
-                            </button>
-                            <button onclick="autoGenerateFixtures()" class="flex-1 md:flex-none px-5 py-2.5 bg-blue-600 text-white font-black rounded-xl text-xs uppercase tracking-wider hover:bg-blue-700 transition-all shadow-md shadow-blue-600/20 active:scale-95 flex items-center justify-center gap-2">
-                                <span>⚡</span> Auto Generate
-                            </button>
-                        </div>
-                    </div>
-                    <div class="p-4 md:p-6 bg-[#F8F9FA] min-h-[250px]">
-                        <div id="schedule-rows" class="space-y-3">
-                            <div class="text-center py-16 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl bg-white">
-                                <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center text-2xl mb-3 shadow-inner">📅</div>
-                                <span class="text-gray-400 font-black text-xs uppercase tracking-widest">No fixtures generated yet</span>
-                                <span class="text-gray-400 text-[10px] font-bold mt-1">Click Auto Generate to create schedule</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
         </div>
 
         <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-50">
@@ -1201,12 +1195,54 @@
                     <span>←</span>
                     <span>PREVIOUS</span>
                 </button>
-                <button id="btn-create-tourney" onclick="createProfessionalTournament()" class="animate-gradient-x px-12 py-4 bg-gradient-to-r from-emerald-500 via-green-400 to-teal-500 text-white font-black rounded-xl shadow-[0_0_25px_rgba(16,185,129,0.6)] hover:shadow-[0_0_35px_rgba(16,185,129,0.8)] hover:scale-105 transition-all duration-300 active:scale-95 flex flex-col items-center justify-center gap-1 uppercase tracking-widest border border-white/20">
+                <button id="btn-create-tourney" disabled onclick="createProfessionalTournament()" class="opacity-50 cursor-not-allowed grayscale animate-gradient-x px-12 py-4 bg-gradient-to-r from-emerald-500 via-green-400 to-teal-500 text-white font-black rounded-xl shadow-none transition-all duration-300 flex flex-col items-center justify-center gap-1 uppercase tracking-widest border border-white/20">
                     <span class="text-sm drop-shadow-md flex items-center gap-2">Start Playing 🚀</span>
                     <span class="text-[9px] text-white font-bold tracking-[0.3em] opacity-90 animate-pulse">✨ Let's Crickerr ✨</span>
                 </button>
             </div>
         </div>
+
+        <script>
+            (function() {
+                const targetNode = document.getElementById('schedule-rows');
+                const btn = document.getElementById('btn-create-tourney');
+                
+                const toggleStartButton = () => {
+                    if (!btn) return;
+                    if (window.isCaptainMode) {
+                        btn.disabled = false;
+                        btn.classList.remove('opacity-50', 'cursor-not-allowed', 'grayscale', 'shadow-none');
+                        btn.classList.add('shadow-[0_0_25px_rgba(16,185,129,0.6)]', 'hover:shadow-[0_0_35px_rgba(16,185,129,0.8)]', 'hover:scale-105', 'active:scale-95');
+                    } else {
+                        const hasFixtures = document.getElementById('schedule-rows') && document.getElementById('schedule-rows').children.length > 0;
+                        if (hasFixtures) {
+                            btn.disabled = false;
+                            btn.classList.remove('opacity-50', 'cursor-not-allowed', 'grayscale', 'shadow-none');
+                            btn.classList.add('shadow-[0_0_25px_rgba(16,185,129,0.6)]', 'hover:shadow-[0_0_35px_rgba(16,185,129,0.8)]', 'hover:scale-105', 'active:scale-95');
+                        } else {
+                            btn.disabled = true;
+                            btn.classList.add('opacity-50', 'cursor-not-allowed', 'grayscale', 'shadow-none');
+                            btn.classList.remove('shadow-[0_0_25px_rgba(16,185,129,0.6)]', 'hover:shadow-[0_0_35px_rgba(16,185,129,0.8)]', 'hover:scale-105', 'active:scale-95');
+                        }
+                    }
+                };
+
+                if (targetNode) {
+                    const observer = new MutationObserver(toggleStartButton);
+                    observer.observe(targetNode, { childList: true, subtree: true });
+                }
+
+                // Call initially to ensure disabled state is active
+                toggleStartButton();
+
+                // Override prepareFixturesPage to re-verify state when the view loads
+                const originalPrepare = window.prepareFixturesPage;
+                window.prepareFixturesPage = function() {
+                    if (originalPrepare) originalPrepare();
+                    toggleStartButton();
+                };
+            })();
+        </script>
     </div>
     
     <script>
@@ -1478,9 +1514,28 @@
             if(displayEl) displayEl.innerText = total;
         };
 
-        window.openManualScheduleModal = function() {
+        window.openManualScheduleModal = function(mode = 'manual') {
+            window.scheduleGenerationMode = mode;
+            const titleEl = document.getElementById('schedule-modal-title');
+            const btnEl = document.getElementById('schedule-generate-btn');
+            
+            if (mode === 'auto') {
+                if (titleEl) titleEl.innerText = "AUTO SCHEDULE SETUP";
+                if (btnEl) btnEl.innerText = "AUTO GENERATE FIXTURES";
+            } else {
+                if (titleEl) titleEl.innerText = "MANUAL SCHEDULE SETUP";
+                if (btnEl) btnEl.innerText = "GENERATE MATCH CARDS";
+            }
             openModal('manual-schedule-modal');
             window.updateManualTotal();
+        };
+
+        window.executeScheduleGeneration = function() {
+            if (window.scheduleGenerationMode === 'auto') {
+                autoGenerateFixtures();
+            } else {
+                generateManualSchedule();
+            }
         };
 
         window.generateManualSchedule = function() {
@@ -1996,7 +2051,7 @@ window.generateProfessionalSchedule = function(selectedFlow = null) {
     <div id="manual-schedule-modal" class="modal-overlay fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-[60] flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
         <div class="p-5 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-            <h3 class="text-lg font-black text-gray-800 uppercase tracking-tight">Manual Schedule Setup</h3>
+            <h3 id="schedule-modal-title" class="text-lg font-black text-gray-800 uppercase tracking-tight">Manual Schedule Setup</h3>
             <button onclick="closeModal('manual-schedule-modal')" class="text-gray-400 hover:text-gray-600 font-bold">✕</button>
         </div>
         
@@ -2036,7 +2091,7 @@ window.generateProfessionalSchedule = function(selectedFlow = null) {
                 <span id="manual-total-display" class="font-black text-blue-800 text-lg">...</span>
             </div>
 
-            <button onclick="generateManualSchedule()" class="w-full py-4 bg-blue-600 text-white font-black rounded-xl shadow-lg hover:bg-blue-700 transition-transform active:scale-95 uppercase tracking-widest text-xs mt-4">
+            <button id="schedule-generate-btn" onclick="executeScheduleGeneration()" class="w-full py-4 bg-blue-600 text-white font-black rounded-xl shadow-lg hover:bg-blue-700 transition-transform active:scale-95 uppercase tracking-widest text-xs mt-4">
                 Generate Match Cards
             </button>
         </div>
@@ -6176,7 +6231,7 @@ window.renderGroupAllocationPage = function() {
 
     container.innerHTML = unassignedHTML + gridHTML;
 
-    let groupOptions = `<option value="">Group...</option>`;
+    let groupOptions = `<option value="">Group</option>`;
     for(let i=0; i<groupMode; i++) {
         groupOptions += `<option value="${allGroups[i]}">Group ${allGroups[i]}</option>`;
     }
@@ -6539,27 +6594,23 @@ function backToTournamentSetup() {
 }
 
 function autoGenerateFixtures() {
-    // 1. Get Teams
-    const teams = [];
-    document.querySelectorAll('.tourney-team-select').forEach(sel => {
-        if(sel.value) teams.push(sel.value);
-    });
+        // 1. Get Teams
+        const teams = [];
+        document.querySelectorAll('.tourney-team-select').forEach(sel => {
+            if(sel.value) teams.push(sel.value);
+        });
 
-    if (teams.length < 2) {
-        showCustomAlert("Error", "Need at least 2 teams to generate schedule.", "red");
-        return;
-    }
+        if (teams.length < 2) {
+            showCustomAlert("Error", "Need at least 2 teams to generate schedule.", "red");
+            return;
+        }
 
-    // 2. Ask User for Balance
-    const suggested = teams.length % 2 === 0 ? teams.length - 1 : teams.length;
-    const input = prompt(`How many matches should each team play?\n(Enter ${suggested} for a full Round Robin)`, suggested);
-    if (!input || isNaN(input)) return;
-    const roundsToPlay = parseInt(input);
+        // 2. Get Matches per Team and Knockouts from modal
+        const roundsToPlay = parseInt(document.getElementById('manual-matches-per-team').value) || 1;
+        const semiFinals = parseInt(document.getElementById('manual-semi-finals').value) || 0;
 
-    if(!confirm(`This will generate ${roundsToPlay} rounds of fixtures. Existing schedule will be cleared. Continue?`)) return;
-
-    // 3. Clear Table
-    document.getElementById('schedule-rows').innerHTML = '';
+        // 3. Clear Table
+        document.getElementById('schedule-rows').innerHTML = '';
 
     // 4. Fair Scheduling Algorithm (Circle Method)
     // Ensures equal breaks and correct distribution
@@ -6591,11 +6642,12 @@ function autoGenerateFixtures() {
     }
 
     // 5. Knockout Stages Logic
-    if (teams.length >= 4) {
-        addScheduleRow('Semi Final 1');
-        addScheduleRow('Semi Final 2');
+    for (let i = 1; i <= semiFinals; i++) {
+        addScheduleRow(semiFinals > 1 ? `Semi Final ${i}` : 'Semi Final');
     }
     addScheduleRow('Final');
+    
+    closeModal('manual-schedule-modal');
 }
 
 function addScheduleRow(defaultType = 'League Match', preFill = null) {
@@ -7348,7 +7400,6 @@ function renderFixtures() {
     const order = (typeof TOURNAMENT_ROUNDS !== 'undefined') ? TOURNAMENT_ROUNDS : ["League Match", "Semi Final", "Final"];
     
     // Always ensure these sections exist in the Match Center
-    grouped['Semi Final'] = [];
     grouped['Final'] = [];
 
     // 1. Group Fixtures
