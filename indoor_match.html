@@ -1153,28 +1153,23 @@
             </div>
 
             <div class="w-full animate-slide-up delay-200">
-    <div id="flow-selector-container" class="hidden mb-6 bg-gray-50 border border-blue-200 rounded-xl p-4 animate-pop relative">
-        <div class="flex justify-between items-start mb-4">
-            <div>
-                <h4 class="text-sm font-black text-blue-900 uppercase">Select Tournament Structure</h4>
-                <p class="text-[10px] text-gray-500 font-bold">Based on your team count, choose a format:</p>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8">
+                    <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 flex flex-col md:flex-row items-center justify-between gap-4">
+                        <h3 class="text-sm font-black text-gray-800 uppercase tracking-wide">Match Center</h3>
+                        <div class="flex gap-2 w-full md:w-auto">
+                            <button onclick="openManualScheduleModal()" class="flex-1 md:flex-none px-4 py-2 bg-purple-50 text-purple-700 font-bold rounded-lg text-xs uppercase tracking-wider hover:bg-purple-100 transition-colors border border-purple-100 shadow-sm">Manual Schedule</button>
+                            <button onclick="autoGenerateFixtures()" class="flex-1 md:flex-none px-4 py-2 bg-blue-50 text-blue-700 font-bold rounded-lg text-xs uppercase tracking-wider hover:bg-blue-100 transition-colors border border-blue-100 shadow-sm">Auto Generate</button>
+                        </div>
+                    </div>
+                    <div class="p-6 bg-gray-50 min-h-[200px]">
+                        <div id="schedule-rows" class="space-y-3">
+                            <div class="text-center py-10 text-gray-400 font-bold text-xs uppercase tracking-widest">
+                                No fixtures generated yet. Click above to start.
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <button onclick="document.getElementById('flow-selector-container').classList.add('hidden')" class="text-gray-400 hover:text-red-500 font-bold">✕</button>
-        </div>
-        
-        <div id="flow-options-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            </div>
-    </div>
-
-    <div id="schedule-rows" class="space-y-3 max-h-[60vh] overflow-y-auto pr-2 custom-scroll h-auto mt-4">
-        <div class="flex flex-col items-center justify-center py-12 text-center group">
-            <button onclick="openManualScheduleModal()" class="bg-blue-600 border border-blue-600 text-white px-8 py-4 rounded-xl text-sm font-black uppercase tracking-widest hover:bg-blue-700 shadow-xl transition-transform active:scale-95 flex items-center gap-3 mx-auto">
-                <span class="text-2xl">📅</span>
-                <span>CREATE MATCHES</span>
-            </button>
-        </div>
-    </div>
-</div>
 
         </div>
 
@@ -1444,7 +1439,8 @@
 
         window.updateManualTotal = function() {
             const matchesPerTeam = parseInt(document.getElementById('manual-matches-per-team').value) || 1;
-            const semiFinals = parseInt(document.getElementById('manual-semi-finals').value) || 2;
+            const semiFinalsVal = document.getElementById('manual-semi-finals').value;
+            const semiFinals = parseInt(semiFinalsVal, 10) || 0;
             const finals = 1; // Always 1
             
             // Calculate total league matches based on team count
@@ -1466,7 +1462,8 @@
 
         window.generateManualSchedule = function() {
             const matchesPerTeam = parseInt(document.getElementById('manual-matches-per-team').value) || 1;
-            const semiFinals = parseInt(document.getElementById('manual-semi-finals').value) || 0;
+            const semiFinalsVal = document.getElementById('manual-semi-finals').value;
+            const semiFinals = parseInt(semiFinalsVal, 10) || 0;
             const finals = 1; // Always 1
 
             const teamCountEl = document.getElementById('tourney-team-count');
@@ -1478,7 +1475,7 @@
             const container = document.getElementById('schedule-rows');
             
             // Clear placeholder and any existing matches to provide a beautiful clean slate
-            container.innerHTML = '';
+            if(container) container.innerHTML = '';
             
             // 1. Generate League Matches
             for (let i = 1; i <= leagueMatches; i++) {
@@ -1487,7 +1484,7 @@
             
             // 2. Generate Semi Finals
             for (let i = 1; i <= semiFinals; i++) {
-                addScheduleRow('Semi Final');
+                addScheduleRow(semiFinals > 1 ? `Semi Final ${i}` : 'Semi Final');
             }
             
             // 3. Generate Final
@@ -1738,10 +1735,10 @@ window.generateProfessionalSchedule = function(selectedFlow = null) {
 </div>
 
 <div id="add-match-modal" class="modal-overlay fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-[60] flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
-        <div class="p-5 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-            <h3 class="text-lg font-black text-gray-800 uppercase tracking-tight">Create Fixture</h3>
-            <button onclick="closeModal('add-match-modal')" class="text-gray-400 hover:text-gray-600 font-bold">✕</button>
+    <div id="add-match-modal-card" class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden transition-all duration-300">
+        <div id="add-match-modal-header" class="p-5 border-b border-gray-100 bg-gray-50 flex justify-between items-center transition-colors duration-300">
+            <h3 id="add-match-modal-title" class="text-lg font-black text-gray-800 uppercase tracking-tight">Create Fixture</h3>
+            <button onclick="closeModal('add-match-modal')" class="text-gray-400 hover:text-gray-600 font-bold bg-white/50 rounded-full w-8 h-8 flex items-center justify-center shadow-sm">✕</button>
         </div>
         
         <div class="p-6 space-y-4">
@@ -1758,7 +1755,38 @@ window.generateProfessionalSchedule = function(selectedFlow = null) {
 
             <div>
                 <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Stage / Round Name</label>
-                <input type="text" id="am-stage" placeholder="e.g. League Match 1, Semi Final" class="w-full p-3 border rounded-xl font-bold text-sm outline-none focus:border-purple-500 uppercase">
+                <div class="relative">
+                    <select id="am-stage" onchange="updateMatchModalTheme(this.value)" class="w-full p-3 border rounded-xl font-bold text-sm outline-none focus:border-purple-500 uppercase appearance-none cursor-pointer bg-white">
+                        <optgroup label="League Stages">
+                            <option value="League Match">League Match</option>
+                            <option value="Group Stage">Group Stage</option>
+                            <option value="Super 8">Super 8</option>
+                            <option value="Super 6">Super 6</option>
+                            <option value="Super 4">Super 4</option>
+                        </optgroup>
+                        <optgroup label="Knockouts & Playoffs">
+                            <option value="Pre-Quarter Final">Pre-Quarter Final</option>
+                            <option value="Quarter Final">Quarter Final</option>
+                            <option value="Quarter Final 1">Quarter Final 1</option>
+                            <option value="Quarter Final 2">Quarter Final 2</option>
+                            <option value="Quarter Final 3">Quarter Final 3</option>
+                            <option value="Quarter Final 4">Quarter Final 4</option>
+                            <option value="Eliminator">Eliminator</option>
+                            <option value="Qualifier 1">Qualifier 1</option>
+                            <option value="Qualifier 2">Qualifier 2</option>
+                            <option value="Semi Final">Semi Final</option>
+                            <option value="Semi Final 1">Semi Final 1</option>
+                            <option value="Semi Final 2">Semi Final 2</option>
+                            <option value="Final">Final</option>
+                            <option value="Grand Final">Grand Final</option>
+                        </optgroup>
+                        <optgroup label="Other Matches">
+                            <option value="Warm Up">Warm Up</option>
+                            <option value="Exhibition">Exhibition</option>
+                        </optgroup>
+                    </select>
+                    <div class="absolute right-3 top-3.5 pointer-events-none text-gray-400 text-xs">▼</div>
+                </div>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
@@ -1778,12 +1806,63 @@ window.generateProfessionalSchedule = function(selectedFlow = null) {
                 </div>
             </div>
 
-            <button onclick="saveManualMatch()" class="w-full py-4 bg-gray-900 text-white font-black rounded-xl shadow-lg hover:bg-black transition-transform active:scale-95 uppercase tracking-widest text-xs mt-2">
+            <div id="am-winner-container" class="hidden mt-2 pt-2 border-t border-gray-100">
+                <label class="block text-[10px] font-bold text-blue-500 uppercase mb-1">Manual Winner Selection</label>
+                <select id="am-winner" class="w-full p-3 border rounded-xl font-bold text-sm bg-blue-50 border-blue-200 text-blue-900 outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">No Winner Yet</option>
+                </select>
+            </div>
+
+            <button id="am-save-btn" onclick="saveManualMatch()" class="w-full py-4 bg-gray-900 text-white font-black rounded-xl shadow-lg hover:bg-black transition-all duration-300 active:scale-95 uppercase tracking-widest text-xs mt-2">
                 Save Match
             </button>
         </div>
     </div>
 </div>
+
+<script>
+    function updateMatchModalTheme(stage) {
+        const card = document.getElementById('add-match-modal-card');
+        const header = document.getElementById('add-match-modal-header');
+        const title = document.getElementById('add-match-modal-title');
+        const btn = document.getElementById('am-save-btn');
+        
+        const winContainer = document.getElementById('am-winner-container');
+        if (stage && (stage.includes('Semi Final') || stage.includes('Final'))) {
+            winContainer.classList.remove('hidden');
+        } else {
+            winContainer.classList.add('hidden');
+        }
+
+        // Reset styles
+        card.className = "bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden transition-all duration-500 transform scale-100";
+        header.className = "p-5 border-b border-gray-100 bg-gray-50 flex justify-between items-center transition-colors duration-500";
+        title.className = "text-lg font-black text-gray-800 uppercase tracking-tight transition-colors duration-500";
+        btn.className = "w-full py-4 bg-gray-900 text-white font-black rounded-xl shadow-lg hover:bg-black transition-all duration-300 active:scale-95 uppercase tracking-widest text-xs mt-2";
+        
+        if (stage && stage.includes('Final') && !stage.includes('Semi') && !stage.includes('Quarter')) {
+            card.classList.add('border-2', 'border-yellow-400', 'shadow-[0_0_40px_rgba(250,204,21,0.3)]', 'scale-[1.02]');
+            header.classList.remove('bg-gray-50', 'border-gray-100');
+            header.classList.add('bg-gradient-to-r', 'from-yellow-400', 'via-amber-400', 'to-yellow-500', 'border-yellow-500');
+            title.classList.remove('text-gray-800');
+            title.classList.add('text-white', 'drop-shadow-md');
+            btn.classList.remove('bg-gray-900', 'hover:bg-black');
+            btn.classList.add('bg-gradient-to-r', 'from-yellow-500', 'to-amber-600', 'hover:from-yellow-400', 'hover:to-amber-500', 'animate-pulse');
+            btn.innerHTML = "🏆 SAVE FINAL MATCH 🏆";
+        } else if (stage && stage.includes('Semi Final')) {
+            card.classList.add('border', 'border-blue-300', 'shadow-[0_0_30px_rgba(59,130,246,0.2)]');
+            header.classList.remove('bg-gray-50', 'border-gray-100');
+            header.classList.add('bg-gradient-to-r', 'from-blue-600', 'via-indigo-600', 'to-blue-700', 'border-blue-700');
+            title.classList.remove('text-gray-800');
+            title.classList.add('text-white', 'drop-shadow-sm');
+            btn.classList.remove('bg-gray-900', 'hover:bg-black');
+            btn.classList.add('bg-gradient-to-r', 'from-blue-600', 'to-indigo-700', 'hover:bg-blue-500');
+            btn.innerHTML = "⚔️ SAVE SEMI FINAL ⚔️";
+        } else {
+            btn.innerHTML = "SAVE MATCH";
+        }
+    }
+</script>
 
 <div id="setup-step-2" class="setup-step hidden w-full">
     <button onclick="window.history.back()" class="mb-4 text-xs font-bold text-gray-400 hover:text-gray-600 uppercase tracking-wider">← Back</button>
@@ -1907,8 +1986,12 @@ window.generateProfessionalSchedule = function(selectedFlow = null) {
                 <div>
                     <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Semi Finals</label>
                     <select id="manual-semi-finals" onchange="updateManualTotal()" class="w-full p-3 border rounded-xl font-bold text-sm bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer">
+                        <option value="0">No Semi Finals</option>
                         <option value="1">1</option>
                         <option value="2" selected>2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
                     </select>
                 </div>
                 <div>
@@ -5990,7 +6073,7 @@ function endInnings() {
 const TOURNAMENT_ROUNDS = [
     "League Match", "Super League", "Super 8", "Super 6", "Super 4",
     "Qualifier 1", "Eliminator", "Qualifier 2",
-    "Pre-Quarter Final", "Quarter Final", "Semi Final", "Final",
+    "Pre-Quarter Final", "Quarter Final", "Semi Final", "Semi Final 1", "Semi Final 2", "Final",
     "Gold Final", "Silver Final", "3rd Place Playoff",
     "Warm Up", "Test Match 1", "Test Match 2"
 ];
@@ -6011,21 +6094,10 @@ let pendingTourneyId = null;
 
 window.prepareFixturesPage = function() {
     if (window.isCaptainMode) {
-        document.getElementById('schedule-rows').innerHTML = `
-            <div class="flex flex-col items-center justify-center h-[300px] text-center p-6 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50">
-                <div class="text-4xl mb-4">🔗</div>
-                <h3 class="text-lg font-black text-gray-800 uppercase">Schedule Pending</h3>
-                <p class="text-xs text-gray-500 max-w-xs mt-2 mb-4">The match schedule will be generated automatically once all captains have registered their teams.</p>
-                <div class="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg border border-blue-100 text-xs font-bold">
-                    Click "Create Tournament" to generate invite links.
-                </div>
-            </div>
-        `;
         document.getElementById('btn-create-tourney').innerHTML = `
             <span class="text-sm drop-shadow-md flex items-center gap-2">Create & Get Links 🔗</span>
         `;
     } else {
-        updateScheduleDropdowns();
         document.getElementById('btn-create-tourney').innerHTML = `
             <span class="text-sm drop-shadow-md flex items-center gap-2">Start Playing 🚀</span>
             <span class="text-[9px] text-white font-bold tracking-[0.3em] opacity-90 animate-pulse">✨ Let's Crickerr ✨</span>
@@ -6075,7 +6147,7 @@ window.renderGroupAllocationPage = function() {
 
     container.innerHTML = unassignedHTML + gridHTML;
 
-    let groupOptions = `<option value="">Assign Group...</option>`;
+    let groupOptions = `<option value="">Group...</option>`;
     for(let i=0; i<groupMode; i++) {
         groupOptions += `<option value="${allGroups[i]}">Group ${allGroups[i]}</option>`;
     }
@@ -6572,8 +6644,9 @@ function addScheduleRow(defaultType = 'League Match', preFill = null) {
 
 function updateScheduleDropdowns() {
     const cards = document.getElementById('schedule-rows').querySelectorAll('.sch-card');
-    if(cards.length === 0) addScheduleRow(); 
-    else cards.forEach(card => populateRowDropdowns(card));
+    if (cards.length > 0) {
+        cards.forEach(card => populateRowDropdowns(card));
+    }
 }
 
 function populateRowDropdowns(row, preFill = null) {
@@ -6740,33 +6813,7 @@ function createProfessionalTournament() {
         }
 
         // --- STANDARD FLOW (Existing Code) ---
-        const cards = document.getElementById('schedule-rows').querySelectorAll('.sch-card');
-        const fixtures = [];
-        
-        cards.forEach((card, index) => {
-            const t1 = card.querySelector('.sch-t1').value;
-            const t2 = card.querySelector('.sch-t2').value;
-            const type = card.querySelector('.sch-type').value;
-            const ground = card.querySelector('.sch-ground').value;
-            const time = card.querySelector('.sch-time').value;
-
-            if(t1 && t2) {
-                fixtures.push({
-                    id: `M_${tourneyId}_${Date.now()}_${index}`,
-                    matchNo: index + 1,
-                    t1: t1,
-                    t2: t2,
-                    stage: type,
-                    ground: ground,
-                    time: time.replace("T", " ") || "TBD",
-                    status: 'UPCOMING',
-                    result: null,
-                    statsLog: null
-                });
-            }
-        });
-
-        if(fixtures.length === 0) { showCustomAlert("Error", "Schedule at least one match.", "red"); btn.disabled = false; btn.innerHTML = originalText; return; }
+        const fixtures = []; // Start with empty fixtures, user adds them in Match Center
 
         const teamsMap = [];
         const usedNames = new Set();
@@ -7056,7 +7103,9 @@ function quickCreateMatch() {
         stage: "League Match", // Default column
         status: 'UPCOMING',
         result: null,
-        overs: tournamentState.data.rules.overs || 16
+        overs: tournamentState.data.rules.overs || 16,
+        winner: null,
+        dependsOn: null
     };
 
     if (!tournamentState.data.fixtures) tournamentState.data.fixtures = [];
@@ -7091,11 +7140,65 @@ function openEditMatchModal(matchId) {
     // Fill Data
     selA.value = fixture.t1 !== "TBD" ? fixture.t1 : "";
     selB.value = fixture.t2 !== "TBD" ? fixture.t2 : "";
-    document.getElementById('am-stage').value = fixture.stage;
+    
+    const stageSelect = document.getElementById('am-stage');
+    let optionExists = Array.from(stageSelect.options).some(opt => opt.value === fixture.stage);
+    if (!optionExists) {
+        const customOpt = document.createElement('option');
+        customOpt.value = fixture.stage;
+        customOpt.textContent = fixture.stage;
+        stageSelect.appendChild(customOpt);
+    }
+    stageSelect.value = fixture.stage;
+    
     document.getElementById('am-overs').value = fixture.overs;
     document.getElementById('am-group').value = fixture.group || "";
 
+    if (typeof updateMatchModalTheme === 'function') {
+        updateMatchModalTheme(fixture.stage);
+    }
+
+    // Knockout Logic (Winner & Lock)
+    const winContainer = document.getElementById('am-winner-container');
+    const winSelect = document.getElementById('am-winner');
+    
+    if (fixture.stage.includes('Semi Final') || fixture.stage === 'Final') {
+        winContainer.classList.remove('hidden');
+        winSelect.innerHTML = '<option value="">No Winner Yet</option>';
+        if (fixture.t1 && fixture.t1 !== "TBD" && !fixture.t1.includes("Winner")) winSelect.innerHTML += `<option value="${fixture.t1}">${fixture.t1}</option>`;
+        if (fixture.t2 && fixture.t2 !== "TBD" && !fixture.t2.includes("Winner")) winSelect.innerHTML += `<option value="${fixture.t2}">${fixture.t2}</option>`;
+        winSelect.value = fixture.winner || "";
+    } else {
+        winContainer.classList.add('hidden');
+    }
+
+    if (fixture.stage === 'Final' && fixture.dependsOn) {
+        selA.disabled = true;
+        selB.disabled = true;
+        selA.classList.add('bg-gray-100', 'text-gray-500');
+        selB.classList.add('bg-gray-100', 'text-gray-500');
+    } else {
+        selA.disabled = false;
+        selB.disabled = false;
+        selA.classList.remove('bg-gray-100', 'text-gray-500');
+        selB.classList.remove('bg-gray-100', 'text-gray-500');
+    }
+
     openModal('add-match-modal');
+}
+
+function updateFinalParticipants() {
+    const fixtures = tournamentState.data.fixtures;
+    const finalMatch = fixtures.find(f => f.stage === 'Final');
+    if (!finalMatch || !finalMatch.dependsOn) return;
+
+    const sf1 = fixtures.find(f => f.id === finalMatch.dependsOn.match1);
+    const sf2 = fixtures.find(f => f.id === finalMatch.dependsOn.match2);
+
+    if (sf1 && sf2) {
+        finalMatch.t1 = sf1.winner || "Winner SF1";
+        finalMatch.t2 = sf2.winner || "Winner SF2";
+    }
 }
 
 // 3. Save Match (Handles both Create & Update logic)
@@ -7105,6 +7208,7 @@ function saveManualMatch() {
     const stage = document.getElementById('am-stage').value || "League Match";
     const group = document.getElementById('am-group').value;
     const overs = document.getElementById('am-overs').value;
+    const winner = document.getElementById('am-winner') ? document.getElementById('am-winner').value : null;
 
     if (!tA || !tB || tA === tB) {
         alert("Please select two different teams.");
@@ -7115,14 +7219,27 @@ function saveManualMatch() {
         // UPDATE EXISTING
         const f = tournamentState.data.fixtures.find(x => x.id === editingMatchId);
         if(f) {
-            f.t1 = tA; f.t2 = tB; f.stage = stage; f.group = group; f.overs = parseInt(overs);
+            if (f.stage !== 'Final' || !f.dependsOn) {
+                f.t1 = tA; f.t2 = tB; 
+            }
+            f.stage = stage; f.group = group; f.overs = parseInt(overs);
+            
+            if (winner !== null && f.winner !== winner) {
+                f.winner = winner;
+                if (winner) {
+                    f.status = 'COMPLETED';
+                    f.result = `${winner} won`;
+                } else {
+                    f.status = 'UPCOMING';
+                    f.result = null;
+                }
+                updateFinalParticipants();
+            }
         }
         editingMatchId = null;
     } else {
         // CREATE NEW (Fallback)
         quickCreateMatch(); 
-        // Note: quickCreate makes a TBD match, we'd need to edit it immediately, 
-        // but since we use Quick Create button now, this block is rarely hit directly.
     }
 
     saveTournamentData();
@@ -7144,7 +7261,10 @@ function openAddMatchModal() {
     // Clear inputs
     document.getElementById('am-team-a').value = "";
     document.getElementById('am-team-b').value = "";
-    document.getElementById('am-stage').value = "";
+    document.getElementById('am-stage').value = "League Match";
+    if (typeof updateMatchModalTheme === 'function') {
+        updateMatchModalTheme("League Match");
+    }
     openModal('add-match-modal');
 }
 
@@ -7155,19 +7275,26 @@ function renderFixtures() {
     board.innerHTML = '';
 
     const fixtures = tournamentState.data.fixtures || [];
-    if(fixtures.length === 0) {
-        board.innerHTML = '<div class="text-center text-gray-400 font-bold p-10 flex flex-col items-center gap-2"><span class="text-4xl">📅</span><span>No matches scheduled</span></div>';
-        return;
-    }
 
     const grouped = {};
     const order = (typeof TOURNAMENT_ROUNDS !== 'undefined') ? TOURNAMENT_ROUNDS : ["League Match", "Semi Final", "Final"];
     
+    // Always ensure these sections exist in the Match Center
+    grouped['Semi Final'] = [];
+    grouped['Final'] = [];
+
     // 1. Group Fixtures
     fixtures.sort((a,b) => (a.matchNo || 999) - (b.matchNo || 999));
     fixtures.forEach(f => {
-        if(!grouped[f.stage]) grouped[f.stage] = [];
-        grouped[f.stage].push(f);
+        let stageName = f.stage;
+        
+        // Unify Semi Finals into a single section for a cleaner look
+        if (stageName.includes('Semi Final')) {
+            stageName = 'Semi Final';
+        }
+        
+        if(!grouped[stageName]) grouped[stageName] = [];
+        grouped[stageName].push(f);
     });
 
     // 2. Sort Stages Robustly
@@ -7215,6 +7342,16 @@ function renderFixtures() {
         `;
         
         const container = stageGroup.querySelector('div[id^="group-"]');
+
+        if (grouped[stage].length === 0) {
+            const emptyState = document.createElement('div');
+            emptyState.className = "bg-gray-50 border-2 border-dashed border-gray-200 p-8 rounded-2xl flex flex-col items-center justify-center text-center col-span-full h-full";
+            emptyState.innerHTML = `
+                <span class="text-2xl mb-2 grayscale opacity-50">🏆</span>
+                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">To Be Decided</span>
+            `;
+            container.appendChild(emptyState);
+        }
 
         grouped[stage].forEach(f => {
             const isPlaceholder = (name) => !name || name === 'TBD' || name.includes('Winner') || name.includes('Place') || name.includes('Qualifier');
@@ -7604,6 +7741,7 @@ function updateTournamentStatsAfterMatch() {
     // 5. Trigger Recalculations
     recalculateStandings();
     autoFillKnockouts(fixture);
+    if (typeof updateFinalParticipants === 'function') updateFinalParticipants();
     recalculatePlayerStats();
 
     // 6. Save
@@ -7667,7 +7805,7 @@ function autoFillKnockouts(completedFixture) {
     const fixtures = tournamentState.data.fixtures;
     
     // 1. Check if League Stage is COMPLETE
-    // We only assign league positions (1st, 2nd) when the table is final to prevent changing opponents.
+    // We only assign league positions when the table is final to prevent changing opponents.
     const leagueMatches = fixtures.filter(f => f.stage === 'League Match' || f.stage.includes('Group'));
     const isLeagueComplete = leagueMatches.length > 0 && leagueMatches.every(f => f.status === 'COMPLETED');
 
@@ -7679,22 +7817,61 @@ function autoFillKnockouts(completedFixture) {
 
     // Map League Positions ONLY if League is Complete (or pure knockout)
     if (isLeagueComplete || leagueMatches.length === 0) {
-        if(standings[0]) { 
-            map["1st Place"] = standings[0].name; 
-            map["1st"] = standings[0].name; 
-            map["Winner Group A"] = standings[0].name; 
-            map["Qualifier 1"] = standings[0].name; 
-            map["Top Ranked 1"] = standings[0].name; 
+        
+        // --- Detect Groups dynamically from League Fixtures ---
+        const groupTeams = {};
+        let hasGroups = false;
+        
+        leagueMatches.forEach(f => {
+            const match = f.stage.match(/Group ([A-Z])/i);
+            if (match) {
+                hasGroups = true;
+                const g = match[1].toUpperCase();
+                if (!groupTeams[g]) groupTeams[g] = new Set();
+                groupTeams[g].add(f.t1);
+                groupTeams[g].add(f.t2);
+            }
+        });
+
+        if (hasGroups) {
+            // Group-based resolution
+            const groupKeys = Object.keys(groupTeams).sort();
+            groupKeys.forEach(g => {
+                // Filter standings for just this group's teams
+                const gStandings = standings.filter(s => groupTeams[g].has(s.name));
+                
+                if (gStandings[0]) {
+                    map[`Winner Group ${g}`] = gStandings[0].name;
+                    map[`1st Group ${g}`] = gStandings[0].name;
+                }
+                if (gStandings[1]) {
+                    map[`Runner Up Group ${g}`] = gStandings[1].name;
+                    map[`2nd Group ${g}`] = gStandings[1].name;
+                }
+            });
+            
+            // Fallbacks for overall (just in case it's needed)
+            if(standings[0]) { map["1st Place"] = standings[0].name; map["1st"] = standings[0].name; }
+            if(standings[1]) { map["2nd Place"] = standings[1].name; map["2nd"] = standings[1].name; }
+        } else {
+            // Standard Single League resolution
+            if(standings[0]) { 
+                map["1st Place"] = standings[0].name; 
+                map["1st"] = standings[0].name; 
+                map["Winner Group A"] = standings[0].name; // Legacy support
+                map["Qualifier 1"] = standings[0].name; 
+                map["Top Ranked 1"] = standings[0].name; 
+            }
+            if(standings[1]) { 
+                map["2nd Place"] = standings[1].name; 
+                map["2nd"] = standings[1].name; 
+                map["Winner Group B"] = standings[1].name; // Legacy support
+                map["Qualifier 2"] = standings[1].name; 
+                map["Top Ranked 2"] = standings[1].name; 
+            }
+            if(standings[2]) { map["3rd Place"] = standings[2].name; map["3rd"] = standings[2].name; map["Runner Up Group A"] = standings[2].name; }
+            if(standings[3]) { map["4th Place"] = standings[3].name; map["4th"] = standings[3].name; map["Runner Up Group B"] = standings[3].name; }
         }
-        if(standings[1]) { 
-            map["2nd Place"] = standings[1].name; 
-            map["2nd"] = standings[1].name; 
-            map["Winner Group B"] = standings[1].name; 
-            map["Qualifier 2"] = standings[1].name; 
-            map["Top Ranked 2"] = standings[1].name; 
-        }
-        if(standings[2]) { map["3rd Place"] = standings[2].name; map["3rd"] = standings[2].name; }
-        if(standings[3]) { map["4th Place"] = standings[3].name; map["4th"] = standings[3].name; }
     }
 
     // Knockout Mappings (Winners of previous stages) - Always Valid
