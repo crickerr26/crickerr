@@ -629,36 +629,36 @@
         .step-active-line { background-color: #1e3a8a !important; width: 100% !important; }
     </style>
 
-    <div class="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
-        <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-            <button onclick="window.history.back()" class="group flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors px-2 py-1 rounded hover:bg-gray-100">
+    <div class="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm box-border">
+        <div class="max-w-5xl mx-auto px-2 sm:px-4 py-3 sm:py-4 flex items-center justify-between">
+            <button onclick="window.history.back()" class="group flex items-center gap-1 sm:gap-2 text-gray-500 hover:text-gray-900 transition-colors px-1 sm:px-2 py-1 rounded hover:bg-gray-100 shrink-0">
                 <span class="text-lg">←</span>
-                <span class="text-xs font-bold uppercase tracking-wider">Back</span>
+                <span class="text-[10px] sm:text-xs font-bold uppercase tracking-wider hidden sm:inline">Back</span>
             </button>
             
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-1 sm:gap-2">
                  <div class="flex items-center gap-1">
-                    <div id="wiz-dot-1" class="w-6 h-6 rounded-full bg-blue-900 text-white text-[10px] font-bold flex items-center justify-center transition-all duration-300">1</div>
-                    <div class="w-8 h-0.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div id="wiz-dot-1" class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-blue-900 text-white text-[9px] sm:text-[10px] font-bold flex items-center justify-center transition-all duration-300 shrink-0">1</div>
+                    <div class="w-4 sm:w-8 h-0.5 bg-gray-200 rounded-full overflow-hidden shrink-0">
                         <div id="wiz-line-1" class="h-full bg-gray-200 w-0 transition-all duration-500"></div>
                     </div>
                  </div>
                  <div class="flex items-center gap-1">
-                    <div id="wiz-dot-2" class="w-6 h-6 rounded-full bg-gray-200 text-gray-400 text-[10px] font-bold flex items-center justify-center transition-all duration-300">2</div>
-                    <div class="w-8 h-0.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div id="wiz-dot-2" class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gray-200 text-gray-400 text-[9px] sm:text-[10px] font-bold flex items-center justify-center transition-all duration-300 shrink-0">2</div>
+                    <div class="w-4 sm:w-8 h-0.5 bg-gray-200 rounded-full overflow-hidden shrink-0">
                         <div id="wiz-line-2" class="h-full bg-gray-200 w-0 transition-all duration-500"></div>
                     </div>
                  </div>
                  <div class="flex items-center gap-1">
-                    <div id="wiz-dot-3" class="w-6 h-6 rounded-full bg-gray-200 text-gray-400 text-[10px] font-bold flex items-center justify-center transition-all duration-300">3</div>
-                    <div class="w-8 h-0.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div id="wiz-dot-3" class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gray-200 text-gray-400 text-[9px] sm:text-[10px] font-bold flex items-center justify-center transition-all duration-300 shrink-0">3</div>
+                    <div class="w-4 sm:w-8 h-0.5 bg-gray-200 rounded-full overflow-hidden shrink-0">
                         <div id="wiz-line-3" class="h-full bg-gray-200 w-0 transition-all duration-500"></div>
                     </div>
                  </div>
-                 <div id="wiz-dot-4" class="w-6 h-6 rounded-full bg-gray-200 text-gray-400 text-[10px] font-bold flex items-center justify-center transition-all duration-300">4</div>
+                 <div id="wiz-dot-4" class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gray-200 text-gray-400 text-[9px] sm:text-[10px] font-bold flex items-center justify-center transition-all duration-300 shrink-0">4</div>
             </div>
             
-            <div class="w-20 text-right">
+            <div class="w-auto sm:w-20 text-right hidden sm:block shrink-0">
                 <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">SETUP</span>
             </div>
         </div>
@@ -1102,17 +1102,17 @@
         </div>
     </div>
 
-    <div id="tourney-page-groups" class="hidden w-full relative pb-40 animate-slide-up">
-        <div class="max-w-4xl mx-auto px-4 mt-8 space-y-8">
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+    <div id="tourney-page-groups" class="hidden w-full relative pb-40 animate-slide-up box-border">
+        <div class="max-w-4xl mx-auto px-2 sm:px-4 mt-4 sm:mt-8 space-y-8 box-border">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden box-border">
+                <div class="bg-gray-50 px-4 sm:px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 box-border">
                     <div class="flex items-center gap-2">
                         <span class="text-blue-600 font-bold text-lg">08.</span>
                         <h3 class="text-sm font-black text-gray-800 uppercase tracking-wide">Group Team Allocation</h3>
                     </div>
                     <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Assign all teams</span>
                 </div>
-                <div class="p-6 bg-[#F8F9FA]" id="groups-allocation-container">
+                <div class="p-3 sm:p-6 bg-[#F8F9FA] box-border" id="groups-allocation-container">
                     </div>
             </div>
         </div>
@@ -6067,9 +6067,9 @@ window.renderGroupAllocationPage = function() {
     gridHTML += `</div>`;
 
     let unassignedHTML = `
-        <div class="mb-6 bg-blue-50 rounded-xl border border-blue-100 p-4">
+        <div class="mb-6 bg-blue-50 rounded-xl border border-blue-100 p-3 sm:p-4 box-border">
             <h3 class="font-black text-blue-900 uppercase tracking-widest text-xs mb-3">Unassigned Teams</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="unassigned-list"></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 box-border" id="unassigned-list"></div>
         </div>
     `;
 
@@ -6093,19 +6093,19 @@ window.renderGroupAllocationPage = function() {
             : `<div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center text-xs border border-blue-200">${tName.substring(0,2).toUpperCase()}</div>`;
 
         const card = document.createElement('div');
-        card.className = "team-allocation-card bg-white p-3 rounded-lg border border-gray-200 shadow-sm flex items-center justify-between transition-all";
+        card.className = "team-allocation-card bg-white p-3 sm:p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 transition-all box-border";
         card.dataset.team = tName;
         
         card.innerHTML = `
-            <div class="flex items-center gap-3">
-                ${logoHTML}
-                <span class="font-black text-gray-800 text-xs uppercase tracking-wide truncate max-w-[120px]">${tName}</span>
+            <div class="flex items-center gap-3 w-full sm:w-auto box-border">
+                <div class="shrink-0 flex items-center">${logoHTML}</div>
+                <span class="font-black text-gray-800 text-xs sm:text-sm uppercase tracking-wide whitespace-normal break-words">${tName}</span>
             </div>
-            <div class="relative w-36 shrink-0">
-                <select class="group-select-dropdown w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 outline-none focus:border-blue-500 uppercase cursor-pointer transition-colors appearance-none" onchange="handleTeamGroupChange(this, '${tName}')">
+            <div class="relative w-full sm:w-48 shrink-0 box-border">
+                <select class="group-select-dropdown w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-3 sm:py-2 text-xs font-bold text-gray-700 outline-none focus:border-blue-500 uppercase cursor-pointer transition-colors appearance-none" onchange="handleTeamGroupChange(this, '${tName}')">
                     ${groupOptions}
                 </select>
-                <div class="absolute right-3 top-2.5 pointer-events-none text-gray-400 text-[10px]">▼</div>
+                <div class="absolute right-3 top-3.5 sm:top-2.5 pointer-events-none text-gray-400 text-[10px]">▼</div>
             </div>
         `;
         unassignedList.appendChild(card);
