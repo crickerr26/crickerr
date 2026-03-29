@@ -371,7 +371,7 @@
 /* --- BROADCAST WATERMARK LOGO --- */
 #broadcast-watermark {
     position: absolute;
-    bottom: 110px; /* Positioned just above the main scoreboard */
+    bottom: 150px; /* Adjusted to sit cleanly above the main scoreboard */
     right: 20px;   /* Aligned with the right edge */
     width: 85px;   /* Professional medium size */
     height: auto;
@@ -1203,10 +1203,15 @@ function goLiveOnDB(matchId, peerId) {
 
             // 5. Trigger Audio & Animations (4, 6, OUT)
             if (data.lastAction && data.lastAction.id !== lastActionId) {
+                const isInitialLoad = (lastActionId === null);
                 lastActionId = data.lastAction.id;
-                triggerAudio(data.lastAction.type);
-                if (['4', '6', 'W'].includes(data.lastAction.type)) {
-                    setTimeout(() => triggerReplay(data.lastAction.type), 4000);
+                
+                // Only trigger the animation if this is a genuinely NEW action (not page load)
+                if (!isInitialLoad) {
+                    triggerAudio(data.lastAction.type);
+                    if (['4', '6', 'W'].includes(data.lastAction.type)) {
+                        setTimeout(() => triggerReplay(data.lastAction.type), 4000);
+                    }
                 }
             }
         }
