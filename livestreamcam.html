@@ -296,6 +296,77 @@
     100% { transform: scale(4) translateZ(2500px); opacity: 0; }
 }
 .active-boom { display: block !important; animation: iplBoomAnim 3.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+
+/* --- CINEMATIC MATCH INTRO BANNER --- */
+#match-intro-overlay {
+    position: absolute; inset: 0; pointer-events: none; z-index: 850;
+    display: none; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.6s ease;
+}
+.intro-banner-container {
+    position: relative; overflow: hidden;
+    width: 85%; max-width: 1400px; /* ENLARGED width */
+    background: linear-gradient(135deg, rgba(5, 10, 25, 0.98) 0%, rgba(15, 30, 65, 0.95) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 35px 70px rgba(0,0,0,0.9), 0 0 60px rgba(56, 189, 248, 0.2);
+    border-radius: 24px;
+    padding: 60px 80px; /* ENLARGED padding */
+    display: flex; flex-direction: column; align-items: center;
+    transform: translateY(50px) scale(0.9);
+    transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+    backdrop-filter: blur(25px);
+}
+
+/* Light Shimmer Effect */
+.intro-banner-container::after {
+    content: ""; position: absolute; top: 0; left: -150%; width: 50%; height: 100%;
+    background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0) 100%);
+    transform: skewX(-25deg); animation: introShimmer 3.5s infinite 1s; pointer-events: none;
+}
+@keyframes introShimmer { 0% { left: -150%; } 100% { left: 250%; } }
+
+.intro-active { opacity: 1 !important; }
+.intro-active .intro-banner-container { transform: translateY(0) scale(1); }
+.intro-out { opacity: 0 !important; }
+/* Smooth fade-out and slide down */
+.intro-out .intro-banner-container { transform: translateY(40px) scale(0.95); } 
+
+.intro-header-badge {
+    background: rgba(220, 38, 38, 0.9); border: 1px solid #ef4444; color: white;
+    font-family: 'Roboto', sans-serif; font-weight: 700; letter-spacing: 3px;
+    padding: 8px 30px; border-radius: 50px; font-size: 16px; margin-bottom: 40px; /* ENLARGED */
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.5); text-transform: uppercase;
+    animation: badgePulse 2s infinite;
+}
+@keyframes badgePulse { 0% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.3); } 50% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.7); } 100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.3); } }
+
+.intro-teams { display: flex; align-items: center; justify-content: center; gap: 60px; width: 100%; }
+.intro-team { display: flex; flex-direction: column; align-items: center; gap: 25px; flex: 1; min-width: 0; } /* Vertically stacked logo & name */
+.intro-team img { 
+    width: 170px; height: 170px; /* ENLARGED significantly */
+    border-radius: 50%; border: 3px solid rgba(255,255,255,0.9); 
+    box-shadow: 0 0 30px rgba(255,255,255,0.2), inset 0 0 20px rgba(0,0,0,0.5); 
+    background: rgba(0,0,0,0.4); object-fit: contain; padding: 10px; 
+    animation: logoFloat 4s ease-in-out infinite;
+}
+@keyframes logoFloat { 0% { transform: translateY(0px); box-shadow: 0 0 20px rgba(255,255,255,0.2); } 50% { transform: translateY(-12px); box-shadow: 0 15px 35px rgba(255,255,255,0.4); } 100% { transform: translateY(0px); box-shadow: 0 0 20px rgba(255,255,255,0.2); } }
+
+.intro-team-name { 
+    font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 48px; /* ENLARGED */
+    color: white; text-shadow: 0 6px 15px rgba(0,0,0,0.9); 
+    text-transform: uppercase; /* ENFORCED UPPERCASE */
+    white-space: nowrap; /* ENFORCED ONE LINE */
+    letter-spacing: 1px; text-align: center;
+}
+.intro-vs { 
+    font-family: 'Montserrat', sans-serif; font-size: 38px; font-style: italic; font-weight: 900; 
+    color: #fbbf24; text-shadow: 0 4px 15px rgba(251, 191, 36, 0.5); padding: 0 25px; 
+    animation: vsPop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.3s backwards;
+}
+@keyframes vsPop { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+.intro-divider { width: 85%; height: 2px; background: linear-gradient(90deg, transparent, rgba(251,191,36,0.8), transparent); margin: 40px 0 30px 0; }
+.intro-info { font-family: 'Roboto', sans-serif; font-size: 22px; font-weight: 500; color: #cbd5e1; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 3px 6px rgba(0,0,0,0.8); }
     </style>
 </head>
 <body>
@@ -341,6 +412,25 @@
         <span class="layer-gold-base">SIX</span>
     </div>
 </div>
+
+            <div id="match-intro-overlay">
+                <div class="intro-banner-container">
+                    <div class="intro-header-badge">MATCH STARTING</div>
+                    <div class="intro-teams">
+                        <div class="intro-team">
+                            <img id="intro-t1-logo" src="">
+                            <span class="intro-team-name" id="intro-t1-name">TEAM 1</span>
+                        </div>
+                        <div class="intro-vs">VS</div>
+                        <div class="intro-team">
+                            <img id="intro-t2-logo" src="">
+                            <span class="intro-team-name" id="intro-t2-name">TEAM 2</span>
+                        </div>
+                    </div>
+                    <div class="intro-divider"></div>
+                    <div class="intro-info" id="intro-match-info">MATCH TYPE – LOCATION – DATE</div>
+                </div>
+            </div>
 
             <div id="quality-badge" class="hud-item" onclick="toggleQualityMenu()">1080p</div>
             <div id="quality-menu" class="hud-item">
@@ -402,6 +492,8 @@
 
         // --- GLOBAL STATE ---
         let match = { t1: "HOME", t2: "AWAY", score: 0, wickets: 0, overs: 0, balls: 0, striker: { name: "", runs: 0, balls: 0 }, nonStriker: { name: "", runs: 0, balls: 0 }, bowler: { name: "", wkts: 0, runs: 0, balls: 0 }, currentOver: [], target: 0, totalOvers: 20, matchStatus: "", winner: "", margin: "", pom: null, showDismissalCard: false, showSummaryOverlay: false, desiredOverlay: null };
+        let introPlayed = false; // Flag to ensure banner shows once
+        let isScoreboardHidden = false; // Flag to hide scoreboard during intro
         let team1Logo = null, team2Logo = null;
         let t1CapImg = null, t2CapImg = null; 
         let lastActionId = null, animType = null, animTime = 0;
@@ -1084,6 +1176,12 @@ function goLiveOnDB(matchId, peerId) {
                 t2CapImg = new Image(); t2CapImg.crossOrigin = "anonymous"; t2CapImg.src = data.t2CaptainImg;
             }
 
+            // --- TRIGGER MATCH INTRO ON FIRST LOAD ---
+            if (!introPlayed && match.t1 && match.t2 && match.t1 !== "HOME") {
+                introPlayed = true;
+                setTimeout(triggerMatchIntro, 1500); // Wait slightly for logos to initialize
+            }
+
             // 5. Trigger Audio & Animations (4, 6, OUT)
             if (data.lastAction && data.lastAction.id !== lastActionId) {
                 lastActionId = data.lastAction.id;
@@ -1095,6 +1193,78 @@ function goLiveOnDB(matchId, peerId) {
         }
     });
 }
+
+        function formatIntroTeamName(name) { 
+            if (!name) return "TEAM"; 
+            let formatted = String(name); 
+            // Replaces instances of CRICKET CLUB / CC with "C.C" while keeping original casing
+            formatted = formatted.replace(/\bCRICKET CLUB\b/gi, "C.C").replace(/\bCRICKET\b/gi, "C.C").replace(/\bCC\b/gi, "C.C"); 
+            return formatted; 
+        }
+
+        function showScoreboard() { isScoreboardHidden = false; }
+        function hideScoreboard() { isScoreboardHidden = true; }
+
+        function triggerMatchIntro() {
+            const overlay = document.getElementById('match-intro-overlay');
+            if (!overlay) return;
+
+            hideScoreboard(); // Hide canvas scorebar entirely
+
+            // Apply Exact Team Names (No forced uppercase, respects DB casing exactly)
+            document.getElementById('intro-t1-name').innerText = formatIntroTeamName(match.t1);
+            document.getElementById('intro-t2-name').innerText = formatIntroTeamName(match.t2);
+            
+            // Apply Logos cleanly
+            const l1 = document.getElementById('intro-t1-logo');
+            if (team1Logo && team1Logo.src) { l1.src = team1Logo.src; l1.style.display = 'block'; }
+            else { l1.style.display = 'none'; }
+            
+            const l2 = document.getElementById('intro-t2-logo');
+            if (team2Logo && team2Logo.src) { l2.src = team2Logo.src; l2.style.display = 'block'; }
+            else { l2.style.display = 'none'; }
+
+            // Format Match Type and Location Data
+            const matchType = match.matchType ? match.matchType : "Friendly Match";
+            const venue = match.venue ? match.venue : "Toronto";
+            let dateStr = "Today";
+            
+            if (match.matchDate) {
+                const d = new Date(match.matchDate);
+                dateStr = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+            } else {
+                const d = new Date();
+                dateStr = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+            }
+            document.getElementById('intro-match-info').innerText = `${matchType} – ${venue} – ${dateStr}`;
+
+            // Play swoosh/stinger sound
+            playTransitionSound();
+            
+            // Animation Sequence
+            overlay.style.display = 'flex';
+            setTimeout(() => {
+                overlay.classList.add('intro-active');
+            }, 50);
+
+            // Remove automatically after 5 seconds
+            setTimeout(() => {
+                hideMatchIntro();
+            }, 5000);
+        }
+
+        function hideMatchIntro() {
+            const overlay = document.getElementById('match-intro-overlay');
+            if (!overlay) return;
+            
+            overlay.classList.remove('intro-active');
+            overlay.classList.add('intro-out');
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                overlay.classList.remove('intro-out');
+                showScoreboard(); // Bring scoreboard back smoothly
+            }, 800);
+        }
 
         function triggerAudio(type) {
             triggerAnim(type); 
@@ -1265,6 +1435,9 @@ function goLiveOnDB(matchId, peerId) {
         function drawLiveGraphics(w, h) {
             updateTransitionState(match.desiredOverlay);
             const c = ctx;
+
+            // NEW: Hide entirely if intro banner is showing
+            if (isScoreboardHidden) return; 
             
             // CHECK IF DISMISSAL IS ACTIVE
             const isDismissalActive = (match.showDismissalCard === true && match.dismissalData && dismissalAnimState.active);
@@ -2216,33 +2389,53 @@ function goLiveOnDB(matchId, peerId) {
             c.font = `500 ${cardH * 0.14}px 'Roboto'`; // Smaller
             c.fillText(niceOut, textX, yHow);
 
-            // 9. SCORE BOX (Fixed Padding)
-            const boxH = cardH * 0.65;
-            const boxW = boxH * 2.8; 
-            const boxX = x + cardW - boxW - 20; 
+            // 9. SCORE BOX (Fixed Padding) - NEW TV BROADCAST STYLE
+            const boxH = cardH * 0.72; // Increased height for better visibility
+            const boxW = boxH * 3.0;   // Wider aspect ratio
+            const boxX = x + cardW - boxW - 15; 
             const boxY = y + (cardH - boxH) / 2;
 
             c.save();
+            // 1. Main Background with Depth Gradient
             const boxGrad = c.createLinearGradient(boxX, boxY, boxX, boxY + boxH);
-            boxGrad.addColorStop(0, "#0f172a"); boxGrad.addColorStop(1, "#1e293b");
+            boxGrad.addColorStop(0, "#0f172a");   // Deep Navy Top
+            boxGrad.addColorStop(0.4, "#1e293b"); // Lighter Mid
+            boxGrad.addColorStop(1, "#020617");   // Almost Black Bottom
+            
+            // 2. Drop Shadow for "Floating" TV effect
+            c.shadowColor = "rgba(0, 0, 0, 0.6)";
+            c.shadowBlur = 12;
+            c.shadowOffsetX = 0; c.shadowOffsetY = 4;
+            
             c.fillStyle = boxGrad;
-            c.beginPath(); c.roundRect(boxX, boxY, boxW, boxH, 8); c.fill();
-            c.strokeStyle = "rgba(255,255,255,0.15)"; c.lineWidth = 1; c.stroke();
+            c.beginPath(); c.roundRect(boxX, boxY, boxW, boxH, 6); c.fill();
+            
+            // Reset shadow for internal elements
+            c.shadowColor = "transparent"; c.shadowBlur = 0; c.shadowOffsetY = 0;
 
-            // Score Number (Centered & Safe)
-            c.fillStyle = "white"; 
+            // 3. Teal Accent Bar (Top Strip) - Matches Pro Theme
+            c.fillStyle = "#14b8a6"; // Teal-500
+            c.beginPath(); 
+            // Draw top rounded strip
+            c.roundRect(boxX, boxY, boxW, 4, {topLeft: 6, topRight: 6, bottomLeft: 0, bottomRight: 0});
+            c.fill();
+
+            // 4. Subtle Glass Highlight Border
+            c.strokeStyle = "rgba(255,255,255,0.15)"; 
+            c.lineWidth = 1.5; 
+            c.stroke();
+
+            // 5. Score Number (High Contrast)
+            c.fillStyle = "#ffffff"; 
             c.textAlign = "center"; c.textBaseline = "middle";
-            // Reduced font size to 0.55 to prevent touching borders
-            c.font = `900 ${boxH * 0.55}px 'Anton'`; 
-            // Positioned exactly in middle of boxY + half height
-            c.fillText(safeStr(d.score), boxX + (boxW/2), boxY + (boxH * 0.45));
+            c.font = `900 ${boxH * 0.62}px 'Anton'`; // Slightly larger font
+            
+            // Text Drop Shadow
+            c.shadowColor = "rgba(0,0,0,1)";
+            c.shadowBlur = 0;
+            c.shadowOffsetX = 2; c.shadowOffsetY = 2;
 
-            // Balls Label
-            if (d.balls) {
-                c.fillStyle = "#fbbf24";
-                c.font = `700 ${boxH * 0.20}px 'Roboto Condensed'`;
-                c.fillText(`OFF ${d.balls} BALLS`, boxX + (boxW/2), boxY + (boxH * 0.82));
-            }
+            c.fillText(safeStr(d.score), boxX + (boxW/2), boxY + (boxH/2) + 3);
             c.restore();
 
             c.restore();
