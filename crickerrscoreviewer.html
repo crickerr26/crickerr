@@ -152,7 +152,16 @@
         </div>
 
         <div id="section-local">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4 px-1">Local Matches</h2>
+            <div class="flex justify-between items-center mb-4 px-1">
+                <h2 class="text-2xl font-bold text-gray-900">Local Matches</h2>
+                <button id="delete-selected-btn" onclick="initMultiDelete()" class="hidden bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-md hover:bg-red-600 transition">Delete Selected</button>
+            </div>
+            
+            <div class="tab-segment mb-6">
+                <button onclick="switchLocalTab('single')" id="lt-single" class="tab-btn active">Single Match</button>
+                <button onclick="switchLocalTab('tournament')" id="lt-tournament" class="tab-btn">Tournament</button>
+            </div>
+
             <div id="matches-container" class="space-y-4">
                 <div class="text-center py-12"><div class="inline-block w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div></div>
             </div>
@@ -352,8 +361,18 @@
         const db = firebase.firestore();
         
         let currentMatchData = null;
-        let matchToDelete = null;
+        let selectedMatches = [];
         let unsubscribeMatch = null;
+        let localMatchesCache = [];
+        let localMatchesLastDoc = null;
+        let activeLocalTab = 'single';
+
+        function switchLocalTab(tab) {
+            document.querySelectorAll('#section-local .tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`lt-${tab}`).classList.add('active');
+            activeLocalTab = tab;
+            renderLocalMatches();
+        }
         
         window.onload = () => {
             loadMatchList();
@@ -380,27 +399,68 @@
         // --- LOCAL MATCHES ---
         function loadMatchList(isNext = false) {
             const container = document.getElementById('matches-container');
-            if(!isNext) container.innerHTML = '<div class="text-center py-10 text-gray-400">Loading matches...</div>';
+            if(!isNext) {
+                container.innerHTML = '<div class="text-center py-10 text-gray-400">Loading matches...</div>';
+                localMatchesCache = [];
+                localMatchesLastDoc = null;
+                selectedMatches = [];
+                const delBtn = document.getElementById('delete-selected-btn');
+                if (delBtn) delBtn.classList.add('hidden');
+            }
 
-            db.collection('live_matches').orderBy('timestamp', 'desc').limit(10).get()
+            let query = db.collection('live_matches').orderBy('timestamp', 'desc').limit(20);
+            if(isNext && localMatchesLastDoc) {
+                query = query.startAfter(localMatchesLastDoc);
+            }
+
+            query.get()
             .then(snap => {
                 if(!isNext) container.innerHTML = '';
-                if(snap.empty) { container.innerHTML = '<div class="text-center text-gray-400 py-10">No matches found.</div>'; return; }
+                if(snap.empty && !isNext) { container.innerHTML = '<div class="text-center text-gray-400 py-10">No matches found.</div>'; return; }
 
-                let delay = 0;
-                snap.forEach(doc => {
-                    const data = doc.data();
-                    const card = createMatchCard(doc.id, data, 'local');
-                    const wrapper = document.createElement('div');
-                    wrapper.style.animationDelay = `${delay}ms`;
-                    wrapper.className = "stagger-item";
-                    wrapper.innerHTML = card;
-                    container.appendChild(wrapper);
-                    delay += 100;
-                });
+                if(!snap.empty) {
+                    localMatchesLastDoc = snap.docs[snap.docs.length - 1];
+                    snap.forEach(doc => {
+                        localMatchesCache.push({ id: doc.id, data: doc.data() });
+                    });
+                }
                 
-                if(snap.docs.length >= 10) document.getElementById('load-more-btn').classList.remove('hidden');
+                renderLocalMatches();
+                
+                if(snap.docs.length >= 20) {
+                    document.getElementById('load-more-btn').classList.remove('hidden');
+                } else {
+                    document.getElementById('load-more-btn').classList.add('hidden');
+                }
             });
+        }
+
+        function renderLocalMatches() {
+            const container = document.getElementById('matches-container');
+            container.innerHTML = '';
+            let delay = 0;
+            let count = 0;
+
+            localMatchesCache.forEach(match => {
+                const mode = match.data.matchMode || match.data.mode || 'single';
+                const normalizedMode = mode.toLowerCase();
+                
+                if (activeLocalTab === 'single' && normalizedMode !== 'single') return;
+                if (activeLocalTab === 'tournament' && normalizedMode !== 'tournament') return;
+
+                const card = createMatchCard(match.id, match.data, 'local');
+                const wrapper = document.createElement('div');
+                wrapper.style.animationDelay = `${delay}ms`;
+                wrapper.className = "stagger-item";
+                wrapper.innerHTML = card;
+                container.appendChild(wrapper);
+                delay += 100;
+                count++;
+            });
+
+            if(count === 0) {
+                container.innerHTML = `<div class="text-center text-gray-400 py-10">No ${activeLocalTab === 'single' ? 'Single' : 'Tournament'} matches found.</div>`;
+            }
         }
 
         // --- INTERNATIONAL MOCK DATA (ENRICHED) ---
@@ -491,13 +551,16 @@
                 ? `<span class="bg-red-50 text-red-600 px-2 py-0.5 rounded text-[10px] font-bold border border-red-100 flex items-center gap-1"><span class="live-dot"></span>LIVE</span>`
                 : `<span class="bg-gray-100 text-gray-500 px-2 py-0.5 rounded text-[10px] font-bold">FINAL</span>`;
             
-            const deleteBtn = type === 'local' ? `<div onclick="initDelete(event, '${id}')" class="absolute top-2 right-2 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow text-red-500 cursor-pointer z-10 opacity-0 group-hover:opacity-100 transition">✕</div>` : '';
+            const isChecked = selectedMatches.includes(id) ? 'checked' : '';
+            const deleteBtn = type === 'local' ? `<input type="checkbox" ${isChecked} onclick="toggleSelection(event, '${id}')" class="w-5 h-5 mr-3 z-20 cursor-pointer accent-blue-600 rounded">` : '';
 
             return `
             <div onclick="openMatch('${id}', '${type}')" class="glass-card p-4 relative group cursor-pointer hover:shadow-lg transition">
-                ${deleteBtn}
                 <div class="flex justify-between items-center mb-3">
-                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">${m.series || m.venue || 'Friendly Match'}</span>
+                    <div class="flex items-center">
+                        ${deleteBtn}
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">${m.series || m.venue || 'Friendly Match'}</span>
+                    </div>
                     ${liveBadge}
                 </div>
                 <div class="flex justify-between items-center mb-2">
@@ -740,13 +803,44 @@
             ['scorecard','comm','squad','charts'].forEach(v => document.getElementById(`dv-${v}`).classList.add('hidden'));
             document.getElementById(`dv-${t}`).classList.remove('hidden');
         }
-        function initDelete(e, id) { e.stopPropagation(); matchToDelete = id; document.getElementById('pin-modal').classList.remove('hidden'); }
-        function closePin() { document.getElementById('pin-modal').classList.add('hidden'); }
+
+        function toggleSelection(e, id) {
+            e.stopPropagation();
+            if (e.target.checked) {
+                if (!selectedMatches.includes(id)) selectedMatches.push(id);
+            } else {
+                selectedMatches = selectedMatches.filter(m => m !== id);
+            }
+            const delBtn = document.getElementById('delete-selected-btn');
+            if(selectedMatches.length > 0) delBtn.classList.remove('hidden');
+            else delBtn.classList.add('hidden');
+        }
+
+        function initMultiDelete() {
+            if(selectedMatches.length === 0) return;
+            document.getElementById('pin-modal').classList.remove('hidden');
+        }
+
+        function closePin() { 
+            document.getElementById('pin-modal').classList.add('hidden'); 
+            document.getElementById('admin-pin').value = '';
+        }
+
         function confirmDelete() {
             if(document.getElementById('admin-pin').value === '2626') {
-                db.collection('live_matches').doc(matchToDelete).delete();
-                closePin();
-                loadMatchList();
+                const batch = db.batch();
+                selectedMatches.forEach(id => {
+                    batch.delete(db.collection('live_matches').doc(id));
+                });
+                
+                batch.commit().then(() => {
+                    closePin();
+                    selectedMatches = [];
+                    document.getElementById('delete-selected-btn').classList.add('hidden');
+                    loadMatchList();
+                }).catch(err => {
+                    alert('Error deleting matches: ' + err.message);
+                });
             } else alert('Invalid PIN');
         }
 
