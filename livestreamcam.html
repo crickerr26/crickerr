@@ -384,6 +384,76 @@
 .show-watermark {
     opacity: 0.95 !important; /* Slight 95% transparency */
 }
+
+/* --- PROFESSIONAL SPONSOR SYSTEM STYLES --- */
+.sponsor-logo-box {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+.sponsor-logo-box img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+/* Live Overlay Sponsors */
+#live-sponsors-container {
+    position: absolute;
+    top: 80px;
+    right: 25px;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    z-index: 45;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+.live-sponsor { height: 45px; width: auto; min-width: 80px; max-width: 140px; }
+
+/* Intro Overlay Sponsors */
+#intro-sponsors-container {
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+}
+.intro-sponsors-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+}
+.intro-sponsor-main { height: 75px; min-width: 140px; box-shadow: 0 0 20px rgba(251, 191, 36, 0.5); }
+.intro-sponsor-sub { height: 55px; min-width: 100px; }
+
+/* Event Animation Sponsors */
+#event-sponsors-container {
+    position: absolute;
+    bottom: 15%;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    z-index: 910; /* Above shutters */
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+.event-sponsor-main { height: 85px; min-width: 150px; box-shadow: 0 0 20px rgba(251, 191, 36, 0.6); border: 2px solid rgba(251, 191, 36, 0.8); }
+.event-sponsor-sub { height: 60px; min-width: 110px; }
     </style>
 </head>
 <body>
@@ -428,6 +498,7 @@
         <span class="layer-gold-depth">SIX</span>
         <span class="layer-gold-base">SIX</span>
     </div>
+    <div id="event-sponsors-container"></div>
 </div>
 
             <div id="match-intro-overlay">
@@ -446,6 +517,7 @@
                     </div>
                     <div class="intro-divider"></div>
                     <div class="intro-info" id="intro-match-info">MATCH TYPE – LOCATION – DATE</div>
+                    <div id="intro-sponsors-container"></div>
                 </div>
             </div>
 
@@ -467,6 +539,7 @@
                 <div class="zoom-btn" onclick="stepZoom(-1)">-</div>
             </div>
             
+            <div id="live-sponsors-container"></div>
             <img id="broadcast-watermark" src="my-logo.png" alt="Broadcast Logo">
         </div>
         
@@ -510,7 +583,7 @@
         const db = firebase.firestore();
 
         // --- GLOBAL STATE ---
-        let match = { t1: "HOME", t2: "AWAY", score: 0, wickets: 0, overs: 0, balls: 0, striker: { name: "", runs: 0, balls: 0 }, nonStriker: { name: "", runs: 0, balls: 0 }, bowler: { name: "", wkts: 0, runs: 0, balls: 0 }, currentOver: [], target: 0, totalOvers: 20, matchStatus: "", winner: "", margin: "", pom: null, showDismissalCard: false, showSummaryOverlay: false, desiredOverlay: null };
+        let match = { t1: "HOME", t2: "AWAY", score: 0, wickets: 0, overs: 0, balls: 0, striker: { name: "", runs: 0, balls: 0 }, nonStriker: { name: "", runs: 0, balls: 0 }, bowler: { name: "", wkts: 0, runs: 0, balls: 0 }, currentOver: [], target: 0, totalOvers: 20, matchStatus: "", winner: "", margin: "", pom: null, showDismissalCard: false, showSummaryOverlay: false, desiredOverlay: null, sponsors: {} };
         let introPlayed = false; // Flag to ensure banner shows once
         let isScoreboardHidden = false; // Flag to hide scoreboard during intro
         let team1Logo = null, team2Logo = null;
@@ -520,6 +593,29 @@
         let crickerrLogoImg = new Image();
         crickerrLogoImg.crossOrigin = "anonymous"; 
         crickerrLogoImg.src = 'crickerrlogo.png';
+
+        // --- SPONSOR SYSTEM UTILITIES ---
+        function createSponsorHTML(src, className) {
+            if (!src) return '';
+            return `<div class="sponsor-logo-box ${className}"><img src="${src}"></div>`;
+        }
+
+        function updateLiveSponsors() {
+            const container = document.getElementById('live-sponsors-container');
+            if (!container) return;
+            
+            if (isScoreboardHidden || !match.sponsors || (!match.sponsors.main && !match.sponsors.sponsor2)) {
+                container.style.opacity = '0';
+                return;
+            }
+            
+            let html = '';
+            if (match.sponsors.main) html += createSponsorHTML(match.sponsors.main, 'live-sponsor');
+            if (match.sponsors.sponsor2) html += createSponsorHTML(match.sponsors.sponsor2, 'live-sponsor');
+            
+            container.innerHTML = html;
+            container.style.opacity = html ? '1' : '0';
+        }
 
         const video = document.getElementById('video-source');
         let replayVideo = null; 
@@ -1214,6 +1310,9 @@ function goLiveOnDB(matchId, peerId) {
                     }
                 }
             }
+
+            // Update Live Sponsors dynamically
+            if (!isScoreboardHidden) updateLiveSponsors();
         }
     });
 }
@@ -1230,12 +1329,15 @@ function goLiveOnDB(matchId, peerId) {
             isScoreboardHidden = false; 
             const wm = document.getElementById('broadcast-watermark');
             if (wm) wm.classList.add('show-watermark');
+            updateLiveSponsors();
         }
         
         function hideScoreboard() { 
             isScoreboardHidden = true; 
             const wm = document.getElementById('broadcast-watermark');
             if (wm) wm.classList.remove('show-watermark');
+            const ls = document.getElementById('live-sponsors-container');
+            if (ls) ls.style.opacity = '0';
         }
 
         // Failsafe: Ensure watermark shows up if intro doesn't trigger immediately
@@ -1273,6 +1375,25 @@ function goLiveOnDB(matchId, peerId) {
                 dateStr = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
             }
             document.getElementById('intro-match-info').innerText = `${matchType} – ${venue} – ${dateStr}`;
+
+            // --- POPULATE INTRO SPONSORS ---
+            const introSponsors = document.getElementById('intro-sponsors-container');
+            if (introSponsors) {
+                const sponsors = match.sponsors || {};
+                let topRow = '';
+                let bottomRow = '';
+                
+                if (sponsors.main) topRow += createSponsorHTML(sponsors.main, 'intro-sponsor-main');
+                if (sponsors.sponsor2) topRow += createSponsorHTML(sponsors.sponsor2, 'intro-sponsor-sub');
+                
+                if (sponsors.sponsor3) bottomRow += createSponsorHTML(sponsors.sponsor3, 'intro-sponsor-sub');
+                if (sponsors.sponsor4) bottomRow += createSponsorHTML(sponsors.sponsor4, 'intro-sponsor-sub');
+                
+                introSponsors.innerHTML = `
+                    ${topRow ? `<div class="intro-sponsors-row">${topRow}</div>` : ''}
+                    ${bottomRow ? `<div class="intro-sponsors-row">${bottomRow}</div>` : ''}
+                `;
+            }
 
             // Play swoosh/stinger sound
             playTransitionSound();
@@ -1331,6 +1452,25 @@ function goLiveOnDB(matchId, peerId) {
             const box = document.getElementById('ipl-box');
             const spans = box.querySelectorAll('span');
 
+            // --- EVENT SPONSORS INTEGRATION ---
+            const sponsors = match.sponsors || {};
+            const eventSponsors = document.getElementById('event-sponsors-container');
+            if (eventSponsors) {
+                let html = '';
+                if (type === '6') {
+                    if (sponsors.main) html += createSponsorHTML(sponsors.main, 'event-sponsor-main');
+                } else if (type === '4') {
+                    if (sponsors.main) html += createSponsorHTML(sponsors.main, 'event-sponsor-main');
+                    if (sponsors.sponsor2) html += createSponsorHTML(sponsors.sponsor2, 'event-sponsor-sub');
+                } else if (type === 'W') {
+                    if (sponsors.main) html += createSponsorHTML(sponsors.main, 'event-sponsor-main');
+                    if (sponsors.sponsor2) html += createSponsorHTML(sponsors.sponsor2, 'event-sponsor-sub');
+                    if (sponsors.sponsor3) html += createSponsorHTML(sponsors.sponsor3, 'event-sponsor-sub');
+                    if (sponsors.sponsor4) html += createSponsorHTML(sponsors.sponsor4, 'event-sponsor-sub');
+                }
+                eventSponsors.innerHTML = html;
+            }
+
             // Reset Animation
             stage.classList.remove('splitting');
             box.classList.remove('active-boom');
@@ -1344,10 +1484,16 @@ function goLiveOnDB(matchId, peerId) {
             stage.classList.add('splitting'); 
             
             // B. Boom Text appears shortly after shutters close
-            setTimeout(() => box.classList.add('active-boom'), 100);
+            setTimeout(() => {
+                box.classList.add('active-boom');
+                if (eventSponsors) eventSponsors.style.opacity = '1';
+            }, 100);
 
             // C. Open Shutters after animation finishes
-            setTimeout(() => stage.classList.remove('splitting'), 3000);
+            setTimeout(() => {
+                stage.classList.remove('splitting');
+                if (eventSponsors) eventSponsors.style.opacity = '0';
+            }, 3000);
         }
 
         // --- BACKGROUND-SAFE RENDER LOOP ---
