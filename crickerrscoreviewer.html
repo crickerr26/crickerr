@@ -328,8 +328,16 @@
 
             <div id="dv-charts" class="hidden space-y-4 page-enter">
                 <div class="glass-card p-4">
-                    <h4 class="text-sm font-bold mb-4">Partnership / Worm</h4>
-                    <div class="h-48"><canvas id="wormChart"></canvas></div>
+                    <h4 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Innings Comparison (Worm)</h4>
+                    <div class="relative h-56 w-full"><canvas id="wormChart"></canvas></div>
+                </div>
+                <div class="glass-card p-4">
+                    <h4 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Run Rate Per Over</h4>
+                    <div class="relative h-48 w-full"><canvas id="rpoChart"></canvas></div>
+                </div>
+                <div class="glass-card p-4">
+                    <h4 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Partnerships</h4>
+                    <div class="relative h-56 w-full"><canvas id="partnershipChart"></canvas></div>
                 </div>
             </div>
         </div>
@@ -366,6 +374,7 @@
         let localMatchesCache = [];
         let localMatchesLastDoc = null;
         let activeLocalTab = 'single';
+        let chartInstances = {};
 
         function switchLocalTab(tab) {
             document.querySelectorAll('#section-local .tab-btn').forEach(b => b.classList.remove('active'));
@@ -639,45 +648,284 @@
             }
         }
 
+        function processRealtimeMatchData(rawDoc) {
+            // Engine to transform raw ball-by-ball data into professional score structures
+            if (!rawDoc.innings || rawDoc.innings.length === 0) return rawDoc; // Fallback for old mock data
+
+            let d = JSON.parse(JSON.stringify(rawDoc)); // Clone to avoid mutation
+            d.scorecard = { innings1: null, innings2: null };
+            d.chartData = { worm: { labels:[0], i1:[0], i2:[0] }, rpo: { labels:[0], i1:[0], i2:[0] }, partnerships: { labels:[], data:[] } };
+            
+            let targetRuns = 0;
+            let timelineEvents = [];
+            let generatedComm = [];
+
+            d.innings.forEach((inn, idx) => {
+                let innKey = idx === 0 ? 'innings1' : 'innings2';
+                let balls = inn.balls || [];
+                
+                let totalRuns = 0;
+                let wickets = 0;
+                let validBalls = 0;
+                let batStats = {}, bowlStats = {};
+                let fow = [], partnerships = [], currentPartnershipRuns = 0;
+                let overRuns = 0;
+                let wormRuns = [0], rpoArr = [0];
+
+                balls.forEach((b, ballIdx) => {
+                    let runs = parseInt(b.runs) || 0;
+                    let extras = parseInt(b.extras) || 0;
+                    let isWicket = b.type === 'wicket' || b.dismissal;
+                    let isWide = b.type === 'wide';
+                    let isNoBall = b.type === 'no-ball';
+                    let isLegal = !isWide && !isNoBall;
+                    
+                    totalRuns += (runs + extras);
+                    currentPartnershipRuns += (runs + extras);
+                    if (isLegal) validBalls++;
+
+                    // Batting calculation
+                    if (b.batsman) {
+                        if (!batStats[b.batsman]) batStats[b.batsman] = { name: b.batsman, runs: 0, balls: 0, fours: 0, sixes: 0, dismissal: 'not out' };
+                        batStats[b.batsman].runs += runs;
+                        if (isLegal) batStats[b.batsman].balls++;
+                        if (runs === 4) batStats[b.batsman].fours++;
+                        if (runs === 6) batStats[b.batsman].sixes++;
+                        if (isWicket && b.dismissal) batStats[b.batsman].dismissal = b.dismissal;
+                    }
+
+                    // Bowling calculation
+                    if (b.bowler) {
+                        if (!bowlStats[b.bowler]) bowlStats[b.bowler] = { name: b.bowler, balls: 0, runs: 0, wickets: 0, maidens: 0 };
+                        bowlStats[b.bowler].runs += (runs + extras);
+                        if (isLegal) bowlStats[b.bowler].balls++;
+                        if (isWicket) bowlStats[b.bowler].wickets++;
+                        
+                        // Calculate Maidens (simplified logic: check over total at end of over)
+                        if (isLegal && validBalls % 6 === 0) {
+                            if (overRuns + runs + extras === 0) bowlStats[b.bowler].maidens++;
+                        }
+                    }
+
+                    // Timeline & Commentary Generation
+                    let eventBadge = isWicket ? 'W' : (runs === 4 ? '4' : (runs === 6 ? '6' : runs.toString()));
+                    if (isWide) eventBadge = runs > 0 ? `${runs}Wd` : 'Wd';
+                    if (isNoBall) eventBadge = runs > 0 ? `${runs}Nb` : 'Nb';
+                    
+                    if (idx === d.innings.length - 1) timelineEvents.push(eventBadge);
+                    
+                    let overStr = `${Math.floor(validBalls/6)}.${validBalls%6}`;
+                    if (validBalls % 6 === 0 && isLegal) overStr = `${Math.floor(validBalls/6)}.0`;
+                    
+                    let text = `${b.bowler || 'Bowler'} to ${b.batsman || 'Batsman'}, `;
+                    if (isWicket) text += `<strong class="text-red-600">OUT!</strong> ${b.dismissal}`;
+                    else if (runs === 4) text += `<strong class="text-blue-600">FOUR!</strong> Driven beautifully.`;
+                    else if (runs === 6) text += `<strong class="text-purple-600">SIX!</strong> Massive hit over the ropes!`;
+                    else if (runs === 0 && isLegal) text += `Solid defense, no run.`;
+                    else text += `${runs} run${runs > 1 ? 's' : ''}.`;
+                    
+                    if (idx === d.innings.length - 1) generatedComm.unshift({ ball: overStr, event: eventBadge, text: text }); // Newest first
+
+                    // Fall of wicket tracking
+                    if (isWicket) {
+                        wickets++;
+                        fow.push(`<strong>${totalRuns}-${wickets}</strong> (${b.batsman || 'Unknown'}, ${overStr})`);
+                        partnerships.push({ label: `${wickets} Wkt`, runs: currentPartnershipRuns });
+                        currentPartnershipRuns = 0;
+                    }
+
+                    // End of Over Chart Aggregation
+                    if (validBalls > 0 && validBalls % 6 === 0 && isLegal) {
+                        wormRuns.push(totalRuns);
+                        rpoArr.push(overRuns + runs + extras);
+                        overRuns = 0;
+                    } else {
+                        overRuns += (runs + extras);
+                    }
+                });
+
+                if (validBalls % 6 !== 0 || balls.length === 0) {
+                    if (balls.length > 0) {
+                        wormRuns.push(totalRuns);
+                        rpoArr.push(overRuns);
+                    }
+                }
+
+                // Append Chart Data
+                let maxLen = Math.max(d.chartData.worm.labels.length, wormRuns.length);
+                d.chartData.worm.labels = Array.from({length: maxLen}, (_, i) => i);
+                d.chartData.rpo.labels = Array.from({length: maxLen}, (_, i) => i);
+                
+                if (idx === 0) {
+                    targetRuns = totalRuns + 1;
+                    d.chartData.worm.i1 = wormRuns;
+                    d.chartData.rpo.i1 = rpoArr;
+                } else {
+                    d.chartData.worm.i2 = wormRuns;
+                    d.chartData.rpo.i2 = rpoArr;
+                }
+                
+                if (idx === d.innings.length - 1) {
+                    d.chartData.partnerships.data = partnerships.map(p => p.runs);
+                    if (currentPartnershipRuns > 0 || partnerships.length === 0) {
+                        d.chartData.partnerships.data.push(currentPartnershipRuns);
+                        partnerships.push({ label: `${wickets+1} Wkt*`, runs: currentPartnershipRuns });
+                    }
+                    d.chartData.partnerships.labels = partnerships.map(p => p.label);
+                }
+
+                // Final Scorecard Formatting
+                let oversStr = `${Math.floor(validBalls / 6)}.${validBalls % 6}`;
+                if (validBalls > 0 && validBalls % 6 === 0) oversStr = `${Math.floor(validBalls/6)}.0`;
+                let crr = validBalls > 0 ? (totalRuns / (validBalls / 6)) : 0;
+                
+                d.scorecard[innKey] = {
+                    name: inn.battingTeam || (idx === 0 ? d.t1 : d.t2),
+                    score: `${totalRuns}/${wickets}`,
+                    overs: oversStr,
+                    batting: Object.values(batStats).map(b => ({...b, sr: b.balls > 0 ? ((b.runs/b.balls)*100).toFixed(1) : '0.0'})),
+                    bowling: Object.values(bowlStats).map(b => ({...b, o: `${Math.floor(b.balls/6)}.${b.balls%6}`, econ: b.balls > 0 ? (b.runs/(b.balls/6)).toFixed(1) : '0.0'})),
+                    fow: fow.join(', ')
+                };
+
+                // Match Status Engine Update
+                if (idx === d.innings.length - 1) {
+                    d.score = totalRuns;
+                    d.wickets = wickets;
+                    d.overs = oversStr;
+                    d.crr = crr.toFixed(2);
+                    d.timeline = timelineEvents;
+                    d.commLines = generatedComm;
+                    
+                    if (idx === 1) {
+                        let totalOvers = d.matchInfo?.overs || 20;
+                        let remBalls = (totalOvers * 6) - validBalls;
+                        let remRuns = targetRuns - totalRuns;
+                        
+                        d.target = targetRuns;
+                        if (remBalls > 0 && remRuns > 0) {
+                            d.rrr = (remRuns / (remBalls / 6)).toFixed(2);
+                            let reqRatio = parseFloat(d.rrr) / (crr || 1);
+                            let winProb = Math.max(1, Math.min(99, 50 + ((1 - reqRatio) * 30) - (wickets * 4)));
+                            d.note = `Win Prob: ${inn.battingTeam} ${winProb.toFixed(0)}% | Need ${remRuns} runs from ${remBalls} balls`;
+                        } else if (remRuns <= 0) {
+                            d.note = `${inn.battingTeam} won the match!`;
+                            d.rrr = "0.00";
+                            d.matchStatus = 'COMPLETE';
+                        } else {
+                            d.note = `Match tied or innings ended.`;
+                            d.rrr = "0.00";
+                        }
+                    } else {
+                        d.note = `1st Innings | Proj Score: ${Math.floor(crr * (d.matchInfo?.overs || 20))}`;
+                    }
+                }
+            });
+            return d;
+        }
+
         function renderDetailView(d) {
-            currentMatchData = d;
+            currentMatchData = processRealtimeMatchData(d);
+            let procD = currentMatchData;
             
             // Basic Info
-            document.getElementById('d-series').innerText = d.series || d.venue || 'Match Center';
-            document.getElementById('d-t1-name').innerText = d.t1;
-            document.getElementById('d-t2-name').innerText = d.t2;
-            document.getElementById('d-t1-logo').src = d.t1Logo || '';
-            document.getElementById('d-t2-logo').src = d.t2Logo || '';
+            document.getElementById('d-series').innerText = procD.series || procD.venue || 'Match Center';
+            document.getElementById('d-t1-name').innerText = procD.t1 || 'Team 1';
+            document.getElementById('d-t2-name').innerText = procD.t2 || 'Team 2';
+            document.getElementById('d-t1-logo').src = procD.t1Logo || '';
+            document.getElementById('d-t2-logo').src = procD.t2Logo || '';
             
             // Status
-            if(d.matchStatus === 'COMPLETE') {
+            if(procD.matchStatus === 'COMPLETE') {
                 document.getElementById('d-status-badge').innerHTML = 'FINAL';
                 document.getElementById('d-status-badge').className = "text-[10px] font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded";
-                document.getElementById('d-note').innerText = d.resultMain || "Match Concluded";
+                document.getElementById('d-note').innerText = procD.resultMain || procD.note || "Match Concluded";
             } else {
                 document.getElementById('d-status-badge').innerHTML = '<span class="live-dot"></span> LIVE';
                 document.getElementById('d-status-badge').className = "text-[10px] font-bold bg-red-50 text-red-600 px-2 py-1 rounded flex items-center gap-1";
-                document.getElementById('d-note').innerText = d.req || d.note || (d.target ? `Target: ${d.target}` : "1st Innings");
+                document.getElementById('d-note').innerText = procD.req || procD.note || (procD.target ? `Target: ${procD.target}` : "1st Innings");
             }
 
             // Scores
-            const i1 = d.scorecard?.innings1 || {score:'0/0', overs:''};
-            const i2 = d.scorecard?.innings2 || {score:'Yet to Bat', overs:''};
-            if(!d.scorecard && d.score) { i1.score = `${d.score}/${d.wickets}`; i1.overs = `${d.overs}`; }
+            const i1 = procD.scorecard?.innings1 || {score:'0/0', overs:''};
+            const i2 = procD.scorecard?.innings2 || {score:'Yet to Bat', overs:''};
+            if(!procD.scorecard && procD.score) { i1.score = `${procD.score}/${procD.wickets}`; i1.overs = `${procD.overs}`; }
 
             document.getElementById('d-t1-score').innerHTML = i1.score + `<span class="text-sm text-gray-400 font-medium ml-1">${i1.overs}</span>`;
             document.getElementById('d-t2-score').innerHTML = i2.score === 'Yet to Bat' ? '<span class="text-sm text-gray-400">Yet to Bat</span>' : i2.score + `<span class="text-sm text-gray-400 font-medium ml-1">${i2.overs}</span>`;
-            document.getElementById('d-crr').innerText = d.crr || "-";
-            document.getElementById('d-target').innerText = d.target || "-";
-            document.getElementById('d-rrr').innerText = d.rrr || "-";
+            document.getElementById('d-crr').innerText = procD.crr || "-";
+            document.getElementById('d-target').innerText = procD.target || "-";
+            document.getElementById('d-rrr').innerText = procD.rrr || "-";
 
             // Render Tabs
             renderScoreTable('i1', i1);
             renderScoreTable('i2', i2);
-            renderCommentary(d);
+            renderCommentary(procD);
+            renderCharts(procD);
             
             // Squads Initial Load
             toggleSquadList(1);
+        }
+
+        // --- NEW: CHARTS & STATS RENDERER ---
+        function renderCharts(d) {
+            // Clear existing charts to prevent canvas ghosting
+            ['wormChart', 'rpoChart', 'partnershipChart'].forEach(id => {
+                if(chartInstances[id]) { chartInstances[id].destroy(); }
+            });
+
+            const t1Color = '#3b82f6'; // Blue
+            const t2Color = '#f59e0b'; // Amber
+            
+            // Checking if real data was generated by the Match Engine
+            const hasRealCharts = d.chartData && d.chartData.worm.labels.length > 1;
+            
+            let commonLabels = hasRealCharts ? d.chartData.worm.labels : [0,1,2,3,4,5];
+            let w1 = hasRealCharts ? d.chartData.worm.i1 : [0,0,0,0,0,0];
+            let w2 = hasRealCharts ? d.chartData.worm.i2 : [];
+            let rpo1 = hasRealCharts ? d.chartData.rpo.i1 : [0,0,0,0,0,0];
+            let rpo2 = hasRealCharts ? d.chartData.rpo.i2 : [];
+            let pLabels = hasRealCharts ? d.chartData.partnerships.labels : ['1st Wkt'];
+            let pData = hasRealCharts ? d.chartData.partnerships.data : [0];
+
+            // 1. Worm Chart (Innings Comparison)
+            const ctxWorm = document.getElementById('wormChart').getContext('2d');
+            chartInstances['wormChart'] = new Chart(ctxWorm, {
+                type: 'line',
+                data: {
+                    labels: commonLabels,
+                    datasets: [
+                        { label: d.t1 || 'Innings 1', data: w1, borderColor: t1Color, backgroundColor: t1Color, tension: 0.3, borderWidth: 3, pointRadius: 0, pointHitRadius: 10 },
+                        { label: d.t2 || 'Innings 2', data: w2, borderColor: t2Color, backgroundColor: t2Color, tension: 0.3, borderWidth: 3, pointRadius: 0, pointHitRadius: 10 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8, font: {size: 10, weight: 'bold'} } } }, scales: { y: { beginAtZero: true, grid: { color: '#f3f4f6' } }, x: { grid: { display: false } } } }
+            });
+
+            // 2. RPO Chart (Over by Over)
+            const ctxRpo = document.getElementById('rpoChart').getContext('2d');
+            chartInstances['rpoChart'] = new Chart(ctxRpo, {
+                type: 'bar',
+                data: {
+                    labels: commonLabels,
+                    datasets: [
+                        { label: d.t1 || 'Innings 1', data: rpo1, backgroundColor: 'rgba(59, 130, 246, 0.8)', borderRadius: 4 },
+                        { label: d.t2 || 'Innings 2', data: rpo2, backgroundColor: 'rgba(245, 158, 11, 0.8)', borderRadius: 4 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f3f4f6' } }, x: { grid: { display: false } } } }
+            });
+
+            // 3. Partnership Chart
+            const ctxPart = document.getElementById('partnershipChart').getContext('2d');
+            chartInstances['partnershipChart'] = new Chart(ctxPart, {
+                type: 'bar',
+                data: {
+                    labels: pLabels,
+                    datasets: [{ label: 'Partnership Runs', data: pData, backgroundColor: '#8b5cf6', borderRadius: 6 }]
+                },
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, grid: { color: '#f3f4f6' } }, y: { grid: { display: false } } } }
+            });
         }
 
         // --- NEW: FULL SCORECARD RENDERER ---
@@ -690,14 +938,23 @@
             }
 
             let html = `<table class="w-full text-left score-table mb-4">
-                <thead><tr><th class="pl-2">Batting</th><th class="text-right">R</th><th class="text-right">B</th><th class="text-right pr-2">4s/6s</th></tr></thead>
+                <thead><tr><th class="pl-2">Batting</th><th class="text-right">R</th><th class="text-right">B</th><th class="text-right">4s/6s</th><th class="text-right pr-2">SR</th></tr></thead>
                 <tbody>
                     ${(inn.batting || []).map(b => `
                         <tr>
-                            <td class="pl-2"><span class="batter-name">${b.name}</span><span class="dismissal-text">${b.dismissal||'not out'}</span></td>
+                            <td class="pl-2 py-1.5">
+                                <div class="flex items-center gap-2">
+                                    <img src="${b.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(b.name)}&background=f3f4f6&color=4b5563&bold=true`}" class="w-7 h-7 rounded-full bg-gray-50 object-cover border border-gray-200 flex-shrink-0">
+                                    <div class="flex flex-col">
+                                        <span class="batter-name">${b.name}</span>
+                                        <span class="dismissal-text">${b.dismissal||'not out'}</span>
+                                    </div>
+                                </div>
+                            </td>
                             <td class="text-right font-bold">${b.runs}</td>
                             <td class="text-right text-gray-500">${b.balls}</td>
-                            <td class="text-right text-gray-400 pr-2 text-[10px]">${b.fours||0}/${b.sixes||0}</td>
+                            <td class="text-right text-gray-400 text-[10px]">${b.fours||0}/${b.sixes||0}</td>
+                            <td class="text-right text-gray-500 pr-2 font-mono text-xs">${b.sr||'0.0'}</td>
                         </tr>
                     `).join('')}
                 </tbody>
@@ -709,15 +966,21 @@
 
             if(inn.bowling && inn.bowling.length > 0) {
                 html += `<table class="w-full text-left score-table">
-                    <thead><tr><th class="pl-2">Bowling</th><th class="text-right">O</th><th class="text-right">M</th><th class="text-right">R</th><th class="text-right pr-2">W</th></tr></thead>
+                    <thead><tr><th class="pl-2">Bowling</th><th class="text-right">O</th><th class="text-right">M</th><th class="text-right">R</th><th class="text-right">W</th><th class="text-right pr-2">ECON</th></tr></thead>
                     <tbody>
                         ${inn.bowling.map(b => `
                             <tr>
-                                <td class="pl-2 bowler-name">${b.name}</td>
+                                <td class="pl-2 py-1.5">
+                                    <div class="flex items-center gap-2">
+                                        <img src="${b.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(b.name)}&background=f3f4f6&color=4b5563&bold=true`}" class="w-7 h-7 rounded-full bg-gray-50 object-cover border border-gray-200 flex-shrink-0">
+                                        <span class="bowler-name">${b.name}</span>
+                                    </div>
+                                </td>
                                 <td class="text-right">${b.o}</td>
-                                <td class="text-right text-gray-400">${b.m}</td>
+                                <td class="text-right text-gray-400">${b.m || 0}</td>
                                 <td class="text-right">${b.r}</td>
-                                <td class="text-right font-bold text-gray-900 pr-2">${b.w}</td>
+                                <td class="text-right font-bold text-gray-900">${b.w}</td>
+                                <td class="text-right text-gray-500 pr-2 font-mono text-xs">${b.econ||'0.0'}</td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -802,27 +1065,59 @@
             const btn2 = document.getElementById('sq-btn-2');
             const content = document.getElementById('squad-list-content');
             
+            const t1Name = currentMatchData?.t1 || 'Home XI';
+            const t2Name = currentMatchData?.t2 || 'Away XI';
+            const t1Logo = currentMatchData?.t1Logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(t1Name)}&background=random&color=fff`;
+            const t2Logo = currentMatchData?.t2Logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(t2Name)}&background=random&color=fff`;
+
+            btn1.innerHTML = `<div class="flex items-center justify-center gap-2 px-1"><img src="${t1Logo}" class="w-5 h-5 object-contain rounded-full shadow-sm bg-gray-50 border border-gray-100"> <span class="truncate max-w-[120px]">${t1Name}</span></div>`;
+            btn2.innerHTML = `<div class="flex items-center justify-center gap-2 px-1"><img src="${t2Logo}" class="w-5 h-5 object-contain rounded-full shadow-sm bg-gray-50 border border-gray-100"> <span class="truncate max-w-[120px]">${t2Name}</span></div>`;
+            
             if(teamIdx === 1) {
-                btn1.classList.replace('bg-gray-100', 'bg-white'); btn1.classList.add('shadow-sm', 'border-gray-100'); btn1.classList.remove('text-gray-500');
-                btn2.classList.replace('bg-white', 'bg-gray-100'); btn2.classList.remove('shadow-sm', 'border-gray-100'); btn2.classList.add('text-gray-500');
+                btn1.className = 'flex-1 py-2.5 bg-white text-sm font-bold text-gray-900 rounded-lg shadow-sm border border-gray-100 transition';
+                btn2.className = 'flex-1 py-2.5 bg-gray-100/70 text-gray-400 text-sm font-bold rounded-lg transition hover:bg-gray-100';
             } else {
-                btn2.classList.replace('bg-gray-100', 'bg-white'); btn2.classList.add('shadow-sm', 'border-gray-100'); btn2.classList.remove('text-gray-500');
-                btn1.classList.replace('bg-white', 'bg-gray-100'); btn1.classList.remove('shadow-sm', 'border-gray-100'); btn1.classList.add('text-gray-500');
+                btn2.className = 'flex-1 py-2.5 bg-white text-sm font-bold text-gray-900 rounded-lg shadow-sm border border-gray-100 transition';
+                btn1.className = 'flex-1 py-2.5 bg-gray-100/70 text-gray-400 text-sm font-bold rounded-lg transition hover:bg-gray-100';
             }
 
             const list = teamIdx === 1 ? (currentMatchData?.t1Squad || []) : (currentMatchData?.t2Squad || []);
             
             content.innerHTML = list.length ? `<div class="divide-y divide-gray-50">
-                ${list.map((p, i) => `
-                    <div class="py-3 px-4 flex items-center gap-4">
-                        <span class="text-xs font-mono text-gray-400 w-4">${i+1}</span>
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-500">${p.charAt(0)}</div>
-                            <span class="text-sm font-semibold text-gray-900">${p}</span>
+                ${list.map((p, i) => {
+                    const pName = typeof p === 'object' ? p.name : String(p).trim();
+                    const pRole = typeof p === 'object' && p.role ? `<span class="text-[9px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded uppercase tracking-wider">${p.role}</span>` : '';
+                    
+                    // Auto-format captain/wicket-keeper badges from string data
+                    let displayRole = pRole;
+                    let displayName = pName;
+                    if (!pRole) {
+                        if (pName.toLowerCase().includes('(c)')) { displayRole = `<span class="text-[9px] font-black text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100 uppercase tracking-wider">C</span>`; displayName = pName.replace(/\(c\)/i, '').trim(); }
+                        if (pName.toLowerCase().includes('(wk)')) { displayRole += `<span class="text-[9px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 uppercase tracking-wider ml-1">WK</span>`; displayName = displayName.replace(/\(wk\)/i, '').trim(); }
+                    }
+                    
+                    const avatarUrl = typeof p === 'object' && p.avatar ? p.avatar : `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=f3f4f6&color=4b5563&bold=true`;
+                    
+                    return `
+                    <div class="py-3 px-4 flex items-center gap-4 hover:bg-gray-50/50 transition">
+                        <span class="text-[10px] font-black text-gray-300 w-4 text-center">${i+1}</span>
+                        <div class="flex items-center gap-3 w-full">
+                            <img src="${avatarUrl}" class="w-10 h-10 rounded-full bg-gray-50 object-cover shadow-sm border border-gray-100">
+                            <div class="flex flex-col">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm font-bold text-gray-900 tracking-tight">${displayName}</span>
+                                    ${displayRole}
+                                </div>
+                            </div>
                         </div>
                     </div>
-                `).join('')}
-            </div>` : `<div class="p-8 text-center text-gray-400 text-sm">Squad information not released.</div>`;
+                `}).join('')}
+            </div>` : `<div class="p-10 flex flex-col items-center justify-center text-center">
+                <div class="w-14 h-14 mb-4 rounded-full bg-gray-50 flex items-center justify-center text-gray-300 border border-gray-100">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                </div>
+                <span class="text-sm font-bold text-gray-400">Squads not announced yet</span>
+            </div>`;
         }
 
         // --- NAVIGATION & ADMIN ---
