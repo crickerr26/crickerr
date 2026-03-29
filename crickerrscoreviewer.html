@@ -2,884 +2,858 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>CRiCKERR Scorebook | Professional Live Scores</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>CriCKERR - Score Viewer</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
-
+    
     <style>
-        /* PROFESSIONAL LIGHT BROADCAST THEME */
-        body { background: #f4f7f9; color: #1e293b; font-family: 'Inter', sans-serif; min-height: 100vh; }
-        .font-oswald { font-family: 'Oswald', sans-serif; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        /* OVERRIDING DARK THEME CLASSES TO LIGHT PREMIUM THEME */
-        .text-white { color: #0f172a !important; }
-        .text-gray-400 { color: #475569 !important; }
-        .text-gray-300 { color: #334155 !important; }
-        .text-gray-500 { color: #64748b !important; }
-        
-        .bg-\[\#020617\]\/80, .bg-\[\#020617\] { background-color: #ffffff !important; box-shadow: 0 4px 20px rgba(0,0,0,0.05) !important; border-bottom: none !important;}
-        .bg-\[\#1e293b\]\/50, .bg-\[\#1e293b\] { background-color: #ffffff !important; border-color: #e2e8f0 !important; color: #0f172a !important; box-shadow: 0 2px 10px rgba(0,0,0,0.02) !important; }
-        .bg-\[\#0f172a\]\/50 { background-color: #f8fafc !important; border-color: #e2e8f0 !important; box-shadow: none !important;}
-        .border-gray-800, .border-gray-800\/50, .border-gray-700, .border-gray-700\/50 { border-color: #e2e8f0 !important; }
-        
-        /* PREMIUM CARDS & ANIMATIONS */
-        .glass-card { 
-            background: #ffffff !important; 
-            border: 1px solid #e2e8f0 !important; 
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03) !important; 
-            border-radius: 16px !important;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-            position: relative; overflow: hidden; 
+        /* --- PRO TYPOGRAPHY & VARS --- */
+        :root {
+            --primary: #007AFF;
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --shadow-soft: 0 8px 30px rgba(0,0,0,0.06);
         }
-        .glass-card:hover { 
-            border-color: #3b82f6 !important; 
-            box-shadow: 0 12px 30px rgba(59, 130, 246, 0.1) !important; 
-            transform: translateY(-3px); 
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+            background-color: #F2F2F7;
+            color: #1c1c1e;
+            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
         }
-        .glass-card:active { transform: scale(0.98); }
 
-        /* TABS UI */
-        .main-tab-btn { flex: 1; text-align: center; padding: 14px 0; font-size: 13px; font-weight: 700; color: #64748b !important; border-bottom: 3px solid transparent; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
-        .main-tab-btn.active { color: #2563eb !important; border-bottom-color: #2563eb !important; background: linear-gradient(to top, rgba(59, 130, 246, 0.05) 0%, transparent 100%); }
+        /* --- AMBIENT BACKGROUND --- */
+        .ambient-bg {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
+            background: 
+                radial-gradient(circle at 15% 50%, rgba(56, 189, 248, 0.15), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(99, 102, 241, 0.15), transparent 25%);
+            animation: pulseBg 10s ease infinite alternate;
+        }
+        @keyframes pulseBg { 0% { opacity: 0.5; } 100% { opacity: 1; } }
 
-        /* DELETE BUTTON */
-        .delete-btn { position: absolute; bottom: 15px; right: 15px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #fee2e2 !important; border: 1px solid #fca5a5 !important; color: #ef4444 !important; font-size: 14px; cursor: pointer; z-index: 20; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .delete-btn:hover { background: #ef4444 !important; color: white !important; transform: scale(1.1) rotate(90deg); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3) !important; }
+        /* --- GLASS COMPONENTS --- */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s;
+        }
+        .glass-card:active { transform: scale(0.98); background: rgba(255,255,255,0.9); }
 
-        /* MULTI-SELECT STYLES */
-        .checkbox-wrapper { position: absolute; top: 15px; left: 15px; z-index: 20; display: none; }
-        .select-mode-active .checkbox-wrapper { display: block; animation: popIn 0.3s ease-out; }
-        .select-mode-active .delete-btn { display: none !important; } 
-        .match-checkbox { width: 22px; height: 22px; cursor: pointer; accent-color: #2563eb; border-radius: 6px; }
-        .glass-card.selected { border-color: #2563eb !important; background: #eff6ff !important; }
+        .nav-glass {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            position: sticky; top: 0; z-index: 100;
+        }
 
-        /* TOAST NOTIFICATION */
-        #toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
-        .toast { background: #10b981; color: white; padding: 14px 28px; border-radius: 12px; font-weight: 600; font-size: 14px; box-shadow: 0 10px 30px rgba(16,185,129,0.3); pointer-events: auto; display: flex; align-items: center; gap: 10px; animation: slideUpFade 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .toast.error { background: #ef4444; box-shadow: 0 10px 30px rgba(239,68,68,0.3); }
+        /* --- ANIMATIONS --- */
+        .page-enter { animation: slideUpEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes slideUpEnter {
+            from { opacity: 0; transform: translateY(20px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
         
-        /* SKELETON LOADER */
-        .skeleton { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 16px; border: none !important; }
-        
-        /* ANIMATIONS */
-        @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-        @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-        @keyframes slideUpFade { 0% { opacity: 0; transform: translateY(20px) scale(0.9); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
-        .animate-fade-in { animation: popIn 0.4s ease-out forwards; }
+        .stagger-item { opacity: 0; animation: fadeInStagger 0.5s ease forwards; }
+        @keyframes fadeInStagger { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* SCOREBOARD ELEMENTS */
-        .team-logo { border: 2px solid #e2e8f0 !important; padding: 2px; background: #ffffff !important; box-shadow: 0 4px 10px rgba(0,0,0,0.05) !important; }
+        .live-dot {
+            width: 8px; height: 8px; background: #FF3B30; border-radius: 50%;
+            box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7);
+            animation: pulseRed 2s infinite;
+        }
+        @keyframes pulseRed {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(255, 59, 48, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
+        }
+
+        /* --- UI ELEMENTS --- */
+        .tab-segment {
+            background: rgba(118, 118, 128, 0.12); border-radius: 10px; padding: 3px;
+            display: flex; gap: 2px;
+        }
+        .tab-btn {
+            flex: 1; padding: 8px 12px; font-size: 13px; font-weight: 600; text-align: center;
+            border-radius: 7px; color: #666; transition: all 0.3s ease;
+        }
+        .tab-btn.active { background: #fff; color: #000; box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+
+        .search-bar {
+            background: rgba(118, 118, 128, 0.12); border: none; border-radius: 12px;
+            padding: 12px 40px; width: 100%; font-size: 17px; outline: none; transition: 0.2s;
+        }
+        .search-bar:focus { background: rgba(118, 118, 128, 0.18); }
+
+        /* --- NEWS READER --- */
+        #news-reader {
+            position: fixed; inset: 0; z-index: 200; background: #fff;
+            transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+        }
+        #news-reader.open { transform: translateY(0); }
+        .hero-img { width: 100%; height: 300px; object-fit: cover; }
+        .article-body { line-height: 1.6; font-size: 18px; color: #333; }
+
+        /* Utility */
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hidden { display: none !important; }
         
-        /* KEYPAD STYLES */
-        .keypad-btn { width: 70px; height: 70px; border-radius: 50%; background-color: #f8fafc; border: 1px solid #e2e8f0; box-shadow: 0 4px 10px rgba(0,0,0,0.02); font-size: 28px; font-weight: 500; color: #0f172a; display: flex; align-items: center; justify-content: center; transition: all 0.2s; cursor: pointer; user-select: none; }
-        .keypad-btn:active { background-color: #e2e8f0; transform: scale(0.95); }
-        .dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #cbd5e1; transition: all 0.2s; }
-        .dot.filled { background-color: #2563eb; border-color: #2563eb; box-shadow: 0 0 12px rgba(37, 99, 235, 0.4); }
-        .shake { animation: shake 0.5s; }
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+        /* Table Styles */
+        .score-table th { font-size: 10px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; padding: 8px 4px; border-bottom: 1px solid #F3F4F6; }
+        .score-table td { font-size: 13px; font-weight: 500; color: #111827; padding: 8px 4px; border-bottom: 1px solid #F9FAFB; }
+        .score-table tr:last-child td { border-bottom: none; }
+        .bowler-name, .batter-name { font-weight: 600; }
+        .dismissal-text { font-size: 10px; color: #6B7280; font-weight: 400; display: block; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="pb-safe">
 
-    <div id="toast-container"></div>
+    <div class="ambient-bg"></div>
 
-    <nav class="bg-[#020617]/80 border-b border-gray-800/50 p-3 sticky top-0 z-50 backdrop-blur-xl">
-        <div class="max-w-4xl mx-auto flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <img src="my-logo.png" onerror="this.src='https://placehold.co/40x40/000000/ffffff?text=C'" class="h-9 w-9 object-contain">
-                <h1 class="font-oswald text-xl uppercase tracking-wider text-white drop-shadow-lg">CRiCKERR <span class="text-blue-500">Live</span></h1>
-            </div>
-            <div class="flex items-center gap-3">
-                <button id="share-btn" onclick="shareMatch()" class="hidden flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-full shadow-[0_0_15px_rgba(37,99,235,0.4)] transition-all"><span>Share</span></button>
-                <button id="back-btn" onclick="showHome()" class="hidden text-xs font-bold text-gray-400 hover:text-white uppercase tracking-wider bg-[#1e293b] hover:bg-[#334155] border border-gray-700 px-4 py-2 rounded-lg transition-colors">Back</button>
-            </div>
-        </div>
-    </nav>
-
-    <div id="home-view" class="flex-grow p-4 max-w-4xl mx-auto w-full">
-        
-        <div class="mb-6">
-            <div class="flex border border-gray-800 bg-[#0f172a]/50 backdrop-blur-md rounded-xl overflow-x-auto hide-scrollbar shadow-lg shadow-black/50">
-                <button id="tab-main-single" class="main-tab-btn active px-4" onclick="switchMainTab('single')">Single Match</button>
-                <button id="tab-main-tournament" class="main-tab-btn px-4" onclick="switchMainTab('tournament')">Tournament</button>
-                <button id="tab-main-international" class="main-tab-btn px-4" onclick="switchMainTab('international')">International</button>
-            </div>
-        </div>
-
-        <div class="mb-6 relative flex flex-col md:flex-row gap-3 z-50">
-            <div class="flex gap-2 flex-grow">
-                <input type="text" id="search-input" placeholder="Search Team Name..." 
-                    oninput="handleSearchInput(this.value)"
-                    class="flex-grow bg-[#1e293b]/50 backdrop-blur-md border border-gray-700/50 text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-all uppercase placeholder-gray-500 shadow-inner">
-                <button onclick="resetSearch()" class="bg-[#1e293b] hover:bg-gray-700 text-gray-400 font-bold uppercase text-xs px-4 rounded-xl border border-gray-700 transition-colors">Reset</button>
-            </div>
-            <div class="flex gap-2 shrink-0">
-                <button id="select-mode-toggle" onclick="toggleSelectMode()" class="bg-[#1e293b] hover:bg-blue-900/40 border border-gray-700 hover:border-blue-500/50 text-gray-300 hover:text-white text-xs font-bold px-4 py-3 rounded-xl transition-all uppercase flex items-center gap-2">
-                    <span id="select-mode-text">Select</span>
-                </button>
-                <button id="bulk-delete-btn" onclick="initiateBulkDelete()" class="hidden bg-red-600/90 hover:bg-red-500 border border-red-500/50 text-white text-xs font-bold px-4 py-3 rounded-xl transition-all uppercase flex items-center gap-2 shadow-[0_0_15px_rgba(220,38,38,0.3)]">
-                    Delete (<span id="bulk-count">0</span>)
-                </button>
-            </div>
-            <div id="suggestions-box" class="hidden absolute top-full mt-2 w-full rounded-xl"></div>
-        </div>
-
-        <div id="empty-state" class="hidden text-center py-12">
-            <div class="text-4xl mb-4 opacity-50">🏏</div>
-            <h3 class="text-gray-400 font-bold uppercase tracking-widest text-sm">No Matches Found</h3>
-            <p class="text-gray-600 text-xs mt-2">Create a match to get started.</p>
-        </div>
-
-        <div id="lists-container">
-            <div class="mb-8">
-                <h2 class="text-xs font-bold text-red-500 uppercase tracking-widest mb-4 flex items-center gap-2 drop-shadow-md">
-                    <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span> Live Matches
-                </h2>
-                <div id="live-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 transition-all">
-                    <div class="glass-card p-5 rounded-2xl h-40 skeleton"></div>
-                    <div class="glass-card p-5 rounded-2xl h-40 skeleton hidden md:block"></div>
+    <nav class="nav-glass px-4 py-3 shadow-sm">
+        <div class="max-w-3xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3 cursor-pointer group" onclick="showHome()">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg group-active:scale-95 transition-transform">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black text-gray-900 tracking-tight leading-none">CriCKERR</h1>
+                    <span class="text-[11px] font-bold text-blue-600 uppercase tracking-widest">Score Viewer</span>
                 </div>
             </div>
             
-            <div class="mb-6">
-                <h2 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                    <span class="w-2 h-2 bg-gray-500 rounded-full"></span> Completed Matches
-                </h2>
-                <div id="completed-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 transition-all"></div>
+            <button id="back-btn" onclick="showHome()" class="hidden bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-full text-sm font-bold transition">Close</button>
+        </div>
+    </nav>
+
+    <div id="home-view" class="max-w-2xl mx-auto w-full p-5 page-enter">
+        
+        <div class="tab-segment mb-6">
+            <button onclick="switchHomeTab('local')" id="ht-local" class="tab-btn active">Local</button>
+            <button onclick="switchHomeTab('intl')" id="ht-intl" class="tab-btn">International</button>
+            <button onclick="switchHomeTab('news')" id="ht-news" class="tab-btn">News</button>
+            <button onclick="switchHomeTab('tourn')" id="ht-tourn" class="tab-btn">Tournaments</button>
+        </div>
+
+        <div id="search-container" class="relative mb-6">
+            <svg class="absolute left-3 top-3.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" placeholder="Search Matches..." class="search-bar" oninput="handleSearch(this.value)">
+        </div>
+
+        <div id="section-local">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4 px-1">Local Matches</h2>
+            <div id="matches-container" class="space-y-4">
+                <div class="text-center py-12"><div class="inline-block w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div></div>
+            </div>
+            <div class="text-center mt-6">
+                <button id="load-more-btn" onclick="loadMatchList(true)" class="hidden text-blue-600 font-bold text-sm bg-blue-50 px-6 py-2 rounded-full hover:bg-blue-100 transition">View More</button>
             </div>
         </div>
 
-        <div class="text-center pb-8">
-            <button id="load-more-btn" onclick="loadMoreMatches()" class="hidden text-xs font-bold text-gray-400 hover:text-white uppercase tracking-wider border border-gray-700 hover:border-blue-500 hover:bg-blue-900/20 px-6 py-3 rounded-full transition-all">
-                Load More Matches
-            </button>
-        </div>
-    </div>
-
-    <div id="detail-view" class="hidden flex-grow flex flex-col max-w-4xl mx-auto w-full animate-fade-in pb-10">
-        <div id="detail-loader" class="hidden flex justify-center py-20">
-            <div class="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
-        </div>
-        <div id="detail-content" class="w-full space-y-4">
+        <div id="section-intl" class="hidden">
+            <div class="flex justify-between items-end mb-4 px-1">
+                <h2 class="text-2xl font-bold text-gray-900">International</h2>
+                <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">LIVE UPDATES</span>
             </div>
-    </div>
+            <div id="intl-container" class="space-y-4"></div>
+        </div>
 
-    <div id="tournament-view" class="hidden flex-grow flex flex-col max-w-4xl mx-auto w-full p-4 space-y-6">
-         <div class="p-4 text-center text-gray-400 mt-10">Tournament view active...</div>
-    </div>
+        <div id="section-news" class="hidden">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4 px-1">Top Stories</h2>
+            <div id="news-container" class="grid grid-cols-1 gap-4"></div>
+        </div>
 
-    <div id="passcode-modal" class="hidden fixed inset-0 z-[110] bg-[#020617]/95 backdrop-blur-xl flex flex-col items-center justify-center animate-fade-in">
-        <div class="w-full max-w-sm flex flex-col items-center">
-            <div class="mb-10 text-center">
-                <div class="bg-red-500/10 shadow-[0_0_30px_rgba(220,38,38,0.2)] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/30">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+        <div id="section-tourn" class="hidden">
+            <div class="flex justify-between items-center mb-4 px-1">
+                <h2 class="text-2xl font-bold text-gray-900">Tournaments</h2>
+            </div>
+            
+            <div class="glass-card p-3 mb-6 flex gap-2">
+                <input type="text" id="tourn-search-id" placeholder="Enter Tournament ID..." class="bg-gray-50/50 border-none rounded-lg px-4 py-2 w-full text-sm outline-none focus:bg-white transition">
+                <button onclick="fetchTournament()" class="bg-blue-600 text-white rounded-lg px-4 font-bold text-xs uppercase tracking-wide shadow-lg shadow-blue-200">Load</button>
+            </div>
+
+            <div id="tourn-loader" class="hidden text-center py-12">
+                <div class="inline-block w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+            </div>
+
+            <div id="tourn-content" class="hidden space-y-6">
+                
+                <div class="glass-card p-6 text-center relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
+                    <div id="t-status" class="inline-block bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-3">UPCOMING</div>
+                    <h1 id="t-name" class="text-2xl font-black text-gray-900 uppercase leading-tight tracking-tight mb-2">Tournament Name</h1>
+                    <div class="flex items-center justify-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wide">
+                        <span id="t-category">Category</span> • <span id="t-location">Location</span>
+                    </div>
                 </div>
-                <h3 class="text-2xl font-black text-white uppercase tracking-tight">Admin Override</h3>
-                <p id="modal-desc" class="text-gray-400 text-xs mt-2 uppercase tracking-widest">Enter code to permanently delete</p>
-            </div>
 
-            <div id="passcode-dots" class="flex gap-6 mb-12">
-                <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
-            </div>
+                <div>
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 px-1">Standings</h3>
+                    <div class="glass-card overflow-hidden p-0">
+                        <div class="overflow-x-auto hide-scroll">
+                            <table class="w-full text-left whitespace-nowrap">
+                                <thead>
+                                    <tr class="bg-gray-50/50 border-b border-gray-100 text-[9px] font-black uppercase text-gray-400 tracking-wider">
+                                        <th class="p-3 pl-4">Team</th>
+                                        <th class="p-3 text-center">P</th>
+                                        <th class="p-3 text-center">W</th>
+                                        <th class="p-3 text-center">L</th>
+                                        <th class="p-3 text-center">NRR</th>
+                                        <th class="p-3 pr-4 text-center text-blue-600">PTS</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="standings-body" class="text-xs font-bold text-gray-700 divide-y divide-gray-50"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
 
-            <div class="grid grid-cols-3 gap-x-8 gap-y-6 mb-10">
-                <div class="keypad-btn" onclick="handleKeypad(1)">1</div>
-                <div class="keypad-btn" onclick="handleKeypad(2)">2</div>
-                <div class="keypad-btn" onclick="handleKeypad(3)">3</div>
-                <div class="keypad-btn" onclick="handleKeypad(4)">4</div>
-                <div class="keypad-btn" onclick="handleKeypad(5)">5</div>
-                <div class="keypad-btn" onclick="handleKeypad(6)">6</div>
-                <div class="keypad-btn" onclick="handleKeypad(7)">7</div>
-                <div class="keypad-btn" onclick="handleKeypad(8)">8</div>
-                <div class="keypad-btn" onclick="handleKeypad(9)">9</div>
-                <div class="keypad-btn opacity-0 cursor-default"></div> 
-                <div class="keypad-btn" onclick="handleKeypad(0)">0</div>
-                <div class="keypad-btn text-base font-bold text-gray-400 bg-transparent shadow-none hover:bg-transparent" onclick="handleKeypad('back')">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414a2 2 0 001.414.586H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z" /></svg>
+                <div>
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 px-1">Schedule</h3>
+                    <div id="schedule-list" class="space-y-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="detail-view" class="hidden max-w-2xl mx-auto w-full flex flex-col h-full">
+        
+        <div class="bg-white/80 backdrop-blur-xl border-b border-gray-200 sticky top-[68px] z-30 pt-2 pb-2 shadow-sm">
+            <div class="px-5 py-2">
+                <div class="flex justify-between items-center mb-4">
+                    <span id="d-series" class="text-[10px] font-bold text-gray-500 uppercase tracking-wider truncate max-w-[200px]">SERIES NAME</span>
+                    <span id="d-status-badge" class="text-[10px] font-bold bg-red-50 text-red-600 px-2 py-1 rounded flex items-center gap-1">
+                        <span class="live-dot"></span> LIVE
+                    </span>
+                </div>
+
+                <div class="flex justify-between items-center mb-6">
+                    <div class="text-center w-1/3">
+                        <img id="d-t1-logo" class="w-14 h-14 mx-auto mb-2 object-contain bg-gray-50 rounded-lg p-1">
+                        <div id="d-t1-name" class="font-bold text-xs text-gray-900 truncate">TEAM 1</div>
+                        <div id="d-t1-score" class="text-xl font-black text-gray-900 mt-1">0/0</div>
+                    </div>
+                    <div class="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded-full">VS</div>
+                    <div class="text-center w-1/3">
+                        <img id="d-t2-logo" class="w-14 h-14 mx-auto mb-2 object-contain bg-gray-50 rounded-lg p-1">
+                        <div id="d-t2-name" class="font-bold text-xs text-gray-900 truncate">TEAM 2</div>
+                        <div id="d-t2-score" class="text-xl font-black text-gray-900 mt-1">0/0</div>
+                    </div>
+                </div>
+
+                <div class="text-center mb-4">
+                    <span id="d-note" class="text-xs font-semibold text-blue-800 bg-blue-50 border border-blue-100 px-3 py-1.5 rounded-lg shadow-sm">Match Status Note</span>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 mb-2">
+                    <div class="bg-gray-50 p-2 rounded-lg text-center">
+                        <div class="text-[9px] text-gray-400 font-bold uppercase">CRR</div>
+                        <div id="d-crr" class="font-mono font-bold text-sm">-</div>
+                    </div>
+                    <div class="bg-gray-50 p-2 rounded-lg text-center">
+                        <div class="text-[9px] text-gray-400 font-bold uppercase">Target</div>
+                        <div id="d-target" class="font-mono font-bold text-sm">-</div>
+                    </div>
+                    <div class="bg-gray-50 p-2 rounded-lg text-center">
+                        <div class="text-[9px] text-gray-400 font-bold uppercase">RRR</div>
+                        <div id="d-rrr" class="font-mono font-bold text-blue-600 text-sm">-</div>
+                    </div>
+                </div>
+
+                <div class="tab-segment">
+                    <button onclick="switchDetailTab('scorecard')" id="dt-scorecard" class="tab-btn active">Scorecard</button>
+                    <button onclick="switchDetailTab('comm')" id="dt-comm" class="tab-btn">Comm</button>
+                    <button onclick="switchDetailTab('squad')" id="dt-squad" class="tab-btn">Squads</button>
+                    <button onclick="switchDetailTab('charts')" id="dt-charts" class="tab-btn">Stats</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-5 space-y-4">
+            <div id="dv-scorecard" class="space-y-4 page-enter">
+                <div class="glass-card p-0">
+                    <div class="bg-gray-50 px-4 py-3 border-b border-gray-100 flex justify-between">
+                        <span id="i1-name" class="font-bold text-sm text-gray-900">Innings 1</span>
+                        <span id="i1-total" class="font-mono font-bold text-blue-600 text-sm"></span>
+                    </div>
+                    <div id="i1-body" class="p-2"></div>
+                </div>
+                <div class="glass-card p-0">
+                    <div class="bg-gray-50 px-4 py-3 border-b border-gray-100 flex justify-between">
+                        <span id="i2-name" class="font-bold text-sm text-gray-900">Innings 2</span>
+                        <span id="i2-total" class="font-mono font-bold text-amber-600 text-sm"></span>
+                    </div>
+                    <div id="i2-body" class="p-2"></div>
                 </div>
             </div>
 
-            <button onclick="closePasscodeModal()" class="text-gray-500 font-semibold text-sm mt-4 hover:text-white uppercase tracking-wider transition-colors">Cancel</button>
+            <div id="dv-comm" class="hidden page-enter">
+                <div class="glass-card p-4 mb-4">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase mb-3">Recent Overs</h3>
+                    <div id="recent-balls" class="flex gap-2 overflow-x-auto pb-2 hide-scroll"></div>
+                </div>
+                <div id="comm-feed" class="glass-card divide-y divide-gray-100">
+                    <div class="p-6 text-center text-gray-400 text-sm">Loading Commentary...</div>
+                </div>
+            </div>
+
+            <div id="dv-squad" class="hidden page-enter">
+                <div class="flex gap-2 mb-4">
+                    <button onclick="toggleSquadList(1)" id="sq-btn-1" class="flex-1 py-2 bg-white text-sm font-bold rounded-lg shadow-sm border border-gray-100 transition">Home XI</button>
+                    <button onclick="toggleSquadList(2)" id="sq-btn-2" class="flex-1 py-2 bg-gray-100 text-gray-500 text-sm font-bold rounded-lg transition">Away XI</button>
+                </div>
+                <div id="squad-list-content" class="glass-card"></div>
+            </div>
+
+            <div id="dv-charts" class="hidden space-y-4 page-enter">
+                <div class="glass-card p-4">
+                    <h4 class="text-sm font-bold mb-4">Partnership / Worm</h4>
+                    <div class="h-48"><canvas id="wormChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="news-reader">
+        <div class="sticky top-0 z-10 flex justify-between items-center p-4 bg-white/90 backdrop-blur-md border-b border-gray-100">
+            <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">News Reader</span>
+            <button onclick="closeNews()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold hover:bg-gray-200">✕</button>
+        </div>
+        <div id="news-content-area" class="pb-20"></div>
+    </div>
+
+    <div id="pin-modal" class="hidden fixed inset-0 z-[300] bg-black/40 backdrop-blur-sm flex items-center justify-center">
+        <div class="glass-card p-6 w-64 text-center transform scale-100 transition-transform">
+            <h3 class="text-lg font-bold mb-4">Admin Delete</h3>
+            <input type="password" id="admin-pin" class="w-full bg-gray-100 p-2 rounded-lg text-center text-xl tracking-widest mb-4" placeholder="••••" maxlength="4">
+            <div class="flex gap-2">
+                <button onclick="closePin()" class="flex-1 py-2 text-gray-500 font-bold">Cancel</button>
+                <button onclick="confirmDelete()" class="flex-1 py-2 bg-red-500 text-white rounded-lg font-bold">Delete</button>
+            </div>
         </div>
     </div>
 
     <script>
-    // --- FIREBASE SETUP ---
-    const firebaseConfig = { 
-        apiKey: "AIzaSyBqcD59IAPpKqk98oDZkgzgkoVZ8b8LGgY", 
-        authDomain: "livecricketscoring-92087.firebaseapp.com", 
-        databaseURL: "https://livecricketscoring-92087-default-rtdb.firebaseio.com", 
-        projectId: "livecricketscoring-92087", 
-        storageBucket: "livecricketscoring-92087.firebasestorage.app", 
-        messagingSenderId: "522927197627", 
-        appId: "1:522927197627:web:f1df5db736cae96893089e" 
-    };
-    
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    db.enablePersistence({ synchronizeTabs: true }).catch(err => console.log(err.code));
-
-    // --- STATE VARS ---
-    let activeMainTab = 'single';
-    let isSelectMode = false;
-    let selectedMatches = new Set();
-    let isBulkDelete = false;
-    
-    let lastVisibleMatch = null;
-    let searchDebounce = null;
-    const MATCH_LIMIT = 15;
-    
-    let matchToDelete = null;
-    let passcodeBuffer = "";
-    const _AC = "2626"; // Admin Code
-
-    window.onload = function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const id = urlParams.get('id');
-        if (id) {
-            db.collection("tournaments").doc(id).get().then(doc => {
-                if(doc.exists) openTournament(id); else openMatch(id);
-            }).catch(() => openMatch(id));
-        } else {
-            loadMatchList(false);
-        }
-    };
-
-    // --- UI HELPERS ---
-    function showToast(message, isError = false) {
-        const container = document.getElementById('toast-container');
-        const toast = document.createElement('div');
-        toast.className = `toast ${isError ? 'error' : ''}`;
-        toast.innerHTML = isError ? 
-            `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> ${message}` :
-            `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> ${message}`;
-        container.appendChild(toast);
-        setTimeout(() => { toast.style.animation = 'fadeOutRight 0.3s forwards'; setTimeout(() => toast.remove(), 300); }, 3000);
-    }
-
-    // --- TAB SYSTEM ---
-    function switchMainTab(tab) {
-        activeMainTab = tab;
-        document.querySelectorAll('.main-tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(`tab-main-${tab}`).classList.add('active');
+        // --- CONFIG & STATE ---
+        const firebaseConfig = { apiKey: "AIzaSyBqcD59IAPpKqk98oDZkgzgkoVZ8b8LGgY", authDomain: "livecricketscoring-92087.firebaseapp.com", databaseURL: "https://livecricketscoring-92087-default-rtdb.firebaseio.com", projectId: "livecricketscoring-92087", storageBucket: "livecricketscoring-92087.firebasestorage.app", messagingSenderId: "522927197627", appId: "1:522927197627:web:f1df5db736cae96893089e" };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
         
-        // Reset selection UI
-        isSelectMode = false;
-        selectedMatches.clear();
-        updateSelectUI();
-
-        if (tab === 'international') {
-            loadInternationalMatches();
-        } else {
-            loadMatchList(false);
-        }
-    }
-
-    // --- SELECT & BULK ACTIONS ---
-    function toggleSelectMode() {
-        if(activeMainTab === 'international') { showToast("Cannot delete international feeds.", true); return; }
-        isSelectMode = !isSelectMode;
-        if (!isSelectMode) selectedMatches.clear();
-        updateSelectUI();
-    }
-
-    function updateSelectUI() {
-        const toggleBtn = document.getElementById('select-mode-toggle');
-        const bulkBtn = document.getElementById('bulk-delete-btn');
-        const liveList = document.getElementById('live-list');
-        const compList = document.getElementById('completed-list');
-
-        if (isSelectMode) {
-            toggleBtn.innerHTML = "Cancel Select";
-            toggleBtn.classList.replace('bg-[#1e293b]', 'bg-blue-600');
-            toggleBtn.classList.add('text-white');
-            liveList.classList.add('select-mode-active');
-            compList.classList.add('select-mode-active');
-            bulkBtn.classList.remove('hidden');
-        } else {
-            toggleBtn.innerHTML = "Select";
-            toggleBtn.classList.replace('bg-blue-600', 'bg-[#1e293b]');
-            toggleBtn.classList.remove('text-white');
-            liveList.classList.remove('select-mode-active');
-            compList.classList.remove('select-mode-active');
-            bulkBtn.classList.add('hidden');
-        }
-        document.getElementById('bulk-count').innerText = selectedMatches.size;
-    }
-
-    function toggleMatchSelect(e, id) {
-        e.stopPropagation();
-        const card = document.getElementById(`card-${id}`);
-        if (selectedMatches.has(id)) {
-            selectedMatches.delete(id);
-            card.classList.remove('selected');
-        } else {
-            selectedMatches.add(id);
-            card.classList.add('selected');
-        }
-        document.getElementById('bulk-count').innerText = selectedMatches.size;
-    }
-
-    function handleCardClick(e, id) {
-        if (isSelectMode) {
-            const checkbox = document.querySelector(`.match-checkbox[data-id="${id}"]`);
-            if (checkbox) { checkbox.checked = !checkbox.checked; toggleMatchSelect(e, id); }
-        } else {
-            openMatch(id);
-        }
-    }
-
-    // --- ADMIN PASSCODE ---
-    function initiateDelete(e, id) {
-        e.stopPropagation();
-        isBulkDelete = false;
-        matchToDelete = id;
-        openPasscode("Delete this match");
-    }
-
-    function initiateBulkDelete() {
-        if (selectedMatches.size === 0) { showToast("No matches selected", true); return; }
-        isBulkDelete = true;
-        openPasscode(`Delete ${selectedMatches.size} selected matches`);
-    }
-
-    function openPasscode(desc) {
-        document.getElementById('modal-desc').innerText = desc.toUpperCase();
-        passcodeBuffer = "";
-        updateDots();
-        document.getElementById('passcode-modal').classList.remove('hidden');
-    }
-
-    function closePasscodeModal() {
-        document.getElementById('passcode-modal').classList.add('hidden');
-        matchToDelete = null; passcodeBuffer = "";
-    }
-
-    function handleKeypad(val) {
-        if (val === 'back') passcodeBuffer = passcodeBuffer.slice(0, -1);
-        else if (passcodeBuffer.length < 4) passcodeBuffer += val;
+        let currentMatchData = null;
+        let matchToDelete = null;
+        let unsubscribeMatch = null;
         
-        updateDots();
-        if (passcodeBuffer.length === 4) {
-            setTimeout(() => {
-                if (passcodeBuffer === _AC) performDeleteAction();
-                else {
-                    const dots = document.getElementById('passcode-dots');
-                    dots.classList.add('shake');
-                    setTimeout(() => { dots.classList.remove('shake'); passcodeBuffer = ""; updateDots(); }, 500);
-                }
-            }, 200);
-        }
-    }
+        window.onload = () => {
+            loadMatchList();
+            setTimeout(loadIntlMatches, 800);
+            setTimeout(loadNews, 1500);
+        };
 
-    function updateDots() {
-        const dots = document.querySelectorAll('.dot');
-        dots.forEach((dot, idx) => {
-            if (idx < passcodeBuffer.length) dot.classList.add('filled');
-            else dot.classList.remove('filled');
-        });
-    }
-
-    async function performDeleteAction() {
-        closePasscodeModal();
-        try {
-            if (isBulkDelete) {
-                const batch = db.batch();
-                selectedMatches.forEach(id => batch.delete(db.collection('live_matches').doc(id)));
-                await batch.commit();
-                showToast(`Successfully deleted ${selectedMatches.size} matches!`);
-                toggleSelectMode(); // Turn off
-            } else {
-                await db.collection('live_matches').doc(matchToDelete).delete();
-                showToast("Match Deleted Successfully");
-            }
-            loadMatchList(false);
-        } catch (err) {
-            showToast("Error deleting matches.", true);
-        }
-    }
-
-    // --- DATA LOADING & FILTERING ---
-    function loadMatchList(isNextPage = false) {
-        const liveContainer = document.getElementById('live-list');
-        const completedContainer = document.getElementById('completed-list');
-        const emptyState = document.getElementById('empty-state');
-        const loadMoreBtn = document.getElementById('load-more-btn');
-
-        if (!isNextPage) {
-            liveContainer.innerHTML = '<div class="glass-card p-5 rounded-2xl h-40 skeleton"></div><div class="glass-card p-5 rounded-2xl h-40 skeleton hidden md:block"></div>';
-            completedContainer.innerHTML = '';
-            lastVisibleMatch = null;
-            emptyState.classList.add('hidden');
-        }
-
-        let query = db.collection('live_matches').orderBy('timestamp', 'desc').limit(MATCH_LIMIT);
-        if (isNextPage && lastVisibleMatch) query = query.startAfter(lastVisibleMatch);
-
-        query.get().then(snapshot => {
-            if (!isNextPage) liveContainer.innerHTML = ''; 
+        // --- TABS & NAVIGATION ---
+        function switchHomeTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`ht-${tab}`).classList.add('active');
+            // Added 'tourn' to the hidden list
+            ['local','intl','news', 'tourn'].forEach(t => document.getElementById(`section-${t}`).classList.add('hidden'));
+            const sec = document.getElementById(`section-${tab}`);
+            sec.classList.remove('hidden');
+            sec.classList.add('page-enter');
             
-            let matchedDocs = [];
-            snapshot.docs.forEach(doc => {
-                const m = doc.data();
-                const matchTypeStr = m.type || 'single'; 
-                if (activeMainTab === 'single' && (matchTypeStr === 'single' || !m.type)) matchedDocs.push({id: doc.id, m});
-                if (activeMainTab === 'tournament' && matchTypeStr === 'tournament') matchedDocs.push({id: doc.id, m});
-            });
+            if(tab === 'intl') loadIntlMatches();
+            if(tab === 'news') loadNews();
+            // Optional: Auto load a demo tournament if you wish
+            // if(tab === 'tourn') fetchTournament('DEMO_ID'); 
+        }
 
-            if (matchedDocs.length === 0 && !isNextPage) {
-                emptyState.classList.remove('hidden');
-                loadMoreBtn.classList.add('hidden');
+        // --- LOCAL MATCHES ---
+        function loadMatchList(isNext = false) {
+            const container = document.getElementById('matches-container');
+            if(!isNext) container.innerHTML = '<div class="text-center py-10 text-gray-400">Loading matches...</div>';
+
+            db.collection('live_matches').orderBy('timestamp', 'desc').limit(10).get()
+            .then(snap => {
+                if(!isNext) container.innerHTML = '';
+                if(snap.empty) { container.innerHTML = '<div class="text-center text-gray-400 py-10">No matches found.</div>'; return; }
+
+                let delay = 0;
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    const card = createMatchCard(doc.id, data, 'local');
+                    const wrapper = document.createElement('div');
+                    wrapper.style.animationDelay = `${delay}ms`;
+                    wrapper.className = "stagger-item";
+                    wrapper.innerHTML = card;
+                    container.appendChild(wrapper);
+                    delay += 100;
+                });
+                
+                if(snap.docs.length >= 10) document.getElementById('load-more-btn').classList.remove('hidden');
+            });
+        }
+
+        // --- INTERNATIONAL MOCK DATA (ENRICHED) ---
+        const intlDB = {
+            'i1': {
+                id: 'i1', t1: 'India', t2: 'Australia', t1Logo: 'https://flagcdn.com/in.svg', t2Logo: 'https://flagcdn.com/au.svg',
+                matchType: 'TEST', matchStatus: 'LIVE', series: 'Border-Gavaskar Trophy', venue: 'MCG, Melbourne',
+                score: '320/4', wickets: 4, overs: '88.2', 
+                req: 'Day 1: Session 3', crr: '3.62', 
+                
+                // DATA: Squads
+                t1Squad: ['R. Sharma (c)', 'Y. Jaiswal', 'S. Gill', 'V. Kohli', 'K. Rahul', 'R. Pant (wk)', 'R. Jadeja', 'R. Ashwin', 'M. Shami', 'J. Bumrah', 'M. Siraj'],
+                t2Squad: ['U. Khawaja', 'D. Warner', 'M. Labuschagne', 'S. Smith', 'T. Head', 'A. Carey (wk)', 'P. Cummins (c)', 'M. Starc', 'N. Lyon', 'J. Hazlewood', 'S. Boland'],
+
+                // DATA: Scorecard
+                scorecard: {
+                    innings1: { 
+                        name: 'India (1st Inn)', score: '320/4', overs: '88.2', 
+                        batting: [
+                            {name:'Y. Jaiswal', runs:45, balls:60, dismissal:'c Smith b Cummins', fours:6, sixes:1},
+                            {name:'R. Sharma', runs:25, balls:42, dismissal:'lbw b Starc', fours:3, sixes:0},
+                            {name:'S. Gill', runs:18, balls:35, dismissal:'b Lyon', fours:2, sixes:0},
+                            {name:'V. Kohli', runs:125, balls:210, dismissal:'batting', fours:14, sixes:1},
+                            {name:'R. Pant', runs:85, balls:98, dismissal:'c Carey b Hazlewood', fours:9, sixes:3},
+                            {name:'K. Rahul', runs:15, balls:30, dismissal:'batting', fours:1, sixes:0}
+                        ],
+                        bowling: [
+                            {name:'M. Starc', o:18, m:3, r:75, w:1},
+                            {name:'P. Cummins', o:20, m:5, r:60, w:1},
+                            {name:'N. Lyon', o:25, m:4, r:90, w:1},
+                            {name:'J. Hazlewood', o:22, m:6, r:55, w:1},
+                            {name:'T. Head', o:3.2, m:0, r:20, w:0}
+                        ],
+                        fow: "1-55 (Jaiswal), 2-85 (Sharma), 3-120 (Gill), 4-290 (Pant)"
+                    },
+                    innings2: { name: 'Australia', score: 'Yet to Bat', overs: '', batting: [] }
+                },
+
+                // DATA: Timeline & Commentary
+                timeline: ['1','4','.','2','W','1', '.','4','1','6','.', '.'],
+                commLines: [
+                    { ball: "88.2", event: "1", text: "Head to Rahul, 1 run, pushed to deep cover for a single to end the over." },
+                    { ball: "88.1", event: "4", text: "Head to Rahul, FOUR! Beautiful shot! Tossed up outside off, driven elegantly through the covers." },
+                    { ball: "87.6", event: "W", text: "Hazlewood to Pant, OUT! Caught behind! The partnership is finally broken. Short ball, Pant tries to pull but gets a top edge." },
+                    { ball: "87.5", event: "2", text: "Hazlewood to Pant, 2 runs, pulled away to deep mid-wicket." },
+                    { ball: "87.4", event: ".", text: "Hazlewood to Pant, no run, solid defense on the front foot." },
+                    { ball: "87.3", event: "6", text: "Hazlewood to Pant, SIX! Massive hit! Steps out and launches it over long-on!" }
+                ]
+            },
+            'i2': {
+                id: 'i2', t1: 'England', t2: 'South Africa', t1Logo: 'https://flagcdn.com/gb-eng.svg', t2Logo: 'https://flagcdn.com/za.svg',
+                matchType: 'T20', matchStatus: 'COMPLETE', series: '3rd T20I', venue: 'Wanderers, JB',
+                score: '156/10', wickets: 10, overs: '19.4',
+                req: 'Result', resultMain: 'SA won by 7 wickets', crr: '7.8',
+                t1Squad: ['Buttler', 'Salt', 'Malan', 'Brook', 'Ali', 'Curran', 'Woakes', 'Adil', 'Wood'],
+                t2Squad: ['De Kock', 'Bavuma', 'Markram', 'Miller', 'Klaasen', 'Jansen', 'Rabada', 'Nortje'],
+                scorecard: {
+                    innings1: { name: 'England', score: '156/10', overs: '19.4', batting: [{name:'Buttler', runs:55, balls:32, dismissal:'b Rabada'}] },
+                    innings2: { name: 'South Africa', score: '160/3', overs: '17.2', batting: [{name:'Markram', runs:60, balls:40, dismissal:'not out'}] }
+                },
+                timeline: ['W', '1', '4', '6', '1', 'W'],
+                commLines: [
+                    { ball: "17.2", event: "4", text: "Markram hits the winning runs! A glorious cover drive to seal the series." },
+                    { ball: "17.1", event: "6", text: "Huge six over long on! He is in a hurry to finish this." }
+                ]
+            }
+        };
+
+        function loadIntlMatches() {
+            const container = document.getElementById('intl-container');
+            if(container.childElementCount > 0) return;
+            const matches = Object.values(intlDB);
+            let delay = 0;
+            container.innerHTML = matches.map(m => {
+                delay += 100;
+                return `<div class="stagger-item" style="animation-delay: ${delay}ms">${createMatchCard(m.id, m, 'intl')}</div>`;
+            }).join('');
+        }
+
+        function createMatchCard(id, m, type) {
+            let s1 = "0/0", s2 = "Yet to Bat";
+            if(m.scorecard) {
+                s1 = m.scorecard.innings1?.score || "0/0";
+                s2 = m.scorecard.innings2?.score || "Yet to Bat";
+            } else if (m.score) s1 = `${m.score}/${m.wickets}`;
+
+            const liveBadge = m.matchStatus !== 'COMPLETE' 
+                ? `<span class="bg-red-50 text-red-600 px-2 py-0.5 rounded text-[10px] font-bold border border-red-100 flex items-center gap-1"><span class="live-dot"></span>LIVE</span>`
+                : `<span class="bg-gray-100 text-gray-500 px-2 py-0.5 rounded text-[10px] font-bold">FINAL</span>`;
+            
+            const deleteBtn = type === 'local' ? `<div onclick="initDelete(event, '${id}')" class="absolute top-2 right-2 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow text-red-500 cursor-pointer z-10 opacity-0 group-hover:opacity-100 transition">✕</div>` : '';
+
+            return `
+            <div onclick="openMatch('${id}', '${type}')" class="glass-card p-4 relative group cursor-pointer hover:shadow-lg transition">
+                ${deleteBtn}
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">${m.series || m.venue || 'Friendly Match'}</span>
+                    ${liveBadge}
+                </div>
+                <div class="flex justify-between items-center mb-2">
+                    <div class="flex items-center gap-3">
+                        <img src="${m.t1Logo || 'https://via.placeholder.com/40'}" class="w-8 h-8 object-contain rounded bg-gray-50 p-0.5">
+                        <span class="font-bold text-gray-900">${m.t1}</span>
+                    </div>
+                    <span class="font-mono font-bold text-gray-900">${s1}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <img src="${m.t2Logo || 'https://via.placeholder.com/40'}" class="w-8 h-8 object-contain rounded bg-gray-50 p-0.5">
+                        <span class="font-bold text-gray-900">${m.t2}</span>
+                    </div>
+                    <span class="font-mono font-bold text-gray-900">${s2}</span>
+                </div>
+                <div class="mt-3 pt-2 border-t border-gray-100 text-xs text-blue-600 font-medium truncate">
+                    ${m.resultMain || m.req || m.note || 'Click for Scorecard'}
+                </div>
+            </div>`;
+        }
+
+        // --- NEWS ---
+        const newsData = [
+            { id: 1, title: "Kohli smashes 80th Century at MCG", img: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=600&q=80", time: "2 hours ago", body: "In a stunning display of mastery, Virat Kohli conquered the MCG once again..." },
+            { id: 2, title: "IPL 2025: Mega Auction Analysis", img: "https://images.unsplash.com/photo-1624526267942-ab0ff8a3e972?w=600&q=80", time: "5 hours ago", body: "The auction room was heated as teams splashed millions on young talent..." },
+            { id: 3, title: "England announce squad for Ashes", img: "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=600&q=80", time: "1 day ago", body: "England have made bold changes to their lineup for the upcoming Ashes series..." }
+        ];
+
+        function loadNews() {
+            const container = document.getElementById('news-container');
+            if(container.childElementCount > 0) return;
+            container.innerHTML = newsData.map((n, i) => `
+                <div onclick="openNews(${n.id})" class="glass-card flex gap-4 p-3 cursor-pointer stagger-item" style="animation-delay: ${i*100}ms">
+                    <img src="${n.img}" class="w-24 h-24 rounded-xl object-cover bg-gray-200">
+                    <div class="flex flex-col justify-center">
+                        <h3 class="font-bold text-sm text-gray-900 leading-tight mb-2 line-clamp-2">${n.title}</h3>
+                        <span class="text-[11px] text-gray-500 font-medium">${n.time}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openNews(id) {
+            const article = newsData.find(n => n.id === id);
+            document.getElementById('news-content-area').innerHTML = `
+                <img src="${article.img}" class="hero-img">
+                <div class="p-6">
+                    <h1 class="text-2xl font-black text-gray-900 leading-tight mb-2">${article.title}</h1>
+                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-6 block">${article.time} • Cricket News</span>
+                    <p class="article-body">${article.body}${article.body}</p>
+                </div>`;
+            document.getElementById('news-reader').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeNews() {
+            document.getElementById('news-reader').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        // --- MATCH DETAILS (FIXED & EXPANDED) ---
+        function openMatch(id, type) {
+            document.getElementById('home-view').classList.add('hidden');
+            document.getElementById('detail-view').classList.remove('hidden');
+            document.getElementById('detail-view').classList.add('page-enter');
+            document.getElementById('back-btn').classList.remove('hidden');
+            window.scrollTo(0,0);
+
+            if(type === 'local') {
+                if(unsubscribeMatch) unsubscribeMatch();
+                unsubscribeMatch = db.collection('live_matches').doc(id).onSnapshot(doc => {
+                    if(doc.exists) renderDetailView(doc.data());
+                });
+            } else {
+                if(intlDB[id]) renderDetailView(intlDB[id]);
+            }
+        }
+
+        function renderDetailView(d) {
+            currentMatchData = d;
+            
+            // Basic Info
+            document.getElementById('d-series').innerText = d.series || d.venue || 'Match Center';
+            document.getElementById('d-t1-name').innerText = d.t1;
+            document.getElementById('d-t2-name').innerText = d.t2;
+            document.getElementById('d-t1-logo').src = d.t1Logo || '';
+            document.getElementById('d-t2-logo').src = d.t2Logo || '';
+            
+            // Status
+            if(d.matchStatus === 'COMPLETE') {
+                document.getElementById('d-status-badge').innerHTML = 'FINAL';
+                document.getElementById('d-status-badge').className = "text-[10px] font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded";
+                document.getElementById('d-note').innerText = d.resultMain || "Match Concluded";
+            } else {
+                document.getElementById('d-status-badge').innerHTML = '<span class="live-dot"></span> LIVE';
+                document.getElementById('d-status-badge').className = "text-[10px] font-bold bg-red-50 text-red-600 px-2 py-1 rounded flex items-center gap-1";
+                document.getElementById('d-note').innerText = d.req || d.note || (d.target ? `Target: ${d.target}` : "1st Innings");
+            }
+
+            // Scores
+            const i1 = d.scorecard?.innings1 || {score:'0/0', overs:''};
+            const i2 = d.scorecard?.innings2 || {score:'Yet to Bat', overs:''};
+            if(!d.scorecard && d.score) { i1.score = `${d.score}/${d.wickets}`; i1.overs = `${d.overs}`; }
+
+            document.getElementById('d-t1-score').innerHTML = i1.score + `<span class="text-sm text-gray-400 font-medium ml-1">${i1.overs}</span>`;
+            document.getElementById('d-t2-score').innerHTML = i2.score === 'Yet to Bat' ? '<span class="text-sm text-gray-400">Yet to Bat</span>' : i2.score + `<span class="text-sm text-gray-400 font-medium ml-1">${i2.overs}</span>`;
+            document.getElementById('d-crr').innerText = d.crr || "-";
+            document.getElementById('d-target').innerText = d.target || "-";
+            document.getElementById('d-rrr').innerText = d.rrr || "-";
+
+            // Render Tabs
+            renderScoreTable('i1', i1);
+            renderScoreTable('i2', i2);
+            renderCommentary(d);
+            
+            // Squads Initial Load
+            toggleSquadList(1);
+        }
+
+        // --- NEW: FULL SCORECARD RENDERER ---
+        function renderScoreTable(id, inn) {
+            document.getElementById(`${id}-total`).innerText = inn.score;
+            const body = document.getElementById(`${id}-body`);
+            if((!inn.batting || inn.batting.length === 0) && (!inn.bowling || inn.bowling.length === 0)) {
+                body.innerHTML = '<div class="text-center text-xs text-gray-400 py-4 italic">No Data</div>';
                 return;
             }
 
-            if(snapshot.docs.length > 0) {
-                lastVisibleMatch = snapshot.docs[snapshot.docs.length - 1];
-                loadMoreBtn.classList.remove('hidden');
-            } else { loadMoreBtn.classList.add('hidden'); }
+            let html = `<table class="w-full text-left score-table mb-4">
+                <thead><tr><th class="pl-2">Batting</th><th class="text-right">R</th><th class="text-right">B</th><th class="text-right pr-2">4s/6s</th></tr></thead>
+                <tbody>
+                    ${(inn.batting || []).map(b => `
+                        <tr>
+                            <td class="pl-2"><span class="batter-name">${b.name}</span><span class="dismissal-text">${b.dismissal||'not out'}</span></td>
+                            <td class="text-right font-bold">${b.runs}</td>
+                            <td class="text-right text-gray-500">${b.balls}</td>
+                            <td class="text-right text-gray-400 pr-2 text-[10px]">${b.fours||0}/${b.sixes||0}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>`;
 
-            // Group matches by Country
-            const liveByCountry = {};
-            const completedByCountry = {};
-
-            matchedDocs.forEach(({id, m}) => {
-                const country = (m.country || 'Global/Local').toUpperCase();
-                const isComplete = m.matchStatus === "COMPLETE";
-                
-                let t1Score = "0/0", t2Score = "Yet to Bat";
-                if (m.scorecard) {
-                    if(m.scorecard.innings1) t1Score = m.scorecard.innings1.score;
-                    if(m.scorecard.innings2) t2Score = m.scorecard.innings2.score;
-                } else if (m.score) { t1Score = `${m.score}/${m.wickets}`; }
-
-                const card = createMatchCard(id, m, t1Score, t2Score);
-                
-                if (isComplete) {
-                    if(!completedByCountry[country]) completedByCountry[country] = [];
-                    completedByCountry[country].push(card);
-                } else {
-                    if(!liveByCountry[country]) liveByCountry[country] = [];
-                    liveByCountry[country].push(card);
-                }
-            });
-
-            // Helper to render grouped cards
-            const renderGrouped = (container, groupObj, badgeColor, badgeBg) => {
-                Object.keys(groupObj).sort().forEach(country => {
-                    const header = `<div class="col-span-1 md:col-span-2 flex items-center gap-3 mt-4 mb-2 animate-fade-in">
-                        <span class="px-3 py-1 rounded-md text-[11px] font-bold uppercase tracking-widest border shadow-sm ${badgeBg} ${badgeColor}">${country}</span>
-                        <div class="h-px flex-grow opacity-20 ${badgeBg.replace('bg-', 'bg-')}"></div>
-                    </div>`;
-                    container.insertAdjacentHTML('beforeend', header);
-                    groupObj[country].forEach(card => container.insertAdjacentHTML('beforeend', card));
-                });
-            };
-
-            renderGrouped(liveContainer, liveByCountry, 'text-blue-600 border-blue-200', 'bg-blue-50');
-            renderGrouped(completedContainer, completedByCountry, 'text-gray-600 border-gray-200', 'bg-gray-100');
-            
-        }).catch(err => {
-            liveContainer.innerHTML = '<div class="text-red-500 text-sm italic col-span-2">Error loading data.</div>';
-        });
-    }
-
-    // --- INTERNATIONAL AUTO-UPDATE MOCK ---
-    function loadInternationalMatches() {
-        const liveContainer = document.getElementById('live-list');
-        const completedContainer = document.getElementById('completed-list');
-        document.getElementById('load-more-btn').classList.add('hidden');
-        document.getElementById('empty-state').classList.add('hidden');
-        
-        liveContainer.innerHTML = '<div class="glass-card p-5 rounded-2xl h-40 skeleton"></div><div class="glass-card p-5 rounded-2xl h-40 skeleton hidden md:block"></div>';
-        completedContainer.innerHTML = '';
-
-        setTimeout(() => {
-            const mockData = [
-                { id: 'int-1', t1: 'IND', t2: 'AUS', t1Logo: 'https://flagcdn.com/w80/in.png', t2Logo: 'https://flagcdn.com/w80/au.png', matchStatus: 'LIVE', t1Score: '185/3', t2Score: 'Yet to Bat', matchType: 'T20I', venue: 'Wankhede Stadium', target: 0, type: 'international', tournament: 'BGT Series', country: 'India' },
-                { id: 'int-2', t1: 'ENG', t2: 'RSA', t1Logo: 'https://flagcdn.com/w80/gb-eng.png', t2Logo: 'https://flagcdn.com/w80/za.png', matchStatus: 'COMPLETE', resultMain: 'ENG won by 15 runs', t1Score: '210/6', t2Score: '195/9', matchType: 'ODI', venue: 'Lord\'s', type: 'international', tournament: 'World Cup', country: 'England' },
-                { id: 'int-3', t1: 'NZ', t2: 'PAK', t1Logo: 'https://flagcdn.com/w80/nz.png', t2Logo: 'https://flagcdn.com/w80/pk.png', matchStatus: 'LIVE', t1Score: '110/1', t2Score: '240/8', matchType: 'Test', venue: 'Eden Park', target: 0, type: 'international', tournament: 'Test Champ.', country: 'New Zealand' }
-            ];
-            
-            liveContainer.innerHTML = '';
-            
-            const liveByCountry = {};
-            const completedByCountry = {};
-
-            mockData.forEach(m => {
-                const country = (m.country || 'International').toUpperCase();
-                const card = createMatchCard(m.id, m, m.t1Score, m.t2Score);
-                if (m.matchStatus === 'COMPLETE') {
-                    if(!completedByCountry[country]) completedByCountry[country] = [];
-                    completedByCountry[country].push(card);
-                } else {
-                    if(!liveByCountry[country]) liveByCountry[country] = [];
-                    liveByCountry[country].push(card);
-                }
-            });
-
-            const renderGrouped = (container, groupObj, badgeColor, badgeBg) => {
-                Object.keys(groupObj).sort().forEach(country => {
-                    const header = `<div class="col-span-1 md:col-span-2 flex items-center gap-3 mt-4 mb-2 animate-fade-in">
-                        <span class="px-3 py-1 rounded-md text-[11px] font-bold uppercase tracking-widest border shadow-sm ${badgeBg} ${badgeColor}">${country}</span>
-                        <div class="h-px flex-grow opacity-20 ${badgeBg.replace('bg-', 'bg-')}"></div>
-                    </div>`;
-                    container.insertAdjacentHTML('beforeend', header);
-                    groupObj[country].forEach(card => container.insertAdjacentHTML('beforeend', card));
-                });
-            };
-
-            renderGrouped(liveContainer, liveByCountry, 'text-blue-600 border-blue-200', 'bg-blue-50');
-            renderGrouped(completedContainer, completedByCountry, 'text-gray-600 border-gray-200', 'bg-gray-100');
-            
-        }, 800);
-    }
-
-    // --- CARD TEMPLATE ---
-    function createMatchCard(id, m, t1Score, t2Score) {
-        let statusBadge = "LIVE", statusColor = "bg-red-50 text-red-600 border-red-200";
-        if (m.matchStatus === "COMPLETE") { statusBadge = "RESULT"; statusColor = "bg-gray-100 text-gray-600 border-gray-200"; }
-        else if (['RAIN', 'BAD LIGHT'].includes(m.matchStatus)) { statusBadge = m.matchStatus; statusColor = "bg-amber-50 text-amber-600 border-amber-200"; }
-        
-        const isSelected = selectedMatches.has(id);
-        const cardClass = isSelected ? "glass-card selected match-card cursor-pointer p-5 rounded-2xl" : "glass-card match-card cursor-pointer p-5 rounded-2xl";
-
-        return `
-        <div id="card-${id}" onclick="handleCardClick(event, '${id}')" class="${cardClass}">
-            <div class="checkbox-wrapper">
-                <input type="checkbox" class="match-checkbox" data-id="${id}" ${isSelected ? 'checked' : ''} onclick="toggleMatchSelect(event, '${id}')">
-            </div>
-            
-            <div onclick="initiateDelete(event, '${id}')" class="delete-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-            </div>
-
-            <div class="flex justify-between items-start mb-5 pb-3 border-b border-gray-200">
-                <div class="flex flex-col pl-2">
-                    <span class="text-[10px] font-bold text-blue-600 uppercase tracking-widest">${m.tournament || 'CRiCKERR Series'}</span>
-                    <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1 flex items-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg>
-                        ${m.venue || 'Global Ground'}
-                    </span>
-                </div>
-                <span class="text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-md border shadow-sm ${statusColor}">${m.matchStatus === 'COMPLETE' ? '' : '<span class="mr-1 animate-pulse text-red-600">●</span>'}${statusBadge}</span>
-            </div>
-            
-            <div class="flex justify-between items-center mb-3">
-                <div class="flex items-center gap-4 w-1/2">
-                    <img src="${m.t1Logo || 'https://placehold.co/40x40/f1f5f9/94a3b8?text=T1'}" class="w-11 h-11 rounded-full object-cover team-logo">
-                    <div class="flex flex-col"><span class="font-bold text-gray-500 text-[11px] uppercase tracking-wider">${formatTeamName(m.t1)}</span><span class="font-bold text-gray-900 text-2xl tracking-tight">${t1Score}</span></div>
-                </div>
-            </div>
-            <div class="flex justify-between items-center mb-2">
-                <div class="flex items-center gap-4 w-1/2">
-                    <img src="${m.t2Logo || 'https://placehold.co/40x40/f1f5f9/94a3b8?text=T2'}" class="w-11 h-11 rounded-full object-cover team-logo">
-                    <div class="flex flex-col"><span class="font-bold text-gray-500 text-[11px] uppercase tracking-wider">${formatTeamName(m.t2)}</span><span class="font-bold text-gray-900 text-2xl tracking-tight">${t2Score}</span></div>
-                </div>
-            </div>
-            
-            <div class="text-[11px] font-bold text-green-700 mt-4 bg-green-50 inline-block px-3 py-1.5 rounded-lg border border-green-200 uppercase tracking-wide">
-                ${m.matchStatus === "COMPLETE" ? (m.resultMain || "Match Concluded") : (m.target > 0 ? "Target: " + m.target : "First Innings")}
-            </div>
-        </div>`;
-    }
-
-    function formatTeamName(name) { return name ? name.replace(/CRICKET CLUB/gi, "C.C").replace(/Cricket Club/g, "C.C") : "Team"; }
-    function loadMoreMatches() { loadMatchList(true); }
-
-    // --- PRO DASHBOARD LOGIC ---
-    let activeMatchListener = null;
-    let matchChartInstance = null;
-
-    function showHome() {
-        if (activeMatchListener) activeMatchListener(); // Stop live sync
-        document.getElementById('detail-view').classList.add('hidden');
-        document.getElementById('tournament-view').classList.add('hidden');
-        document.getElementById('home-view').classList.remove('hidden');
-        document.getElementById('back-btn').classList.add('hidden');
-        document.getElementById('share-btn').classList.add('hidden');
-        window.history.replaceState({}, document.title, window.location.pathname);
-    }
-
-    function openMatch(id) {
-        document.getElementById('home-view').classList.add('hidden');
-        document.getElementById('tournament-view').classList.add('hidden');
-        document.getElementById('detail-view').classList.remove('hidden');
-        document.getElementById('back-btn').classList.remove('hidden');
-        document.getElementById('share-btn').classList.remove('hidden');
-        
-        document.getElementById('detail-content').innerHTML = '';
-        document.getElementById('detail-loader').classList.remove('hidden');
-        
-        if (activeMatchListener) activeMatchListener(); 
-        
-        // REAL-TIME FIRESTORE SYNC
-        activeMatchListener = db.collection('live_matches').doc(id).onSnapshot(doc => {
-            document.getElementById('detail-loader').classList.add('hidden');
-            if (doc.exists) {
-                renderMatchDashboard(doc.data(), id);
-            } else {
-                showToast("Match not found or deleted", true);
-                showHome();
+            if(inn.fow) {
+                html += `<div class="text-[10px] text-gray-500 bg-gray-50 p-2 rounded mb-4 border border-gray-100"><strong class="text-gray-700">Fall of Wickets:</strong> ${inn.fow}</div>`;
             }
-        }, err => {
-            document.getElementById('detail-loader').classList.add('hidden');
-            showToast("Connection paused or offline", true);
-        });
-    }
 
-    function switchDetailTab(tabName) {
-        document.querySelectorAll('.detail-tab-btn').forEach(btn => {
-            btn.classList.remove('active', 'text-blue-500', 'border-blue-500');
-            btn.classList.add('text-gray-500', 'border-transparent');
-        });
-        const activeBtn = document.getElementById(`tab-detail-${tabName}`);
-        activeBtn.classList.remove('text-gray-500', 'border-transparent');
-        activeBtn.classList.add('active', 'text-blue-500', 'border-blue-500');
-        
-        document.querySelectorAll('.detail-section').forEach(sec => sec.classList.add('hidden'));
-        document.getElementById(`section-${tabName}`).classList.remove('hidden');
-    }
+            if(inn.bowling && inn.bowling.length > 0) {
+                html += `<table class="w-full text-left score-table">
+                    <thead><tr><th class="pl-2">Bowling</th><th class="text-right">O</th><th class="text-right">M</th><th class="text-right">R</th><th class="text-right pr-2">W</th></tr></thead>
+                    <tbody>
+                        ${inn.bowling.map(b => `
+                            <tr>
+                                <td class="pl-2 bowler-name">${b.name}</td>
+                                <td class="text-right">${b.o}</td>
+                                <td class="text-right text-gray-400">${b.m}</td>
+                                <td class="text-right">${b.r}</td>
+                                <td class="text-right font-bold text-gray-900 pr-2">${b.w}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>`;
+            }
+            body.innerHTML = html;
+        }
 
-    function renderMatchDashboard(m, id) {
-        const container = document.getElementById('detail-content');
-        
-        // --- 1. DATA EXTRACTION & MATH ---
-        let t1Score = "0/0", t1Overs = "0.0";
-        let t2Score = "Yet to Bat", t2Overs = "0.0";
-        let batData = [], bowlData = [];
-        
-        if (m.scorecard) {
-            if(m.scorecard.innings1) { t1Score = m.scorecard.innings1.score; t1Overs = m.scorecard.innings1.overs; }
-            if(m.scorecard.innings2) { t2Score = m.scorecard.innings2.score; t2Overs = m.scorecard.innings2.overs; }
+        // --- NEW: COMMENTARY RENDERER ---
+        function renderCommentary(d) {
+            // Horizontal Scroll (Bubbles)
+            if(d.timeline) {
+                const rec = document.getElementById('recent-balls');
+                rec.innerHTML = d.timeline.slice().reverse().slice(0,12).map(b => {
+                    const val = typeof b === 'object' ? b.val : b;
+                    let color = 'bg-gray-800 text-white';
+                    if(val == '4' || val == '6') color = 'bg-green-500 text-white';
+                    if(val == 'W') color = 'bg-red-500 text-white';
+                    return `<div class="flex-shrink-0 w-7 h-7 ${color} rounded-full flex items-center justify-center text-[10px] font-bold border border-white/20 shadow-sm">${val}</div>`;
+                }).join('');
+            }
+
+            // Vertical Feed (Text)
+            const feed = document.getElementById('comm-feed');
+            if(d.commLines && d.commLines.length > 0) {
+                feed.innerHTML = d.commLines.map(c => {
+                    let badge = "bg-gray-100 text-gray-600";
+                    if(c.event == '4' || c.event == '6') badge = "bg-green-100 text-green-700";
+                    if(c.event == 'W') badge = "bg-red-100 text-red-700";
+                    
+                    return `<div class="p-4 flex gap-3 items-start">
+                        <div class="flex-shrink-0 w-8 h-8 rounded-full ${badge} flex items-center justify-center font-bold text-xs shadow-sm">${c.event}</div>
+                        <div>
+                            <div class="text-[10px] font-bold text-gray-400 mb-0.5">${c.ball}</div>
+                            <p class="text-sm text-gray-800 leading-snug font-medium">${c.text}</p>
+                        </div>
+                    </div>`;
+                }).join('');
+            } else {
+                feed.innerHTML = `<div class="p-6 text-center text-gray-400 text-sm italic">Full text commentary not available for this match.</div>`;
+            }
+        }
+
+        // --- NEW: SQUADS LOGIC ---
+        function toggleSquadList(teamIdx) {
+            const btn1 = document.getElementById('sq-btn-1');
+            const btn2 = document.getElementById('sq-btn-2');
+            const content = document.getElementById('squad-list-content');
             
-            // Auto-detect active innings for tables
-            const activeInnings = (m.scorecard.innings2 && m.scorecard.innings2.score !== "0/0") ? m.scorecard.innings2 : m.scorecard.innings1;
-            batData = activeInnings?.batting || [];
-            bowlData = activeInnings?.bowling || [];
+            if(teamIdx === 1) {
+                btn1.classList.replace('bg-gray-100', 'bg-white'); btn1.classList.add('shadow-sm', 'border-gray-100'); btn1.classList.remove('text-gray-500');
+                btn2.classList.replace('bg-white', 'bg-gray-100'); btn2.classList.remove('shadow-sm', 'border-gray-100'); btn2.classList.add('text-gray-500');
+            } else {
+                btn2.classList.replace('bg-gray-100', 'bg-white'); btn2.classList.add('shadow-sm', 'border-gray-100'); btn2.classList.remove('text-gray-500');
+                btn1.classList.replace('bg-white', 'bg-gray-100'); btn1.classList.remove('shadow-sm', 'border-gray-100'); btn1.classList.add('text-gray-500');
+            }
+
+            const list = teamIdx === 1 ? (currentMatchData?.t1Squad || []) : (currentMatchData?.t2Squad || []);
+            
+            content.innerHTML = list.length ? `<div class="divide-y divide-gray-50">
+                ${list.map((p, i) => `
+                    <div class="py-3 px-4 flex items-center gap-4">
+                        <span class="text-xs font-mono text-gray-400 w-4">${i+1}</span>
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-500">${p.charAt(0)}</div>
+                            <span class="text-sm font-semibold text-gray-900">${p}</span>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>` : `<div class="p-8 text-center text-gray-400 text-sm">Squad information not released.</div>`;
         }
 
-        // CRR Calculation safely
-        let [runsStr, wktsStr] = (t2Score !== "Yet to Bat" ? t2Score : t1Score).split('/');
-        let currentRuns = parseInt(runsStr) || 0;
-        let ovParts = (t2Score !== "Yet to Bat" ? t2Overs : t1Overs).split('.');
-        let totalOversDecimal = parseInt(ovParts[0]||0) + (parseInt(ovParts[1]||0)/6);
-        let crr = totalOversDecimal > 0 ? (currentRuns / totalOversDecimal).toFixed(2) : "0.00";
-
-        // Win Probability Logic (Heuristic based on Target & CRR)
-        let pT1 = 50, pT2 = 50;
-        if (m.target > 0) {
-            let runsNeeded = m.target - currentRuns;
-            let percentChased = Math.min((currentRuns / m.target) * 100, 100);
-            pT2 = Math.round(percentChased);
-            pT1 = 100 - pT2;
-        } else if (m.matchStatus === "COMPLETE") {
-            pT1 = m.resultMain && m.resultMain.includes(m.t1) ? 100 : 0;
-            pT2 = 100 - pT1;
+        // --- NAVIGATION & ADMIN ---
+        function showHome() {
+            document.getElementById('detail-view').classList.add('hidden');
+            document.getElementById('home-view').classList.remove('hidden');
+            document.getElementById('back-btn').classList.add('hidden');
+            if(unsubscribeMatch) { unsubscribeMatch(); unsubscribeMatch = null; }
+        }
+        function switchDetailTab(t) {
+            document.querySelectorAll('#detail-view .tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`dt-${t}`).classList.add('active');
+            ['scorecard','comm','squad','charts'].forEach(v => document.getElementById(`dv-${v}`).classList.add('hidden'));
+            document.getElementById(`dv-${t}`).classList.remove('hidden');
+        }
+        function initDelete(e, id) { e.stopPropagation(); matchToDelete = id; document.getElementById('pin-modal').classList.remove('hidden'); }
+        function closePin() { document.getElementById('pin-modal').classList.add('hidden'); }
+        function confirmDelete() {
+            if(document.getElementById('admin-pin').value === '2626') {
+                db.collection('live_matches').doc(matchToDelete).delete();
+                closePin();
+                loadMatchList();
+            } else alert('Invalid PIN');
         }
 
-        // Timeline to Chips
-        let timelineHtml = '<div class="text-xs text-gray-500">No recent deliveries</div>';
-        let fowLabels = [], fowData = [];
-        if (m.timeline && m.timeline.length > 0) {
-            const recent = m.timeline.slice(-8); // Last 8 balls
-            timelineHtml = recent.map(b => {
-                let ev = String((typeof b === 'object') ? b.event : b).toUpperCase();
-                let bg = "bg-gray-700", text = ev;
-                if (ev === '4') bg = "bg-blue-500";
-                else if (ev === '6') bg = "bg-green-500";
-                else if (ev.includes('W') && !ev.includes('WD')) { bg = "bg-red-500"; text = "W"; }
-                else if (ev.includes('WD') || ev.includes('NB')) bg = "bg-yellow-500 text-black";
-                return `<span class="${bg} text-white text-[10px] font-bold px-2 py-1 rounded-full ring-1 ring-white/10">${text}</span>`;
-            }).join('');
+        // --- TOURNAMENT VIEWER LOGIC ---
+        function fetchTournament() {
+            const id = document.getElementById('tourn-search-id').value.trim();
+            if(!id) return alert("Please enter a Tournament ID");
 
-            // FOW Chart Data Prep
-            let cumulativeRuns = 0;
-            m.timeline.forEach((b, i) => {
-                if(b.runs) cumulativeRuns += parseInt(b.runs);
-                let ev = String(b.event || b).toUpperCase();
-                if (ev.includes('W') && !ev.includes('WD')) {
-                    fowLabels.push(`Ov ${b.over || (i/6).toFixed(1)}`);
-                    fowData.push(cumulativeRuns);
+            document.getElementById('tourn-loader').classList.remove('hidden');
+            document.getElementById('tourn-content').classList.add('hidden');
+
+            db.collection("tournaments").doc(id).get().then(doc => {
+                document.getElementById('tourn-loader').classList.add('hidden');
+                if (!doc.exists) {
+                    alert("Tournament not found");
+                } else {
+                    renderTournamentData(doc.data());
+                    document.getElementById('tourn-content').classList.remove('hidden');
+                    document.getElementById('tourn-content').classList.add('page-enter');
                 }
+            }).catch(e => {
+                document.getElementById('tourn-loader').classList.add('hidden');
+                alert("Error loading data");
             });
         }
 
-        // --- 2. HTML GENERATION ---
-        container.innerHTML = `
-            <div class="glass-card p-4 md:p-6 rounded-2xl border-t-4 border-t-blue-500 shadow-2xl">
-                <div class="flex justify-between items-center mb-6">
-                    <span class="text-[10px] bg-red-500/10 text-red-500 border border-red-500/20 px-3 py-1 rounded-md font-bold uppercase tracking-widest">${m.matchStatus || 'LIVE'}</span>
-                    <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">${m.venue || 'Global Ground'}</span>
-                </div>
+        function renderTournamentData(data) {
+            // 1. Header
+            const meta = data.meta || {};
+            document.getElementById('t-name').textContent = meta.name || "Tournament";
+            document.getElementById('t-category').textContent = meta.category || "Open";
+            document.getElementById('t-location').textContent = meta.country || "Global";
+
+            const completedCount = (data.fixtures || []).filter(f => f.status === 'COMPLETED').length;
+            const totalCount = (data.fixtures || []).length;
+            const statusEl = document.getElementById('t-status');
+
+            if (completedCount === totalCount && totalCount > 0) {
+                statusEl.textContent = "COMPLETED";
+                statusEl.className = "inline-block bg-green-50 text-green-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-3";
+            } else if (completedCount > 0) {
+                statusEl.textContent = "LIVE NOW";
+                statusEl.className = "inline-block bg-red-50 text-red-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-3 animate-pulse";
+            } else {
+                statusEl.textContent = "UPCOMING";
+                statusEl.className = "inline-block bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-3";
+            }
+
+            // 2. Standings
+            const tbody = document.getElementById('standings-body');
+            const sortedStandings = (data.standings || []).sort((a,b) => b.pts - a.pts || b.nrr - a.nrr);
+            
+            tbody.innerHTML = sortedStandings.length ? sortedStandings.map((t, i) => `
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="p-3 pl-4 flex items-center gap-3">
+                        <span class="font-mono text-gray-300 text-[10px]">${i+1}</span>
+                        <span class="font-bold text-gray-800">${t.name}</span>
+                    </td>
+                    <td class="p-3 text-center text-gray-400 font-mono">${t.p}</td>
+                    <td class="p-3 text-center text-green-600 font-bold bg-green-50/50 rounded-lg">${t.w}</td>
+                    <td class="p-3 text-center text-red-400 font-medium">${t.l}</td>
+                    <td class="p-3 text-center text-gray-500 font-mono text-[10px]">${t.nrr ? t.nrr.toFixed(3) : '0.000'}</td>
+                    <td class="p-3 pr-4 text-center text-sm font-black text-blue-900 bg-blue-50/50 rounded-lg">${t.pts}</td>
+                </tr>
+            `).join('') : `<tr><td colspan="6" class="text-center p-4 text-gray-400 italic">No standings available</td></tr>`;
+
+            // 3. Schedule
+            const list = document.getElementById('schedule-list');
+            const fixtures = (data.fixtures || []).sort((a,b) => a.matchNo - b.matchNo);
+            
+            list.innerHTML = fixtures.map((f, i) => {
+                let badge = "";
+                let resultRow = "";
                 
-                <div class="flex items-center justify-between">
-                    <div class="flex flex-col items-center w-1/3">
-                        <img src="${m.t1Logo || 'https://placehold.co/60x60/0f172a/ffffff?text=T1'}" class="w-14 h-14 rounded-full border-2 border-gray-700/50 shadow-lg mb-2">
-                        <span class="text-xs font-bold text-gray-400 uppercase tracking-widest text-center">${formatTeamName(m.t1)}</span>
-                        <div class="text-2xl font-black text-white tracking-tighter mt-1">${t1Score} <span class="text-xs text-gray-500 font-medium">(${t1Overs})</span></div>
-                    </div>
-                    
-                    <div class="flex flex-col items-center w-1/3 space-y-2">
-                        <span class="text-xs font-black text-gray-600 italic">VS</span>
-                        ${m.target > 0 && m.matchStatus !== "COMPLETE" ? `<div class="bg-blue-900/20 text-blue-400 text-[10px] font-bold px-3 py-1 rounded border border-blue-500/30 uppercase tracking-wider text-center">Target: ${m.target}</div>` : ''}
-                    </div>
-
-                    <div class="flex flex-col items-center w-1/3">
-                        <img src="${m.t2Logo || 'https://placehold.co/60x60/0f172a/ffffff?text=T2'}" class="w-14 h-14 rounded-full border-2 border-gray-700/50 shadow-lg mb-2">
-                        <span class="text-xs font-bold text-gray-400 uppercase tracking-widest text-center">${formatTeamName(m.t2)}</span>
-                        <div class="text-2xl font-black text-white tracking-tighter mt-1">${t2Score} <span class="text-xs text-gray-500 font-medium">${t2Score !== "Yet to Bat" ? `(${t2Overs})` : ''}</span></div>
-                    </div>
-                </div>
-
-                <div class="mt-6 pt-4 border-t border-gray-800 flex justify-between items-center">
-                    <div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">CRR: <span class="text-white text-sm ml-1">${crr}</span></div>
-                    <div class="text-[10px] font-bold ${m.matchStatus === 'COMPLETE' ? 'text-green-400' : 'text-yellow-500'} uppercase tracking-widest">${m.resultMain || (m.req || "1st Innings in progress")}</div>
-                </div>
-
-                <div class="mt-4 bg-[#0f172a]/50 rounded-lg p-3 border border-gray-800">
-                    <div class="flex justify-between text-[9px] font-bold text-gray-400 uppercase mb-1.5 tracking-wider">
-                        <span>${m.t1} (${pT1}%)</span>
-                        <span>Win Predictor</span>
-                        <span>${m.t2} (${pT2}%)</span>
-                    </div>
-                    <div class="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden flex">
-                        <div class="h-full bg-blue-500 transition-all duration-1000 ease-out" style="width: ${pT1}%"></div>
-                        <div class="h-full bg-green-500 transition-all duration-1000 ease-out" style="width: ${pT2}%"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex border-b border-gray-800 mt-2">
-                <button id="tab-detail-scorecard" onclick="switchDetailTab('scorecard')" class="detail-tab-btn active text-blue-500 border-b-2 border-blue-500 pb-3 px-4 text-xs font-bold uppercase tracking-widest transition-colors">Scorecard</button>
-                <button id="tab-detail-analytics" onclick="switchDetailTab('analytics')" class="detail-tab-btn text-gray-500 border-b-2 border-transparent pb-3 px-4 text-xs font-bold uppercase tracking-widest transition-colors hover:text-gray-300">Analytics</button>
-                <button id="tab-detail-commentary" onclick="switchDetailTab('commentary')" class="detail-tab-btn text-gray-500 border-b-2 border-transparent pb-3 px-4 text-xs font-bold uppercase tracking-widest transition-colors hover:text-gray-300">Timeline</button>
-            </div>
-
-            <div id="section-scorecard" class="detail-section space-y-4 animate-fade-in">
-                <div class="glass-card rounded-xl overflow-hidden">
-                    <div class="bg-gray-800/40 py-2 px-4 border-b border-gray-700/50"><h3 class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Batting</h3></div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs whitespace-nowrap">
-                            <thead class="text-gray-500 bg-black/20">
-                                <tr><th class="p-3 font-medium">Batter</th><th class="p-3 text-right">R</th><th class="p-3 text-right">B</th><th class="p-3 text-right">4s</th><th class="p-3 text-right">6s</th><th class="p-3 text-right">SR</th></tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-800/50 text-gray-300">
-                                ${batData.length > 0 ? batData.map(p => {
-                                    let b_runs = parseInt(p.runs)||0, b_balls = parseInt(p.balls)||1;
-                                    let sr = p.sr || ((b_runs / b_balls) * 100).toFixed(2);
-                                    return `<tr><td class="p-3 font-bold text-white">${p.name}<div class="text-[9px] text-gray-500 font-normal uppercase tracking-wider mt-0.5">${p.dismissal||'not out'}</div></td><td class="p-3 text-right font-black text-blue-400">${p.runs}</td><td class="p-3 text-right text-gray-400">${p.balls}</td><td class="p-3 text-right">${p.fours||0}</td><td class="p-3 text-right">${p.sixes||0}</td><td class="p-3 text-right font-mono">${sr}</td></tr>`;
-                                }).join('') : '<tr><td colspan="6" class="p-4 text-center text-gray-500 italic">No batting data yet</td></tr>'}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="glass-card rounded-xl overflow-hidden">
-                    <div class="bg-gray-800/40 py-2 px-4 border-b border-gray-700/50"><h3 class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Bowling</h3></div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs whitespace-nowrap">
-                            <thead class="text-gray-500 bg-black/20">
-                                <tr><th class="p-3 font-medium">Bowler</th><th class="p-3 text-right">O</th><th class="p-3 text-right">M</th><th class="p-3 text-right">R</th><th class="p-3 text-right">W</th><th class="p-3 text-right">ECON</th></tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-800/50 text-gray-300">
-                                ${bowlData.length > 0 ? bowlData.map(b => {
-                                    let oParts = String(b.overs||'0').split('.');
-                                    let totalOvers = parseInt(oParts[0]) + (parseInt(oParts[1]||0)/6);
-                                    let econ = b.econ || (totalOvers > 0 ? ((parseInt(b.runs)||0) / totalOvers).toFixed(2) : "0.00");
-                                    return `<tr><td class="p-3 font-bold text-white">${b.name}</td><td class="p-3 text-right">${b.overs}</td><td class="p-3 text-right text-gray-500">${b.maidens||0}</td><td class="p-3 text-right">${b.runs}</td><td class="p-3 text-right font-black text-red-400">${b.wickets}</td><td class="p-3 text-right font-mono">${econ}</td></tr>`;
-                                }).join('') : '<tr><td colspan="6" class="p-4 text-center text-gray-500 italic">No bowling data yet</td></tr>'}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div id="section-analytics" class="detail-section hidden space-y-4 animate-fade-in">
-                ${m.partnership ? `
-                <div class="glass-card p-4 rounded-xl flex items-center justify-between border-l-4 border-l-green-500">
-                    <div>
-                        <h4 class="text-[9px] text-gray-500 font-bold uppercase tracking-widest mb-1">Current Partnership</h4>
-                        <div class="text-white font-bold text-sm">Batsmen in middle</div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-xl font-black text-green-400">${m.partnership.runs} <span class="text-xs text-gray-500 font-normal">(${m.partnership.balls})</span></div>
-                    </div>
-                </div>` : ''}
-
-                <div class="glass-card p-4 rounded-xl">
-                    <h4 class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-4">Fall of Wickets</h4>
-                    <div class="w-full h-48 relative">
-                        <canvas id="fowChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <div id="section-commentary" class="detail-section hidden space-y-4 animate-fade-in">
-                <div class="glass-card p-4 rounded-xl">
-                    <h4 class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-3">Recent Deliveries</h4>
-                    <div class="flex flex-wrap gap-2">${timelineHtml}</div>
-                </div>
-                
-                <div class="glass-card rounded-xl overflow-hidden divide-y divide-gray-800/50">
-                    ${(m.timeline && m.timeline.length > 0) ? [...m.timeline].reverse().map(b => {
-                        let ev = String((typeof b === 'object') ? b.event : b).toUpperCase();
-                        let badgeColor = "bg-gray-800 text-gray-300";
-                        if(ev === '4') badgeColor = "bg-blue-900/40 text-blue-400 border border-blue-500/30";
-                        if(ev === '6') badgeColor = "bg-green-900/40 text-green-400 border border-green-500/30";
-                        if(ev.includes('W') && !ev.includes('WD')) badgeColor = "bg-red-900/40 text-red-400 border border-red-500/30";
-                        
-                        return `
-                        <div class="p-4 flex gap-4 items-center hover:bg-white/5 transition-colors">
-                            <div class="w-10 text-center flex-shrink-0">
-                                <span class="text-xs font-mono font-bold text-gray-500">${b.over||'-'}</span>
-                            </div>
-                            <div class="w-10 h-10 rounded-full flex items-center justify-center font-black text-sm ${badgeColor} shadow-inner flex-shrink-0">
-                                ${ev.includes('W') && !ev.includes('WD') ? 'W' : ev}
-                            </div>
-                            <div class="flex-grow">
-                                <div class="text-xs font-bold text-gray-300 uppercase tracking-wider">${b.bowler||'Bowler'} to ${b.batter||'Batter'}</div>
-                                <div class="text-[11px] text-gray-500 mt-1">${ev === '0' ? 'Dot ball.' : ev === '4' ? 'Smashed for four!' : ev === '6' ? 'Massive six!' : ev.includes('W') ? 'OUT! Wicket falls.' : ev + ' runs.'}</div>
-                            </div>
-                        </div>`;
-                    }).join('') : '<div class="p-6 text-center text-gray-500 text-xs italic">Awaiting live action...</div>'}
-                </div>
-            </div>
-        `;
-
-        // --- 3. CHART.JS INITIALIZATION ---
-        if (fowLabels.length > 0) {
-            setTimeout(() => {
-                const ctx = document.getElementById('fowChart');
-                if (ctx) {
-                    if (matchChartInstance) matchChartInstance.destroy();
-                    matchChartInstance = new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: fowLabels,
-                            datasets: [{
-                                label: 'Score at Wicket',
-                                data: fowData,
-                                borderColor: '#ef4444',
-                                backgroundColor: 'rgba(239, 68, 68, 0.2)',
-                                borderWidth: 2, pointRadius: 5, pointBackgroundColor: '#ef4444', fill: true, tension: 0.3
-                            }]
-                        },
-                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' } }, x: { grid: { display: false } } } }
-                    });
+                if (f.status === 'COMPLETED') {
+                    badge = `<span class="bg-gray-100 text-gray-500 text-[9px] font-black px-2 py-0.5 rounded uppercase">Finished</span>`;
+                    resultRow = `<div class="mt-3 text-center text-[10px] font-bold text-green-600 uppercase bg-green-50 py-1.5 rounded border border-green-100">${f.result}</div>`;
+                } else if (f.status === 'LIVE') {
+                    badge = `<span class="bg-red-100 text-red-600 text-[9px] font-black px-2 py-0.5 rounded uppercase animate-pulse">● LIVE</span>`;
+                } else {
+                    badge = `<span class="bg-blue-50 text-blue-600 text-[9px] font-black px-2 py-0.5 rounded uppercase">${f.time || 'Upcoming'}</span>`;
                 }
-            }, 100);
+
+                const isFinal = (f.stage || '').includes('Final');
+                const delay = i * 50; // Stagger animation
+
+                return `
+                <div class="glass-card p-4 relative group stagger-item" style="animation-delay: ${delay}ms">
+                    ${isFinal ? '<div class="absolute top-0 left-0 w-1 h-full bg-yellow-400"></div>' : ''}
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-[9px] font-black text-gray-400 uppercase tracking-wider">${f.stage || 'Match ' + f.matchNo} • ${f.ground || 'TBA'}</span>
+                        ${badge}
+                    </div>
+                    <div class="flex justify-between items-center px-1">
+                        <div class="w-5/12 text-center">
+                            <div class="text-xs font-black text-gray-900 uppercase truncate">${f.t1}</div>
+                        </div>
+                        <div class="text-[10px] font-black text-gray-300">VS</div>
+                        <div class="w-5/12 text-center">
+                            <div class="text-xs font-black text-gray-900 uppercase truncate">${f.t2}</div>
+                        </div>
+                    </div>
+                    ${resultRow}
+                </div>
+                `;
+            }).join('');
         }
-    }
     </script>
 </body>
 </html>
