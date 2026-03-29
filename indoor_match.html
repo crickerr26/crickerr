@@ -602,6 +602,80 @@
                 </div>
             </div>
 
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                <div class="bg-gradient-to-r from-gray-800 to-gray-900 px-6 py-4 flex justify-between items-center shadow-md relative z-10">
+                    <span class="text-white font-bold uppercase tracking-widest text-xs flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-yellow-400"></span>
+                        Match Sponsors
+                    </span>
+                    <span class="text-white/50 text-[10px] font-black tracking-[0.2em]">BROADCAST OVERLAY</span>
+                </div>
+                
+                <div class="p-6 md:p-8 bg-gray-50/50 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <div class="bg-white border border-yellow-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow relative group">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-[10px] font-black text-yellow-800 bg-yellow-100 px-2 py-1 rounded uppercase tracking-wider border border-yellow-200">Gold / Main Sponsor</span>
+                            <div class="flex gap-2">
+                                <label for="sponsor-main-input" class="cursor-pointer text-[10px] font-bold text-blue-500 hover:text-blue-700 transition-colors">UPLOAD</label>
+                                <button onclick="removeSponsor('main')" class="text-[10px] font-bold text-red-400 hover:text-red-600 transition-colors hidden" id="sponsor-main-remove">REMOVE</button>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-lg h-24 bg-gray-50 relative overflow-hidden group-hover:border-yellow-300 transition-colors">
+                            <input type="file" id="sponsor-main-input" class="hidden" accept="image/png, image/jpeg" onchange="handleSponsorUpload(this.files[0], 'main')">
+                            <img id="sponsor-main-preview" class="hidden w-full h-full object-contain p-2">
+                            <span id="sponsor-main-placeholder" class="text-xs text-gray-400 font-bold uppercase tracking-widest">No Logo</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow relative group">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-[10px] font-black text-gray-600 bg-gray-100 px-2 py-1 rounded uppercase tracking-wider border border-gray-200">Sponsor 2</span>
+                            <div class="flex gap-2">
+                                <label for="sponsor-s2-input" class="cursor-pointer text-[10px] font-bold text-blue-500 hover:text-blue-700 transition-colors">UPLOAD</label>
+                                <button onclick="removeSponsor('sponsor2')" class="text-[10px] font-bold text-red-400 hover:text-red-600 transition-colors hidden" id="sponsor-s2-remove">REMOVE</button>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-lg h-24 bg-gray-50 relative overflow-hidden group-hover:border-gray-300 transition-colors">
+                            <input type="file" id="sponsor-s2-input" class="hidden" accept="image/png, image/jpeg" onchange="handleSponsorUpload(this.files[0], 'sponsor2')">
+                            <img id="sponsor-s2-preview" class="hidden w-full h-full object-contain p-2">
+                            <span id="sponsor-s2-placeholder" class="text-xs text-gray-400 font-bold uppercase tracking-widest">No Logo</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow relative group">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-[10px] font-black text-gray-600 bg-gray-100 px-2 py-1 rounded uppercase tracking-wider border border-gray-200">Sponsor 3</span>
+                            <div class="flex gap-2">
+                                <label for="sponsor-s3-input" class="cursor-pointer text-[10px] font-bold text-blue-500 hover:text-blue-700 transition-colors">UPLOAD</label>
+                                <button onclick="removeSponsor('sponsor3')" class="text-[10px] font-bold text-red-400 hover:text-red-600 transition-colors hidden" id="sponsor-s3-remove">REMOVE</button>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-lg h-24 bg-gray-50 relative overflow-hidden group-hover:border-gray-300 transition-colors">
+                            <input type="file" id="sponsor-s3-input" class="hidden" accept="image/png, image/jpeg" onchange="handleSponsorUpload(this.files[0], 'sponsor3')">
+                            <img id="sponsor-s3-preview" class="hidden w-full h-full object-contain p-2">
+                            <span id="sponsor-s3-placeholder" class="text-xs text-gray-400 font-bold uppercase tracking-widest">No Logo</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow relative group">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-[10px] font-black text-gray-600 bg-gray-100 px-2 py-1 rounded uppercase tracking-wider border border-gray-200">Sponsor 4</span>
+                            <div class="flex gap-2">
+                                <label for="sponsor-s4-input" class="cursor-pointer text-[10px] font-bold text-blue-500 hover:text-blue-700 transition-colors">UPLOAD</label>
+                                <button onclick="removeSponsor('sponsor4')" class="text-[10px] font-bold text-red-400 hover:text-red-600 transition-colors hidden" id="sponsor-s4-remove">REMOVE</button>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-lg h-24 bg-gray-50 relative overflow-hidden group-hover:border-gray-300 transition-colors">
+                            <input type="file" id="sponsor-s4-input" class="hidden" accept="image/png, image/jpeg" onchange="handleSponsorUpload(this.files[0], 'sponsor4')">
+                            <img id="sponsor-s4-preview" class="hidden w-full h-full object-contain p-2">
+                            <span id="sponsor-s4-placeholder" class="text-xs text-gray-400 font-bold uppercase tracking-widest">No Logo</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
         </div>
     </div>
     
@@ -2729,6 +2803,7 @@ function broadcastMatchResult() {
     rules: { wicketRuns: 5, wideRuns: 2, noBallRuns: 2, skins: false },
     team1: { name: "", logo: "", squad: [], playing: [], playerStats: {}, isLoaded: false },
     team2: { name: "", logo: "", squad: [], playing: [], playerStats: {}, isLoaded: false },
+    sponsors: { main: "", sponsor2: "", sponsor3: "", sponsor4: "" },
     battingTeam: 'team1', bowlingTeam: 'team2',
     striker: null, nonStriker: null, bowler: null,
     id: null, innings: 1, target: 0, totalOvers: 16, playersPerSide: 8, ballsPerOver: 6, // Added configurable ballsPerOver
@@ -3172,6 +3247,62 @@ function broadcastMatchResult() {
                     previewEl.classList.remove('hidden');
                 };
                 reader.readAsDataURL(file);
+            }
+        }
+
+        function handleSponsorUpload(file, sponsorType) {
+            if (file) {
+                if (file.size > 2 * 1024 * 1024) {
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert("File Too Large", "Please select an image smaller than 2MB.", "red");
+                    } else {
+                        alert("Please select an image smaller than 2MB.");
+                    }
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    if (!state.sponsors) state.sponsors = { main: "", sponsor2: "", sponsor3: "", sponsor4: "" };
+                    state.sponsors[sponsorType] = e.target.result;
+                    
+                    const idMap = { main: 'main', sponsor2: 's2', sponsor3: 's3', sponsor4: 's4' };
+                    const prefix = idMap[sponsorType];
+                    
+                    const previewEl = document.getElementById(`sponsor-${prefix}-preview`);
+                    const placeholderEl = document.getElementById(`sponsor-${prefix}-placeholder`);
+                    const removeBtn = document.getElementById(`sponsor-${prefix}-remove`);
+                    
+                    if (previewEl && placeholderEl && removeBtn) {
+                        previewEl.src = e.target.result;
+                        previewEl.classList.remove('hidden');
+                        placeholderEl.classList.add('hidden');
+                        removeBtn.classList.remove('hidden');
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removeSponsor(sponsorType) {
+            if (state.sponsors && state.sponsors[sponsorType]) {
+                state.sponsors[sponsorType] = "";
+                
+                const idMap = { main: 'main', sponsor2: 's2', sponsor3: 's3', sponsor4: 's4' };
+                const prefix = idMap[sponsorType];
+                
+                const previewEl = document.getElementById(`sponsor-${prefix}-preview`);
+                const placeholderEl = document.getElementById(`sponsor-${prefix}-placeholder`);
+                const removeBtn = document.getElementById(`sponsor-${prefix}-remove`);
+                const inputEl = document.getElementById(`sponsor-${prefix}-input`);
+                
+                if (previewEl && placeholderEl && removeBtn) {
+                    previewEl.src = "";
+                    previewEl.classList.add('hidden');
+                    placeholderEl.classList.remove('hidden');
+                    removeBtn.classList.add('hidden');
+                }
+                if (inputEl) inputEl.value = "";
             }
         }
 
@@ -3684,6 +3815,7 @@ function generateBroadcastCode() {
                 // Basic Info
                 venue: state.venue || "Unknown Venue",
                 matchDate: document.getElementById('match-date-input').value,
+                sponsors: state.sponsors || {},
                 
                 // FIX: Send the Equation string as matchStatus for Broadcast to display
                 matchStatus: statusText,
@@ -5810,6 +5942,7 @@ function endInnings() {
                 ballsPerOver: state.ballsPerOver,
                 team1: JSON.parse(JSON.stringify(state.team1)), // Deep copy
                 team2: JSON.parse(JSON.stringify(state.team2)), // Deep copy
+                sponsors: JSON.parse(JSON.stringify(state.sponsors || { main: "", sponsor2: "", sponsor3: "", sponsor4: "" })),
                 rules: state.rules,
                 seriesStats: state.seriesStats,
                 broadcastId: broadcastId // KEEP BROADCAST ID
@@ -5858,6 +5991,7 @@ function endInnings() {
                 rules: config.rules,
                 team1: config.team1,
                 team2: config.team2,
+                sponsors: config.sponsors || { main: "", sponsor2: "", sponsor3: "", sponsor4: "" },
                 battingTeam: 'team1', bowlingTeam: 'team2', // Will be reset by Toss
                 striker: null, nonStriker: null, bowler: null,
                 id: null, innings: 1, target: 0, 
