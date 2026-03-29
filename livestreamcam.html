@@ -367,6 +367,23 @@
 
 .intro-divider { width: 85%; height: 2px; background: linear-gradient(90deg, transparent, rgba(251,191,36,0.8), transparent); margin: 40px 0 30px 0; }
 .intro-info { font-family: 'Roboto', sans-serif; font-size: 22px; font-weight: 500; color: #cbd5e1; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 3px 6px rgba(0,0,0,0.8); }
+
+/* --- BROADCAST WATERMARK LOGO --- */
+#broadcast-watermark {
+    position: absolute;
+    bottom: 110px; /* Positioned just above the main scoreboard */
+    right: 20px;   /* Aligned with the right edge */
+    width: 85px;   /* Professional medium size */
+    height: auto;
+    opacity: 0;    /* Hidden by default, toggled via JS */
+    z-index: 45;   /* Above canvas but below intro overlays */
+    pointer-events: none; /* Prevents accidental clicks */
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); /* Subtle glow/shadow */
+    transition: opacity 0.8s ease-in-out;
+}
+.show-watermark {
+    opacity: 0.95 !important; /* Slight 95% transparency */
+}
     </style>
 </head>
 <body>
@@ -449,6 +466,8 @@
                 <input type="range" id="zoom-slider" orient="vertical" min="1" max="10" step="0.1" value="1" oninput="applyZoom(this.value)">
                 <div class="zoom-btn" onclick="stepZoom(-1)">-</div>
             </div>
+            
+            <img id="broadcast-watermark" src="my-logo.png" alt="Broadcast Logo">
         </div>
         
         <video id="video-source" autoplay playsinline muted></video>
@@ -1202,8 +1221,20 @@ function goLiveOnDB(matchId, peerId) {
             return formatted; 
         }
 
-        function showScoreboard() { isScoreboardHidden = false; }
-        function hideScoreboard() { isScoreboardHidden = true; }
+        function showScoreboard() { 
+            isScoreboardHidden = false; 
+            const wm = document.getElementById('broadcast-watermark');
+            if (wm) wm.classList.add('show-watermark');
+        }
+        
+        function hideScoreboard() { 
+            isScoreboardHidden = true; 
+            const wm = document.getElementById('broadcast-watermark');
+            if (wm) wm.classList.remove('show-watermark');
+        }
+
+        // Failsafe: Ensure watermark shows up if intro doesn't trigger immediately
+        setTimeout(() => { if(!isScoreboardHidden) showScoreboard(); }, 3000);
 
         function triggerMatchIntro() {
             const overlay = document.getElementById('match-intro-overlay');
