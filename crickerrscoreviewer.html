@@ -730,13 +730,43 @@
         function renderCommentary(d) {
             // Horizontal Scroll (Bubbles)
             if(d.timeline) {
+                // Handle different Firebase formats (Array, Object mapping, or String)
+                let tData = Array.isArray(d.timeline) ? d.timeline : (typeof d.timeline === 'string' ? d.timeline.split(',') : Object.values(d.timeline));
+                
                 const rec = document.getElementById('recent-balls');
-                rec.innerHTML = d.timeline.slice().reverse().slice(0,12).map(b => {
-                    const val = typeof b === 'object' ? b.val : b;
-                    let color = 'bg-gray-800 text-white';
-                    if(val == '4' || val == '6') color = 'bg-green-500 text-white';
-                    if(val == 'W') color = 'bg-red-500 text-white';
-                    return `<div class="flex-shrink-0 w-7 h-7 ${color} rounded-full flex items-center justify-center text-[10px] font-bold border border-white/20 shadow-sm">${val}</div>`;
+                rec.innerHTML = tData.slice(-18).map(b => {
+                    let rawVal = '-';
+                    if (b !== null && b !== undefined) {
+                        if (typeof b === 'object') {
+                            // Catch standard keys scoring apps use to store runs
+                            rawVal = b.val ?? b.runs ?? b.run ?? b.event ?? b.score ?? b.value ?? '-';
+                        } else {
+                            rawVal = b;
+                        }
+                    }
+                    
+                    let val = String(rawVal).trim();
+                    if(val === 'undefined' || val === 'null' || val === '') val = '-';
+                    
+                    let lowerVal = val.toLowerCase();
+                    let bgClass = 'bg-white border border-gray-200 text-gray-800 shadow-sm';
+                    
+                    if (val === '4' || val === '4s') {
+                        bgClass = 'bg-blue-500 text-white border-blue-500 shadow-md shadow-blue-200';
+                    } else if (val === '6' || val === '6s') {
+                        bgClass = 'bg-purple-600 text-white border-purple-600 shadow-md shadow-purple-200';
+                    } else if (lowerVal.includes('w') && !lowerVal.includes('wd')) {
+                        // Catch Wickets (W, 1W, etc.) excluding Wides
+                        bgClass = 'bg-red-500 text-white border-red-500 shadow-md shadow-red-200';
+                    } else if (lowerVal.includes('wd') || lowerVal.includes('nb') || lowerVal.includes('b') || lowerVal.includes('lb')) {
+                        // Catch Extras (Wd, 1Wd, Nb, B, Lb, etc.)
+                        bgClass = 'bg-amber-100 text-amber-800 border-amber-200';
+                    } else if (val === '0' || val === '.') {
+                        bgClass = 'bg-gray-100 text-gray-500 border-gray-100';
+                    }
+
+                    // Display the exact value the user entered in the scoring app
+                    return `<div class="flex-shrink-0 min-w-[32px] h-8 px-2 rounded-full flex items-center justify-center text-[11px] font-black tracking-wider ${bgClass}">${val}</div>`;
                 }).join('');
             }
 
@@ -744,14 +774,19 @@
             const feed = document.getElementById('comm-feed');
             if(d.commLines && d.commLines.length > 0) {
                 feed.innerHTML = d.commLines.map(c => {
-                    let badge = "bg-gray-100 text-gray-600";
-                    if(c.event == '4' || c.event == '6') badge = "bg-green-100 text-green-700";
-                    if(c.event == 'W') badge = "bg-red-100 text-red-700";
+                    let eventStr = String(c.event || '-').trim();
+                    let lowerEvent = eventStr.toLowerCase();
+                    let badge = "bg-gray-100 text-gray-600 border border-gray-200";
+                    
+                    if (eventStr === '4' || eventStr === '4s') badge = "bg-blue-50 text-blue-600 border border-blue-200";
+                    else if (eventStr === '6' || eventStr === '6s') badge = "bg-purple-50 text-purple-600 border border-purple-200";
+                    else if (lowerEvent.includes('w') && !lowerEvent.includes('wd')) badge = "bg-red-50 text-red-600 border border-red-200";
+                    else if (lowerEvent.includes('wd') || lowerEvent.includes('nb') || lowerEvent.includes('b')) badge = "bg-amber-50 text-amber-600 border border-amber-200";
                     
                     return `<div class="p-4 flex gap-3 items-start">
-                        <div class="flex-shrink-0 w-8 h-8 rounded-full ${badge} flex items-center justify-center font-bold text-xs shadow-sm">${c.event}</div>
+                        <div class="flex-shrink-0 min-w-[32px] h-8 px-2 rounded-full ${badge} flex items-center justify-center font-black text-[11px] shadow-sm tracking-wider">${eventStr}</div>
                         <div>
-                            <div class="text-[10px] font-bold text-gray-400 mb-0.5">${c.ball}</div>
+                            <div class="text-[10px] font-bold text-gray-400 mb-0.5">OVER ${c.ball}</div>
                             <p class="text-sm text-gray-800 leading-snug font-medium">${c.text}</p>
                         </div>
                     </div>`;
