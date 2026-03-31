@@ -352,10 +352,12 @@
 @keyframes logoFloat { 0% { transform: translateY(0px); box-shadow: 0 0 20px rgba(255,255,255,0.2); } 50% { transform: translateY(-12px); box-shadow: 0 15px 35px rgba(255,255,255,0.4); } 100% { transform: translateY(0px); box-shadow: 0 0 20px rgba(255,255,255,0.2); } }
 
 .intro-team-name { 
-    font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 48px; /* ENLARGED */
+    font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 34px; /* Made smaller for better fit */
     color: white; text-shadow: 0 6px 15px rgba(0,0,0,0.9); 
     text-transform: uppercase; /* ENFORCED UPPERCASE */
-    white-space: nowrap; /* ENFORCED ONE LINE */
+    white-space: normal; /* Allow text to wrap naturally so it doesn't push the layout */
+    width: 100%; /* Forces equal spacing for both teams */
+    line-height: 1.2;
     letter-spacing: 1px; text-align: center;
 }
 .intro-vs { 
@@ -371,9 +373,9 @@
 /* --- BROADCAST WATERMARK LOGO --- */
 #broadcast-watermark {
     position: absolute;
-    bottom: 150px; /* Adjusted to sit cleanly above the main scoreboard */
-    right: 20px;   /* Aligned with the right edge */
-    width: 85px;   /* Professional medium size */
+    bottom: 140px; /* Moved UP to sit cleanly above the scorebar */
+    left: 25px;    /* Aligned with the left edge */
+    width: 60px;   /* Made slightly smaller */
     height: auto;
     opacity: 0;    /* Hidden by default, toggled via JS */
     z-index: 45;   /* Above canvas but below intro overlays */
@@ -386,74 +388,74 @@
 }
 
 /* --- PROFESSIONAL SPONSOR SYSTEM STYLES --- */
-.sponsor-logo-box {
-    background: rgba(255, 255, 255, 0.95);
-    padding: 8px;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-}
-.sponsor-logo-box img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-}
+        .sponsor-logo-box {
+            background: transparent !important; /* Forces NO background */
+            border: none !important; /* Forces NO border */
+            box-shadow: none !important; /* Forces NO box frame shadow */
+            padding: 0; /* Removes padding to let the pure logo breathe */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: visible; /* Allows the drop-shadow to show without being cut off */
+        }
+        .sponsor-logo-box img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.8)); /* Pure black shadow on the exact shape of your PNG */
+        }
 
-/* Live Overlay Sponsors */
-#live-sponsors-container {
-    position: absolute;
-    top: 80px;
-    right: 25px;
-    display: flex;
-    flex-direction: row;
-    gap: 10px;
-    z-index: 45;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.5s ease;
-}
-.live-sponsor { height: 45px; width: auto; min-width: 80px; max-width: 140px; }
+        /* Live Overlay Sponsors */
+        #live-sponsors-container {
+            position: absolute;
+            top: 80px;
+            right: 25px;
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+            z-index: 45;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .live-sponsor { height: 75px; width: auto; min-width: 120px; max-width: 220px; }
 
-/* Intro Overlay Sponsors */
-#intro-sponsors-container {
-    margin-top: 30px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-    width: 100%;
-}
-.intro-sponsors-row {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 20px;
-}
-.intro-sponsor-main { height: 75px; min-width: 140px; box-shadow: 0 0 20px rgba(251, 191, 36, 0.5); }
-.intro-sponsor-sub { height: 55px; min-width: 100px; }
+        /* Intro Overlay Sponsors */
+        #intro-sponsors-container {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+        }
+        .intro-sponsors-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+        .intro-sponsor-main { height: 75px; min-width: 140px; }
+        .intro-sponsor-sub { height: 55px; min-width: 100px; }
 
-/* Event Animation Sponsors */
-#event-sponsors-container {
-    position: absolute;
-    bottom: 15%;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    gap: 15px;
-    z-index: 910; /* Above shutters */
-    opacity: 0;
-    transition: opacity 0.5s ease;
-}
-.event-sponsor-main { height: 85px; min-width: 150px; box-shadow: 0 0 20px rgba(251, 191, 36, 0.6); border: 2px solid rgba(251, 191, 36, 0.8); }
-.event-sponsor-sub { height: 60px; min-width: 110px; }
+        /* Event Animation Sponsors */
+        #event-sponsors-container {
+            position: absolute;
+            bottom: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            z-index: 910; /* Above shutters */
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .event-sponsor-main { height: 85px; min-width: 150px; }
+        .event-sponsor-sub { height: 60px; min-width: 110px; }
     </style>
 </head>
 <body>
@@ -726,6 +728,19 @@
             const btn = document.getElementById('btn-start');
             btn.innerText = "Starting...";
             btn.disabled = true;
+
+            // Force Fullscreen and Lock Orientation (Overrides device rotation lock)
+            try {
+                if (document.documentElement.requestFullscreen) {
+                    await document.documentElement.requestFullscreen();
+                }
+                if (screen.orientation && screen.orientation.lock) {
+                    await screen.orientation.lock("portrait"); 
+                }
+            } catch (err) { 
+                console.warn("Orientation lock failed:", err); 
+            }
+
             try { ['audio-four','audio-six','audio-wicket','audio-transition'].forEach(id => document.getElementById(id).load()); } catch(e){}
             const success = await startCameraStream(1920, 1080);
             if (success) {
@@ -1866,18 +1881,18 @@ function goLiveOnDB(matchId, peerId) {
             
             // Branding Logo
             if (crickerrLogoImg.complete && crickerrLogoImg.naturalHeight !== 0) { 
-                const cLogoH = barH * 1.5; 
+                const cLogoH = barH * 0.8; // Made smaller
                 const aspectRatio = crickerrLogoImg.width / crickerrLogoImg.height; 
                 const cLogoW = cLogoH * aspectRatio; 
-                const cLogoX = (pillX + pillW) - cLogoW; 
-                const cLogoY = goldY - cLogoH - 4; 
+                const cLogoX = marginX; // Kept on the left side
+                const cLogoY = goldY - cLogoH - 8; // Moved UP, sitting cleanly just above the scorebar
                 c.save(); 
                 c.shadowColor = "rgba(0,0,0,0.5)"; 
                 c.shadowBlur = 8; 
                 c.shadowOffsetY = 4; 
                 c.drawImage(crickerrLogoImg, cLogoX, cLogoY, cLogoW, cLogoH); 
                 c.restore(); 
-            } 
+            }
             
             // Dividers Logic
             let x1 = pillX; 
@@ -2072,15 +2087,16 @@ function goLiveOnDB(matchId, peerId) {
             
             // TEAM 2 INFO (Bowling)
             const finalDiv = isChasing ? bowlEnd : x5; 
-            drawLogo(c, match.t2, displayImg2, xEnd - 15 - logoS, bottomY + (barH - logoS)/2, logoS, false); 
+            const logoS2 = barH * 0.55; // Slightly smaller size for the right side logo
+            drawLogo(c, match.t2, displayImg2, xEnd - 8 - logoS2, bottomY + (barH - logoS2)/2, logoS2, false); 
             
             c.fillStyle = "white"; 
             c.textAlign = "right"; 
-            fitText(c, formatTeamName(match.t2), xEnd - 25 - logoS, bottomY + barH * 0.45, (xEnd - finalDiv) - logoS - 35, barH * 0.35, '700', 'Roboto Condensed'); 
+            fitText(c, formatTeamName(match.t2), xEnd - 18 - logoS2, bottomY + barH * 0.45, (xEnd - finalDiv) - logoS2 - 28, barH * 0.35, '700', 'Roboto Condensed'); 
             
             c.fillStyle = "#64748b"; 
             c.font = `700 ${barH * 0.16}px 'Roboto'`; 
-            c.fillText("BOWLING", xEnd - 25 - logoS, bottomY + barH * 0.70); 
+            c.fillText("BOWLING", xEnd - 18 - logoS2, bottomY + barH * 0.70); 
         }
 
         function drawSquadBoard(c, w, h) { 
