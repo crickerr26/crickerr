@@ -23,6 +23,12 @@
             transform: translateZ(0); 
             backface-visibility: hidden;
         }
+
+        @media (orientation: landscape) {
+            #viewer-video {
+                object-fit: cover;
+            }
+        }
         
         /* LIVE BADGE */
         #live-badge {
