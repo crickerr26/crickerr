@@ -61,6 +61,12 @@
             cursor: pointer; z-index: 800; backdrop-filter: blur(4px);
             transition: background 0.3s;
         }
+
+        @media (orientation: landscape) {
+            #live-badge { padding: 4px 12px; font-size: 10px; top: 15px; right: 15px; gap: 6px; }
+            .live-dot { width: 6px; height: 6px; }
+            #quality-badge { padding: 4px 10px; font-size: 10px; top: 15px; left: 15px; }
+        }
         #quality-badge:hover { background: rgba(0,0,0,0.8); }
 
         #quality-menu {
@@ -138,19 +144,11 @@
         #chat-input { flex-grow: 1; padding: 10px 15px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.3); background: rgba(0,0,0,0.6); color: white; font-size: 13px; outline: none; backdrop-filter: blur(5px); }
         #chat-send { background: #3b82f6; border: none; border-radius: 50%; width: 36px; height: 36px; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
-        @media (orientation: landscape) { 
-            #chat-container { width: 350px; bottom: 50px; } 
-            #chat-input-area { display: none !important; }
-            #chat-messages { mask-image: none; -webkit-mask-image: none; justify-content: flex-end; }
-            .chat-msg { font-size: 10px; background: rgba(0,0,0,0.2); opacity: 0.8; animation: slideUpFade 0.3s ease-out; }
-            .chat-msg:not(:nth-last-child(-n+3)) { display: none; }
-        }
-        
         @keyframes slideUpFade {
             0% { transform: translateY(10px); opacity: 0; }
             100% { transform: translateY(0); opacity: 0.8; }
         }
-        
+
         #heart-container {
             position: absolute; bottom: 85px; right: 15px; z-index: 800; display: none; flex-direction: column; align-items: center; justify-content: flex-end; pointer-events: none; height: 250px; width: 60px;
         }
@@ -166,6 +164,25 @@
         @keyframes floatUp {
             0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
             100% { transform: translateY(-200px) scale(1.5) rotate(calc(var(--rot) * 1deg)); opacity: 0; }
+        }
+
+        /* --- LANDSCAPE UI OVERRIDES --- */
+        @media (orientation: landscape) { 
+            #live-stats-bar { padding: 4px 10px; font-size: 10px; top: 15px; right: 90px; gap: 4px; }
+            #live-stats-bar svg { width: 12px !important; height: 12px !important; }
+            
+            #chat-toggle-btn { padding: 4px 10px; font-size: 9px; top: 45px; right: 15px; gap: 4px; }
+            #chat-toggle-btn svg { width: 12px !important; height: 12px !important; }
+            
+            #heart-container { bottom: 35px; right: 15px; }
+            #heart-btn { width: 34px; height: 34px; }
+            #heart-btn svg { width: 16px; height: 16px; }
+
+            #chat-container { width: 350px; bottom: 35px; } 
+            #chat-input-area { display: none !important; }
+            #chat-messages { mask-image: none; -webkit-mask-image: none; justify-content: flex-end; }
+            .chat-msg { font-size: 10px; background: rgba(0,0,0,0.2); opacity: 0.8; animation: slideUpFade 0.3s ease-out; padding: 4px 8px; border-radius: 8px;}
+            .chat-msg:not(:nth-last-child(-n+3)) { display: none; }
         }
 
         /* Live Overlay Sponsors */
