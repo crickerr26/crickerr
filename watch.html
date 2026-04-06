@@ -94,13 +94,13 @@
 
         /* --- BROADCAST WATERMARK LOGO --- */
         #broadcast-watermark {
-            position: absolute; left: 15px; width: 60px; height: auto; opacity: 0;    
+            position: absolute; left: 15px; width: 35px; height: auto; opacity: 0;    
             z-index: 45; pointer-events: none; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); transition: opacity 0.8s ease-in-out;
         }
         /* Portrait: Perfectly calculates video bound inside black bars */
-        @media (orientation: portrait) { #broadcast-watermark { bottom: calc(50vh - 28vw + 80px); } }
+        @media (orientation: portrait) { #broadcast-watermark { bottom: calc(50vh - 28vw + 35px); } }
         /* Landscape: Video touches the bottom */
-        @media (orientation: landscape) { #broadcast-watermark { bottom: 80px; } }
+        @media (orientation: landscape) { #broadcast-watermark { bottom: 35px; } }
         .show-watermark { opacity: 0.95 !important; }
 
         /* LIVE STATS & CHAT */
@@ -111,11 +111,21 @@
             display: none; align-items: center; gap: 8px; z-index: 800; border: 1px solid rgba(255,255,255,0.2);
             backdrop-filter: blur(4px);
         }
+        
+        #chat-toggle-btn {
+            position: absolute; top: 75px; right: 25px;
+            background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2);
+            padding: 8px 12px; border-radius: 50px; color: white;
+            font-family: 'Roboto', sans-serif; font-size: 12px; font-weight: bold; letter-spacing: 1px;
+            cursor: pointer; z-index: 800; display: none; align-items: center; gap: 6px;
+            backdrop-filter: blur(4px);
+        }
+
         #chat-container {
             position: absolute; bottom: 85px; left: 15px; width: 280px; max-height: 200px;
             display: none; flex-direction: column; justify-content: flex-end; z-index: 800; pointer-events: none;
+            transition: opacity 0.3s ease;
         }
-        @media (orientation: landscape) { #chat-container { width: 350px; } }
         #chat-messages {
             overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-bottom: 10px; pointer-events: auto;
             max-height: 150px; scrollbar-width: none;
@@ -127,6 +137,19 @@
         #chat-input-area { display: flex; gap: 8px; pointer-events: auto; align-items: center; }
         #chat-input { flex-grow: 1; padding: 10px 15px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.3); background: rgba(0,0,0,0.6); color: white; font-size: 13px; outline: none; backdrop-filter: blur(5px); }
         #chat-send { background: #3b82f6; border: none; border-radius: 50%; width: 36px; height: 36px; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+        @media (orientation: landscape) { 
+            #chat-container { width: 350px; bottom: 50px; } 
+            #chat-input-area { display: none !important; }
+            #chat-messages { mask-image: none; -webkit-mask-image: none; justify-content: flex-end; }
+            .chat-msg { font-size: 10px; background: rgba(0,0,0,0.2); opacity: 0.8; animation: slideUpFade 0.3s ease-out; }
+            .chat-msg:not(:nth-last-child(-n+3)) { display: none; }
+        }
+        
+        @keyframes slideUpFade {
+            0% { transform: translateY(10px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 0.8; }
+        }
         
         #heart-container {
             position: absolute; bottom: 85px; right: 15px; z-index: 800; display: none; flex-direction: column; align-items: center; justify-content: flex-end; pointer-events: none; height: 250px; width: 60px;
@@ -421,6 +444,11 @@
         <div class="q-option" onclick="selectQuality(800, '480p (LOW)')">Low Quality (Data Saver)</div>
     </div>
 
+    <div id="chat-toggle-btn" onclick="toggleChat()">
+        <svg id="chat-toggle-icon" style="width:16px;height:16px;fill:white;" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+        <span id="chat-toggle-text">HIDE CHAT</span>
+    </div>
+
     <div id="share-btn" onclick="shareMatch()">
         <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
         SHARE
@@ -534,6 +562,26 @@
         function toggleQualityMenu() {
             const menu = document.getElementById('quality-menu');
             menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        let isChatVisible = true;
+        function toggleChat() {
+            isChatVisible = !isChatVisible;
+            const chatContainer = document.getElementById('chat-container');
+            const toggleText = document.getElementById('chat-toggle-text');
+            const toggleIcon = document.getElementById('chat-toggle-icon');
+            
+            if (isChatVisible) {
+                chatContainer.style.opacity = '1';
+                chatContainer.style.pointerEvents = 'auto';
+                toggleText.innerText = 'HIDE CHAT';
+                toggleIcon.innerHTML = '<path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>';
+            } else {
+                chatContainer.style.opacity = '0';
+                chatContainer.style.pointerEvents = 'none';
+                toggleText.innerText = 'SHOW CHAT';
+                toggleIcon.innerHTML = '<path d="M19.36 2.72l1.42 1.42-15.06 15.06-1.42-1.42L19.36 2.72zM20 2H4c-.8 0-1.49.47-1.81 1.14L18.86 19.82c.15-.02.29-.07.44-.14l.7-.7V4c0-1.1-.9-2-2-2zM4.14 4.86L2 6.99v13.01l4-4h9.86l-11.72-11.14z"/>';
+            }
         }
 
         function shareMatch() {
@@ -740,6 +788,7 @@
                             document.getElementById('live-badge').style.display = 'flex';
                             document.getElementById('live-stats-bar').style.display = 'flex';
                             document.getElementById('chat-container').style.display = 'flex';
+                            document.getElementById('chat-toggle-btn').style.display = 'flex';
                             document.getElementById('heart-container').style.display = 'flex';
                             document.getElementById('share-btn').classList.add('match-active');
                             
@@ -751,6 +800,7 @@
                             document.getElementById('live-badge').style.display = 'none';
                             document.getElementById('live-stats-bar').style.display = 'none';
                             document.getElementById('chat-container').style.display = 'none';
+                            document.getElementById('chat-toggle-btn').style.display = 'none';
                             document.getElementById('heart-container').style.display = 'none';
                             document.getElementById('share-btn').classList.remove('match-active');
                         }
