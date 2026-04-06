@@ -43,6 +43,30 @@
             100% { opacity: 1; transform: scale(1); }
         }
 
+        /* QUALITY INDICATOR & MENU */
+        #quality-badge {
+            position: absolute; top: 25px; left: 25px;
+            background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255,255,255,0.3);
+            padding: 8px 15px; border-radius: 8px; color: white;
+            font-family: 'Roboto Condensed', sans-serif; font-size: 14px; font-weight: bold; letter-spacing: 1px;
+            cursor: pointer; z-index: 800; backdrop-filter: blur(4px);
+            transition: background 0.3s;
+        }
+        #quality-badge:hover { background: rgba(0,0,0,0.8); }
+
+        #quality-menu {
+            display: none; position: absolute; top: 70px; left: 25px;
+            background: rgba(15, 23, 42, 0.95); border: 1px solid #333;
+            border-radius: 8px; z-index: 801; flex-direction: column;
+            backdrop-filter: blur(10px); min-width: 160px; overflow: hidden;
+        }
+        .q-option {
+            padding: 12px 20px; color: #ccc; cursor: pointer;
+            font-family: 'Roboto', sans-serif; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .q-option:last-child { border-bottom: none; }
+        .q-option:hover { background: rgba(255,255,255,0.1); color: white; }
+
         /* --- BROADCAST WATERMARK LOGO --- */
         #broadcast-watermark {
             position: absolute;
@@ -118,61 +142,66 @@
             box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
         }
 
-        /* --- NEW IPL 3D ANIMATION STYLES --- */
-        #ipl-stage-overlay {
+        /* --- NEW IMPACT EVENT ANIMATION STYLES --- */
+        #event-stage-overlay {
             position: absolute; inset: 0; pointer-events: none; z-index: 900;
             display: flex; align-items: center; justify-content: center;
-            perspective: 2000px; overflow: hidden;
+            overflow: hidden; background: radial-gradient(circle, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 70%);
+            opacity: 0; transition: opacity 0.2s ease-out;
+        }
+        #event-stage-overlay.is-active { opacity: 1; }
+
+        .shockwave {
+            position: absolute; width: 10px; height: 10px;
+            border: 20px solid rgba(255,255,255,0.8); border-radius: 50%;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            opacity: 0; pointer-events: none;
+        }
+        .is-active .shockwave { animation: shockwaveAnim 1.2s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; }
+        @keyframes shockwaveAnim {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 1; border-width: 50px; }
+            100% { transform: translate(-50%, -50%) scale(150); opacity: 0; border-width: 0px; }
         }
 
-        .shutter {
-            position: absolute; width: 100%; height: 50%;
-            background: rgba(0, 5, 16, 0.95); z-index: 901;
-            transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1);
-            backdrop-filter: blur(5px);
+        #event-text-box {
+            position: relative; z-index: 905;
+            display: none; transform: scale(0);
         }
-        .top-s { top: 0; border-bottom: 4px solid #fbbf24; transform: translateY(-100%); }
-        .bot-s { bottom: 0; border-top: 4px solid #fbbf24; transform: translateY(100%); }
-        .splitting .top-s { transform: translateY(0%); }
-        .splitting .bot-s { transform: translateY(0%); }
+        .is-active #event-text-box { 
+            display: block; 
+            animation: textImpactAnim 3.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; 
+        }
 
-        .ipl-boom {
-            position: absolute; z-index: 905;
-            transform-style: preserve-3d;
-            display: none; opacity: 0;
-        }
-        .ipl-boom span {
+        #event-text-box span {
             position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            font-family: 'Montserrat', sans-serif;
-            font-size: 25vw;
-            font-weight: 900; text-transform: uppercase;
-            font-style: italic; line-height: 1; letter-spacing: -5px;
+            font-family: 'Anton', sans-serif;
+            font-size: 28vw;
+            letter-spacing: 5px;
             white-space: nowrap;
+            text-transform: uppercase;
         }
 
-        .layer-gold-front {
-            z-index: 5;
-            background: linear-gradient(135deg, #fff9c4 0%, #fbc02d 40%, #f57f17 60%, #fff9c4 100%);
-            background-size: 200% auto;
+        .text-glow {
+            -webkit-text-stroke: 8px rgba(255, 255, 255, 0.5);
+            filter: blur(20px); z-index: 1;
+        }
+        .text-core {
+            color: #ffffff;
+            background: linear-gradient(180deg, #ffffff 0%, #e2e8f0 40%, #94a3b8 100%);
             -webkit-background-clip: text; color: transparent;
-            transform: translate(-50%, -50%) translateZ(80px);
-            filter: drop-shadow(0 0 30px rgba(251, 191, 36, 0.6));
-            animation: goldShimmer 3s infinite linear;
+            z-index: 2;
+            filter: drop-shadow(0 20px 20px rgba(0,0,0,0.9));
+            -webkit-text-stroke: 3px rgba(0, 0, 0, 0.9);
         }
-        .layer-gold-depth { color: #827717; transform: translate(-50%, -50%) translateZ(40px); }
-        .layer-gold-base { color: #332b00; transform: translate(-50%, -50%) translateZ(0px); }
-        @keyframes goldShimmer { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
-
-        @keyframes iplBoomAnim {
-            0% { transform: scale(0.1) rotateY(45deg) translateZ(-1500px); opacity: 0; }
-            15% { opacity: 1; }
-            35% { transform: scale(1.1) rotateY(-5deg) translateZ(100px); }
-            45% { transform: scale(1) rotateY(0deg) translateZ(0px); }
-            80% { transform: scale(1.05) translateZ(200px); opacity: 1; }
-            100% { transform: scale(4) translateZ(2500px); opacity: 0; }
+        
+        @keyframes textImpactAnim {
+            0% { transform: scale(0) rotate(-15deg); opacity: 0; filter: brightness(4); }
+            8% { transform: scale(1.2) rotate(5deg); opacity: 1; filter: brightness(2); }
+            15% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+            85% { transform: scale(1.1) rotate(0deg); opacity: 1; }
+            100% { transform: scale(1.5) translateY(100px); opacity: 0; filter: brightness(0); }
         }
-        .active-boom { display: block !important; animation: iplBoomAnim 3.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
 
         /* --- CINEMATIC MATCH INTRO BANNER --- */
         #match-intro-overlay {
@@ -256,18 +285,24 @@
     <audio id="audio-transition" src="transitionmusic.mp3" preload="auto"></audio>
 
     <div id="live-badge"><div class="live-dot"></div>LIVE</div>
+    
+    <div id="quality-badge" onclick="toggleQualityMenu()">1080p (HIGH)</div>
+    <div id="quality-menu">
+        <div class="q-option" onclick="selectQuality(40000, '1080p (HIGH)')">High Quality</div>
+        <div class="q-option" onclick="selectQuality(2500, '720p (MED)')">Medium Quality</div>
+        <div class="q-option" onclick="selectQuality(800, '480p (LOW)')">Low Quality (Data Saver)</div>
+    </div>
+
     <div id="live-sponsors-container"></div>
     <img id="broadcast-watermark" src="my-logo.png" alt="Broadcast Logo">
 
     <video id="viewer-video" autoplay playsinline></video>
     
-    <div id="ipl-stage-overlay">
-        <div class="shutter top-s"></div>
-        <div class="shutter bot-s"></div>
-        <div id="ipl-box" class="ipl-boom">
-            <span class="layer-gold-front">SIX</span>
-            <span class="layer-gold-depth">SIX</span>
-            <span class="layer-gold-base">SIX</span>
+    <div id="event-stage-overlay">
+        <div class="shockwave"></div>
+        <div id="event-text-box">
+            <span class="text-glow">SIX</span>
+            <span class="text-core">SIX</span>
         </div>
         <div id="event-sponsors-container"></div>
     </div>
@@ -330,10 +365,37 @@
         const playOverlay = document.getElementById('play-overlay');
         
         let peer = null;
+        let activeCall = null;
+        let activePeerId = null;
+        let currentBandwidth = 40000; // Force Highest Quality by Default
+        let isSwitchingQuality = false;
+        
         let unsubscribe = null;
         let lastActionId = null;
         let introPlayed = false;
         let currentMatchData = {};
+
+        function toggleQualityMenu() {
+            const menu = document.getElementById('quality-menu');
+            menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function selectQuality(bw, label) {
+            document.getElementById('quality-menu').style.display = 'none';
+            document.getElementById('quality-badge').innerText = label;
+            
+            if (currentBandwidth === bw) return;
+            currentBandwidth = bw;
+            
+            // Seamlessly drop and re-fetch the stream with the new quality boundary
+            if (activePeerId && peer && !peer.destroyed) {
+                if (activeCall) {
+                    isSwitchingQuality = true;
+                    activeCall.close();
+                }
+                connectToStream(activePeerId, true);
+            }
+        }
 
         window.onload = () => {
             const params = new URLSearchParams(window.location.search);
@@ -458,69 +520,86 @@
             });
         }
 
-        function connectToStream(targetPeerId) {
-            statusText.innerText = "Connecting to Broadcast Server...";
-            spinner.style.display = 'block';
+        function connectToStream(targetPeerId, isReconnecting = false) {
+            activePeerId = targetPeerId;
             
-            peer = new Peer({
-                config: {
-                    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
-                }
-            });
-
-            peer.on('open', () => {
-                statusText.innerText = "Fetching Live Video Feed...";
+            if (!isReconnecting) {
+                statusText.innerText = "Connecting to Broadcast Server...";
+                spinner.style.display = 'block';
                 
-                // We use a 1080p canvas running at a tiny 1-frame-per-second to trigger the connection 
-                // and negotiate a high-quality WebRTC receiving pipeline for "punching quality".
-                let dummyStream;
-                try {
-                    const dummyCanvas = document.createElement('canvas');
-                    dummyCanvas.width = 1920; 
-                    dummyCanvas.height = 1080;
-                    const dummyCtx = dummyCanvas.getContext('2d');
-                    dummyCtx.fillStyle = '#000';
-                    dummyCtx.fillRect(0, 0, 1920, 1080);
-                    dummyStream = dummyCanvas.captureStream(1); 
-                } catch(e) {
-                    // Safety fallback if iOS Safari aggressively blocks canvas capture
-                    dummyStream = new MediaStream();
-                }
-
-                // FIX: We tell the WebRTC protocol to forcefully allocate up to 40 Mbps 
-                // of download bandwidth for this connection, guaranteeing the 4K quality comes through cleanly.
-                const call = peer.call(targetPeerId, dummyStream, {
-                    sdpTransform: (sdp) => {
-                        let newSdp = sdp;
-                        if (newSdp.includes('a=mid:video')) {
-                            newSdp = newSdp.replace(/a=mid:video\r\n/g, 'a=mid:video\r\nb=AS:40000\r\n');
-                        }
-                        return newSdp;
-                    }
-                }); 
-                
-                call.on('stream', (remoteStream) => {
-                    statusOverlay.style.display = 'none';
-                    video.srcObject = remoteStream;
-                    
-                    const playPromise = video.play();
-                    if (playPromise !== undefined) {
-                        playPromise.catch(() => {
-                            playOverlay.style.display = 'flex';
-                        });
+                peer = new Peer({
+                    config: {
+                        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
                     }
                 });
-                
-                call.on('close', () => showError("Stream disconnected by broadcaster."));
-                call.on('error', (err) => {
-                    console.error("Call error:", err);
-                    showError("Stream connection error.");
-                });
-            });
 
-            peer.on('error', (err) => {
-                console.error("Peer error:", err);
-                showError("Failed to connect to video server.\nPlease refresh and try again.");
+                peer.on('open', () => {
+                    initiateCall(targetPeerId);
+                });
+
+                peer.on('error', (err) => {
+                    console.error("Peer error:", err);
+                    showError("Failed to connect to video server.\nPlease refresh and try again.");
+                });
+            } else {
+                statusOverlay.style.display = 'flex';
+                statusText.innerText = "Adjusting Video Quality...";
+                spinner.style.display = 'block';
+                initiateCall(targetPeerId);
+            }
+        }
+
+        function initiateCall(targetPeerId) {
+            statusText.innerText = "Fetching Live Video Feed...";
+            
+            let dummyStream;
+            try {
+                const dummyCanvas = document.createElement('canvas');
+                dummyCanvas.width = 1920; 
+                dummyCanvas.height = 1080;
+                const dummyCtx = dummyCanvas.getContext('2d');
+                dummyCtx.fillStyle = '#000';
+                dummyCtx.fillRect(0, 0, 1920, 1080);
+                dummyStream = dummyCanvas.captureStream(1); 
+            } catch(e) {
+                dummyStream = new MediaStream();
+            }
+
+            // Apply selected bandwidth and FORCE high starting bitrate to avoid slow start blur
+            activeCall = peer.call(targetPeerId, dummyStream, {
+                sdpTransform: (sdp) => {
+                    let newSdp = sdp;
+                    if (newSdp.includes('a=mid:video')) {
+                        newSdp = newSdp.replace(/a=mid:video\r\n/g, `a=mid:video\r\nb=AS:${currentBandwidth}\r\n`);
+                    }
+                    // This specific line guarantees it skips "auto-detecting network speed" and jumps straight to crisp quality
+                    newSdp = newSdp.replace(/(a=fmtp:\d+ .*)\r\n/g, `$1;x-google-start-bitrate=${currentBandwidth};x-google-min-bitrate=${Math.floor(currentBandwidth/2)}\r\n`);
+                    return newSdp;
+                }
+            }); 
+            
+            activeCall.on('stream', (remoteStream) => {
+                isSwitchingQuality = false;
+                statusOverlay.style.display = 'none';
+                video.srcObject = remoteStream;
+                
+                const playPromise = video.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(() => {
+                        playOverlay.style.display = 'flex';
+                    });
+                }
+            });
+            
+            activeCall.on('close', () => {
+                if (!isSwitchingQuality) {
+                    showError("Stream disconnected by broadcaster.");
+                }
+            });
+            
+            activeCall.on('error', (err) => {
+                console.error("Call error:", err);
+                showError("Stream connection error.");
             });
         }
 
@@ -573,6 +652,15 @@
             return formatted; 
         }
 
+        function playTransitionSound() {
+            try { 
+                const audioTransition = document.getElementById('audio-transition');
+                audioTransition.currentTime = 0; 
+                audioTransition.volume = 1.0; 
+                audioTransition.play().catch(e => {}); 
+            } catch(e) {}
+        }
+
         function triggerMatchIntro(match) {
             const overlay = document.getElementById('match-intro-overlay');
             if (!overlay) return;
@@ -592,6 +680,9 @@
             
             if (match.matchDate) {
                 const d = new Date(match.matchDate);
+                dateStr = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+            } else {
+                const d = new Date();
                 dateStr = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
             }
             document.getElementById('intro-match-info').innerText = `${matchType} – ${venue} – ${dateStr}`;
@@ -615,6 +706,9 @@
             if (wm) wm.classList.remove('show-watermark');
             if (ls) ls.style.opacity = '0';
 
+            // Play swoosh/stinger sound to match broadcaster output exactly
+            playTransitionSound();
+
             overlay.style.display = 'flex';
             setTimeout(() => overlay.classList.add('intro-active'), 50);
 
@@ -636,12 +730,7 @@
         function triggerAudio(type) {
             const audioId = type === '4' ? 'audio-four' : type === '6' ? 'audio-six' : type === 'W' ? 'audio-wicket' : null;
             if(['4','6','W'].includes(type)) {
-                try {
-                    const transAudio = document.getElementById('audio-transition');
-                    transAudio.currentTime = 0;
-                    transAudio.volume = 1.0;
-                    transAudio.play().catch(e => {});
-                } catch(e) {}
+                playTransitionSound();
             }
             if (audioId) { 
                 const audio = document.getElementById(audioId); 
@@ -652,14 +741,18 @@
 
         function triggerAnim(type, sponsorsObj) {
             let displayText = "";
-            if (type === '4') displayText = "FOUR";
-            else if (type === '6') displayText = "SIX";
-            else if (type === 'W') displayText = "OUT"; 
+            let accentColor = "";
+            
+            // Assign Dynamic Colors based on the event
+            if (type === '4') { displayText = "FOUR"; accentColor = "rgba(56, 189, 248, 0.8)"; } // Bright Blue
+            else if (type === '6') { displayText = "SIX"; accentColor = "rgba(34, 197, 94, 0.8)"; } // Bright Green
+            else if (type === 'W') { displayText = "OUT"; accentColor = "rgba(239, 68, 68, 0.8)"; } // Bright Red
             else return;
 
-            const stage = document.getElementById('ipl-stage-overlay');
-            const box = document.getElementById('ipl-box');
+            const stage = document.getElementById('event-stage-overlay');
+            const box = document.getElementById('event-text-box');
             const spans = box.querySelectorAll('span');
+            const shockwave = document.querySelector('.shockwave');
 
             const sponsors = sponsorsObj || {};
             const eventSponsors = document.getElementById('event-sponsors-container');
@@ -679,23 +772,35 @@
                 eventSponsors.innerHTML = html;
             }
 
-            stage.classList.remove('splitting');
-            box.classList.remove('active-boom');
-            void box.offsetWidth; 
-
-            spans.forEach(s => s.innerText = displayText);
-
-            stage.classList.add('splitting'); 
+            // Remove class immediately to reset the state
+            stage.classList.remove('is-active');
             
-            setTimeout(() => {
-                box.classList.add('active-boom');
-                if (eventSponsors) eventSponsors.style.opacity = '1';
-            }, 100);
+            // Apply Dynamic Color to Shockwave & Glow based on the event
+            if (shockwave) {
+                shockwave.style.boxShadow = `0 0 80px ${accentColor}, inset 0 0 80px ${accentColor}`;
+                shockwave.style.borderColor = accentColor;
+            }
+            const textGlow = document.querySelector('.text-glow');
+            if (textGlow) textGlow.style.color = accentColor;
+            
+            // Double requestAnimationFrame ensures WebKit/Mobile Safari actually paints 
+            // the cleared state before applying the active state, guaranteeing the animation plays every time.
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    spans.forEach(s => s.innerText = displayText);
 
-            setTimeout(() => {
-                stage.classList.remove('splitting');
-                if (eventSponsors) eventSponsors.style.opacity = '0';
-            }, 3000);
+                    // Trigger the new animation classes
+                    stage.classList.add('is-active'); 
+                    
+                    if (eventSponsors) eventSponsors.style.opacity = '1';
+
+                    // Cleanup after animation completes (matches the 3.5s CSS animation)
+                    setTimeout(() => {
+                        stage.classList.remove('is-active');
+                        if (eventSponsors) eventSponsors.style.opacity = '0';
+                    }, 3500);
+                });
+            });
         }
     </script>
 </body>
