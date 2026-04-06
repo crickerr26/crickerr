@@ -2,148 +2,253 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Match Live Stream</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Live Match Broadcast</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-
+    
     <style>
-        body { margin: 0; background: #000; font-family: 'Roboto', sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; }
         
-        #login-screen {
-            position: absolute; inset: 0; z-index: 20;
-            background: radial-gradient(circle at center, #1e293b, #000);
+        #viewer-video { 
+            width: 100%; height: 100%; 
+            object-fit: contain; 
+            background: #000; 
+            display: block; 
+        }
+        
+        /* OVERLAYS */
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
-        input {
-            background: rgba(255,255,255,0.1); border: 2px solid #333;
-            color: #fbbf24; font-size: 24px; padding: 15px; text-align: center;
-            border-radius: 10px; margin-bottom: 20px; text-transform: uppercase;
-            outline: none; font-weight: bold; width: 250px;
-        }
-        button {
-            background: linear-gradient(135deg, #fbbf24, #d97706);
-            border: none; padding: 15px 40px; font-size: 18px; font-weight: bold;
-            border-radius: 50px; cursor: pointer; color: black;
-            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+            background: #000; color: white; z-index: 10;
         }
 
-        #video-wrapper { width: 100%; height: 100%; position: relative; background: black; display: none; }
-        video { width: 100%; height: 100%; object-fit: contain; background: black; }
+        /* INPUT SCREEN */
+        #input-overlay { z-index: 30; display: none; }
+        #input-overlay h2 { margin-bottom: 20px; font-size: 24px; color: #fff; letter-spacing: 1px;}
+        #match-input {
+            padding: 15px 20px; font-size: 20px; border-radius: 8px; 
+            border: 2px solid #333; background: #111; color: white; 
+            margin-bottom: 20px; text-transform: uppercase; text-align: center;
+            width: 80%; max-width: 300px; outline: none;
+        }
+        #match-input:focus { border-color: #3b82f6; }
+        #submit-btn {
+            padding: 15px 40px; background: #3b82f6; color: white; border: none;
+            border-radius: 50px; font-size: 18px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); transition: transform 0.1s;
+        }
+        #submit-btn:active { transform: scale(0.95); }
+
+        /* STATUS SCREEN */
+        .spinner {
+            width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.2);
+            border-top: 4px solid #3b82f6; border-radius: 50%;
+            animation: spin 1s linear infinite; margin-bottom: 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #status-text { font-size: 16px; font-weight: bold; letter-spacing: 1px; color: #cbd5e1; text-align: center; padding: 0 20px; line-height: 1.5; }
         
-        #status-pill {
-            position: absolute; top: 20px; left: 20px;
-            background: rgba(220, 38, 38, 0.9); color: white;
-            padding: 8px 16px; border-radius: 20px;
-            font-size: 14px; font-weight: bold; pointer-events: none;
-            display: flex; align-items: center; gap: 8px; z-index: 50;
+        /* PLAY FALLBACK SCREEN */
+        #play-overlay {
+            background: rgba(0, 0, 0, 0.8); z-index: 20; display: none; cursor: pointer;
         }
-        .blink { animation: blink 1s infinite; width: 10px; height: 10px; background: white; border-radius: 50%; }
-        @keyframes blink { 50% { opacity: 0.5; } }
-
-        #debug-log {
-            position: absolute; bottom: 20px; left: 20px;
-            color: lime; font-family: monospace; font-size: 10px;
-            pointer-events: none; opacity: 0.8; z-index: 100;
+        #play-btn {
+            padding: 15px 40px; background: #22c55e; color: white; border: none;
+            border-radius: 50px; font-size: 18px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
         }
     </style>
 </head>
 <body>
 
-    <div id="login-screen">
-        <h1 style="color:white; margin-bottom:10px;">LIVE CRICKET</h1>
-        <input type="text" id="match-id" placeholder="MATCH ID">
-        <button onclick="joinStream()">WATCH LIVE</button>
-        <p id="error-msg" style="color:#ef4444; margin-top: 20px; font-weight: bold;"></p>
+    <video id="viewer-video" autoplay playsinline></video>
+    
+    <div id="input-overlay" class="overlay">
+        <h2>Enter Match ID</h2>
+        <input type="text" id="match-input" placeholder="e.g. FINALS123" autocomplete="off">
+        <button id="submit-btn" onclick="submitMatchId()">WATCH MATCH</button>
     </div>
 
-    <div id="video-wrapper">
-        <div id="status-pill"><div class="blink"></div> LIVE</div>
+    <div id="status-overlay" class="overlay">
+        <div class="spinner" id="spinner"></div>
+        <div id="status-text">Initializing...</div>
     </div>
 
-    <div id="debug-log">Ready...</div>
+    <div id="play-overlay" class="overlay" onclick="startVideo()">
+        <button id="play-btn">TAP TO WATCH LIVE</button>
+    </div>
 
     <script>
-        // CONFIG MUST MATCH YOUR BROADCASTER APP
-        const firebaseConfig = { apiKey: "AIzaSyBqcD59IAPpKqk98oDZkgzgkoVZ8b8LGgY", authDomain: "livecricketscoring-92087.firebaseapp.com", databaseURL: "https://livecricketscoring-92087-default-rtdb.firebaseio.com", projectId: "livecricketscoring-92087", storageBucket: "livecricketscoring-92087.firebasestorage.app", messagingSenderId: "522927197627", appId: "1:522927197627:web:f1df5db736cae96893089e" };
-        firebase.initializeApp(firebaseConfig);
+        // --- FIREBASE CONFIG ---
+        const firebaseConfig = { 
+            apiKey: "AIzaSyBqcD59IAPpKqk98oDZkgzgkoVZ8b8LGgY", 
+            authDomain: "livecricketscoring-92087.firebaseapp.com", 
+            databaseURL: "https://livecricketscoring-92087-default-rtdb.firebaseio.com", 
+            projectId: "livecricketscoring-92087", 
+            storageBucket: "livecricketscoring-92087.firebasestorage.app", 
+            messagingSenderId: "522927197627", 
+            appId: "1:522927197627:web:f1df5db736cae96893089e" 
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        function log(msg) { console.log(msg); document.getElementById('debug-log').innerText = msg; }
+        const video = document.getElementById('viewer-video');
+        const inputOverlay = document.getElementById('input-overlay');
+        const matchInput = document.getElementById('match-input');
+        const statusOverlay = document.getElementById('status-overlay');
+        const statusText = document.getElementById('status-text');
+        const spinner = document.getElementById('spinner');
+        const playOverlay = document.getElementById('play-overlay');
+        
+        let peer = null;
+        let unsubscribe = null;
 
-        function joinStream() {
-            const matchId = document.getElementById('match-id').value.trim().toUpperCase();
-            if(!matchId) return;
-            document.querySelector('button').innerText = "CONNECTING...";
+        window.onload = () => {
+            const params = new URLSearchParams(window.location.search);
+            const matchId = params.get('matchId');
+
+            if (!matchId) {
+                inputOverlay.style.display = 'flex';
+                statusOverlay.style.display = 'none';
+            } else {
+                inputOverlay.style.display = 'none';
+                checkLiveStatus(matchId.toUpperCase());
+            }
+        };
+
+        function submitMatchId() {
+            const val = matchInput.value.trim().toUpperCase();
+            if (!val) {
+                alert("Please enter a valid Match ID");
+                return;
+            }
             
-            log("Searching for Match ID: " + matchId);
-            db.collection("live_matches").doc(matchId).onSnapshot(doc => {
-                if(doc.exists && doc.data().isStreaming && doc.data().streamId) {
-                    log("Match Found! ID: " + doc.data().streamId);
-                    connectToPeer(doc.data().streamId);
+            window.history.replaceState(null, '', '?matchId=' + val);
+            
+            inputOverlay.style.display = 'none';
+            statusOverlay.style.display = 'flex';
+            spinner.style.display = 'block';
+            
+            checkLiveStatus(val);
+        }
+
+        function checkLiveStatus(matchId) {
+            statusText.innerText = "Looking for Match ID in Database...";
+            
+            if (unsubscribe) unsubscribe();
+
+            unsubscribe = db.collection("live_matches").doc(matchId).onSnapshot((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    if (data.isStreaming && data.streamId) {
+                        if (!peer) {
+                            connectToStream(data.streamId);
+                        }
+                    } else {
+                        showError("The broadcaster is currently offline.");
+                        if (peer) { peer.destroy(); peer = null; }
+                        video.srcObject = null;
+                    }
                 } else {
-                    log("Waiting for Broadcaster...");
+                    showError("Match not found.\nMake sure the Broadcaster has clicked 'GO LIVE'.");
+                }
+            }, (error) => {
+                console.error("Firestore error:", error);
+                // Specifically catch permission errors for better debugging
+                if (error.code === 'permission-denied') {
+                    showError("Database Permission Denied!\nPlease update your Firebase Firestore Rules to allow reading.");
+                } else {
+                    showError("Connection error to Database.");
                 }
             });
         }
 
-        function connectToPeer(targetId) {
-            const peer = new Peer({ config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] } });
-            peer.on('open', (id) => {
-                log("Calling Broadcaster...");
-                const dummyDest = new AudioContext().createMediaStreamDestination();
-                const call = peer.call(targetId, dummyDest.stream);
-
-                call.on('stream', (remoteStream) => {
-                    log("Stream Arrived! Building Player...");
-                    document.getElementById('login-screen').style.display = 'none';
-                    document.getElementById('video-wrapper').style.display = 'block';
-                    
-                    // Delay build slightly to ensure stream data is ready
-                    setTimeout(() => buildPlayer(remoteStream), 500);
-                });
-
-                call.on('close', () => { alert("Stream Ended"); location.reload(); });
-                call.on('error', (e) => log("Call Error: " + e));
-            });
-        }
-
-        function buildPlayer(stream) {
-            const wrapper = document.getElementById('video-wrapper');
-            // Remove old video if exists
-            const old = wrapper.querySelector('video');
-            if(old) old.remove();
-
-            const vid = document.createElement('video');
-            vid.autoplay = true; vid.playsInline = true; vid.muted = true;
-            vid.setAttribute('playsinline', ''); vid.setAttribute('webkit-playsinline', '');
-            vid.srcObject = stream;
+        function connectToStream(targetPeerId) {
+            statusText.innerText = "Connecting to Broadcast Server...";
+            spinner.style.display = 'block';
             
-            wrapper.appendChild(vid);
+            peer = new Peer({
+                config: {
+                    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+                }
+            });
 
-            vid.play().then(() => {
-                log("Playing.");
-                // Check if video is stuck at 0x0
-                setInterval(() => {
-                    if (vid.videoWidth === 0) {
-                        log("⚠️ 0x0 Stream detected. Broadcaster might be hidden.");
-                        document.getElementById('status-pill').style.background = "#eab308"; // Yellow
-                    } else {
-                        log(`✅ LIVE: ${vid.videoWidth}x${vid.videoHeight}`);
-                        document.getElementById('status-pill').style.background = "#dc2626"; // Red
+            peer.on('open', () => {
+                statusText.innerText = "Fetching Live Video Feed...";
+                
+                // FIX: Browsers block empty WebRTC calls. 
+                // We create a silent, invisible 1x1 canvas stream to force the connection open.
+                const dummyCanvas = document.createElement('canvas');
+                dummyCanvas.width = 1; dummyCanvas.height = 1;
+                const dummyStream = dummyCanvas.captureStream();
+
+                const call = peer.call(targetPeerId, dummyStream); 
+                
+                call.on('stream', (remoteStream) => {
+                    statusOverlay.style.display = 'none';
+                    video.srcObject = remoteStream;
+                    
+                    const playPromise = video.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(() => {
+                            playOverlay.style.display = 'flex';
+                        });
                     }
-                }, 2000);
-            }).catch(e => {
-                log("Autoplay blocked. Tap screen.");
-                const btn = document.createElement('button');
-                btn.innerText = "TAP TO WATCH";
-                btn.style.cssText = "position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:100; padding:20px; font-weight:900;";
-                btn.onclick = () => { vid.play(); btn.remove(); };
-                wrapper.appendChild(btn);
+                });
+                
+                call.on('close', () => showError("Stream disconnected by broadcaster."));
+                call.on('error', (err) => {
+                    console.error("Call error:", err);
+                    showError("Stream connection error.");
+                });
+            });
+
+            peer.on('error', (err) => {
+                console.error("Peer error:", err);
+                showError("Failed to connect to video server.\nPlease refresh and try again.");
             });
         }
+
+        function startVideo() {
+            playOverlay.style.display = 'none';
+            video.muted = false; 
+            video.play();
+        }
+
+        function showError(msg) {
+            statusOverlay.style.display = 'flex';
+            spinner.style.display = 'none';
+            statusText.innerText = msg;
+            
+            if (!document.getElementById('back-btn')) {
+                const backBtn = document.createElement('button');
+                backBtn.id = 'back-btn';
+                backBtn.innerText = 'TRY ANOTHER ID';
+                backBtn.style.cssText = "margin-top: 25px; padding: 12px 25px; background: transparent; border: 2px solid #555; color: white; border-radius: 50px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s;";
+                backBtn.onmouseover = () => backBtn.style.borderColor = "#3b82f6";
+                backBtn.onmouseout = () => backBtn.style.borderColor = "#555";
+                
+                backBtn.onclick = () => {
+                    window.history.replaceState(null, '', window.location.pathname);
+                    statusOverlay.style.display = 'none';
+                    inputOverlay.style.display = 'flex';
+                    if (peer) { peer.destroy(); peer = null; }
+                };
+                statusOverlay.appendChild(backBtn);
+            }
+        }
+        
+        matchInput.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                submitMatchId();
+            }
+        });
     </script>
 </body>
 </html>
