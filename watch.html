@@ -73,6 +73,29 @@
             .live-dot { width: 6px; height: 6px; }
             #quality-badge { padding: 4px 10px; font-size: 10px; top: 15px; left: 15px; }
         }
+
+        /* PORTRAIT OVERRIDES FOR BADGE & QUALITY */
+        @media (orientation: portrait) {
+            #live-badge {
+                top: 10px; right: 10px;
+                padding: 4px 10px; font-size: 9px;
+                background: rgba(239, 68, 68, 0.2);
+                border: 1px solid rgba(239, 68, 68, 0.1);
+                box-shadow: none; gap: 4px;
+            }
+            .live-dot { width: 5px; height: 5px; }
+            
+            #quality-badge {
+                top: auto; left: auto;
+                bottom: 60px; right: 105px;
+                padding: 5px 10px; font-size: 10px;
+            }
+            #quality-menu {
+                top: auto !important; left: auto !important;
+                bottom: 90px; right: 105px;
+            }
+        }
+
         #quality-badge:hover { background: rgba(0,0,0,0.8); }
 
         #quality-menu {
@@ -130,6 +153,25 @@
             font-family: 'Roboto', sans-serif; font-size: 11px; font-weight: bold; letter-spacing: 1px;
             cursor: pointer; z-index: 800; display: none; align-items: center; gap: 6px;
             backdrop-filter: blur(4px);
+        }
+
+        /* PORTRAIT OVERRIDES FOR STATS & CHAT TOGGLE */
+        @media (orientation: portrait) {
+            #live-stats-bar {
+                top: 10px; right: 72px;
+                padding: 4px 8px; font-size: 9px;
+                background: rgba(0,0,0,0.15);
+                border: 1px solid rgba(255,255,255,0.1);
+                gap: 4px;
+            }
+            #live-stats-bar svg { width: 10px !important; height: 10px !important; }
+            
+            #chat-toggle-btn {
+                top: auto;
+                bottom: 60px; right: 15px;
+                padding: 5px 10px; font-size: 9px;
+            }
+            #chat-toggle-btn svg { width: 10px !important; height: 10px !important; }
         }
 
         #chat-container {
