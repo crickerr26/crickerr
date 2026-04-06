@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Match Viewer</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        body { 
+            background: #0f172a; color: #fff; margin: 0; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            height: 100vh; font-family: 'Roboto', sans-serif; 
+        }
+        #live-video { 
+            width: 100%; height: 100%; max-width: 100%; max-height: 100%; display: none; object-fit: contain; background: #000;
+        }
+        #status-container {
+            text-align: center;
+            display: none; /* Hidden initially */
+        }
+        #status-text { 
+            font-size: 1.5rem; font-weight: bold; margin-bottom: 10px; color: #fbbf24;
+        }
+        #sub-text {
+            color: #94a3b8; font-size: 0.9rem;
+        }
+        /* Setup Screen Styles */
+        #setup-screen {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: #1e293b; padding: 40px; border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            text-align: center; width: 90%; max-width: 400px;
+        }
+        .input-field {
+            background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); 
+            color: #fbbf24; font-size: 1.5rem; text-align: center; font-weight: 700; 
+            letter-spacing: 0.1rem; width: 100%; padding: 1rem; box-sizing: border-box;
+            border-radius: 0.5rem; outline: none; margin-bottom: 1.5rem; text-transform: uppercase;
+        }
+        .start-btn { 
+            background: #2563eb; color: #fff; border: none; padding: 1rem; 
+            border-radius: 50px; font-size: 1.1rem; font-weight: bold; 
+            cursor: pointer; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4); 
+            text-transform: uppercase; transition: transform 0.1s; width: 100%;
+        }
+        .start-btn:active { transform: scale(0.95); }
+    </style>
+</head>
+<body>
+
+    <div id="setup-screen">
+        <h1 style="margin-top: 0; color: white;">LIVE CRICKET</h1>
+        <p style="color: #94a3b8; margin-bottom: 20px;">Enter Match Code to watch</p>
+        <input type="text" id="match-input" class="input-field" placeholder="CRICKERR_XXXXXX">
+        <button onclick="startViewing()" class="start-btn">WATCH MATCH</button>
+    </div>
+
+    <div id="status-container">
+        <div id="status-text">🟡 Connecting to Network...</div>
+        <div id="sub-text">Please wait</div>
+    </div>
+
+    <video id="live-video" autoplay playsinline muted controls></video>
+
+    <script>
+        let MATCH_ID = ""; 
+        let peer = null;
+        let retryInterval = null;
+
+        const setupScreen = document.getElementById('setup-screen');
+        const statusContainer = document.getElementById('status-container');
+        const statusText = document.getElementById('status-text');
+        const subText = document.getElementById('sub-text');
+        const videoElement = document.getElementById('live-video');
+
+        function startViewing() {
+            const inputVal = document.getElementById('match-input').value.trim();
+            if (!inputVal) {
+                alert("Please enter a Match Code.");
+                return;
+            }
+
+            MATCH_ID = inputVal.toUpperCase();
+            
+            // UI Transition
+            setupScreen.style.display = 'none';
+            statusContainer.style.display = 'block';
+            document.body.style.background = '#000'; // Darken background for video
+
+            // Initialize Peer
+            peer = new Peer();
+
+            peer.on('open', (id) => {
+                statusText.innerText = "🟡 Searching for Match...";
+                subText.innerText = `Looking for Match ID: ${MATCH_ID}`;
+                console.log('My Viewer ID is:', id);
+                
+                // Try immediately, then loop every 3 seconds if not found
+                connectToBroadcaster();
+                retryInterval = setInterval(connectToBroadcaster, 3000);
+            });
+
+            peer.on('error', (err) => {
+                console.error("Peer error:", err);
+                // Ignore standard 'peer-unavailable' errors so it keeps retrying silently in the background
+                if (err.type !== 'peer-unavailable') {
+                    statusText.innerText = "🔴 Connection Error";
+                    statusText.style.color = "#ef4444";
+                    subText.innerText = "Please refresh and try again.";
+                }
+            });
+        }
+
+        function connectToBroadcaster() {
+            if (!peer) return;
+
+            const call = peer.call(MATCH_ID);
+            
+            if (!call) {
+                statusText.innerText = "🟡 Waiting for Broadcast...";
+                subText.innerText = `Retrying connection to ${MATCH_ID}...`;
+                return;
+            }
+
+            call.on('stream', (remoteStream) => {
+                clearInterval(retryInterval); // Stop retrying once successfully connected
+                statusContainer.style.display = 'none'; 
+                
+                videoElement.style.display = 'block'; 
+                videoElement.srcObject = remoteStream;
+                
+                videoElement.play().catch(e => {
+                    console.log("Autoplay blocked, user must click play", e);
+                });
+            });
+
+            call.on('close', () => {
+                statusContainer.style.display = 'block';
+                statusText.innerText = "🔴 Broadcast Ended.";
+                statusText.style.color = "#ef4444";
+                subText.innerText = "Waiting for broadcaster to return...";
+                videoElement.style.display = 'none';
+                
+                // Broadcaster disconnected, restart auto-retry polling
+                retryInterval = setInterval(connectToBroadcaster, 3000);
+            });
+            
+            call.on('error', (err) => {
+                console.error("Call error:", err);
+            });
+        }
+    </script>
+</body>
+</html>
