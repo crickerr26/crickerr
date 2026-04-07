@@ -19,25 +19,33 @@
         body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; }
         
         #viewer-video { 
-            width: 100%; height: 100%; 
+            position: fixed; /* Prevents layout shifting when keyboard opens */
+            top: -5%; /* Elevates video slightly to give bottom UI breathing space */
+            left: 0;
+            width: 100vw; 
+            height: 100vh; /* Fixed dimensions prevent resize on keyboard popup */
             object-fit: contain; 
             background: #000; 
             display: block; 
             transform: translateZ(0); 
             backface-visibility: hidden;
+            z-index: 1; /* Sets exact layer order */
         }
 
         @media (orientation: portrait) {
             #viewer-video {
                 object-fit: contain;
-                height: 100%;
-                position: static;
+                height: 100vh;
+                position: fixed;
+                top: -5vh;
             }
         }
 
         @media (orientation: landscape) {
             #viewer-video {
                 object-fit: contain;
+                top: 0; /* Reset for landscape to avoid clipping */
+                height: 100vh;
             }
         }
         
@@ -130,13 +138,15 @@
 
         /* --- BROADCAST WATERMARK LOGO --- */
         #broadcast-watermark {
-            position: absolute; left: 15px; width: 35px; height: auto; opacity: 0;    
-            z-index: 45; pointer-events: none; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); transition: opacity 0.8s ease-in-out;
+            position: fixed; /* Anchors firmly regardless of scrolling/keyboard */
+            left: 15px; width: 45px; height: auto; opacity: 0;    
+            z-index: 950; /* Super high z-index to stay completely above scoreboard/UI */
+            pointer-events: none; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); transition: opacity 0.8s ease-in-out;
         }
-        /* Portrait: Perfectly calculates video bound inside black bars */
-        @media (orientation: portrait) { #broadcast-watermark { bottom: calc(50vh - 28vw + 120px); } }
-        /* Landscape: Video touches the bottom */
-        @media (orientation: landscape) { #broadcast-watermark { bottom: 120px; } }
+        /* Portrait: Safely above scoreboard taking new video offset into account */
+        @media (orientation: portrait) { #broadcast-watermark { bottom: calc(50vh - 28vw + 160px); } }
+        /* Landscape: Video touches the bottom, keep above score */
+        @media (orientation: landscape) { #broadcast-watermark { bottom: 140px; } }
         .show-watermark { opacity: 0.95 !important; }
 
         /* LIVE STATS & CHAT */
@@ -1407,6 +1417,9 @@
             // Remove class immediately to reset the state
             stage.classList.remove('is-active');
             
+            // FORCE DOM REFLOW INSTANTLY (Fixes animation stuck/not triggering bug)
+            void stage.offsetWidth; 
+            
             // Apply Dynamic Color to Shockwave & Glow based on the event
             if (shockwave) {
                 shockwave.style.boxShadow = `0 0 80px ${accentColor}, inset 0 0 80px ${accentColor}`;
@@ -1415,24 +1428,18 @@
             const textGlow = document.querySelector('.text-glow');
             if (textGlow) textGlow.style.color = accentColor;
             
-            // Double requestAnimationFrame ensures WebKit/Mobile Safari actually paints 
-            // the cleared state before applying the active state, guaranteeing the animation plays every time.
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    spans.forEach(s => s.innerText = displayText);
+            spans.forEach(s => s.innerText = displayText);
 
-                    // Trigger the new animation classes
-                    stage.classList.add('is-active'); 
-                    
-                    if (eventSponsors) eventSponsors.style.opacity = '1';
+            // Trigger the new animation classes
+            stage.classList.add('is-active'); 
+            
+            if (eventSponsors) eventSponsors.style.opacity = '1';
 
-                    // Cleanup after animation completes (matches the 3.5s CSS animation)
-                    setTimeout(() => {
-                        stage.classList.remove('is-active');
-                        if (eventSponsors) eventSponsors.style.opacity = '0';
-                    }, 3500);
-                });
-            });
+            // Cleanup after animation completes (matches the 3.5s CSS animation)
+            setTimeout(() => {
+                stage.classList.remove('is-active');
+                if (eventSponsors) eventSponsors.style.opacity = '0';
+            }, 3500);
         }
     </script>
 </body>
