@@ -22,8 +22,8 @@
             position: fixed; /* Changed BACK to fixed to prevent the browser from panning it off-screen */
             top: 0; 
             left: 0;
-            width: 100%; 
-            height: 100%; 
+            width: 100vw; 
+            height: 100vh; 
             object-fit: contain; 
             background: #000; 
             display: block; 
@@ -41,7 +41,7 @@
                 object-fit: contain;
                 object-position: 50% 10%; /* Dynamically slides video up gracefully when keyboard opens, without hiding */
                 padding-top: 0; 
-                height: 100%;
+                height: 100vh;
                 position: fixed;
                 top: 0; 
             }
@@ -65,7 +65,7 @@
                 object-position: center;
                 padding-top: 0;
                 top: 0; 
-                height: 100%;
+                height: 100vh;
             }
             #yt-title-container { display: none !important; }
         }
