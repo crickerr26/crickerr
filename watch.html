@@ -53,14 +53,14 @@
                 display: flex;
                 flex-direction: column;
                 position: fixed; 
-                top: calc(56.25vw + 12px); /* Positioned strictly below the video */
+                top: calc(56.25vw + 15px); /* Positioned strictly below the video */
                 left: 15px;
                 right: 15px;
                 z-index: 10;
                 font-family: 'Roboto', sans-serif;
             }
-            .yt-label { font-size: 11px; color: #aaa; font-weight: 700; text-transform: uppercase; margin-bottom: 2px; }
-            .yt-title-text { font-size: 18px; color: white; font-weight: 700; line-height: 1.3; margin-right: 90px; /* Leaves space for buttons */ }
+            .yt-label { font-size: 11px; color: #aaa; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
+            .yt-title-text { font-size: 18px; color: white; font-weight: 700; line-height: 1.3; margin-right: 130px; /* Leaves space for buttons */ }
         }
 
         @media (orientation: landscape) {
@@ -122,13 +122,13 @@
             .live-dot { width: 5px; height: 5px; }
             
             #quality-badge {
-                top: calc(56.25vw + 12px); left: auto;
+                top: calc(56.25vw + 15px); left: auto;
                 bottom: auto; right: 55px;
-                padding: 8px 10px; font-size: 10px;
+                padding: 6px 10px; font-size: 10px;
                 background: #222; border: 1px solid #444; color: white;
             }
             #quality-menu {
-                top: calc(56.25vw + 45px) !important; left: auto !important;
+                top: calc(56.25vw + 50px) !important; left: auto !important;
                 bottom: auto; right: 55px;
             }
         }
@@ -162,7 +162,7 @@
         @media (orientation: portrait) {
             #share-btn.match-active { 
                 display: flex; 
-                top: calc(56.25vw + 12px); 
+                top: calc(56.25vw + 15px); 
                 right: 15px; 
                 bottom: auto;
                 background: #222; 
@@ -206,7 +206,7 @@
         /* PORTRAIT OVERRIDES FOR STATS & CHAT TOGGLE */
         @media (orientation: portrait) {
             #live-stats-bar {
-                top: calc(56.25vw + 45px); right: auto; left: 15px; 
+                top: calc(56.25vw + 60px); right: auto; left: 15px; 
                 padding: 4px 8px; font-size: 11px;
                 background: transparent; border: none;
                 gap: 6px; color: #aaa;
@@ -214,7 +214,7 @@
             #live-stats-bar svg { width: 14px !important; height: 14px !important; fill: #aaa !important; }
             
             #chat-toggle-btn {
-                top: calc(56.25vw + 40px); right: 15px; bottom: auto; left: auto;
+                top: calc(56.25vw + 55px); right: 15px; bottom: auto; left: auto;
                 padding: 6px 12px; font-size: 10px;
                 background: #222; border: 1px solid #444; border-radius: 20px;
             }
@@ -222,8 +222,8 @@
 
             /* YouTube Style Chat Box overrides */
             #chat-container {
-                top: calc(56.25vw + 85px); 
-                bottom: 15px; left: 15px; width: calc(100% - 30px);
+                top: calc(56.25vw + 95px); 
+                bottom: 15px; left: 15px; width: calc(100% - 75px);
                 max-height: none; 
                 background: #0f0f0f; border: 1px solid #222; border-radius: 12px;
                 padding: 10px; pointer-events: auto;
@@ -243,7 +243,7 @@
             #chat-input { background: #222; border-color: #333; }
             
             #heart-container {
-                bottom: 90px; right: 25px; height: 150px;
+                bottom: 15px; right: 15px; height: 150px;
             }
         }
 
@@ -324,12 +324,12 @@
         .overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            background: #000; color: white; z-index: 10;
+            background: #000; color: white; z-index: 1000;
         }
 
         /* INPUT SCREEN & LIVE MATCHES LIST */
         #input-overlay { 
-            z-index: 30; display: none; 
+            z-index: 1000; display: none; 
             background: linear-gradient(180deg, #0f172a 0%, #000000 100%);
             flex-direction: column; 
             justify-content: flex-start; 
@@ -498,7 +498,7 @@
         
         /* PLAY FALLBACK SCREEN */
         #play-overlay {
-            background: rgba(0, 0, 0, 0.8); z-index: 20; display: none; cursor: pointer;
+            background: rgba(0, 0, 0, 0.8); z-index: 1000; display: none; cursor: pointer;
         }
         #play-btn {
             padding: 15px 40px; background: #22c55e; color: white; border: none;
