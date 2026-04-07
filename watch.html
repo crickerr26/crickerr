@@ -986,18 +986,36 @@
                         currentMatchData = data;
 
                         // --- POPULATE YOUTUBE TITLE (PORTRAIT) ---
-                        const ytTitle = document.getElementById('yt-title-text');
-                        if (ytTitle) {
-                            const t1 = data.t1 || "Team A";
-                            const t2 = data.t2 || "Team B";
-                            const venue = data.venue || "Venue";
-                            let dateStr = data.matchType || "Live Match";
-                            if (data.matchDate) {
-                                const d = new Date(data.matchDate);
-                                dateStr = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-                            }
-                            ytTitle.innerText = `${t1} vs ${t2} - ${venue} - ${dateStr}`;
-                        }
+        const ytTitle = document.getElementById('yt-title-text');
+        if (ytTitle) {
+            const t1 = data.t1;
+            const t2 = data.t2;
+            
+            if (t1 && t2) {
+                let titleParts = [`${t1} vs ${t2}`];
+                
+                // Add venue cleanly if it exists
+                if (data.venue && data.venue.trim() !== "") {
+                    titleParts.push(data.venue.trim());
+                }
+                
+                // Add date cleanly if it exists
+                const matchDate = data.date || data.matchDate;
+                if (matchDate && matchDate.trim() !== "") {
+                    const d = new Date(matchDate);
+                    // Check if it's a valid date object to apply formatting
+                    if (!isNaN(d.getTime())) {
+                        titleParts.push(d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }));
+                    } else {
+                        // Fallback to exactly what the raw text is if not a standard date format
+                        titleParts.push(matchDate.trim());
+                    }
+                }
+                
+                // Join available parts dynamically with " - "
+                ytTitle.innerText = titleParts.join(' - ');
+            }
+        }
 
                         // --- ANIMATION / INTRO SYNC LOGIC ---
                         if (data.t1 && data.t2 && data.t1 !== "HOME" && !introPlayed) {
