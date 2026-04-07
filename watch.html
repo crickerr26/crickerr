@@ -29,7 +29,10 @@
 
         @media (orientation: portrait) {
             #viewer-video {
-                object-position: top;
+                object-fit: fill;
+                height: 68vw; /* Enlarges and stretches the top/bottom vertically */
+                position: absolute;
+                top: 15vh; /* Moves the video down */
             }
         }
 
