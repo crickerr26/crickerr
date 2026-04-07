@@ -257,13 +257,29 @@
         /* INPUT SCREEN & LIVE MATCHES LIST */
         #input-overlay { 
             z-index: 30; display: none; 
-            background: #0a0a0a; 
+            background: radial-gradient(circle at top, #1e293b 0%, #0a0a0a 60%); 
             flex-direction: column; 
             justify-content: flex-start; 
             align-items: center; 
             padding-top: 60px;
             overflow-y: auto;
         }
+
+        #main-brand-logo {
+            width: 200px; max-width: 80%; height: auto; margin-bottom: 30px;
+            filter: drop-shadow(0 4px 15px rgba(0,0,0,0.5));
+        }
+
+        .page-intro-anim {
+            animation: slideFadeIn 0.8s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+            opacity: 0; transform: translateY(30px);
+        }
+
+        @keyframes slideFadeIn {
+            0% { opacity: 0; transform: translateY(30px); filter: blur(5px); }
+            100% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+        }
+
         .search-container {
             display: flex; flex-direction: column; align-items: center;
             width: 100%; max-width: 500px; margin-bottom: 40px;
@@ -277,22 +293,39 @@
             border: 2px solid #333; background: #111; color: white; 
             text-transform: uppercase; text-align: center;
             flex-grow: 1; outline: none; transition: 0.2s;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
         }
-        #match-input:focus { border-color: #3b82f6; }
+        #match-input:focus { border-color: #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.3), inset 0 2px 4px rgba(0,0,0,0.5); }
         #submit-btn {
-            padding: 12px 25px; background: #3b82f6; color: white; border: none;
+            padding: 12px 25px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none;
             border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); transition: transform 0.1s;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); transition: transform 0.1s, box-shadow 0.2s;
         }
+        #submit-btn:hover { box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6); }
         #submit-btn:active { transform: scale(0.95); }
 
         .live-matches-container {
             width: 90%; max-width: 800px;
             padding-bottom: 50px;
         }
-        .live-matches-container h2 {
-            font-size: 20px; color: #fff; letter-spacing: 1px; margin-bottom: 20px; text-align: center;
+        .live-matches-header {
+            display: flex; justify-content: center; align-items: center; position: relative; margin-bottom: 20px;
         }
+        .live-matches-container h2 {
+            font-size: 20px; color: #fff; letter-spacing: 1px; text-align: center; margin-bottom: 0;
+        }
+        #admin-toggle-btn {
+            position: absolute; right: 0; background: transparent; border: 1px solid #555; color: #888;
+            padding: 4px 10px; border-radius: 4px; font-size: 10px; cursor: pointer; text-transform: uppercase; transition: 0.2s;
+        }
+        #admin-toggle-btn:hover { border-color: #ef4444; color: #ef4444; }
+        #admin-actions {
+            display: none; justify-content: flex-end; margin-bottom: 15px; gap: 10px;
+        }
+        .admin-btn {
+            padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold;
+        }
+        .admin-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .country-group {
             margin-bottom: 30px;
         }
@@ -309,6 +342,13 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
         .match-card:hover { transform: translateY(-3px); border-color: #3b82f6; }
+        .match-card.admin-selected {
+            border-color: #ef4444; background: rgba(239, 68, 68, 0.1);
+        }
+        .match-checkbox {
+            display: none; position: absolute; top: 12px; left: 12px; width: 16px; height: 16px; pointer-events: none; accent-color: #ef4444;
+        }
+        .admin-mode .match-checkbox { display: block; }
         .match-card-live {
             position: absolute; top: 10px; right: 10px;
             background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444;
@@ -317,8 +357,9 @@
         }
         .match-card-title {
             font-family: 'Montserrat', sans-serif; font-size: 16px; font-weight: 800; color: white;
-            margin-top: 10px; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            margin-top: 10px; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: margin 0.2s;
         }
+        .admin-mode .match-card-title { margin-top: 20px; } /* Give room for checkbox */
         .match-card-sub {
             font-size: 12px; color: #888; font-weight: 500;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -557,7 +598,8 @@
     </div>
 
     <div id="input-overlay" class="overlay">
-        <div class="search-container">
+        <div class="search-container page-intro-anim">
+            <img src="logo.png" alt="Crickerr Logo" id="main-brand-logo">
             <h2>Search Match Code</h2>
             <div class="search-box">
                 <input type="text" id="match-input" placeholder="e.g. FINALS123" autocomplete="off">
@@ -565,8 +607,14 @@
             </div>
         </div>
 
-        <div class="live-matches-container">
-            <h2>Currently Ongoing Matches</h2>
+        <div class="live-matches-container page-intro-anim" style="animation-delay: 0.2s;">
+            <div class="live-matches-header">
+                <h2>Currently Ongoing Matches</h2>
+                <button id="admin-toggle-btn" onclick="toggleAdminMode()">Admin</button>
+            </div>
+            <div id="admin-actions">
+                <button class="admin-btn" id="delete-selected-btn" onclick="deleteSelectedMatches()" disabled>Delete Selected</button>
+            </div>
             <div id="live-matches-list">
                 <div class="spinner" style="margin: 0 auto;"></div>
             </div>
@@ -703,6 +751,66 @@
             }
         };
 
+        let isAdminMode = false;
+        let selectedAdminMatches = new Set();
+
+        function toggleAdminMode() {
+            if (!isAdminMode) {
+                const pwd = prompt("Enter Admin Password:");
+                if (pwd !== "2626") {
+                    if (pwd !== null) alert("Incorrect Password");
+                    return;
+                }
+                isAdminMode = true;
+                document.getElementById('admin-toggle-btn').innerText = "Exit Admin";
+                document.getElementById('admin-toggle-btn').style.color = "#ef4444";
+                document.getElementById('admin-toggle-btn').style.borderColor = "#ef4444";
+                document.getElementById('admin-actions').style.display = "flex";
+                document.getElementById('live-matches-list').classList.add('admin-mode');
+            } else {
+                isAdminMode = false;
+                selectedAdminMatches.clear();
+                document.getElementById('admin-toggle-btn').innerText = "Admin";
+                document.getElementById('admin-toggle-btn').style.color = "#888";
+                document.getElementById('admin-toggle-btn').style.borderColor = "#555";
+                document.getElementById('admin-actions').style.display = "none";
+                document.getElementById('live-matches-list').classList.remove('admin-mode');
+                updateAdminDeleteButton();
+                
+                // Clear any UI selections if disabling admin mode
+                document.querySelectorAll('.match-card.admin-selected').forEach(card => {
+                    card.classList.remove('admin-selected');
+                    const cb = card.querySelector('.match-checkbox');
+                    if (cb) cb.checked = false;
+                });
+            }
+        }
+
+        function updateAdminDeleteButton() {
+            const btn = document.getElementById('delete-selected-btn');
+            if (selectedAdminMatches.size > 0) {
+                btn.disabled = false;
+                btn.innerText = `Delete Selected (${selectedAdminMatches.size})`;
+            } else {
+                btn.disabled = true;
+                btn.innerText = "Delete Selected";
+            }
+        }
+
+        function deleteSelectedMatches() {
+            if (selectedAdminMatches.size === 0) return;
+            if (confirm(`Are you sure you want to permanently delete ${selectedAdminMatches.size} match(es)?`)) {
+                selectedAdminMatches.forEach(matchId => {
+                    db.collection("live_matches").doc(matchId).delete().catch(err => {
+                        console.error("Error deleting match (falling back to isStreaming:false):", err);
+                        db.collection("live_matches").doc(matchId).update({ isStreaming: false });
+                    });
+                });
+                selectedAdminMatches.clear();
+                updateAdminDeleteButton();
+            }
+        }
+
         function fetchLiveMatches() {
             const listContainer = document.getElementById('live-matches-list');
             
@@ -726,19 +834,26 @@
                         matchesByCountry[country].push({ id: doc.id, ...data });
                     });
 
+                    // Retain selections if Firebase pushes an update while selecting
+                    const oldSelected = new Set(selectedAdminMatches);
+
                     let html = '';
                     for (const [country, matches] of Object.entries(matchesByCountry)) {
                         html += `
                         <div class="country-group">
                             <div class="country-header">${country}</div>
                             <div class="match-cards">
-                                ${matches.map(m => `
-                                    <div class="match-card" onclick="selectMatchFromList('${m.id}')">
+                                ${matches.map(m => {
+                                    const isSel = oldSelected.has(m.id);
+                                    return `
+                                    <div class="match-card ${isSel ? 'admin-selected' : ''}" id="card-${m.id}" onclick="selectMatchFromList('${m.id}')">
+                                        <input type="checkbox" class="match-checkbox" ${isSel ? 'checked' : ''}>
                                         <div class="match-card-live"><div class="live-dot" style="width:6px;height:6px;"></div> LIVE</div>
                                         <div class="match-card-title">${m.t1 || 'Team 1'} vs ${m.t2 || 'Team 2'}</div>
                                         <div class="match-card-sub">${m.matchType || 'Match'} • ${m.venue || 'Venue'}</div>
                                     </div>
-                                `).join('')}
+                                    `;
+                                }).join('')}
                             </div>
                         </div>`;
                     }
@@ -754,8 +869,23 @@
         }
 
         function selectMatchFromList(matchId) {
-            matchInput.value = matchId;
-            submitMatchId();
+            if (isAdminMode) {
+                const card = document.getElementById(`card-${matchId}`);
+                const cb = card.querySelector('.match-checkbox');
+                if (selectedAdminMatches.has(matchId)) {
+                    selectedAdminMatches.delete(matchId);
+                    card.classList.remove('admin-selected');
+                    cb.checked = false;
+                } else {
+                    selectedAdminMatches.add(matchId);
+                    card.classList.add('admin-selected');
+                    cb.checked = true;
+                }
+                updateAdminDeleteButton();
+            } else {
+                matchInput.value = matchId;
+                submitMatchId();
+            }
         }
 
         function submitMatchId() {
