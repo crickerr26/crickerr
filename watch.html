@@ -330,112 +330,161 @@
         /* INPUT SCREEN & LIVE MATCHES LIST */
         #input-overlay { 
             z-index: 30; display: none; 
-            background: radial-gradient(circle at top, #1e293b 0%, #0a0a0a 60%); 
+            background: linear-gradient(180deg, #0f172a 0%, #000000 100%);
             flex-direction: column; 
             justify-content: flex-start; 
             align-items: center; 
-            padding-top: 60px;
+            padding-top: 80px;
             overflow-y: auto;
         }
 
         #main-brand-logo {
-            width: 200px; max-width: 80%; height: auto; margin-bottom: 30px;
-            filter: drop-shadow(0 4px 15px rgba(0,0,0,0.5));
+            width: 180px; max-width: 70%; height: auto; margin-bottom: 12px;
+            filter: drop-shadow(0 4px 20px rgba(0,0,0,0.6));
+        }
+
+        .hero-tagline {
+            color: #94a3b8; font-size: 14px; font-family: 'Roboto', sans-serif; 
+            letter-spacing: 0.5px; margin-bottom: 35px; font-weight: 500; text-align: center;
         }
 
         .page-intro-anim {
-            animation: slideFadeIn 0.8s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
-            opacity: 0; transform: translateY(30px);
+            animation: smoothSlideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0; transform: translateY(20px);
         }
 
-        @keyframes slideFadeIn {
-            0% { opacity: 0; transform: translateY(30px); filter: blur(5px); }
+        @keyframes smoothSlideUp {
+            0% { opacity: 0; transform: translateY(20px); filter: blur(4px); }
             100% { opacity: 1; transform: translateY(0); filter: blur(0px); }
         }
 
         .search-container {
             display: flex; flex-direction: column; align-items: center;
-            width: 100%; max-width: 500px; margin-bottom: 40px;
+            width: 100%; padding: 0 20px; margin-bottom: 45px;
         }
-        .search-container h2 { margin-bottom: 15px; font-size: 22px; color: #fff; letter-spacing: 1px;}
         .search-box {
-            display: flex; gap: 10px; width: 90%; justify-content: center;
+            display: flex; align-items: center; gap: 8px; width: 100%; max-width: 450px; 
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); 
+            border-radius: 50px; padding: 6px 6px 6px 18px; 
+            transition: all 0.3s ease; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
         }
+        .search-box:focus-within { 
+            border-color: rgba(59, 130, 246, 0.5); background: rgba(255,255,255,0.07); 
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 3px rgba(59, 130, 246, 0.15); 
+        }
+        .search-icon { width: 18px; height: 18px; fill: #64748b; flex-shrink: 0; }
+        
         #match-input {
-            padding: 12px 20px; font-size: 18px; border-radius: 8px; 
-            border: 2px solid #333; background: #111; color: white; 
-            text-transform: uppercase; text-align: center;
-            flex-grow: 1; outline: none; transition: 0.2s;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+            flex-grow: 1; background: transparent; border: none; color: white; 
+            font-size: 15px; outline: none; font-family: 'Roboto', sans-serif; 
+            padding: 10px 0; letter-spacing: 0.5px; text-transform: uppercase;
         }
-        #match-input:focus { border-color: #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.3), inset 0 2px 4px rgba(0,0,0,0.5); }
+        #match-input::placeholder { color: #475569; font-weight: 400; text-transform: none; }
+        
         #submit-btn {
-            padding: 12px 25px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none;
-            border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); transition: transform 0.1s, box-shadow 0.2s;
+            padding: 10px 24px; background: #3b82f6; color: white; border: none;
+            border-radius: 50px; font-size: 13px; font-weight: 700; cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); text-transform: uppercase; 
+            letter-spacing: 0.5px; flex-shrink: 0;
         }
-        #submit-btn:hover { box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6); }
-        #submit-btn:active { transform: scale(0.95); }
+        #submit-btn:active { transform: scale(0.95); background: #2563eb; }
 
         .live-matches-container {
-            width: 90%; max-width: 800px;
-            padding-bottom: 50px;
+            width: 100%; max-width: 600px; padding: 0 20px 60px;
         }
         .live-matches-header {
-            display: flex; justify-content: center; align-items: center; position: relative; margin-bottom: 20px;
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05);
         }
         .live-matches-container h2 {
-            font-size: 20px; color: #fff; letter-spacing: 1px; text-align: center; margin-bottom: 0;
+            font-size: 18px; color: #f8fafc; letter-spacing: 0; font-weight: 700; 
+            font-family: 'Montserrat', sans-serif; margin-bottom: 0;
         }
         #admin-toggle-btn {
-            position: absolute; right: 0; background: transparent; border: 1px solid #555; color: #888;
-            padding: 4px 10px; border-radius: 4px; font-size: 10px; cursor: pointer; text-transform: uppercase; transition: 0.2s;
+            background: transparent; border: none; color: #64748b; font-size: 11px; 
+            font-weight: 600; text-transform: uppercase; cursor: pointer; 
+            letter-spacing: 1px; transition: color 0.2s; padding: 4px;
         }
-        #admin-toggle-btn:hover { border-color: #ef4444; color: #ef4444; }
+        #admin-toggle-btn:hover { color: #f8fafc; }
+        
         #admin-actions {
-            display: none; justify-content: flex-end; margin-bottom: 15px; gap: 10px;
+            display: none; justify-content: flex-end; margin-bottom: 16px; gap: 10px;
         }
         .admin-btn {
-            padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold;
+            padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold;
         }
-        .admin-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .admin-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        
         .country-group {
-            margin-bottom: 30px;
+            margin-bottom: 32px;
         }
         .country-header {
-            font-family: 'Roboto Condensed', sans-serif; font-size: 18px; font-weight: bold; color: #cbd5e1;
-            margin-bottom: 15px; border-bottom: 2px solid #333; padding-bottom: 5px; text-transform: uppercase;
+            font-family: 'Roboto Condensed', sans-serif; font-size: 13px; font-weight: 700; 
+            color: #64748b; margin-bottom: 16px; border-bottom: none; 
+            text-transform: uppercase; letter-spacing: 1px; padding-left: 4px;
         }
         .match-cards {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;
+            display: grid; grid-template-columns: 1fr; gap: 12px; /* Mobile first structure */
         }
+        
+        @media (min-width: 600px) {
+            .match-cards { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+        }
+
         .match-card {
-            background: #111; border: 1px solid #222; border-radius: 12px; padding: 15px;
-            cursor: pointer; transition: transform 0.2s, border-color 0.2s; position: relative;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); 
+            border-radius: 16px; padding: 20px; cursor: pointer; 
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
+            display: flex; flex-direction: column; gap: 6px; backdrop-filter: blur(10px);
         }
-        .match-card:hover { transform: translateY(-3px); border-color: #3b82f6; }
+        .match-card:active { transform: scale(0.98); background: rgba(255, 255, 255, 0.04); border-color: rgba(59, 130, 246, 0.3); }
         .match-card.admin-selected {
-            border-color: #ef4444; background: rgba(239, 68, 68, 0.1);
+            border-color: #ef4444; background: rgba(239, 68, 68, 0.05);
         }
+        
         .match-checkbox {
-            display: none; position: absolute; top: 12px; left: 12px; width: 16px; height: 16px; pointer-events: none; accent-color: #ef4444;
+            display: none; position: absolute; top: 16px; left: 16px; width: 18px; height: 18px; pointer-events: none; accent-color: #ef4444;
         }
         .admin-mode .match-checkbox { display: block; }
+        .admin-mode .match-card-teams { padding-left: 28px; } /* Room for checkbox */
+        
         .match-card-live {
-            position: absolute; top: 10px; right: 10px;
-            background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444;
-            padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: bold;
-            display: flex; align-items: center; gap: 5px; letter-spacing: 1px;
+            position: absolute; top: 16px; right: 16px;
+            background: rgba(239, 68, 68, 0.15); border: none; color: #f87171;
+            padding: 4px 10px; border-radius: 50px; font-size: 10px; font-weight: 800;
+            display: flex; align-items: center; gap: 6px; letter-spacing: 0.5px;
+            z-index: 5;
         }
-        .match-card-title {
-            font-family: 'Montserrat', sans-serif; font-size: 16px; font-weight: 800; color: white;
-            margin-top: 10px; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: margin 0.2s;
+        
+        .match-card-teams {
+            display: flex; align-items: center; justify-content: space-between; 
+            margin-top: 10px; padding-right: 75px; transition: padding 0.2s;
         }
-        .admin-mode .match-card-title { margin-top: 20px; } /* Give room for checkbox */
+        
+        .match-team {
+            display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;
+        }
+        .match-team.right { flex-direction: row-reverse; text-align: right; }
+        
+        .match-team-logo {
+            width: 40px; height: 40px; border-radius: 50%; object-fit: contain; 
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); 
+            padding: 4px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        
+        .match-team-name {
+            font-family: 'Roboto', sans-serif; font-size: 15px; font-weight: 700; color: #f8fafc;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;
+        }
+        
+        .match-vs {
+            font-size: 11px; font-weight: 800; color: #64748b; padding: 0 10px; font-style: italic;
+        }
+        
         .match-card-sub {
-            font-size: 12px; color: #888; font-weight: 500;
+            font-size: 12px; color: #94a3b8; font-weight: 500; font-family: 'Roboto', sans-serif;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px; margin-top: 12px; text-align: center;
         }
 
         /* STATUS SCREEN */
@@ -621,10 +670,10 @@
 </head>
 <body>
 
-    <audio id="audio-four" src="four.mp3" preload="auto"></audio>
-    <audio id="audio-six" src="six.mp3" preload="auto"></audio>
-    <audio id="audio-wicket" src="wicket.mp3" preload="auto"></audio>
-    <audio id="audio-transition" src="transitionmusic.mp3" preload="auto"></audio>
+    <audio id="audio-four" src="/four.mp3" preload="auto"></audio>
+    <audio id="audio-six" src="/six.mp3" preload="auto"></audio>
+    <audio id="audio-wicket" src="/wicket.mp3" preload="auto"></audio>
+    <audio id="audio-transition" src="/transitionmusic.mp3" preload="auto"></audio>
 
     
     
@@ -675,7 +724,7 @@
     </div>
 
     <div id="live-sponsors-container"></div>
-    <img id="broadcast-watermark" src="my-logo.png" alt="Broadcast Logo">
+    <img id="broadcast-watermark" src="/my-logo.png" alt="Broadcast Logo">
 
     <video id="viewer-video" autoplay playsinline></video>
     
@@ -706,17 +755,18 @@
 
     <div id="input-overlay" class="overlay">
         <div class="search-container page-intro-anim">
-            <img src="logo.png" alt="Crickerr Logo" id="main-brand-logo">
-            <h2>Search Match Code</h2>
+            <img src="/logo.png" alt="Crickerr Logo" id="main-brand-logo">
+            <p class="hero-tagline">Watch Live Cricket Matches</p>
             <div class="search-box">
-                <input type="text" id="match-input" placeholder="e.g. FINALS123" autocomplete="off">
-                <button id="submit-btn" onclick="submitMatchId()">SEARCH</button>
+                <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                <input type="text" id="match-input" placeholder="Enter Match Code" autocomplete="off">
+                <button id="submit-btn" onclick="submitMatchId()">Search</button>
             </div>
         </div>
 
-        <div class="live-matches-container page-intro-anim" style="animation-delay: 0.2s;">
+        <div class="live-matches-container page-intro-anim" style="animation-delay: 0.15s;">
             <div class="live-matches-header">
-                <h2>Currently Ongoing Matches</h2>
+                <h2>Live Matches</h2>
                 <button id="admin-toggle-btn" onclick="toggleAdminMode()">Admin</button>
             </div>
             <div id="admin-actions">
@@ -952,12 +1002,45 @@
                             <div class="match-cards">
                                 ${matches.map(m => {
                                     const isSel = oldSelected.has(m.id);
+                                    
+                                    // 1. Run the logic FIRST
+                                    const defaultLogo = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23475569"><path d="M12 2L3 7v9.82c0 3.61 2.5 6.94 5.92 7.95L12 22l3.08-.23c3.42-1.01 5.92-4.34 5.92-7.95V7l-9-5zm0 2.18l7.5 4.17v8.47c0 2.82-1.95 5.43-4.63 6.22L12 19.88l-2.87.82C6.45 19.91 4.5 17.3 4.5 14.48V8.35L12 4.18z"/></svg>';
+                                    const t1Img = m.t1Logo ? m.t1Logo : defaultLogo;
+                                    const t2Img = m.t2Logo ? m.t2Logo : defaultLogo;
+                                    
+                                    const t1Name = m.t1 ? m.t1 : '';
+                                    const t2Name = m.t2 ? m.t2 : '';
+                                    
+                                    let subInfo = [];
+                                    if (m.venue) subInfo.push(m.venue);
+                                    if (m.matchType) subInfo.push(m.matchType);
+                                    const subText = subInfo.length > 0 ? subInfo.join(' • ') : '';
+
+                                    // 2. Return the HTML structure SECOND
                                     return `
                                     <div class="match-card ${isSel ? 'admin-selected' : ''}" id="card-${m.id}" onclick="selectMatchFromList('${m.id}')">
                                         <input type="checkbox" class="match-checkbox" ${isSel ? 'checked' : ''}>
                                         <div class="match-card-live"><div class="live-dot" style="width:6px;height:6px;"></div> LIVE</div>
-                                        <div class="match-card-title">${m.t1 || 'Team 1'} vs ${m.t2 || 'Team 2'}</div>
-                                        <div class="match-card-sub">${m.matchType || 'Match'} • ${m.venue || 'Venue'}</div>
+                                        
+                                        <div class="match-card-teams">
+                                            ${t1Name ? `
+                                            <div class="match-team left">
+                                                <img src="${t1Img}" class="match-team-logo" alt="T1">
+                                                <span class="match-team-name">${t1Name}</span>
+                                            </div>
+                                            ` : ''}
+                                            
+                                            ${(t1Name && t2Name) ? '<div class="match-vs">VS</div>' : ''}
+                                            
+                                            ${t2Name ? `
+                                            <div class="match-team right">
+                                                <img src="${t2Img}" class="match-team-logo" alt="T2">
+                                                <span class="match-team-name">${t2Name}</span>
+                                            </div>
+                                            ` : ''}
+                                        </div>
+                                        
+                                        ${subText ? `<div class="match-card-sub">${subText}</div>` : ''}
                                     </div>
                                     `;
                                 }).join('')}
