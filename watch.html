@@ -20,7 +20,7 @@
         
         #viewer-video { 
             position: fixed; /* Prevents layout shifting when keyboard opens */
-            top: -5%; /* Elevates video slightly to give bottom UI breathing space */
+            top: 0; /* Clamped to 0 so it NEVER goes above the screen */
             left: 0;
             width: 100vw; 
             height: 100vh; /* Fixed dimensions prevent resize on keyboard popup */
@@ -32,21 +32,42 @@
             z-index: 1; /* Sets exact layer order */
         }
 
+        #yt-title-container {
+            display: none;
+        }
+
         @media (orientation: portrait) {
             #viewer-video {
                 object-fit: contain;
+                object-position: center top; /* Anchors the video frame to the top */
+                padding-top: 12vh; /* Elevates video safely without pushing the container off-screen */
                 height: 100vh;
                 position: fixed;
-                top: -5vh;
+                top: 0; /* Stays locked during keyboard pop-up */
             }
+            #yt-title-container {
+                display: flex;
+                flex-direction: column;
+                position: fixed;
+                top: calc(12vh + (100vw * 0.5625) + 15px); /* Perfectly positioned below the 16:9 video */
+                left: 15px;
+                right: 15px;
+                z-index: 10;
+                font-family: 'Roboto', sans-serif;
+            }
+            .yt-label { font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
+            .yt-title-text { font-size: 16px; color: white; font-weight: 700; line-height: 1.3; }
         }
 
         @media (orientation: landscape) {
             #viewer-video {
                 object-fit: contain;
+                object-position: center;
+                padding-top: 0;
                 top: 0; /* Reset for landscape to avoid clipping */
                 height: 100vh;
             }
+            #yt-title-container { display: none !important; }
         }
         
         /* LIVE BADGE */
@@ -618,6 +639,11 @@
 
     <video id="viewer-video" autoplay playsinline></video>
     
+    <div id="yt-title-container">
+        <div class="yt-label">Match Intro</div>
+        <div class="yt-title-text" id="yt-title-text">Loading Match Info...</div>
+    </div>
+
     <div id="match-intro-overlay">
         <div class="intro-banner-container">
             <div class="intro-header-badge">MATCH STARTING</div>
@@ -958,6 +984,20 @@
                     if (doc.exists) {
                         const data = doc.data();
                         currentMatchData = data;
+
+                        // --- POPULATE YOUTUBE TITLE (PORTRAIT) ---
+                        const ytTitle = document.getElementById('yt-title-text');
+                        if (ytTitle) {
+                            const t1 = data.t1 || "Team A";
+                            const t2 = data.t2 || "Team B";
+                            const venue = data.venue || "Venue";
+                            let dateStr = data.matchType || "Live Match";
+                            if (data.matchDate) {
+                                const d = new Date(data.matchDate);
+                                dateStr = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+                            }
+                            ytTitle.innerText = `${t1} vs ${t2} - ${venue} - ${dateStr}`;
+                        }
 
                         // --- ANIMATION / INTRO SYNC LOGIC ---
                         if (data.t1 && data.t2 && data.t1 !== "HOME" && !introPlayed) {
