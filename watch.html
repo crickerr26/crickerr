@@ -986,35 +986,35 @@
                         currentMatchData = data;
 
                         // --- POPULATE YOUTUBE TITLE (PORTRAIT) ---
-        const ytTitle = document.getElementById('yt-title-text');
-        if (ytTitle) {
-            const t1 = data.t1;
-            const t2 = data.t2;
-            
-            if (t1 && t2) {
-                let titleParts = [`${t1} vs ${t2}`];
-                
-                // Add venue cleanly if it exists
-                if (data.venue && data.venue.trim() !== "") {
-                    titleParts.push(data.venue.trim());
-                }
-                
-                // Add date cleanly if it exists
-                const matchDate = data.date || data.matchDate;
-                if (matchDate && matchDate.trim() !== "") {
-                    const d = new Date(matchDate);
-                    // Check if it's a valid date object to apply formatting
-                    if (!isNaN(d.getTime())) {
-                        titleParts.push(d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }));
-                    } else {
-                        // Fallback to exactly what the raw text is if not a standard date format
-                        titleParts.push(matchDate.trim());
-                    }
-                }
-                
-                // Join available parts dynamically with " - "
-                ytTitle.innerText = titleParts.join(' - ');
-            }
+                        const ytTitle = document.getElementById('yt-title-text');
+                        if (ytTitle) {
+                            let titleParts = [];
+                            
+                            // 1. Add Teams dynamically
+                            if (data.t1 && data.t2) {
+                                titleParts.push(`${data.t1} vs ${data.t2}`);
+                            } else if (data.t1 || data.t2) {
+                                titleParts.push(data.t1 || data.t2); // Fallback if only one team is present initially
+                            }
+                            
+                            // 2. Add Venue cleanly
+                            if (data.venue && data.venue.trim() !== "") {
+                                titleParts.push(data.venue.trim());
+                            }
+                            
+                            // 3. Add Date cleanly
+                            const matchDate = data.matchDate || data.date;
+                            if (matchDate && matchDate.trim() !== "") {
+                                const d = new Date(matchDate);
+                                if (!isNaN(d.getTime())) {
+                                    titleParts.push(d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }));
+                                } else {
+                                    titleParts.push(matchDate.trim());
+                                }
+                            }
+                            
+                            // 4. Overwrite text immediately. If no data exists, this clears the "Loading..." text instead of getting stuck.
+                            ytTitle.innerText = titleParts.length > 0 ? titleParts.join(' - ') : "";
         }
 
                         // --- ANIMATION / INTRO SYNC LOGIC ---
