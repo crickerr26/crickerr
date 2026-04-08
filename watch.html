@@ -1008,13 +1008,23 @@
                                     const t1Img = m.t1Logo ? m.t1Logo : defaultLogo;
                                     const t2Img = m.t2Logo ? m.t2Logo : defaultLogo;
                                     
-                                    const t1Name = m.t1 ? m.t1 : '';
-                                    const t2Name = m.t2 ? m.t2 : '';
+                                    let t1Name = m.t1 ? m.t1 : '';
+                                    let t2Name = m.t2 ? m.t2 : '';
+                                    
+                                    // FALLBACK: If team names are missing, show the Match Code so the user knows what to click
+                                    if (!t1Name && !t2Name) {
+                                        t1Name = 'Match Code';
+                                        t2Name = m.id;
+                                    } else if (!t1Name) {
+                                        t1Name = 'TBA';
+                                    } else if (!t2Name) {
+                                        t2Name = 'TBA';
+                                    }
                                     
                                     let subInfo = [];
                                     if (m.venue) subInfo.push(m.venue);
                                     if (m.matchType) subInfo.push(m.matchType);
-                                    const subText = subInfo.length > 0 ? subInfo.join(' • ') : '';
+                                    const subText = subInfo.length > 0 ? subInfo.join(' • ') : 'Tap to Watch Live';
 
                                     // 2. Return the HTML structure SECOND
                                     return `
@@ -1023,24 +1033,20 @@
                                         <div class="match-card-live"><div class="live-dot" style="width:6px;height:6px;"></div> LIVE</div>
                                         
                                         <div class="match-card-teams">
-                                            ${t1Name ? `
                                             <div class="match-team left">
                                                 <img src="${t1Img}" class="match-team-logo" alt="T1">
                                                 <span class="match-team-name">${t1Name}</span>
                                             </div>
-                                            ` : ''}
                                             
-                                            ${(t1Name && t2Name) ? '<div class="match-vs">VS</div>' : ''}
+                                            <div class="match-vs">VS</div>
                                             
-                                            ${t2Name ? `
                                             <div class="match-team right">
                                                 <img src="${t2Img}" class="match-team-logo" alt="T2">
                                                 <span class="match-team-name">${t2Name}</span>
                                             </div>
-                                            ` : ''}
                                         </div>
                                         
-                                        ${subText ? `<div class="match-card-sub">${subText}</div>` : ''}
+                                        <div class="match-card-sub">${subText}</div>
                                     </div>
                                     `;
                                 }).join('')}
