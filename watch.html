@@ -79,7 +79,7 @@
                 display: flex;
                 position: fixed;
                 top: calc(70px + 56.25vw);
-                left: 0; right: 0;
+                left: 50%; right: 0; width: 50%;
                 height: 40px;
                 background: #1a1a1a;
                 z-index: 45;
@@ -87,6 +87,7 @@
                 justify-content: center;
                 gap: 8px;
                 color: white; font-family: 'Roboto', sans-serif; font-size: 12px; font-weight: bold; cursor: pointer; border-bottom: 1px solid #333;
+                border-left: 1px solid #333;
             }
             #fullscreen-btn svg { width: 18px; height: 18px; fill: white; }
         }
@@ -272,7 +273,7 @@
         /* PORTRAIT OVERRIDES FOR STATS & CHAT TOGGLE */
         @media (orientation: portrait) {
             #live-stats-bar {
-                top: 80px; right: auto; left: 75px; 
+                top: 80px; right: auto; left: 85px; 
                 padding: 4px 10px; font-size: 10px;
                 background: rgba(0,0,0,0.5); border: none;
                 gap: 4px; color: white; border-radius: 50px; z-index: 55;
@@ -280,19 +281,23 @@
             #live-stats-bar svg { width: 12px !important; height: 12px !important; fill: white !important; }
             
             #chat-toggle-btn {
-                top: calc(70px + 56.25vw - 35px); left: 10px; right: auto; bottom: auto;
-                padding: 4px 8px; font-size: 9px;
-                background: rgba(0,0,0,0.6); border: none; border-radius: 8px; z-index: 55;
+                position: fixed;
+                top: calc(70px + 56.25vw); left: 0; right: auto; bottom: auto;
+                width: 50%; height: 40px;
+                padding: 0; font-size: 12px;
+                background: #1a1a1a; border: none; border-bottom: 1px solid #333; border-radius: 0; z-index: 45;
+                display: flex; align-items: center; justify-content: center;
             }
-            #chat-toggle-btn svg { width: 12px !important; height: 12px !important; }
+            #chat-toggle-btn svg { width: 18px !important; height: 18px !important; }
 
             /* YouTube Style Chat Box overrides */
             #chat-container {
-                top: calc(70px + 56.25vw + 40px); /* Below fullscreen btn */
+                position: fixed;
+                top: calc(70px + 56.25vw + 40px); /* Below the control bar */
                 bottom: 0; left: 0; right: 0; width: 100%;
                 max-height: none; 
                 background: #000; border: none; border-radius: 0;
-                padding: 10px 15px 15px 15px; pointer-events: auto;
+                padding: 10px 15px env(safe-area-inset-bottom, 15px) 15px; pointer-events: auto;
             }
             #chat-messages {
                 max-height: none; flex-grow: 1; height: calc(100% - 50px);
@@ -1616,22 +1621,37 @@
         }
 
         function toggleFullScreen() {
-            if (!document.fullscreenElement) {
-                if (document.documentElement.requestFullscreen) {
-                    document.documentElement.requestFullscreen();
-                } else if (document.documentElement.webkitRequestFullscreen) { /* Safari */
-                    document.documentElement.webkitRequestFullscreen();
-                } else if (document.documentElement.msRequestFullscreen) { /* IE11 */
-                    document.documentElement.msRequestFullscreen();
+            const fsBtnText = document.querySelector('#fullscreen-btn span');
+            
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                const docEl = document.documentElement;
+                if (docEl.requestFullscreen) {
+                    docEl.requestFullscreen().then(() => {
+                        if (screen.orientation && screen.orientation.lock) {
+                            screen.orientation.lock('landscape').catch(e => console.log(e));
+                        }
+                    }).catch(err => console.log(err));
+                } else if (docEl.webkitRequestFullscreen) {
+                    docEl.webkitRequestFullscreen();
+                    if (screen.orientation && screen.orientation.lock) {
+                        screen.orientation.lock('landscape').catch(e => console.log(e));
+                    }
                 }
+                if (fsBtnText) fsBtnText.innerText = "EXIT FULL SCREEN";
             } else {
                 if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.webkitExitFullscreen) { /* Safari */
+                    document.exitFullscreen().then(() => {
+                        if (screen.orientation && screen.orientation.unlock) {
+                            screen.orientation.unlock();
+                        }
+                    }).catch(err => console.log(err));
+                } else if (document.webkitExitFullscreen) {
                     document.webkitExitFullscreen();
-                } else if (document.msExitFullscreen) { /* IE11 */
-                    document.msExitFullscreen();
+                    if (screen.orientation && screen.orientation.unlock) {
+                        screen.orientation.unlock();
+                    }
                 }
+                if (fsBtnText) fsBtnText.innerText = "FULL SCREEN";
             }
         }
 
