@@ -334,8 +334,8 @@
             flex-direction: column; 
             justify-content: flex-start; 
             align-items: center; 
-            padding-top: 40px;
-            overflow: hidden;
+            padding-top: 25px;
+            overflow-y: auto; overflow-x: hidden;
         }
 
         #main-brand-logo {
@@ -344,8 +344,8 @@
         }
 
         .hero-tagline {
-            color: #94a3b8; font-size: 14px; font-family: 'Roboto', sans-serif; 
-            letter-spacing: 0.5px; margin-bottom: 20px; font-weight: 500; text-align: center;
+            color: #94a3b8; font-size: 12px; font-family: 'Roboto', sans-serif; 
+            letter-spacing: 0.5px; margin-bottom: 15px; font-weight: 500; text-align: center;
         }
 
         .page-intro-anim {
@@ -360,73 +360,71 @@
 
         .search-container {
             display: flex; flex-direction: column; align-items: center;
-            width: 100%; padding: 0 20px; margin-bottom: 25px;
+            width: 100%; padding: 0 15px; margin-bottom: 15px;
         }
         .search-box {
             display: flex; align-items: center; gap: 8px; width: 100%; max-width: 450px; 
             background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); 
-            border-radius: 50px; padding: 6px 6px 6px 18px; 
+            border-radius: 50px; padding: 5px 5px 5px 15px; 
             transition: all 0.3s ease; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
         }
         .search-box:focus-within { 
             border-color: rgba(59, 130, 246, 0.5); background: rgba(255,255,255,0.07); 
             box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 3px rgba(59, 130, 246, 0.15); 
         }
-        .search-icon { width: 18px; height: 18px; fill: #64748b; flex-shrink: 0; }
+        .search-icon { width: 16px; height: 16px; fill: #64748b; flex-shrink: 0; }
         
         #match-input {
             flex-grow: 1; background: transparent; border: none; color: white; 
-            font-size: 15px; outline: none; font-family: 'Roboto', sans-serif; 
-            padding: 10px 0; letter-spacing: 0.5px; text-transform: uppercase;
+            font-size: 13px; outline: none; font-family: 'Roboto', sans-serif; 
+            padding: 8px 0; letter-spacing: 0.5px; text-transform: uppercase;
         }
         #match-input::placeholder { color: #475569; font-weight: 400; text-transform: none; }
         
         #submit-btn {
-            padding: 10px 24px; background: #3b82f6; color: white; border: none;
-            border-radius: 50px; font-size: 13px; font-weight: 700; cursor: pointer;
+            padding: 8px 20px; background: #3b82f6; color: white; border: none;
+            border-radius: 50px; font-size: 11px; font-weight: 700; cursor: pointer;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); text-transform: uppercase; 
             letter-spacing: 0.5px; flex-shrink: 0;
         }
         #submit-btn:active { transform: scale(0.95); background: #2563eb; }
 
         .live-matches-container {
-            width: 100%; max-width: 600px; padding: 0 20px 20px;
-            flex-grow: 1; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none;
+            width: 100%; max-width: 600px; padding: 0 15px 40px;
         }
-        .live-matches-container::-webkit-scrollbar { display: none; }
         .live-matches-header {
             display: flex; justify-content: space-between; align-items: center; 
-            margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05);
+            margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);
         }
         .live-matches-container h2 {
-            font-size: 18px; color: #f8fafc; letter-spacing: 0; font-weight: 700; 
+            font-size: 15px; color: #f8fafc; letter-spacing: 0; font-weight: 700; 
             font-family: 'Montserrat', sans-serif; margin-bottom: 0;
         }
         #admin-toggle-btn {
-            background: transparent; border: none; color: #64748b; font-size: 11px; 
+            background: transparent; border: none; color: #64748b; font-size: 10px; 
             font-weight: 600; text-transform: uppercase; cursor: pointer; 
             letter-spacing: 1px; transition: color 0.2s; padding: 4px;
         }
         #admin-toggle-btn:hover { color: #f8fafc; }
         
         #admin-actions {
-            display: none; justify-content: flex-end; margin-bottom: 16px; gap: 10px;
+            display: none; justify-content: flex-end; margin-bottom: 12px; gap: 10px;
         }
         .admin-btn {
-            padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold;
+            padding: 6px 12px; background: #ef4444; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: bold;
         }
         .admin-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         
         .country-group {
-            margin-bottom: 32px;
+            margin-bottom: 20px;
         }
         .country-header {
-            font-family: 'Roboto Condensed', sans-serif; font-size: 13px; font-weight: 700; 
-            color: #64748b; margin-bottom: 16px; border-bottom: none; 
+            font-family: 'Roboto Condensed', sans-serif; font-size: 11px; font-weight: 700; 
+            color: #64748b; margin-bottom: 10px; border-bottom: none; 
             text-transform: uppercase; letter-spacing: 1px; padding-left: 4px;
         }
         .match-cards {
-            display: grid; grid-template-columns: 1fr; gap: 12px; /* Mobile first structure */
+            display: grid; grid-template-columns: 1fr; gap: 10px; /* Mobile first structure */
         }
         
         @media (min-width: 600px) {
@@ -435,9 +433,9 @@
 
         .match-card {
             background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); 
-            border-radius: 16px; padding: 20px; cursor: pointer; 
+            border-radius: 12px; padding: 12px 15px; cursor: pointer; 
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
-            display: flex; flex-direction: column; gap: 6px; backdrop-filter: blur(10px);
+            display: flex; flex-direction: column; gap: 4px; backdrop-filter: blur(10px);
         }
         .match-card:active { transform: scale(0.98); background: rgba(255, 255, 255, 0.04); border-color: rgba(59, 130, 246, 0.3); }
         .match-card.admin-selected {
@@ -445,48 +443,48 @@
         }
         
         .match-checkbox {
-            display: none; position: absolute; top: 16px; left: 16px; width: 18px; height: 18px; pointer-events: none; accent-color: #ef4444;
+            display: none; position: absolute; top: 12px; left: 12px; width: 16px; height: 16px; pointer-events: none; accent-color: #ef4444;
         }
         .admin-mode .match-checkbox { display: block; }
-        .admin-mode .match-card-teams { padding-left: 28px; } /* Room for checkbox */
+        .admin-mode .match-card-teams { padding-left: 24px; } /* Room for checkbox */
         
         .match-card-live {
-            position: absolute; top: 16px; right: 16px;
+            position: absolute; top: 12px; right: 12px;
             background: rgba(239, 68, 68, 0.15); border: none; color: #f87171;
-            padding: 4px 10px; border-radius: 50px; font-size: 10px; font-weight: 800;
-            display: flex; align-items: center; gap: 6px; letter-spacing: 0.5px;
+            padding: 3px 8px; border-radius: 50px; font-size: 9px; font-weight: 800;
+            display: flex; align-items: center; gap: 4px; letter-spacing: 0.5px;
             z-index: 5;
         }
         
         .match-card-teams {
             display: flex; align-items: center; justify-content: space-between; 
-            margin-top: 10px; padding-right: 75px; transition: padding 0.2s;
+            margin-top: 6px; padding-right: 65px; transition: padding 0.2s;
         }
         
         .match-team {
-            display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;
+            display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;
         }
         .match-team.right { flex-direction: row-reverse; text-align: right; }
         
         .match-team-logo {
-            width: 40px; height: 40px; border-radius: 50%; object-fit: contain; 
+            width: 30px; height: 30px; border-radius: 50%; object-fit: contain; 
             background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); 
-            padding: 4px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            padding: 3px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
         
         .match-team-name {
-            font-family: 'Roboto', sans-serif; font-size: 15px; font-weight: 700; color: #f8fafc;
+            font-family: 'Roboto', sans-serif; font-size: 12px; font-weight: 700; color: #f8fafc;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;
         }
         
         .match-vs {
-            font-size: 11px; font-weight: 800; color: #64748b; padding: 0 10px; font-style: italic;
+            font-size: 9px; font-weight: 800; color: #64748b; padding: 0 6px; font-style: italic;
         }
         
         .match-card-sub {
-            font-size: 12px; color: #94a3b8; font-weight: 500; font-family: 'Roboto', sans-serif;
+            font-size: 10px; color: #94a3b8; font-weight: 500; font-family: 'Roboto', sans-serif;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px; margin-top: 12px; text-align: center;
+            border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px; margin-top: 8px; text-align: center;
         }
 
         /* STATUS SCREEN */
@@ -1010,8 +1008,18 @@
                                     const t1Img = m.t1Logo ? m.t1Logo : defaultLogo;
                                     const t2Img = m.t2Logo ? m.t2Logo : defaultLogo;
                                     
-                                    let t1Name = m.t1 ? m.t1 : '';
-                                    let t2Name = m.t2 ? m.t2 : '';
+                                    function shrinkName(name) {
+                                        if (!name) return '';
+                                        let words = name.trim().split(/\s+/);
+                                        if (words.length <= 2) return name;
+                                        let firstTwo = words[0] + " " + words[1];
+                                        let rest = words.slice(2).map(w => w.charAt(0).toUpperCase()).join('.');
+                                        if (words.length === 3) rest += '.'; // Ensures format like Royal Titans C.
+                                        return firstTwo + " " + rest;
+                                    }
+
+                                    let t1Name = m.t1 ? shrinkName(m.t1) : '';
+                                    let t2Name = m.t2 ? shrinkName(m.t2) : '';
                                     
                                     // FALLBACK: If team names are missing, show the Match Code so the user knows what to click
                                     if (!t1Name && !t2Name) {
