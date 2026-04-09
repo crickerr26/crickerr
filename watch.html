@@ -1416,28 +1416,28 @@
             let dummyStream;
             try {
                 const dummyCanvas = document.createElement('canvas');
+                dummyCanvas.style.display = 'none';
+                document.body.appendChild(dummyCanvas); // Fixes iOS empty track issue
                 dummyCanvas.width = 1920; 
                 dummyCanvas.height = 1080;
                 const dummyCtx = dummyCanvas.getContext('2d');
                 dummyCtx.fillStyle = '#000';
                 dummyCtx.fillRect(0, 0, 1920, 1080);
                 dummyStream = dummyCanvas.captureStream(1); 
+                
+                // Add dummy audio track to ensure WebRTC negotiates an audio channel
+                const actx = new (window.AudioContext || window.webkitAudioContext)();
+                const dest = actx.createMediaStreamDestination();
+                if (dest.stream.getAudioTracks().length > 0) {
+                    dummyStream.addTrack(dest.stream.getAudioTracks()[0]);
+                }
             } catch(e) {
                 dummyStream = new MediaStream();
             }
 
-            // Apply selected bandwidth and FORCE high starting bitrate to avoid slow start blur
-            activeCall = peer.call(targetPeerId, dummyStream, {
-                sdpTransform: (sdp) => {
-                    let newSdp = sdp;
-                    if (newSdp.includes('a=mid:video')) {
-                        newSdp = newSdp.replace(/a=mid:video\r\n/g, `a=mid:video\r\nb=AS:${currentBandwidth}\r\n`);
-                    }
-                    // This specific line guarantees it skips "auto-detecting network speed" and jumps straight to crisp quality
-                    newSdp = newSdp.replace(/(a=fmtp:\d+ .*)\r\n/g, `$1;x-google-start-bitrate=${currentBandwidth};x-google-min-bitrate=${Math.floor(currentBandwidth/2)}\r\n`);
-                    return newSdp;
-                }
-            }); 
+            // Removed dangerous SDP transforms. Modifying SDP directly using regex 
+            // corrupts the audio format profile on Safari and Mobile devices, killing the stream!
+            activeCall = peer.call(targetPeerId, dummyStream); 
             
             activeCall.on('stream', (remoteStream) => {
                 isSwitchingQuality = false;
