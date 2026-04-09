@@ -4652,61 +4652,117 @@ function generateBroadcastCode() {
         }
 
         function startMatch() {
-            // --- NEW: Confetti Explosion ---
-            confetti({
-                particleCount: 150,
-                spread: 100,
-                origin: { y: 0.6 }, // Starts from slightly below center
-                colors: ['#2563eb', '#facc15', '#ef4444', '#22c55e'] // Blue, Yellow, Red, Green
-            });
-            // -------------------------------
+    // --- NEW: Intro Text & Glitter Animation ---
+    const overlay = document.getElementById('event-animation-overlay');
+    const textEl = document.getElementById('event-animation-text');
+    
+    textEl.innerHTML = "LET'S START! 🏏";
+    textEl.className = "text-5xl md:text-7xl font-black uppercase drop-shadow-2xl text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-yellow-400 to-green-400 transform scale-50 opacity-0 transition-all duration-700 ease-out";
+    
+    overlay.classList.remove('hidden');
+    
+    // Trigger pop-in animation
+    setTimeout(() => {
+        textEl.classList.remove('scale-50', 'opacity-0');
+        textEl.classList.add('scale-110', 'opacity-100');
+    }, 50);
+    
+    // Settle animation
+    setTimeout(() => {
+        textEl.classList.remove('scale-110');
+        textEl.classList.add('scale-100');
+    }, 750);
 
-            state.totalOvers = parseInt(ui.totalOversInput.value);
-            state.playersPerSide = parseInt(ui.playersPerSideInput.value);
-            state.venue = ui.venueInput.value;
+    // Continuous Glitter Confetti for 2 seconds
+    const duration = 2000;
+    const end = Date.now() + duration;
 
-            state.team1.score = 0; state.team1.wickets = 0; state.team1.overs = 0; state.team1.balls = 0;
-            state.team2.score = 0; state.team2.wickets = 0; state.team2.overs = 0; state.team2.balls = 0;
+    (function frame() {
+        confetti({
+            particleCount: 5,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0 },
+            colors: ['#2563eb', '#facc15', '#ef4444', '#22c55e']
+        });
+        confetti({
+            particleCount: 5,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1 },
+            colors: ['#2563eb', '#facc15', '#ef4444', '#22c55e']
+        });
 
-            if ((tossWinner === 'team1' && tossDecision === 'bat') || (tossWinner === 'team2' && tossDecision === 'bowl')) {
-                state.battingTeam = 'team1'; state.bowlingTeam = 'team2';
-            } else {
-                state.battingTeam = 'team2'; state.bowlingTeam = 'team1';
-            }
-
-            syncToLiveDB();
-
-            state.rules.wicketRuns = parseInt(document.getElementById('rule-wicket').value); 
-            
-            document.getElementById('btn-wicket').textContent = `WKT (-${state.rules.wicketRuns})`;
-            document.getElementById('wicket-modal-title').textContent = `WICKET! (-${state.rules.wicketRuns} Runs)`;
-            
-            const wVal = state.rules.wideRuns;
-            const nbVal = state.rules.noBallRuns;
-
-            // Wide Buttons + Run Out Option
-            let wButtons = `<button onclick="handleAddExtra('wd', ${wVal})" class="col-span-3 p-4 bg-blue-100 text-blue-900 font-bold rounded-xl mb-1">Standard (+${wVal})</button>`;
-            [3, 4, 5, 6].forEach(r => {
-                if (r !== wVal) wButtons += `<button onclick="handleAddExtra('wd', ${r})" class="p-4 bg-gray-100 font-bold rounded-xl">+${r}</button>`;
-            });
-            // Add Wide Run Out Button
-            wButtons += `<button onclick="setupExtraRunOut('wd')" class="col-span-3 mt-2 p-3 bg-red-50 text-red-900 font-bold rounded-xl border border-red-200">RUN OUT</button>`;
-            document.getElementById('wide-options').innerHTML = wButtons;
-
-            // No Ball Buttons + Run Out Option
-            let nbButtons = `<button onclick="handleAddExtra('nb', ${nbVal})" class="col-span-3 p-4 bg-blue-100 text-blue-900 font-bold rounded-xl mb-1">Standard (+${nbVal})</button>`;
-            [3, 4, 5, 6].forEach(r => {
-                if (r !== nbVal) nbButtons += `<button onclick="handleAddExtra('nb', ${r})" class="p-4 bg-gray-100 font-bold rounded-xl">+${r}</button>`;
-            });
-            // Add NB Run Out Button
-            nbButtons += `<button onclick="setupExtraRunOut('nb')" class="col-span-3 mt-2 p-3 bg-red-50 text-red-900 font-bold rounded-xl border border-red-200">RUN OUT</button>`;
-            document.getElementById('noball-options').innerHTML = nbButtons;
-
-            updateMatchHeader();
-            updateScoreboard();
-            showScreen('app');
-            initInnings();
+        if (Date.now() < end) {
+            requestAnimationFrame(frame);
         }
+    }());
+
+    // Proceed to match after animation finishes
+    setTimeout(() => {
+        overlay.classList.add('opacity-0');
+        setTimeout(() => {
+            overlay.classList.add('hidden');
+            overlay.classList.remove('opacity-0');
+            textEl.innerHTML = ""; // Reset
+        }, 300);
+
+        // --- Original Match Setup Logic ---
+        state.totalOvers = parseInt(ui.totalOversInput.value);
+        state.playersPerSide = parseInt(ui.playersPerSideInput.value);
+        state.venue = ui.venueInput.value;
+        
+        state.team1.score = 0;
+        state.team1.wickets = 0;
+        state.team1.overs = 0;
+        state.team1.balls = 0;
+        
+        state.team2.score = 0;
+        state.team2.wickets = 0;
+        state.team2.overs = 0;
+        state.team2.balls = 0;
+
+        if ((tossWinner === 'team1' && tossDecision === 'bat') || (tossWinner === 'team2' && tossDecision === 'bowl')) {
+            state.battingTeam = 'team1';
+            state.bowlingTeam = 'team2';
+        } else {
+            state.battingTeam = 'team2';
+            state.bowlingTeam = 'team1';
+        }
+
+        syncToLiveDB();
+
+        state.rules.wicketRuns = parseInt(document.getElementById('rule-wicket').value);
+        
+        document.getElementById('btn-wicket').textContent = `WKT (-${state.rules.wicketRuns})`;
+        document.getElementById('wicket-modal-title').textContent = `WICKET! (-${state.rules.wicketRuns} Runs)`;
+
+        const wVal = state.rules.wideRuns;
+        const nbVal = state.rules.noBallRuns;
+
+        // Wide Buttons + Run Out Option
+        let wButtons = `<button onclick="handleAddExtra('wd', ${wVal})" class="col-span-3 p-4 bg-blue-100 text-blue-900 font-bold rounded-xl mb-1">Standard (+${wVal})</button>`;
+        [3, 4, 5, 6].forEach(r => {
+            if (r !== wVal) wButtons += `<button onclick="handleAddExtra('wd', ${r})" class="p-4 bg-gray-100 font-bold rounded-xl">+${r}</button>`;
+        });
+        wButtons += `<button onclick="setupExtraRunOut('wd')" class="col-span-3 mt-2 p-3 bg-red-50 text-red-900 font-bold rounded-xl border border-red-200">RUN OUT</button>`;
+        document.getElementById('wide-options').innerHTML = wButtons;
+
+        // No Ball Buttons + Run Out Option
+        let nbButtons = `<button onclick="handleAddExtra('nb', ${nbVal})" class="col-span-3 p-4 bg-blue-100 text-blue-900 font-bold rounded-xl mb-1">Standard (+${nbVal})</button>`;
+        [3, 4, 5, 6].forEach(r => {
+            if (r !== nbVal) nbButtons += `<button onclick="handleAddExtra('nb', ${r})" class="p-4 bg-gray-100 font-bold rounded-xl">+${r}</button>`;
+        });
+        nbButtons += `<button onclick="setupExtraRunOut('nb')" class="col-span-3 mt-2 p-3 bg-red-50 text-red-900 font-bold rounded-xl border border-red-200">RUN OUT</button>`;
+        document.getElementById('noball-options').innerHTML = nbButtons;
+
+        updateMatchHeader();
+        updateScoreboard();
+
+        showScreen('app');
+        initInnings();
+    }, 2200); // 2.2 seconds wait for the whole animation to shine before rendering the app screen
+}
 
         function updateMatchHeader() {
             const t1 = state.team1.name;
@@ -6505,32 +6561,32 @@ function processEndMatch(statusType) {
             batTable.innerHTML = '';
             
             const createRow = (p, isStriker) => {
-                const sr = p.balls > 0 ? ((p.runs / p.balls) * 100).toFixed(2) : '0.00';
-                const roleArg = isStriker ? 'striker' : 'nonStriker';
-                
-                // NEW: Floating Swap Button on the bottom border of the Striker's row
-                const swapBtn = isStriker ? `
-                    <button onclick="manualSwap()" class="absolute -bottom-2.5 left-10 z-10 bg-white border border-gray-200 text-blue-600 rounded-full w-5 h-5 flex items-center justify-center shadow-sm hover:scale-110 transition-transform active:scale-95 group" title="Swap Ends">
-                        <svg class="w-3 h-3 group-hover:rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
-                    </button>
-                ` : '';
-                
-                return `
-                <tr class="border-t ${isStriker ? 'bg-blue-50' : ''}">
-                    <td class="p-2 font-bold text-gray-800 relative">
-                        <div class="flex items-center justify-between w-full">
-                            <span>${p.name} ${isStriker ? '<span class="text-red-500">*</span>' : ''}</span>
-                            <button onclick="editActivePlayer('${roleArg}')" class="text-gray-400 hover:text-blue-600 px-2 text-lg">✎</button>
-                        </div>
-                        ${swapBtn}
-                    </td>
-                    <td class="text-center p-2 font-bold ${p.runs < 0 ? 'text-red-600' : ''}">${p.runs}</td>
-                    <td class="text-center p-2 text-gray-600">${p.balls}</td>
-                    <td class="text-center p-2 text-gray-600">${p.fours || 0}</td>
-                    <td class="text-center p-2 text-gray-600">${p.sixes || 0}</td>
-                    <td class="text-right p-2 text-gray-500 text-xs">${sr}</td>
-                </tr>`;
-            };
+            const sr = p.balls > 0 ? ((p.runs / p.balls) * 100).toFixed(2) : '0.00';
+            const roleArg = isStriker ? 'striker' : 'nonStriker';
+
+            // NEW: Floating Swap Button on the bottom border of the Striker's row
+            const swapBtn = isStriker ? `
+                <button onclick="manualSwap()" class="absolute -bottom-2.5 left-10 z-10 bg-white border border-gray-200 text-blue-600 rounded-full w-5 h-5 flex items-center justify-center shadow-sm hover:scale-110 transition-transform active:scale-95 group" title="Swap Ends">
+                    <svg class="w-3 h-3 group-hover:rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
+                </button>
+            ` : '';
+
+            return `
+            <tr class="border-t ${isStriker ? 'bg-blue-50' : ''}">
+                <td class="p-2 font-bold text-gray-800 relative">
+                    <div class="flex items-center justify-between w-full">
+                        <span class="uppercase">${(p.name || '').toUpperCase()} ${isStriker ? '<span class="text-red-500">*</span>' : ''}</span>
+                        <button onclick="editActivePlayer('${roleArg}')" class="text-gray-400 hover:text-blue-600 px-2 text-lg">✎</button>
+                    </div>
+                    ${swapBtn}
+                </td>
+                <td class="text-center p-2 font-bold ${p.runs < 0 ? 'text-red-600' : ''}">${p.runs}</td>
+                <td class="text-center p-2 text-gray-600">${p.balls}</td>
+                <td class="text-center p-2 text-gray-600">${p.fours || 0}</td>
+                <td class="text-center p-2 text-gray-600">${p.sixes || 0}</td>
+                <td class="text-right p-2 text-gray-500 text-xs">${sr}</td>
+            </tr>`;
+        };
             
             if(state.striker) batTable.innerHTML += createRow(state.striker, true);
             if(state.nonStriker) batTable.innerHTML += createRow(state.nonStriker, false);
@@ -6597,21 +6653,21 @@ function processEndMatch(statusType) {
                 const rowClass = isActive ? "bg-blue-50/50" : "";
 
                 // ALIGNMENT FIX: Used p-2 and removed small font sizes to match Batting Table
-                bowlingTable.innerHTML += `
-                <tr class="border-t ${rowClass}">
-                    <td class="p-2 align-middle">
-                        <div class="font-bold text-gray-800 text-xs leading-tight flex items-center">
-                            ${p.name} ${isActive ? '<span class="text-blue-500 text-[9px] ml-1">●</span>' : ''}
-                            ${editBtn}
-                        </div>
-                        ${ballsHTML}
-                    </td>
-                    <td class="text-center p-2 font-medium text-gray-700 align-middle">${overs}</td>
-                    <td class="text-center p-2 text-gray-400 align-middle">-</td>
-                    <td class="text-center p-2 font-medium text-gray-800 align-middle">${rc}</td>
-                    <td class="text-center p-2 font-bold text-red-600 align-middle">${wk}</td>
-                    <td class="text-right p-2 text-gray-500 text-xs align-middle">${econ}</td>
-                </tr>`;
+            bowlingTable.innerHTML += `
+            <tr class="border-t ${rowClass}">
+                <td class="p-2 align-middle">
+                    <div class="font-bold text-gray-800 text-xs leading-tight flex items-center uppercase">
+                        ${(p.name || '').toUpperCase()} ${isActive ? '<span class="text-blue-500 text-[9px] ml-1">●</span>' : ''}
+                        ${editBtn}
+                    </div>
+                    ${ballsHTML}
+                </td>
+                <td class="text-center p-2 font-medium text-gray-700 align-middle">${overs}</td>
+                <td class="text-center p-2 text-gray-400 align-middle">-</td>
+                <td class="text-center p-2 font-medium text-gray-800 align-middle">${rc}</td>
+                <td class="text-center p-2 font-bold text-red-600 align-middle">${wk}</td>
+                <td class="text-right p-2 text-gray-500 text-xs align-middle">${econ}</td>
+            </tr>`;
             });
         }
         // ==========================================
