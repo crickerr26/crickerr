@@ -4416,8 +4416,13 @@ function generateBroadcastCode() {
                          if (p.dismissal) status = p.dismissal;
                          else if (isAtCrease) status = "not out";
                          
+                         const sqData = team.squad.find(s => s.id === p.id);
+                         const pImage = sqData ? sqData.image : null;
+
                          batting.push({
+                             id: p.id,
                              name: p.name,
+                             image: pImage,
                              runs: p.runs,
                              balls: p.balls,
                              fours: p.fours || 0,
@@ -4435,8 +4440,14 @@ function generateBroadcastCode() {
                     if (p.ballsBowled > 0) {
                         const o = Math.floor(p.ballsBowled / bpo) + '.' + (p.ballsBowled % bpo);
                         const econ = (p.runsConceded / (p.ballsBowled/bpo)).toFixed(2);
+                        
+                        const sqData = opp.squad.find(s => s.id === p.id);
+                        const pImage = sqData ? sqData.image : null;
+
                         bowling.push({
+                            id: p.id,
                             name: p.name,
+                            image: pImage,
                             o: o,
                             m: 0,
                             r: p.runsConceded,
@@ -4502,6 +4513,17 @@ function generateBroadcastCode() {
                 statusText = `1st INNINGS`;
             }
 
+            // --- EXTRACT SQUAD NAMES FOR BROADCAST GRAPHICS ---
+            const squad1Names = (state.team1.playing || []).map(id => {
+                const p = state.team1.squad.find(sq => sq.id === id);
+                return p ? p.name : "";
+            }).filter(n => n);
+
+            const squad2Names = (state.team2.playing || []).map(id => {
+                const p = state.team2.squad.find(sq => sq.id === id);
+                return p ? p.name : "";
+            }).filter(n => n);
+
             // --- Prepare Payload ---
             const payload = {
                 // Security & Session
@@ -4513,8 +4535,8 @@ function generateBroadcastCode() {
                 activeBattingTeam: state.battingTeam,
                 target: state.target || 0,
                 totalOvers: state.totalOvers || 0, // <--- ADDED: Fixes broadcast assuming 20 overs
-                requiredRuns: need,           // <--- ADDED: Explicit equation data
-                remainingBalls: remBalls,     // <--- ADDED: Explicit equation data
+                requiredRuns: need,            // <--- ADDED: Explicit equation data
+                remainingBalls: remBalls,      // <--- ADDED: Explicit equation data
 
                 // Basic Info
                 venue: state.venue || "Unknown Venue",
@@ -4529,6 +4551,10 @@ function generateBroadcastCode() {
                 // Live State
                 currentOver: state.currentOver.map(b => b.event),
                 timeline: state.timeline || [],
+
+                // --- SQUAD GRAPHICS SUPPORT ---
+                squad1: squad1Names,
+                squad2: squad2Names,
 
                 // --- VIEWER COMPATIBILITY FIX ---
                 // We send the NAME property explicitly so the viewer sees text, not [object Object]
