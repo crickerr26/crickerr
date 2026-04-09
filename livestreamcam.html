@@ -722,7 +722,7 @@
             initParticles(window.innerWidth, window.innerHeight);
         }
 
-        async function connectToMatch() {
+       async function connectToMatch() {
             const id = document.getElementById('match-id').value;
             if(!id) return alert("Please enter Match ID");
             const btn = document.getElementById('btn-start');
@@ -750,6 +750,14 @@
                 requestAnimationFrame(renderLoop);
                 listenToDB(id);
                 setTimeout(showRecReminder, 4000);
+                
+                // Wait a tiny fraction of a second for the canvas to draw its first frame
+                // This prevents the browser from silently blocking the auto-stream
+                setTimeout(() => {
+                    if (!isLive) {
+                        toggleLiveStream();
+                    }
+                }, 500);
             } else {
                 btn.innerText = "Start Camera";
                 btn.disabled = false;
@@ -1101,58 +1109,66 @@
         // --- UPDATE THIS FUNCTION IN 56.html ---
 // --- LIVE STREAMING LOGIC ---
 let isLive = false;
+let hasCallListener = false; // Track to prevent duplicate PeerJS instances
 
 async function toggleLiveStream() {
     const btn = document.getElementById('live-button');
     const txt = document.getElementById('live-text');
     const matchIdInput = document.getElementById('match-id');
-    // FIX: Removed .toUpperCase() so mixed-case IDs (Crickerr_...) work correctly
-    const matchId = matchIdInput ? matchIdInput.value.trim() : "";
+    const matchId = matchIdInput ? matchIdInput.value.trim().toUpperCase() : "";
 
-    // 1. Validation (Log errors to console instead of Alert to prevent freezing)
-    if (!matchId) { console.warn("No Match ID"); return; }
+    if (!matchId) {
+        alert("Please enter a Match ID first.");
+        return;
+    }
 
-    // 2. Stop Stream (Immediate stop, no popup confirmation)
     if (isLive) {
-        db.collection("live_matches").doc(matchId).update({ isStreaming: false });
+        await db.collection("live_matches").doc(matchId).update({ isStreaming: false });
         isLive = false;
         if(btn) btn.classList.remove('is-live');
         if(txt) txt.innerText = "GO LIVE";
         return;
     }
 
-    // 3. Start Stream
     if(txt) txt.innerText = "STARTING...";
-    
-    if (!peer) {
-        const code = Math.floor(1000 + Math.random() * 9000);
-        myPeerId = "broadcast-" + code; 
-        
-        peer = new Peer(myPeerId, {
-            config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
-        });
 
-        peer.on('open', (id) => {
-            console.log("My Peer ID: " + id);
-            goLiveOnDB(matchId, id);
-        });
-        
-        peer.on('error', (err) => {
-            console.error(err);
-            if(txt) txt.innerText = "ERROR";
-        });
-    } else {
-        goLiveOnDB(matchId, myPeerId);
+    // Destroy existing peer if it exists to re-initialize with the correct ID
+    if (peer) {
+        peer.destroy();
+        peer = null;
+        hasCallListener = false;
     }
+
+    // Initialize PeerJS using the MATCH ID as the Peer ID
+    myPeerId = matchId; 
+    peer = new Peer(myPeerId, {
+        config: {
+            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+        }
+    });
+
+    peer.on('open', (id) => {
+        console.log('Broadcaster is live with Peer ID:', id);
+        goLiveOnDB(matchId, id);
+    });
+
+    peer.on('error', (err) => {
+        console.error("PeerJS Error:", err);
+        if(err.type === 'unavailable-id') {
+            alert("This Match ID is already live elsewhere.");
+        }
+        if(txt) txt.innerText = "ERROR";
+    });
 }
 
 function goLiveOnDB(matchId, peerId) {
     const btn = document.getElementById('live-button');
     const txt = document.getElementById('live-text');
 
-    // FIX: Capture 60 FPS for smoother live broadcast
-    const stream = canvas.captureStream(60);
+    // 1. Capture the stream from your canvas
+    const stream = canvas.captureStream(30);
     
+    // Ensure live audio continues to be sent along with the canvas stream
     if (currentStream && currentStream.getAudioTracks().length > 0) {
         stream.addTrack(currentStream.getAudioTracks()[0]);
     } else {
@@ -1161,10 +1177,15 @@ function goLiveOnDB(matchId, peerId) {
         stream.addTrack(dest.stream.getAudioTracks()[0]);
     }
 
-    peer.on('call', (call) => {
-        console.log("Viewer Connected!");
-        call.answer(stream);
-    });
+    // 3. Automatically answer incoming viewer connections with the stream
+    // Ensure we only register the call listener once
+    if (!hasCallListener) {
+        peer.on('call', (call) => {
+            console.log('New viewer joined!');
+            call.answer(stream); // Send the canvas video stream
+        });
+        hasCallListener = true;
+    }
 
     db.collection("live_matches").doc(matchId).set({
         streamId: peerId,
@@ -1173,7 +1194,23 @@ function goLiveOnDB(matchId, peerId) {
     }, { merge: true }).then(() => {
         isLive = true;
         if(btn) btn.classList.add('is-live');
-        if(txt) txt.innerText = "LIVE"; // No Alert popup!
+        if(txt) txt.innerText = "LIVE";
+
+        // Generate and prompt shareable link
+        const watchLink = `${window.location.origin}/watch.html?matchId=${matchId}`;
+        console.log("Viewer Link:", watchLink);
+        
+        // Attempt to copy, otherwise show alert
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(watchLink).then(() => {
+                alert(`🔴 LIVE NOW!\n\nViewer link copied to clipboard:\n${watchLink}`);
+            }).catch(() => {
+                alert(`🔴 LIVE NOW!\n\nShare this link to watch:\n${watchLink}`);
+            });
+        } else {
+            prompt("🔴 LIVE NOW!\nCopy and share this link to watch:", watchLink);
+        }
+
     }).catch(err => {
         console.error("DB Error", err);
         if(txt) txt.innerText = "RETRY";
@@ -1241,6 +1278,16 @@ function goLiveOnDB(matchId, peerId) {
 
             // 1. Merge Basic Data
             match = { ...match, ...data };
+            
+            // FIX: Map team names correctly in case the database uses different key names (e.g., team1 instead of t1)
+            if (data.team1) match.t1 = data.team1;
+            if (data.team2) match.t2 = data.team2;
+            if (data.team1Name) match.t1 = data.team1Name;
+            if (data.team2Name) match.t2 = data.team2Name;
+            if (data.t1Name) match.t1 = data.t1Name;
+            if (data.t2Name) match.t2 = data.t2Name;
+            if (data.team1Logo) data.t1Logo = data.team1Logo;
+            if (data.team2Logo) data.t2Logo = data.team2Logo;
 
             // 2. [CRITICAL FIX] RECONSTRUCT PLAYERS FOR BROADCAST
             // If data comes in "flat" from the new Controller, we build the objects needed by the display.
