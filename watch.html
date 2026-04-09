@@ -330,23 +330,36 @@
         /* INPUT SCREEN & LIVE MATCHES LIST */
         #input-overlay { 
             z-index: 1000; display: none; 
-            background: linear-gradient(180deg, #0f172a 0%, #000000 100%);
+            background: linear-gradient(135deg, #3a3a3c 0%, #1c1c1e 100%);
             flex-direction: column; 
             justify-content: flex-start; 
             align-items: center; 
-            padding-top: 25px;
+            padding-top: 20px;
             overflow-y: auto; overflow-x: hidden;
         }
 
         #main-brand-logo {
-            width: 180px; max-width: 70%; height: auto; margin-bottom: 12px;
-            filter: drop-shadow(0 4px 20px rgba(0,0,0,0.6));
+            width: 80px; max-width: 50%; height: auto; margin-bottom: 10px; margin-top: 5px;
+            filter: drop-shadow(0 4px 15px rgba(0,0,0,0.4));
         }
 
         .hero-tagline {
-            color: #94a3b8; font-size: 12px; font-family: 'Roboto', sans-serif; 
-            letter-spacing: 0.5px; margin-bottom: 15px; font-weight: 500; text-align: center;
+            color: rgba(255, 255, 255, 0.95); font-size: 13px; font-family: 'Roboto', sans-serif; 
+            letter-spacing: 0.5px; margin-bottom: 20px; font-weight: 600; text-align: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
+
+        .pagination-controls {
+            display: flex; justify-content: center; gap: 15px; margin-top: 20px; align-items: center; width: 100%;
+        }
+        .page-btn {
+            background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+            color: white; padding: 6px 16px; border-radius: 50px; font-size: 12px; font-weight: bold; cursor: pointer; backdrop-filter: blur(5px);
+            transition: all 0.2s;
+        }
+        .page-btn:hover:not(:disabled) { background: rgba(255,255,255,0.25); }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .page-info { color: white; font-size: 13px; font-weight: bold; font-family: 'Roboto', sans-serif; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
 
         .page-intro-anim {
             animation: smoothSlideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -968,102 +981,180 @@
             }
         }
 
+        let globalLiveMatches = [];
+        let currentMatchPage = 1;
+        const matchesPerPage = 4;
+
+        function getFlagEmoji(country) {
+            if (!country) return "🏳️";
+            const c = country.trim().toLowerCase();
+            if(c === 'india') return '🇮🇳';
+            if(c === 'australia') return '🇦🇺';
+            if(c === 'england' || c === 'uk') return '🇬🇧';
+            if(c === 'pakistan') return '🇵🇰';
+            if(c === 'sri lanka') return '🇱🇰';
+            if(c === 'bangladesh') return '🇧🇩';
+            if(c === 'new zealand') return '🇳🇿';
+            if(c === 'south africa') return '🇿🇦';
+            if(c === 'west indies') return '🌴';
+            if(c === 'afghanistan') return '🇦🇫';
+            if(c === 'canada') return '🇨🇦';
+            if(c === 'usa' || c === 'united states') return '🇺🇸';
+            if(c === 'nepal') return '🇳🇵';
+            if(c === 'ireland') return '🇮🇪';
+            if(c === 'zimbabwe') return '🇿🇼';
+            if(c === 'uae') return '🇦🇪';
+            return '🌍';
+        }
+
+        function renderMatchesPage() {
+            const listContainer = document.getElementById('live-matches-list');
+            if (globalLiveMatches.length === 0) {
+                listContainer.innerHTML = '<div style="text-align: center; color: rgba(255,255,255,0.8); font-size: 16px;">No live broadcasts at the moment.</div>';
+                return;
+            }
+
+            const totalPages = Math.ceil(globalLiveMatches.length / matchesPerPage);
+            if (currentMatchPage > totalPages) currentMatchPage = totalPages;
+            if (currentMatchPage < 1) currentMatchPage = 1;
+
+            const startIndex = (currentMatchPage - 1) * matchesPerPage;
+            const endIndex = startIndex + matchesPerPage;
+            const currentMatches = globalLiveMatches.slice(startIndex, endIndex);
+
+            const matchesByCountry = {};
+            currentMatches.forEach(m => {
+                const country = m.country || "International";
+                if (!matchesByCountry[country]) matchesByCountry[country] = [];
+                matchesByCountry[country].push(m);
+            });
+
+            const oldSelected = new Set(selectedAdminMatches);
+            let html = '';
+
+            for (const [country, matches] of Object.entries(matchesByCountry)) {
+                const flag = getFlagEmoji(country);
+                html += `
+                <div class="country-group">
+                    <div class="country-header" style="color: rgba(255,255,255,0.9); text-shadow: 0 1px 2px rgba(0,0,0,0.4);">${flag} ${country}</div>
+                    <div class="match-cards">
+                        ${matches.map(m => {
+                            const isSel = oldSelected.has(m.id);
+                            
+                            const defaultLogo = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23475569"><path d="M12 2L3 7v9.82c0 3.61 2.5 6.94 5.92 7.95L12 22l3.08-.23c3.42-1.01 5.92-4.34 5.92-7.95V7l-9-5zm0 2.18l7.5 4.17v8.47c0 2.82-1.95 5.43-4.63 6.22L12 19.88l-2.87.82C6.45 19.91 4.5 17.3 4.5 14.48V8.35L12 4.18z"/></svg>';
+                            const t1Img = m.t1Logo ? m.t1Logo : defaultLogo;
+                            const t2Img = m.t2Logo ? m.t2Logo : defaultLogo;
+                            
+                            function shrinkName(name) {
+                                if (!name) return '';
+                                let words = name.trim().split(/\s+/);
+                                if (words.length <= 2) return name;
+                                let firstTwo = words[0] + " " + words[1];
+                                let rest = words.slice(2).map(w => w.charAt(0).toUpperCase()).join('.');
+                                if (words.length === 3) rest += '.';
+                                return firstTwo + " " + rest;
+                            }
+
+                            let t1Name = m.t1 ? shrinkName(m.t1) : '';
+                            let t2Name = m.t2 ? shrinkName(m.t2) : '';
+                            
+                            if (!t1Name && !t2Name) {
+                                t1Name = 'Match Code';
+                                t2Name = m.id;
+                            } else if (!t1Name) {
+                                t1Name = 'TBA';
+                            } else if (!t2Name) {
+                                t2Name = 'TBA';
+                            }
+                            
+                            const isEnded = m.matchStatus === "COMPLETE" || m.isStreaming === false;
+                            
+                            let dateStr = "";
+                            const matchDate = m.matchDate || m.date;
+                            if (matchDate) {
+                                const d = new Date(matchDate);
+                                if (!isNaN(d.getTime())) {
+                                    dateStr = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+                                } else {
+                                    dateStr = matchDate.trim();
+                                }
+                            }
+
+                            let subInfo = [];
+                            if (dateStr) subInfo.push(dateStr);
+                            if (m.venue) subInfo.push(m.venue);
+                            if (m.matchType) subInfo.push(m.matchType);
+                            let subText = subInfo.length > 0 ? subInfo.join(' • ') : 'Tap to Watch Live';
+
+                            if (isEnded) {
+                                let resultText = m.result && m.result.trim() !== "" ? m.result : "Live match ended";
+                                subText = `<span style="color: #fca5a5; font-weight: 700;">${resultText}</span>`;
+                            }
+
+                            const cardStyle = isEnded ? 'opacity: 0.6; filter: grayscale(100%);' : '';
+                            const liveBadgeHtml = isEnded 
+                                ? `<div class="match-card-live" style="background: rgba(255, 255, 255, 0.15); color: #cbd5e1;">ENDED</div>` 
+                                : `<div class="match-card-live"><div class="live-dot" style="width:6px;height:6px;"></div> LIVE</div>`;
+
+                            return `
+                            <div class="match-card ${isSel ? 'admin-selected' : ''}" id="card-${m.id}" onclick="selectMatchFromList('${m.id}')" style="${cardStyle}">
+                                <input type="checkbox" class="match-checkbox" ${isSel ? 'checked' : ''}>
+                                ${liveBadgeHtml}
+                                
+                                <div class="match-card-teams">
+                                    <div class="match-team left">
+                                        <img src="${t1Img}" class="match-team-logo" alt="T1">
+                                        <span class="match-team-name">${t1Name}</span>
+                                    </div>
+                                    
+                                    <div class="match-vs">VS</div>
+                                    
+                                    <div class="match-team right">
+                                        <img src="${t2Img}" class="match-team-logo" alt="T2">
+                                        <span class="match-team-name">${t2Name}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="match-card-sub">${subText}</div>
+                            </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>`;
+            }
+
+            if (totalPages > 1) {
+                html += `
+                <div class="pagination-controls">
+                    <button class="page-btn" onclick="changeMatchPage(-1)" ${currentMatchPage === 1 ? 'disabled' : ''}>PREV</button>
+                    <span class="page-info">Page ${currentMatchPage} of ${totalPages}</span>
+                    <button class="page-btn" onclick="changeMatchPage(1)" ${currentMatchPage === totalPages ? 'disabled' : ''}>NEXT</button>
+                </div>
+                `;
+            }
+
+            listContainer.innerHTML = html;
+        }
+
+        window.changeMatchPage = function(dir) {
+            currentMatchPage += dir;
+            renderMatchesPage();
+        };
+
         function fetchLiveMatches() {
             const listContainer = document.getElementById('live-matches-list');
             
             // Sign in anonymously first to satisfy Firebase security rules
             firebase.auth().signInAnonymously().then(() => {
                 db.collection("live_matches")
-                  .where("isStreaming", "==", true)
                   .onSnapshot((snapshot) => {
-                    if (snapshot.empty) {
-                        listContainer.innerHTML = '<div style="text-align: center; color: #888; font-size: 16px;">No live broadcasts at the moment.</div>';
-                        return;
+                    globalLiveMatches = [];
+                    if (!snapshot.empty) {
+                        snapshot.forEach(doc => {
+                            globalLiveMatches.push({ id: doc.id, ...doc.data() });
+                        });
                     }
-
-                    const matchesByCountry = {};
-                    snapshot.forEach(doc => {
-                        const data = doc.data();
-                        const country = data.country || "International"; // Grouping fallback
-                        if (!matchesByCountry[country]) {
-                            matchesByCountry[country] = [];
-                        }
-                        matchesByCountry[country].push({ id: doc.id, ...data });
-                    });
-
-                    // Retain selections if Firebase pushes an update while selecting
-                    const oldSelected = new Set(selectedAdminMatches);
-
-                    let html = '';
-                    for (const [country, matches] of Object.entries(matchesByCountry)) {
-                        html += `
-                        <div class="country-group">
-                            <div class="country-header">${country}</div>
-                            <div class="match-cards">
-                                ${matches.map(m => {
-                                    const isSel = oldSelected.has(m.id);
-                                    
-                                    // 1. Run the logic FIRST
-                                    const defaultLogo = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23475569"><path d="M12 2L3 7v9.82c0 3.61 2.5 6.94 5.92 7.95L12 22l3.08-.23c3.42-1.01 5.92-4.34 5.92-7.95V7l-9-5zm0 2.18l7.5 4.17v8.47c0 2.82-1.95 5.43-4.63 6.22L12 19.88l-2.87.82C6.45 19.91 4.5 17.3 4.5 14.48V8.35L12 4.18z"/></svg>';
-                                    const t1Img = m.t1Logo ? m.t1Logo : defaultLogo;
-                                    const t2Img = m.t2Logo ? m.t2Logo : defaultLogo;
-                                    
-                                    function shrinkName(name) {
-                                        if (!name) return '';
-                                        let words = name.trim().split(/\s+/);
-                                        if (words.length <= 2) return name;
-                                        let firstTwo = words[0] + " " + words[1];
-                                        let rest = words.slice(2).map(w => w.charAt(0).toUpperCase()).join('.');
-                                        if (words.length === 3) rest += '.'; // Ensures format like Royal Titans C.
-                                        return firstTwo + " " + rest;
-                                    }
-
-                                    let t1Name = m.t1 ? shrinkName(m.t1) : '';
-                                    let t2Name = m.t2 ? shrinkName(m.t2) : '';
-                                    
-                                    // FALLBACK: If team names are missing, show the Match Code so the user knows what to click
-                                    if (!t1Name && !t2Name) {
-                                        t1Name = 'Match Code';
-                                        t2Name = m.id;
-                                    } else if (!t1Name) {
-                                        t1Name = 'TBA';
-                                    } else if (!t2Name) {
-                                        t2Name = 'TBA';
-                                    }
-                                    
-                                    let subInfo = [];
-                                    if (m.venue) subInfo.push(m.venue);
-                                    if (m.matchType) subInfo.push(m.matchType);
-                                    const subText = subInfo.length > 0 ? subInfo.join(' • ') : 'Tap to Watch Live';
-
-                                    // 2. Return the HTML structure SECOND
-                                    return `
-                                    <div class="match-card ${isSel ? 'admin-selected' : ''}" id="card-${m.id}" onclick="selectMatchFromList('${m.id}')">
-                                        <input type="checkbox" class="match-checkbox" ${isSel ? 'checked' : ''}>
-                                        <div class="match-card-live"><div class="live-dot" style="width:6px;height:6px;"></div> LIVE</div>
-                                        
-                                        <div class="match-card-teams">
-                                            <div class="match-team left">
-                                                <img src="${t1Img}" class="match-team-logo" alt="T1">
-                                                <span class="match-team-name">${t1Name}</span>
-                                            </div>
-                                            
-                                            <div class="match-vs">VS</div>
-                                            
-                                            <div class="match-team right">
-                                                <img src="${t2Img}" class="match-team-logo" alt="T2">
-                                                <span class="match-team-name">${t2Name}</span>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="match-card-sub">${subText}</div>
-                                    </div>
-                                    `;
-                                }).join('')}
-                            </div>
-                        </div>`;
-                    }
-                    listContainer.innerHTML = html;
+                    renderMatchesPage();
                 }, (error) => {
                     console.error("Error fetching live matches:", error);
                     listContainer.innerHTML = '<div style="text-align: center; color: #ef4444;">Error loading matches.</div>';
