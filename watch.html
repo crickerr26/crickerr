@@ -35,6 +35,9 @@
         #yt-title-container {
             display: none;
         }
+        #fullscreen-btn {
+            display: none;
+        }
 
         @media (orientation: portrait) {
             #viewer-video {
@@ -44,23 +47,48 @@
                 height: 56.25vw; /* Strict 16:9 YouTube style aspect ratio */
                 width: 100vw;
                 position: fixed;
-                top: 0;
+                top: 70px; /* Lowered for header */
                 left: 0;
                 z-index: 50;
                 background: #000;
             }
             #yt-title-container {
                 display: flex;
-                flex-direction: column;
+                flex-direction: row;
+                align-items: center;
                 position: fixed; 
-                top: calc(56.25vw + 15px); /* Positioned strictly below the video */
-                left: 15px;
-                right: 15px;
-                z-index: 10;
+                top: 0; 
+                left: 0;
+                right: 0;
+                height: 70px;
+                background: #111;
+                z-index: 60;
+                padding: 0 15px;
+                gap: 12px;
                 font-family: 'Roboto', sans-serif;
             }
-            .yt-label { font-size: 11px; color: #aaa; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
-            .yt-title-text { font-size: 18px; color: white; font-weight: 700; line-height: 1.3; margin-right: 130px; /* Leaves space for buttons */ }
+            .yt-logo {
+                width: 44px; height: 44px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden;
+            }
+            .yt-logo img { width: 80%; height: auto; object-fit: contain; }
+            .yt-info { display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
+            .yt-title-text { font-size: 14px; color: white; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
+            .yt-label { font-size: 11px; color: #aaa; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 0; }
+            
+            #fullscreen-btn {
+                display: flex;
+                position: fixed;
+                top: calc(70px + 56.25vw);
+                left: 0; right: 0;
+                height: 40px;
+                background: #1a1a1a;
+                z-index: 45;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                color: white; font-family: 'Roboto', sans-serif; font-size: 12px; font-weight: bold; cursor: pointer; border-bottom: 1px solid #333;
+            }
+            #fullscreen-btn svg { width: 18px; height: 18px; fill: white; }
         }
 
         @media (orientation: landscape) {
@@ -72,6 +100,10 @@
                 height: 100vh;
             }
             #yt-title-container { display: none !important; }
+            #fullscreen-btn {
+                display: flex; position: fixed; bottom: 25px; right: 110px; background: rgba(0,0,0,0.6); padding: 8px 12px; border-radius: 8px; color: white; z-index: 800; cursor: pointer; gap: 6px; font-family: 'Roboto', sans-serif; font-size: 10px; font-weight: bold; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(4px);
+            }
+            #fullscreen-btn svg { width: 14px; height: 14px; fill: white; }
         }
         
         /* LIVE BADGE */
@@ -112,7 +144,7 @@
         /* PORTRAIT OVERRIDES FOR BADGE & QUALITY */
         @media (orientation: portrait) {
             #live-badge {
-                top: 10px; left: 55px; right: auto;
+                top: 80px; left: 10px; right: auto;
                 padding: 4px 10px; font-size: 10px;
                 background: rgba(239, 68, 68, 0.9);
                 border: none;
@@ -122,14 +154,14 @@
             .live-dot { width: 5px; height: 5px; }
             
             #quality-badge {
-                top: calc(56.25vw + 15px); left: auto;
-                bottom: auto; right: 55px;
-                padding: 6px 10px; font-size: 10px;
-                background: #222; border: 1px solid #444; color: white;
+                top: calc(70px + 56.25vw - 35px); left: auto;
+                bottom: auto; right: 10px;
+                padding: 4px 8px; font-size: 9px;
+                background: rgba(0,0,0,0.6); border: none; color: white;
             }
             #quality-menu {
-                top: calc(56.25vw + 50px) !important; left: auto !important;
-                bottom: auto; right: 55px;
+                top: calc(70px + 56.25vw - 120px) !important; left: auto !important;
+                bottom: auto; right: 10px;
             }
         }
 
@@ -184,22 +216,23 @@
         @media (orientation: portrait) {
             #share-btn.match-active { 
                 display: flex; 
-                top: calc(56.25vw + 15px); 
-                right: 15px; 
+                top: 125px; 
+                right: 10px; 
                 bottom: auto;
-                background: #222; 
-                border: 1px solid #444; 
+                background: rgba(0,0,0,0.5); 
+                border: none; 
                 width: 32px; 
                 height: 32px;
             }
             #close-btn.match-active {
                 display: flex;
-                top: 10px;
-                left: 10px;
+                top: 80px;
+                left: auto;
+                right: 10px;
                 width: 34px;
                 height: 34px;
                 background: rgba(0, 0, 0, 0.6);
-                border: 1px solid rgba(255,255,255,0.2);
+                border: none;
                 z-index: 60;
             }
             #close-btn.match-active svg { width: 18px; height: 18px; }
@@ -213,7 +246,7 @@
             pointer-events: none; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); transition: opacity 0.8s ease-in-out;
         }
         /* Portrait: Positioned at Top Right inside 16:9 video */
-        @media (orientation: portrait) { #broadcast-watermark { top: 10px; left: auto; right: 15px; bottom: auto; z-index: 55; max-width: 40px; } }
+        @media (orientation: portrait) { #broadcast-watermark { top: 80px; left: auto; right: 55px; bottom: auto; z-index: 55; max-width: 35px; } }
         /* Landscape: Positioned at Top Left next to quality controls */
         @media (orientation: landscape) { #broadcast-watermark { top: 25px; left: 110px; bottom: auto; } }
         .show-watermark { opacity: 0.95 !important; }
@@ -239,44 +272,45 @@
         /* PORTRAIT OVERRIDES FOR STATS & CHAT TOGGLE */
         @media (orientation: portrait) {
             #live-stats-bar {
-                top: calc(56.25vw + 60px); right: auto; left: 15px; 
-                padding: 4px 8px; font-size: 11px;
-                background: transparent; border: none;
-                gap: 6px; color: #aaa;
+                top: 80px; right: auto; left: 75px; 
+                padding: 4px 10px; font-size: 10px;
+                background: rgba(0,0,0,0.5); border: none;
+                gap: 4px; color: white; border-radius: 50px; z-index: 55;
             }
-            #live-stats-bar svg { width: 14px !important; height: 14px !important; fill: #aaa !important; }
+            #live-stats-bar svg { width: 12px !important; height: 12px !important; fill: white !important; }
             
             #chat-toggle-btn {
-                top: calc(56.25vw + 55px); right: 15px; bottom: auto; left: auto;
-                padding: 6px 12px; font-size: 10px;
-                background: #222; border: 1px solid #444; border-radius: 20px;
+                top: calc(70px + 56.25vw - 35px); left: 10px; right: auto; bottom: auto;
+                padding: 4px 8px; font-size: 9px;
+                background: rgba(0,0,0,0.6); border: none; border-radius: 8px; z-index: 55;
             }
             #chat-toggle-btn svg { width: 12px !important; height: 12px !important; }
 
             /* YouTube Style Chat Box overrides */
             #chat-container {
-                top: calc(56.25vw + 95px); 
-                bottom: 15px; left: 15px; width: calc(100% - 75px);
+                top: calc(70px + 56.25vw + 40px); /* Below fullscreen btn */
+                bottom: 0; left: 0; right: 0; width: 100%;
                 max-height: none; 
-                background: #0f0f0f; border: 1px solid #222; border-radius: 12px;
-                padding: 10px; pointer-events: auto;
+                background: #000; border: none; border-radius: 0;
+                padding: 10px 15px 15px 15px; pointer-events: auto;
             }
             #chat-messages {
                 max-height: none; flex-grow: 1; height: calc(100% - 50px);
-                mask-image: none; -webkit-mask-image: none;
+                mask-image: linear-gradient(to bottom, transparent, black 5%); -webkit-mask-image: linear-gradient(to bottom, transparent, black 5%);
                 padding-bottom: 5px;
             }
             .chat-msg {
                 width: 100%; max-width: 100%; background: transparent;
-                padding: 4px 0; border-radius: 0; font-size: 13px; text-shadow: none;
+                padding: 4px 0; border-radius: 0; font-size: 13px; text-shadow: none; color: #ddd;
             }
+            .chat-user { color: #aaa; font-weight: normal; }
             #chat-input-area {
-                margin-top: auto; border-top: 1px solid #222; padding-top: 10px;
+                margin-top: auto; border-top: 1px solid #222; padding-top: 15px;
             }
-            #chat-input { background: #222; border-color: #333; }
+            #chat-input { background: #111; border-color: #222; color: white; border-radius: 50px; padding: 12px 20px; }
             
             #heart-container {
-                bottom: 15px; right: 15px; height: 150px;
+                bottom: 80px; right: 15px; height: 150px;
             }
         }
 
@@ -356,15 +390,16 @@
         /* PORTRAIT OVERRIDES FOR LIVE SPONSORS */
         @media (orientation: portrait) {
             #live-sponsors-container {
-                top: 60px; /* Positioned just below the watermark */
-                right: 15px;
+                top: 170px; /* Positioned below share buttons */
+                right: 10px;
                 z-index: 55; /* Higher than the portrait video's z-index: 50 */
                 gap: 6px;
+                flex-direction: column;
             }
             .live-sponsor { 
-                height: 35px; 
-                min-width: 60px; 
-                max-width: 100px; 
+                height: 25px; 
+                min-width: 50px; 
+                max-width: 80px; 
             }
         }
 
@@ -800,8 +835,16 @@
     <video id="viewer-video" autoplay playsinline></video>
     
     <div id="yt-title-container">
-        <div class="yt-label">Match Intro</div>
-        <div class="yt-title-text" id="yt-title-text">Loading Match Info...</div>
+        <div class="yt-logo"><img src="/my-logo.png" alt="Logo"></div>
+        <div class="yt-info">
+            <div class="yt-title-text" id="yt-title-text">Loading Match Info...</div>
+            <div class="yt-label" id="yt-label-text">Live Match</div>
+        </div>
+    </div>
+    
+    <div id="fullscreen-btn" onclick="toggleFullScreen()">
+        <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+        <span>FULL SCREEN</span>
     </div>
 
     <div id="match-intro-overlay">
@@ -1330,18 +1373,19 @@
                         // --- POPULATE YOUTUBE TITLE (PORTRAIT) ---
                         const ytTitle = document.getElementById('yt-title-text');
                         if (ytTitle) {
-                            let titleParts = [];
+                            let teamsText = "";
                             
                             // 1. Add Teams dynamically
                             if (data.t1 && data.t2) {
-                                titleParts.push(`${data.t1} vs ${data.t2}`);
+                                teamsText = `${data.t1} vs ${data.t2}`;
                             } else if (data.t1 || data.t2) {
-                                titleParts.push(data.t1 || data.t2); // Fallback if only one team is present initially
+                                teamsText = data.t1 || data.t2; 
                             }
                             
+                            let subParts = [];
                             // 2. Add Venue cleanly
                             if (data.venue && data.venue.trim() !== "") {
-                                titleParts.push(data.venue.trim());
+                                subParts.push(data.venue.trim());
                             }
                             
                             // 3. Add Date cleanly
@@ -1349,14 +1393,16 @@
                             if (matchDate && matchDate.trim() !== "") {
                                 const d = new Date(matchDate);
                                 if (!isNaN(d.getTime())) {
-                                    titleParts.push(d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }));
+                                    subParts.push(d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }));
                                 } else {
-                                    titleParts.push(matchDate.trim());
+                                    subParts.push(matchDate.trim());
                                 }
                             }
                             
-                            // 4. Overwrite text immediately. If no data exists, this clears the "Loading..." text instead of getting stuck.
-                            ytTitle.innerText = titleParts.length > 0 ? titleParts.join(' - ') : "";
+                            // 4. Overwrite text immediately. 
+                            ytTitle.innerText = teamsText;
+                            const ytLabel = document.getElementById('yt-label-text');
+                            if (ytLabel) ytLabel.innerText = subParts.length > 0 ? subParts.join(' • ') : "Live Match";
         }
 
                         // --- ANIMATION / INTRO SYNC LOGIC ---
@@ -1567,6 +1613,26 @@
             playOverlay.style.display = 'none';
             video.muted = false; 
             video.play();
+        }
+
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen();
+                } else if (document.documentElement.webkitRequestFullscreen) { /* Safari */
+                    document.documentElement.webkitRequestFullscreen();
+                } else if (document.documentElement.msRequestFullscreen) { /* IE11 */
+                    document.documentElement.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) { /* Safari */
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) { /* IE11 */
+                    document.msExitFullscreen();
+                }
+            }
         }
 
         function removeViewerPresence() {
