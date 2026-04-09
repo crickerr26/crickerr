@@ -1855,7 +1855,8 @@ function goLiveOnDB(matchId, peerId) {
         function formatTeamName(name) { if (!name) return "TEAM"; let formatted = String(name).toUpperCase(); formatted = formatted.replace(/\bCRICKET CLUB\b/g, "C.C").replace(/\bCRICKET\b/g, "C.C").replace(/\bCC\b/g, "C.C"); return formatted; }
         function formatPlayerName(fullName) { if (!fullName) return ""; const parts = String(fullName).trim().split(/\s+/); if (parts.length > 1) { return (parts[0] + " " + parts[1].charAt(0) + ".").toUpperCase(); } return parts[0].toUpperCase(); }
         function drawRoundRect(c, x, y, w, h, r) { if (w < 2 * r) r = w / 2; if (h < 2 * r) r = h / 2; c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
-        function drawLogo(c, name, img, x, y, s, isLeft) { c.save(); c.beginPath(); c.arc(x + s/2, y + s/2, s/2, 0, Math.PI*2); c.fillStyle = "white"; c.fill(); c.clip(); if(img) c.drawImage(img, x, y, s, s); else { c.fillStyle = "#334155"; c.fillRect(x, y, s, s); c.fillStyle = "white"; c.textAlign = "center"; c.textBaseline = "middle"; c.font = `bold ${s*0.5}px 'Roboto'`; c.fillText(safeStr(name).substring(0,2), x+s/2, y+s/2); } c.restore(); }
+        function getTeamInitials(name) { if (!name) return '??'; const parts = name.trim().split(/\s+/); if (parts.length === 1) return name.substring(0, 2).toUpperCase(); return parts.map(p => p[0]).join('').substring(0, 3).toUpperCase(); }
+        function drawLogo(c, name, img, x, y, s, isLeft) { c.save(); c.beginPath(); c.arc(x + s/2, y + s/2, s/2, 0, Math.PI*2); c.fillStyle = "white"; c.fill(); c.clip(); if(img && img.complete && img.naturalHeight !== 0) c.drawImage(img, x, y, s, s); else { c.fillStyle = "#334155"; c.fillRect(x, y, s, s); c.fillStyle = "white"; c.textAlign = "center"; c.textBaseline = "middle"; c.font = `bold ${s*0.45}px 'Roboto'`; c.fillText(getTeamInitials(safeStr(name)), x+s/2, y+s/2); } c.restore(); }
         function fitText(c, text, x, y, maxWidth, initialFontSize, weight, fontFace) { let fontSize = initialFontSize; c.font = `${weight} ${fontSize}px '${fontFace}'`; let width = c.measureText(text).width; while (width > maxWidth && fontSize > (initialFontSize * 0.5)) { fontSize -= 2; c.font = `${weight} ${fontSize}px '${fontFace}'`; width = c.measureText(text).width; } c.fillText(text, x, y); }
         function drawBallSquare(c, b, x, y, size) { let txt = String(b); let bgColor = "#ffffff"; let txtColor = "#000000"; if (txt === '4') { bgColor = "#0ea5e9"; txtColor = "white"; } else if (txt === '6') { bgColor = "#22c55e"; txtColor = "white"; } else if (txt.includes('W') && !txt.includes('WD')) { bgColor = "#dc2626"; txtColor = "white"; } else if (txt === '0' || txt === '•') { txt = "•"; bgColor = "white"; txtColor = "black"; } else { bgColor = "white"; txtColor = "black"; } c.save(); c.fillStyle = bgColor; c.fillRect(x, y, size, size); if (txt === "•") { c.fillStyle = "black"; c.beginPath(); c.arc(x + size/2, y + size/2, size * 0.18, 0, Math.PI * 2); c.fill(); } else { c.fillStyle = txtColor; c.textAlign = "center"; c.textBaseline = "middle"; if (txt.includes('+') || txt.length > 2) { c.font = `900 ${size * 0.45}px 'Roboto Condensed'`; } else { c.font = `900 ${size * 0.7}px 'Roboto Condensed'`; } c.fillText(txt, x + size/2, y + size/2 + (size * 0.05)); } c.restore(); }
         
@@ -2342,7 +2343,17 @@ function goLiveOnDB(matchId, peerId) {
             c.stroke(); 
             c.restore();
             
-            drawLogo(c, safeTeamName(match.t1), team1Logo, logoX, logoY, logoSize, true); 
+            let activeTeamName = match.t1;
+            let activeTeamLogo = team1Logo;
+            if (match.summaryType === "BOWLING") {
+                activeTeamName = match.activeBattingTeam === 'team1' ? match.t2 : match.t1;
+                activeTeamLogo = match.activeBattingTeam === 'team1' ? team2Logo : team1Logo;
+            } else {
+                activeTeamName = match.activeBattingTeam === 'team1' ? match.t1 : match.t2;
+                activeTeamLogo = match.activeBattingTeam === 'team1' ? team1Logo : team2Logo;
+            }
+
+            drawLogo(c, safeTeamName(activeTeamName), activeTeamLogo, logoX, logoY, logoSize, true); 
             
             const textX = logoX + logoSize + 30; 
             const maxTextW = cardW - (textX - x) - 40; 
@@ -2352,13 +2363,13 @@ function goLiveOnDB(matchId, peerId) {
             c.shadowColor = "rgba(0,0,0,0.8)"; 
             c.shadowBlur = 4; 
             c.shadowOffsetY = 2; 
-            fitText(c, (safeTeamName(match.t1) || "TEAM NAME").toUpperCase(), textX, y + headerH * 0.55, maxTextW, cardH * 0.08, '900', 'Roboto Condensed'); 
+            fitText(c, (safeTeamName(activeTeamName) || "TEAM NAME").toUpperCase(), textX, y + headerH * 0.55, maxTextW, cardH * 0.08, '900', 'Roboto Condensed'); 
             
             c.fillStyle = "#7dd3fc"; 
             c.font = `700 ${cardH * 0.03}px 'Roboto'`; 
             c.shadowBlur = 0; 
             c.shadowOffsetY = 0; 
-            const subTitle = (match.summaryType === "BOWLING") ? "BOWLING CARD" : "ICC CHAMPIONS TROPHY"; 
+            const subTitle = (match.summaryType === "BOWLING") ? "BOWLING CARD" : "BATTING CARD"; 
             c.fillText(subTitle, textX, y + headerH * 0.85);
             
             // DATA TABLE
@@ -2367,6 +2378,14 @@ function goLiveOnDB(matchId, peerId) {
             c.font = `bold ${cardH * 0.028}px 'Roboto'`; 
             c.textAlign = "left"; 
             let dataList = [];
+            
+            // Extract correct innings data from match object
+            let currentInningsData = null;
+            if (match.scorecard) {
+                // FIX: Accurately pull the exact active team's data instead of relying on innings number
+                // (This fixes the bug where the table is empty if Team 2 bats in Innings 1)
+                currentInningsData = (match.activeBattingTeam === 'team2') ? match.scorecard.innings2 : match.scorecard.innings1;
+            }
             
             if (match.summaryType === "BOWLING") { 
                 const colX = { name: x + 40, o: x + cardW * 0.55, m: x + cardW * 0.65, r: x + cardW * 0.75, w: x + cardW * 0.85, e: x + cardW * 0.95 }; 
@@ -2377,16 +2396,19 @@ function goLiveOnDB(matchId, peerId) {
                 c.fillText("R", colX.r, startY); 
                 c.fillText("W", colX.w, startY); 
                 c.fillText("ECON", colX.e, startY); 
-                dataList = match.bowlingCard || []; 
+                dataList = currentInningsData ? (currentInningsData.bowling || []) : (match.bowlingCard || []); 
                 renderRows(c, dataList, startY, cardW, cardH, x, colX, "BOWLING"); 
             } else { 
-                const colX = { name: x + 40, dismissal: x + cardW * 0.45, runs: x + cardW * 0.80, balls: x + cardW * 0.95 }; 
+                const colX = { name: x + 40, dismissal: x + cardW * 0.40, r: x + cardW * 0.65, b: x + cardW * 0.72, fours: x + cardW * 0.79, sixes: x + cardW * 0.86, sr: x + cardW * 0.95 }; 
                 c.fillText("BATTER", colX.name, startY); 
                 c.fillText("DISMISSAL", colX.dismissal, startY); 
                 c.textAlign = "right"; 
-                c.fillText("RUNS", colX.runs, startY); 
-                c.fillText("BALLS", colX.balls, startY); 
-                dataList = match.battingCard || []; 
+                c.fillText("R", colX.r, startY); 
+                c.fillText("B", colX.b, startY); 
+                c.fillText("4s", colX.fours, startY); 
+                c.fillText("6s", colX.sixes, startY); 
+                c.fillText("SR", colX.sr, startY); 
+                dataList = currentInningsData ? (currentInningsData.batting || []) : (match.battingCard || []); 
                 renderRows(c, dataList, startY, cardW, cardH, x, colX, "BATTING"); 
             }
             
@@ -2443,8 +2465,9 @@ function goLiveOnDB(matchId, peerId) {
             list.forEach((p, i) => {
                 const rowY = currentY; 
                 const textY = rowY + (rowH * 0.65); 
+                const pStatus = safeStr(p.status || p.dismissal || "").toUpperCase();
                 let isActive = false; 
-                if (mode === "BATTING" && p.status.includes("NOT OUT")) isActive = true;
+                if (mode === "BATTING" && pStatus.includes("NOT OUT")) isActive = true;
                 
                 // Row BG
                 if (isActive) { 
@@ -2457,11 +2480,46 @@ function goLiveOnDB(matchId, peerId) {
                 } 
                 c.fillRect(x, rowY, cardW, rowH);
                 
+                let textOffsetX = colX.name;
+                
+                // Draw Player Image
+                if (p.image) {
+                    if (!window.playerImageCache) window.playerImageCache = {};
+                    const cacheId = p.id || p.name;
+                    if (!window.playerImageCache[cacheId]) {
+                        const img = new Image();
+                        img.crossOrigin = "anonymous";
+                        img.src = p.image;
+                        window.playerImageCache[cacheId] = img;
+                    }
+                    const avatarS = rowH * 0.7;
+                    const avatarX = colX.name;
+                    const avatarY = rowY + (rowH - avatarS) / 2;
+                    
+                    const imgObj = window.playerImageCache[cacheId];
+                    if (imgObj.complete && imgObj.naturalHeight !== 0) {
+                        c.save();
+                        c.beginPath();
+                        c.arc(avatarX + avatarS/2, avatarY + avatarS/2, avatarS/2, 0, Math.PI*2);
+                        c.clip();
+                        c.drawImage(imgObj, avatarX, avatarY, avatarS, avatarS);
+                        c.restore();
+                    } else {
+                        c.save();
+                        c.beginPath();
+                        c.arc(avatarX + avatarS/2, avatarY + avatarS/2, avatarS/2, 0, Math.PI*2);
+                        c.fillStyle = "rgba(255,255,255,0.1)";
+                        c.fill();
+                        c.restore();
+                    }
+                    textOffsetX += avatarS + 12; // Shift name to make room for image
+                }
+
                 // Text Colors
                 c.fillStyle = isActive ? "white" : (mode === "BATTING" && !isActive ? "#94a3b8" : "white"); 
                 c.textAlign = "left"; 
                 c.font = `700 ${cardH * 0.045}px 'Roboto Condensed'`; 
-                c.fillText(safeStr(p.name).toUpperCase(), colX.name, textY);
+                c.fillText(safeStr(p.name).toUpperCase(), textOffsetX, textY);
                 
                 if (mode === "BOWLING") { 
                     c.textAlign = "right"; 
@@ -2480,15 +2538,18 @@ function goLiveOnDB(matchId, peerId) {
                         c.fillText("NOT OUT", colX.dismissal, textY); 
                     } else { 
                         c.fillStyle = "#94a3b8"; 
-                        c.fillText(safeStr(p.status).toLowerCase(), colX.dismissal, textY); 
+                        c.fillText(safeStr(p.status || p.dismissal).toLowerCase(), colX.dismissal, textY); 
                     } 
                     c.textAlign = "right"; 
                     c.font = `900 ${cardH * 0.055}px 'Roboto'`; 
                     c.fillStyle = "white"; 
-                    c.fillText(safeStr(p.runs), colX.runs, textY); 
+                    c.fillText(safeStr(p.runs), colX.r, textY); 
                     c.font = `500 ${cardH * 0.035}px 'Roboto'`; 
                     c.fillStyle = isActive ? "white" : "#94a3b8"; 
-                    c.fillText(safeStr(p.balls), colX.balls, textY); 
+                    c.fillText(safeStr(p.balls), colX.b, textY); 
+                    c.fillText(safeStr(p.fours || 0), colX.fours, textY); 
+                    c.fillText(safeStr(p.sixes || 0), colX.sixes, textY); 
+                    c.fillText(safeStr(p.sr || "0.00"), colX.sr, textY); 
                 } 
                 currentY += rowH;
             }); 
