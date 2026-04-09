@@ -313,12 +313,27 @@
             display: flex;
             flex-direction: row;
             gap: 10px;
-            z-index: 45;
+            z-index: 950; /* Boosted to stay above everything */
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.5s ease;
         }
         .live-sponsor { height: 75px; width: auto; min-width: 120px; max-width: 220px; }
+
+        /* PORTRAIT OVERRIDES FOR LIVE SPONSORS */
+        @media (orientation: portrait) {
+            #live-sponsors-container {
+                top: 60px; /* Positioned just below the watermark */
+                right: 15px;
+                z-index: 55; /* Higher than the portrait video's z-index: 50 */
+                gap: 6px;
+            }
+            .live-sponsor { 
+                height: 35px; 
+                min-width: 60px; 
+                max-width: 100px; 
+            }
+        }
 
         /* OVERLAYS */
         .overlay {
@@ -519,66 +534,69 @@
             box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
         }
 
-        /* --- NEW IMPACT EVENT ANIMATION STYLES --- */
-        #event-stage-overlay {
+        /* --- NEW IPL 3D ANIMATION STYLES --- */
+        #ipl-stage-overlay {
             position: absolute; inset: 0; pointer-events: none; z-index: 900;
             display: flex; align-items: center; justify-content: center;
-            overflow: hidden; background: radial-gradient(circle, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 70%);
-            opacity: 0; transition: opacity 0.2s ease-out;
-        }
-        #event-stage-overlay.is-active { opacity: 1; }
-
-        .shockwave {
-            position: absolute; width: 10px; height: 10px;
-            border: 20px solid rgba(255,255,255,0.8); border-radius: 50%;
-            top: 50%; left: 50%; transform: translate(-50%, -50%);
-            opacity: 0; pointer-events: none;
-        }
-        .is-active .shockwave { animation: shockwaveAnim 1.2s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; }
-        @keyframes shockwaveAnim {
-            0% { transform: translate(-50%, -50%) scale(0); opacity: 1; border-width: 50px; }
-            100% { transform: translate(-50%, -50%) scale(150); opacity: 0; border-width: 0px; }
+            perspective: 2000px; overflow: hidden;
         }
 
-        #event-text-box {
-            position: relative; z-index: 905;
-            display: none; transform: scale(0);
+        /* SHUTTERS */
+        .shutter {
+            position: absolute; width: 100%; height: 50%;
+            background: rgba(0, 5, 16, 0.95); z-index: 901;
+            transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+            backdrop-filter: blur(5px);
         }
-        .is-active #event-text-box { 
-            display: block; 
-            animation: textImpactAnim 3.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; 
+        .top-s { top: 0; border-bottom: 4px solid #fbbf24; transform: translateY(-100%); }
+        .bot-s { bottom: 0; border-top: 4px solid #fbbf24; transform: translateY(100%); }
+
+        /* Trigger Class to Close Shutters */
+        .splitting .top-s { transform: translateY(0%); }
+        .splitting .bot-s { transform: translateY(0%); }
+
+        /* 3D TEXT CONTAINER */
+        .ipl-boom {
+            position: absolute; z-index: 905;
+            transform-style: preserve-3d;
+            display: none; opacity: 0;
         }
 
-        #event-text-box span {
+        .ipl-boom span {
             position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            font-family: 'Anton', sans-serif;
-            font-size: 28vw;
-            letter-spacing: 5px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 25vw;
+            font-weight: 900; text-transform: uppercase;
+            font-style: italic; line-height: 1; letter-spacing: -5px;
             white-space: nowrap;
-            text-transform: uppercase;
         }
 
-        .text-glow {
-            -webkit-text-stroke: 8px rgba(255, 255, 255, 0.5);
-            filter: blur(20px); z-index: 1;
-        }
-        .text-core {
-            color: #ffffff;
-            background: linear-gradient(180deg, #ffffff 0%, #e2e8f0 40%, #94a3b8 100%);
+        /* GOLD SHADER LAYERS */
+        .layer-gold-front {
+            z-index: 5;
+            background: linear-gradient(135deg, #fff9c4 0%, #fbc02d 40%, #f57f17 60%, #fff9c4 100%);
+            background-size: 200% auto;
             -webkit-background-clip: text; color: transparent;
-            z-index: 2;
-            filter: drop-shadow(0 20px 20px rgba(0,0,0,0.9));
-            -webkit-text-stroke: 3px rgba(0, 0, 0, 0.9);
+            transform: translate(-50%, -50%) translateZ(80px);
+            filter: drop-shadow(0 0 30px rgba(251, 191, 36, 0.6));
+            animation: goldShimmer 3s infinite linear;
         }
-        
-        @keyframes textImpactAnim {
-            0% { transform: scale(0) rotate(-15deg); opacity: 0; filter: brightness(4); }
-            8% { transform: scale(1.2) rotate(5deg); opacity: 1; filter: brightness(2); }
-            15% { transform: scale(1) rotate(0deg); filter: brightness(1); }
-            85% { transform: scale(1.1) rotate(0deg); opacity: 1; }
-            100% { transform: scale(1.5) translateY(100px); opacity: 0; filter: brightness(0); }
+        .layer-gold-depth { color: #827717; transform: translate(-50%, -50%) translateZ(40px); }
+        .layer-gold-base { color: #332b00; transform: translate(-50%, -50%) translateZ(0px); }
+
+        @keyframes goldShimmer { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+
+        /* PHYSICS ANIMATION */
+        @keyframes iplBoomAnim {
+            0% { transform: scale(0.1) rotateY(45deg) translateZ(-1500px); opacity: 0; }
+            15% { opacity: 1; }
+            35% { transform: scale(1.1) rotateY(-5deg) translateZ(100px); }
+            45% { transform: scale(1) rotateY(0deg) translateZ(0px); }
+            80% { transform: scale(1.05) translateZ(200px); opacity: 1; }
+            100% { transform: scale(4) translateZ(2500px); opacity: 0; }
         }
+        .active-boom { display: block !important; animation: iplBoomAnim 3.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
 
         /* --- CINEMATIC MATCH INTRO BANNER --- */
         #match-intro-overlay {
@@ -690,11 +708,14 @@
 
     
     
-    <div id="event-stage-overlay">
-        <div class="shockwave"></div>
-        <div id="event-text-box">
-            <span class="text-glow">SIX</span>
-            <span class="text-core">SIX</span>
+    <div id="ipl-stage-overlay">
+        <div class="shutter top-s"></div>
+        <div class="shutter bot-s"></div>
+
+        <div id="ipl-box" class="ipl-boom">
+            <span class="layer-gold-front">SIX</span>
+            <span class="layer-gold-depth">SIX</span>
+            <span class="layer-gold-base">SIX</span>
         </div>
         <div id="event-sponsors-container"></div>
     </div>
@@ -1253,14 +1274,23 @@
                             setTimeout(() => triggerMatchIntro(data), 1500);
                         }
                         
-                        if (data.lastAction && data.lastAction.id !== lastActionId) {
-                            const isInitialLoad = (lastActionId === null);
-                            lastActionId = data.lastAction.id;
+                        // Track the first load for this specific match to avoid playing stale animations on refresh,
+                        // but ensure the very first live action plays perfectly without fail.
+                        if (window.currentMatchLoaded !== matchId) {
+                            window.currentMatchLoaded = matchId;
+                            if (data.lastAction) {
+                                lastActionId = JSON.stringify(data.lastAction);
+                            }
+                        }
+
+                        if (data.lastAction && JSON.stringify(data.lastAction) !== lastActionId) {
+                            lastActionId = JSON.stringify(data.lastAction);
                             
-                            // Ensure it only triggers if it's a genuinely NEW action (not initial load)
-                            if (!isInitialLoad && ['4', '6', 'W'].includes(data.lastAction.type)) {
-                                triggerAudio(data.lastAction.type);
-                                triggerAnim(data.lastAction.type, data.sponsors);
+                            // Trigger animation for newly received actions
+                            const actionType = String(data.lastAction.type || data.lastAction).toUpperCase();
+                            if (['4', '6', 'W'].includes(actionType)) {
+                                triggerAudio(actionType);
+                                triggerAnim(actionType, data.sponsors);
                             }
                         }
 
@@ -1276,23 +1306,28 @@
                         const wm = document.getElementById('broadcast-watermark');
                         const ls = document.getElementById('live-sponsors-container');
                         
+                        // ALWAYS populate the sponsor HTML so it is fully loaded and ready when overlays close
+                        if (ls) {
+                            if (data.sponsors && (data.sponsors.main || data.sponsors.sponsor2)) {
+                                let html = '';
+                                if (data.sponsors.main) html += createSponsorHTML(data.sponsors.main, 'live-sponsor');
+                                if (data.sponsors.sponsor2) html += createSponsorHTML(data.sponsors.sponsor2, 'live-sponsor');
+                                ls.innerHTML = html;
+                            } else {
+                                ls.innerHTML = '';
+                            }
+                        }
+                        
+                        // Toggle Visibility based on overlays
                         if (isIntroActive || hasOverlay) {
                             if (wm) wm.classList.remove('show-watermark');
                             if (ls) ls.style.opacity = '0';
                         } else {
                             if (wm) wm.classList.add('show-watermark');
-                            
-                            // Update Live Sponsors dynamically
-                            if (data.sponsors && (data.sponsors.main || data.sponsors.sponsor2)) {
-                                let html = '';
-                                if (data.sponsors.main) html += createSponsorHTML(data.sponsors.main, 'live-sponsor');
-                                if (data.sponsors.sponsor2) html += createSponsorHTML(data.sponsors.sponsor2, 'live-sponsor');
-                                if (ls) {
-                                    ls.innerHTML = html;
-                                    ls.style.opacity = '1';
-                                }
-                            } else {
-                                if (ls) ls.style.opacity = '0';
+                            if (ls && data.sponsors && (data.sponsors.main || data.sponsors.sponsor2)) {
+                                ls.style.opacity = '1';
+                            } else if (ls) {
+                                ls.style.opacity = '0';
                             }
                         }
 
@@ -1671,18 +1706,16 @@
 
         function triggerAnim(type, sponsorsObj) {
             let displayText = "";
-            let accentColor = "";
             
-            // Assign Dynamic Colors based on the event
-            if (type === '4') { displayText = "FOUR"; accentColor = "rgba(56, 189, 248, 0.8)"; } // Bright Blue
-            else if (type === '6') { displayText = "SIX"; accentColor = "rgba(34, 197, 94, 0.8)"; } // Bright Green
-            else if (type === 'W') { displayText = "OUT"; accentColor = "rgba(239, 68, 68, 0.8)"; } // Bright Red
+            // Assign Text based on the event
+            if (type === '4') { displayText = "FOUR"; }
+            else if (type === '6') { displayText = "SIX"; }
+            else if (type === 'W') { displayText = "OUT"; }
             else return;
 
-            const stage = document.getElementById('event-stage-overlay');
-            const box = document.getElementById('event-text-box');
+            const stage = document.getElementById('ipl-stage-overlay');
+            const box = document.getElementById('ipl-box');
             const spans = box.querySelectorAll('span');
-            const shockwave = document.querySelector('.shockwave');
 
             const sponsors = sponsorsObj || {};
             const eventSponsors = document.getElementById('event-sponsors-container');
@@ -1702,32 +1735,30 @@
                 eventSponsors.innerHTML = html;
             }
 
-            // Remove class immediately to reset the state
-            stage.classList.remove('is-active');
+            // Reset Animation
+            stage.classList.remove('splitting');
+            box.classList.remove('active-boom');
             
             // FORCE DOM REFLOW INSTANTLY (Fixes animation stuck/not triggering bug)
-            void stage.offsetWidth; 
-            
-            // Apply Dynamic Color to Shockwave & Glow based on the event
-            if (shockwave) {
-                shockwave.style.boxShadow = `0 0 80px ${accentColor}, inset 0 0 80px ${accentColor}`;
-                shockwave.style.borderColor = accentColor;
-            }
-            const textGlow = document.querySelector('.text-glow');
-            if (textGlow) textGlow.style.color = accentColor;
+            void box.offsetWidth; 
             
             spans.forEach(s => s.innerText = displayText);
 
-            // Trigger the new animation classes
-            stage.classList.add('is-active'); 
+            // Play Sequence
+            // A. Close Shutters immediately
+            stage.classList.add('splitting'); 
             
-            if (eventSponsors) eventSponsors.style.opacity = '1';
-
-            // Cleanup after animation completes (matches the 3.5s CSS animation)
+            // B. Boom Text appears shortly after shutters close
             setTimeout(() => {
-                stage.classList.remove('is-active');
+                box.classList.add('active-boom');
+                if (eventSponsors) eventSponsors.style.opacity = '1';
+            }, 100);
+
+            // C. Open Shutters after animation finishes
+            setTimeout(() => {
+                stage.classList.remove('splitting');
                 if (eventSponsors) eventSponsors.style.opacity = '0';
-            }, 3500);
+            }, 3000);
         }
     </script>
 </body>
