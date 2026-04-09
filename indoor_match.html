@@ -1836,37 +1836,6 @@
         </div>
 
         <script>
-            // Function to generate Team Logo or Colorful Initials Avatar
-function getTeamAvatar(teamName, logoUrl) {
-    // 1. If a logo URL exists, show the logo
-    if (logoUrl && logoUrl.trim() !== '') {
-        return `<img src="${logoUrl}" alt="${teamName}" class="w-10 h-10 rounded-full object-cover shadow-sm border border-gray-200 shrink-0">`;
-    }
-    
-    // 2. Fallback: Generate Initials (First letter of first two words)
-    const words = (teamName || '').trim().split(/\s+/);
-    let initials = '';
-    
-    if (words.length >= 2) {
-        initials = (words[0][0] + words[1][0]).toUpperCase();
-    } else if (words.length === 1 && words[0].length >= 2 {
-        initials = words[0].substring(0, 2).toUpperCase();
-    } else if (words.length === 1) {
-        initials = words[0][0].toUpperCase();
-    } else {
-        initials = 'TM'; // Fallback for empty names
-    }
-
-    // 3. Generate a consistent professional color based on the team's name
-    let hash = 0;
-    for (let i = 0; i < teamName.length; i++) {
-        hash = teamName.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    // Using HSL to keep it colorful but professional (saturation 70%, lightness 45%)
-    const hue = Math.abs(hash % 360);
-    
-    return `<div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-sm shrink-0" style="background-color: hsl(${hue}, 70%, 45%);">${initials}</div>`;
-}
             (function() {
                 const targetNode = document.getElementById('schedule-rows');
                 const btn = document.getElementById('btn-create-tourney');
@@ -2827,7 +2796,7 @@ window.generateProfessionalSchedule = function(selectedFlow = null) {
                 </div>
 
                 <div class="p-2 bg-gray-50 flex justify-between items-center border-t px-4">
-                    <button onclick="confirmExit()" class="text-xs font-bold uppercase tracking-wider text-red-600">Exit Match</button>
+                    <button onclick="openEndMatchModal()" class="text-xs font-bold uppercase tracking-wider text-red-600">End Match</button>
                     <button onclick="openEditMatchMode()" class="text-xs font-bold uppercase tracking-wider text-blue-600 border border-blue-200 px-3 py-1 rounded-lg hover:bg-blue-50">✎ Edit Match</button>
                     <button onclick="openViewControlModal()" class="text-xs font-bold uppercase tracking-wider text-white bg-indigo-600 px-4 py-2 rounded-full border border-indigo-700 shadow-lg hover:bg-indigo-700">📺 BROADCAST</button>
                 </div>
@@ -2948,6 +2917,22 @@ window.generateProfessionalSchedule = function(selectedFlow = null) {
                 <button id="btn-ro-nonstriker" onclick="finalizeRunOut('nonstriker')" class="p-4 bg-gray-100 font-bold rounded-xl text-md hover:bg-red-50 border border-gray-200 text-gray-800">Non-Striker</button>
             </div>
             <button onclick="closeModal('runout-modal')" class="mt-4 text-gray-400 text-sm">Cancel</button>
+        </div>
+    </div>
+
+    <div id="end-match-modal" class="modal-overlay fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-[100] flex items-center justify-center">
+        <div class="modal-content bg-white rounded-2xl p-6 w-80 shadow-2xl text-center">
+            <h3 class="text-xl font-black text-gray-800 mb-2 uppercase tracking-wide">End Match</h3>
+            <p class="text-xs text-gray-500 mb-4 uppercase tracking-wider">Select how this match ended</p>
+            <div class="grid grid-cols-1 gap-2 text-sm">
+                <button onclick="processEndMatch('COMPLETED')" class="p-3 bg-blue-50 hover:bg-blue-100 text-blue-900 font-bold rounded-xl border border-blue-200">Match Completed</button>
+                <button onclick="processEndMatch('TIED')" class="p-3 bg-gray-50 hover:bg-gray-100 font-bold rounded-xl border border-gray-200">Match Tied</button>
+                <button onclick="processEndMatch('ABANDONED')" class="p-3 bg-gray-50 hover:bg-gray-100 font-bold rounded-xl border border-gray-200">Match Abandoned</button>
+                <button onclick="processEndMatch('WASHED_OUT')" class="p-3 bg-blue-50 hover:bg-blue-100 text-blue-800 font-bold rounded-xl border border-blue-200">Match Washed Out (Rain)</button>
+                <button onclick="processEndMatch('FORFEITED')" class="p-3 bg-red-50 hover:bg-red-100 text-red-900 font-bold rounded-xl border border-red-200">Match Forfeited</button>
+                <button onclick="processEndMatch('CANCELLED')" class="p-3 bg-gray-50 hover:bg-gray-100 font-bold rounded-xl border border-gray-200">Match Cancelled</button>
+            </div>
+            <button onclick="closeModal('end-match-modal')" class="mt-4 text-gray-400 text-xs font-bold uppercase tracking-widest hover:text-gray-600">Cancel</button>
         </div>
     </div>
 
@@ -3823,18 +3808,18 @@ function broadcastMatchResult() {
                     groupedTeams[country].forEach(team => {
                         const opt = document.createElement('option');
                         opt.value = team.name;
-
+                        
+                        // Add team logos next to the team name (Logo - Team Name format)
+                        // Natively <select> doesn't render <img>, so we use the country flag as the logo indicator
+                        const logoFlag = countryFlags[team.country] || '🏏';
+                        opt.textContent = `${logoFlag} - ${team.name}`;
+                        
+                        // We also set the uploaded logo as a background image for browsers that support it
                         if (team.logo) {
-                            // Show custom logo as background image in the list and use spaces to indent
-                            opt.innerHTML = `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${team.name}`;
                             opt.style.backgroundImage = `url(${team.logo})`;
                             opt.style.backgroundSize = '16px 16px';
                             opt.style.backgroundPosition = 'left center';
                             opt.style.backgroundRepeat = 'no-repeat';
-                        } else {
-                            // Fallback if no custom logo is found
-                            const logoFlag = countryFlags[country] || '🏏';
-                            opt.textContent = `${logoFlag}  ${team.name}`;
                         }
                         
                         optgroup.appendChild(opt);
@@ -3843,22 +3828,7 @@ function broadcastMatchResult() {
                     select.appendChild(optgroup);
                 });
                 
-                select.onchange = (e) => {
-                    handleTeamSelection(e.target.value, id.includes('team1') ? 'team1' : 'team2');
-                    
-                    // Show the selected team's logo inside the main select box itself (works on all browsers)
-                    const selectedTeam = savedTeamsData.find(t => t.name === e.target.value);
-                    if (selectedTeam && selectedTeam.logo) {
-                        select.style.backgroundImage = `url(${selectedTeam.logo})`;
-                        select.style.backgroundSize = '20px 20px';
-                        select.style.backgroundPosition = 'left 8px center';
-                        select.style.backgroundRepeat = 'no-repeat';
-                        select.style.paddingLeft = '36px'; // Make room for the logo
-                    } else {
-                        select.style.backgroundImage = 'none';
-                        select.style.paddingLeft = ''; // Revert to default
-                    }
-                };
+                select.onchange = (e) => handleTeamSelection(e.target.value, id.includes('team1') ? 'team1' : 'team2');
             });
         }
         function handleTeamSelection(teamName, teamKey) {
@@ -4264,6 +4234,16 @@ function uploadPlayerImage(input, teamKey, playerId) {
         function updatePlayerName(newName, teamKey, playerId) {
             const player = state[teamKey].squad.find(p => p.id === playerId);
             if(player) player.name = newName.toUpperCase();
+            
+            // 1. Instantly update the active match stats
+            if (state[teamKey].playerStats && state[teamKey].playerStats[playerId]) {
+                state[teamKey].playerStats[playerId].name = newName.toUpperCase();
+            }
+            
+            // 2. Instantly refresh UI and Broadcast if the match is already running
+            if (typeof updateUI === 'function') {
+                updateUI();
+            }
         }
 
         function togglePlayerSelection(checkbox, teamKey, playerId) {
@@ -6252,16 +6232,68 @@ function endInnings() {
         }
 
         function confirmExit() {
-            CustomDialog.show({
-                type: 'confirm',
-                title: "Exit Match?",
-                message: "Are you sure you want to exit? <br>All unsaved progress will be lost.",
-                theme: "red",
-                icon: "🚪",
-                confirmText: "Yes, Exit",
-                onConfirm: () => location.reload()
-            });
+    CustomDialog.show({
+        type: 'confirm',
+        title: "Exit Match?",
+        message: "Are you sure you want to exit? <br>All unsaved progress will be lost.",
+        theme: "red",
+        icon: "🚪",
+        confirmText: "Yes, Exit",
+        onConfirm: () => location.reload()
+    });
+}
+
+function openEndMatchModal() {
+    openModal('end-match-modal');
+}
+
+function processEndMatch(statusType) {
+    closeModal('end-match-modal');
+    
+    let finalResultText = "";
+    const t1 = state.team1;
+    const t2 = state.team2;
+    
+    if (statusType === "COMPLETED" || statusType === "TIED") {
+        if (t1.score > t2.score) {
+            finalResultText = `${t1.name} won by ${t1.score - t2.score} runs`;
+        } else if (t2.score > t1.score) {
+            const wktsLost = t2.wickets || 0;
+            const maxWickets = state.playersPerSide - 1;
+            const wktsLeft = Math.max(1, maxWickets - wktsLost);
+            finalResultText = `${t2.name} won by ${wktsLeft} wickets`;
+        } else {
+            finalResultText = "Match Tied";
         }
+    } else if (statusType === "ABANDONED") {
+        finalResultText = "Match abandoned";
+    } else if (statusType === "WASHED_OUT") {
+        finalResultText = "Match washed out due to rain";
+    } else if (statusType === "FORFEITED") {
+        finalResultText = "Match forfeited";
+    } else if (statusType === "CANCELLED") {
+        finalResultText = "Match cancelled";
+    }
+
+    // Sync to live database for viewers
+    if (typeof broadcastId !== 'undefined' && broadcastId) {
+        db.collection("live_matches").doc(broadcastId).set({
+            matchStatus: "COMPLETE",
+            result: finalResultText,
+            isStreaming: false
+        }, { merge: true }).catch(err => console.error(err));
+    }
+    
+    if (statusType === "COMPLETED" || statusType === "TIED") {
+        state.innings = 2; // Force end of match
+        if (typeof endInnings === 'function') {
+            endInnings();
+        }
+    } else {
+        alert(`Match ended: ${finalResultText}`);
+        location.reload();
+    }
+}
 
         // --- NEW EDITING LOGIC (BOWLER & OVER) ---
         function editActivePlayer(role) {
