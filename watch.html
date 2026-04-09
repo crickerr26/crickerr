@@ -1479,7 +1479,7 @@
         function formatIntroTeamName(name) { 
             if (!name) return "TEAM"; 
             let formatted = String(name); 
-            formatted = formatted.replace(/\bCRICKET CLUB\b/gi, "C.C").replace(/\bCRICKET\b/gi, "C.C").replace(/\bCC\b/gi, "C.C"); 
+            formatted = formatted.replace(/\bCRICKET CLUB\b/gi, "C.C").replace(/\bCRICKET\b/gi, "C.").replace(/\bCC\b/gi, "C.C"); 
             return formatted; 
         }
 
