@@ -433,9 +433,15 @@
                                  return;
                             }
 
+                            const initialText = getInitials(t.name);
+                            const bgColor = getColorForInitials(t.name);
+                            let initialSize = "text-4xl";
+                            if (initialText.length === 3) initialSize = "text-3xl";
+                            if (initialText.length === 4) initialSize = "text-2xl";
+
                             const logoDisplay = t.logo 
                                 ? `<img src="${t.logo}" class="w-full h-full object-cover">` 
-                                : `<span class="text-4xl">👑</span>`;
+                                : `<div class="w-full h-full flex items-center justify-center text-white font-bold ${initialSize}" style="background-color: ${bgColor};">${initialText}</div>`;
 
                             document.getElementById('main-scroll-area').innerHTML = `
                                  <div class="flex flex-col items-center justify-center h-full p-6 text-center animate-scale-in">
@@ -640,10 +646,15 @@
                 const row = document.createElement('div');
                 row.className = 'team-row';
                 
-                const initial = team.name.charAt(0).toUpperCase();
+                const initial = getInitials(team.name);
+                const bgColor = getColorForInitials(team.name);
+                let avatarSize = "text-lg";
+                if (initial.length === 3) avatarSize = "text-sm";
+                if (initial.length === 4) avatarSize = "text-xs";
+
                 const logoHtml = team.logo 
                     ? `<img src="${team.logo}" class="team-avatar">` 
-                    : `<div class="team-avatar flex items-center justify-center bg-gray-200 text-gray-500 font-bold text-lg">${initial}</div>`;
+                    : `<div class="team-avatar flex items-center justify-center text-white font-bold ${avatarSize}" style="background-color: ${bgColor};">${initial}</div>`;
                 
                 const captainName = team.captain ? team.captain.split(' ')[0] : null;
                 const creatorName = team.creator || "Unknown";
@@ -992,7 +1003,13 @@
                          captainCompleted: true
                          // Removed 'captainToken: null' to keep link active for 24h
                      }).then(() => {
-                        const logoDisplay = data.logo ? `<img src="${data.logo}" class="w-full h-full object-cover">` : `<span class="text-4xl">👑</span>`;
+                        const initialText = getInitials(name);
+                        const bgColor = getColorForInitials(name);
+                        let initialSize = "text-4xl";
+                        if (initialText.length === 3) initialSize = "text-3xl";
+                        if (initialText.length === 4) initialSize = "text-2xl";
+
+                        const logoDisplay = data.logo ? `<img src="${data.logo}" class="w-full h-full object-cover">` : `<div class="w-full h-full flex items-center justify-center text-white font-bold ${initialSize}" style="background-color: ${bgColor};">${initialText}</div>`;
                         const capName = data.captain || "No Captain Selected";
 
                         document.getElementById('team-editor-view').innerHTML = `
@@ -1150,6 +1167,28 @@
 
         // --- UTILS ---
         function titleCase(str) { return str.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '); }
+        function getInitials(name) {
+            if (!name) return "T";
+            let words = name.trim().split(/\s+/);
+            let firstWord = words[0];
+            
+            // If the first word is an acronym (all caps, 2 to 4 letters long), use it entirely
+            if (firstWord.length >= 2 && firstWord.length <= 4 && firstWord === firstWord.toUpperCase()) {
+                return firstWord;
+            }
+            
+            if (words.length >= 2) return (words[0].charAt(0) + words[1].charAt(0)).toUpperCase();
+            return name.substring(0, 2).toUpperCase();
+        }
+        function getColorForInitials(str) {
+            let hash = 0;
+            if (!str) return 'hsl(0, 0%, 50%)';
+            for (let i = 0; i < str.length; i++) {
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const h = Math.abs(hash) % 360;
+            return `hsl(${h}, 60%, 45%)`; // Professional colored backgrounds
+        }
         function openBulkModal() { document.getElementById('bulk-paste-modal').classList.remove('hidden'); }
         function processBulkPaste() {
             const txt = document.getElementById('bulk-paste-area').value;
