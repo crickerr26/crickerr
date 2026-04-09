@@ -890,7 +890,7 @@
             const matchId = document.getElementById('match-input').value.trim() || new URLSearchParams(window.location.search).get('matchId');
             if (!matchId) return;
 
-            const shareUrl = window.location.origin + window.location.pathname + '?matchId=' + matchId.toUpperCase();
+            const shareUrl = window.location.origin + window.location.pathname + '?matchId=' + matchId;
             const shareData = {
                 title: 'Live Cricket Match',
                 text: 'Watch this cricket match live right now!',
@@ -938,7 +938,7 @@
                 fetchLiveMatches();
             } else {
                 inputOverlay.style.display = 'none';
-                checkLiveStatus(matchId.toUpperCase());
+                checkLiveStatus(matchId);
             }
         };
 
@@ -1207,7 +1207,7 @@
         }
 
         function submitMatchId() {
-            const val = matchInput.value.trim().toUpperCase();
+            const val = matchInput.value.trim();
             if (!val) {
                 alert("Please enter a valid Match ID");
                 return;
