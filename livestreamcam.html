@@ -1993,15 +1993,28 @@ function goLiveOnDB(matchId, peerId) {
             
             const xEnd = pillX + pillW; 
             
-            // TEAM 1 INFO
+            // TEAM 1 INFO -> BATTING TEAM INFO (Left side)
             const logoS = barH * 0.7; 
             const displayImg1 = (t1CapImg && t1CapImg.src) ? t1CapImg : team1Logo; 
             const displayImg2 = (t2CapImg && t2CapImg.src) ? t2CapImg : team2Logo; 
-            drawLogo(c, match.t1, displayImg1, x1 + 15, bottomY + (barH - logoS)/2, logoS, true); 
+            
+            let batTeamName = match.t1;
+            let batTeamImg = displayImg1;
+            let bowlTeamName = match.t2;
+            let bowlTeamImg = displayImg2;
+            
+            if (match.activeBattingTeam === 'team2') {
+                batTeamName = match.t2;
+                batTeamImg = displayImg2;
+                bowlTeamName = match.t1;
+                bowlTeamImg = displayImg1;
+            }
+
+            drawLogo(c, batTeamName, batTeamImg, x1 + 15, bottomY + (barH - logoS)/2, logoS, true); 
             
             c.fillStyle = "white"; 
             c.textAlign = "left"; 
-            fitText(c, formatTeamName(match.t1), x1 + 25 + logoS, bottomY + barH * 0.45, (x2 - x1) - logoS - 35, barH * 0.35, '700', 'Roboto Condensed'); 
+            fitText(c, formatTeamName(batTeamName), x1 + 25 + logoS, bottomY + barH * 0.45, (x2 - x1) - logoS - 35, barH * 0.35, '700', 'Roboto Condensed'); 
             
             if (isChasing) { 
                 c.fillStyle = "#fbbf24"; 
@@ -2140,14 +2153,14 @@ function goLiveOnDB(matchId, peerId) {
                 ballX -= (ballSize + ballGap); 
             }); 
             
-            // TEAM 2 INFO (Bowling)
+            // TEAM 2 INFO (Bowling) -> BOWLING TEAM INFO (Right side)
             const finalDiv = isChasing ? bowlEnd : x5; 
             const logoS2 = barH * 0.55; // Slightly smaller size for the right side logo
-            drawLogo(c, match.t2, displayImg2, xEnd - 8 - logoS2, bottomY + (barH - logoS2)/2, logoS2, false); 
+            drawLogo(c, bowlTeamName, bowlTeamImg, xEnd - 8 - logoS2, bottomY + (barH - logoS2)/2, logoS2, false); 
             
             c.fillStyle = "white"; 
             c.textAlign = "right"; 
-            fitText(c, formatTeamName(match.t2), xEnd - 18 - logoS2, bottomY + barH * 0.45, (xEnd - finalDiv) - logoS2 - 28, barH * 0.35, '700', 'Roboto Condensed'); 
+            fitText(c, formatTeamName(bowlTeamName), xEnd - 18 - logoS2, bottomY + barH * 0.45, (xEnd - finalDiv) - logoS2 - 28, barH * 0.35, '700', 'Roboto Condensed'); 
             
             c.fillStyle = "#64748b"; 
             c.font = `700 ${barH * 0.16}px 'Roboto'`; 
