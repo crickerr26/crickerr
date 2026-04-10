@@ -1276,8 +1276,15 @@ function goLiveOnDB(matchId, peerId) {
         if (doc.exists) {
             const data = doc.data();
 
-            // 1. Merge Basic Data
+            // 1. Merge Basic Data & CRITICAL Innings State
             match = { ...match, ...data };
+            if (data.currentInnings) match.innings = data.currentInnings;
+            if (data.target) match.target = data.target;
+            
+            // FIX: Ensure the graphics engine knows exactly who is batting
+            if (data.activeBattingTeam) {
+                match.activeBattingTeam = data.activeBattingTeam;
+            }
             
             // FIX: Map team names correctly in case the database uses different key names (e.g., team1 instead of t1)
             if (data.team1) match.t1 = data.team1;
