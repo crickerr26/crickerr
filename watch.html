@@ -38,6 +38,8 @@
         #fullscreen-btn {
             display: none;
         }
+        
+        .fs-text::before { content: "FULL SCREEN"; }
 
         @media (orientation: portrait) {
             #viewer-video {
@@ -93,6 +95,7 @@
         }
 
         @media (orientation: landscape) {
+            .fs-text::before { content: "EXIT FULL SCREEN"; }
             #viewer-video {
                 object-fit: contain;
                 object-position: center;
@@ -215,28 +218,33 @@
         }
 
         @media (orientation: portrait) {
-            #share-btn.match-active { 
-                display: flex; 
-                top: 125px; 
-                right: 10px; 
-                bottom: auto;
-                background: rgba(0,0,0,0.5); 
-                border: none; 
-                width: 32px; 
-                height: 32px;
-            }
             #close-btn.match-active {
                 display: flex;
-                top: 80px;
+                top: auto;
+                bottom: 140px; /* Above share button */
                 left: auto;
-                right: 10px;
-                width: 34px;
-                height: 34px;
+                right: 15px;
+                width: 38px;
+                height: 38px;
                 background: rgba(0, 0, 0, 0.6);
-                border: none;
+                border: 1px solid rgba(255,255,255,0.15);
                 z-index: 60;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.5);
             }
-            #close-btn.match-active svg { width: 18px; height: 18px; }
+            #share-btn.match-active { 
+                display: flex; 
+                top: auto; 
+                bottom: 90px; 
+                right: 15px; 
+                left: auto;
+                background: rgba(0,0,0,0.6); 
+                border: 1px solid rgba(255,255,255,0.15); 
+                width: 38px; 
+                height: 38px;
+                z-index: 60;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            }
+            #close-btn.match-active svg, #share-btn.match-active svg { width: 18px; height: 18px; }
         }
 
         /* --- BROADCAST WATERMARK LOGO --- */
@@ -315,7 +323,7 @@
             #chat-input { background: #111; border-color: #222; color: white; border-radius: 50px; padding: 12px 20px; }
             
             #heart-container {
-                bottom: 80px; right: 15px; height: 150px;
+                bottom: 195px; right: 15px; height: 150px; /* Shifted above the action buttons */
             }
         }
 
@@ -849,7 +857,7 @@
     
     <div id="fullscreen-btn" onclick="toggleFullScreen()">
         <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
-        <span>FULL SCREEN</span>
+        <span class="fs-text"></span>
     </div>
 
     <div id="match-intro-overlay">
@@ -1621,8 +1629,6 @@
         }
 
         function toggleFullScreen() {
-            const fsBtnText = document.querySelector('#fullscreen-btn span');
-            
             if (!document.fullscreenElement && !document.webkitFullscreenElement) {
                 const docEl = document.documentElement;
                 if (docEl.requestFullscreen) {
@@ -1631,13 +1637,12 @@
                             screen.orientation.lock('landscape').catch(e => console.log(e));
                         }
                     }).catch(err => console.log(err));
-                } else if (docEl.webkitRequestFullscreen) {
+                } else if (docEl.webkitRequestFullscreen) { /* Safari */
                     docEl.webkitRequestFullscreen();
                     if (screen.orientation && screen.orientation.lock) {
                         screen.orientation.lock('landscape').catch(e => console.log(e));
                     }
                 }
-                if (fsBtnText) fsBtnText.innerText = "EXIT FULL SCREEN";
             } else {
                 if (document.exitFullscreen) {
                     document.exitFullscreen().then(() => {
@@ -1645,15 +1650,15 @@
                             screen.orientation.unlock();
                         }
                     }).catch(err => console.log(err));
-                } else if (document.webkitExitFullscreen) {
+                } else if (document.webkitExitFullscreen) { /* Safari */
                     document.webkitExitFullscreen();
                     if (screen.orientation && screen.orientation.unlock) {
                         screen.orientation.unlock();
                     }
                 }
-                if (fsBtnText) fsBtnText.innerText = "FULL SCREEN";
             }
         }
+            
 
         function removeViewerPresence() {
             if (isViewerAdded && activeMatchId) {
