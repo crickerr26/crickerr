@@ -81,17 +81,17 @@
                 display: flex;
                 position: fixed;
                 top: calc(70px + 56.25vw);
-                left: 50%; right: 0; width: 50%;
+                left: 66.66%; right: 0; width: 33.34%;
                 height: 40px;
                 background: #1a1a1a;
                 z-index: 45;
                 align-items: center;
                 justify-content: center;
-                gap: 8px;
-                color: white; font-family: 'Roboto', sans-serif; font-size: 12px; font-weight: bold; cursor: pointer; border-bottom: 1px solid #333;
+                gap: 6px;
+                color: white; font-family: 'Roboto', sans-serif; font-size: 11px; font-weight: bold; cursor: pointer; border-bottom: 1px solid #333;
                 border-left: 1px solid #333;
             }
-            #fullscreen-btn svg { width: 18px; height: 18px; fill: white; }
+            #fullscreen-btn svg { width: 16px; height: 16px; fill: white; }
         }
 
         @media (orientation: landscape) {
@@ -149,23 +149,25 @@
         @media (orientation: portrait) {
             #live-badge {
                 top: 80px; left: 10px; right: auto;
-                padding: 4px 10px; font-size: 10px;
+                padding: 2px 6px; font-size: 9px;
                 background: rgba(239, 68, 68, 0.9);
                 border: none;
-                box-shadow: 0 0 8px rgba(239, 68, 68, 0.6); gap: 4px;
+                box-shadow: 0 0 8px rgba(239, 68, 68, 0.6); gap: 3px;
                 z-index: 55;
             }
-            .live-dot { width: 5px; height: 5px; }
+            .live-dot { width: 4px; height: 4px; }
             
             #quality-badge {
-                top: calc(70px + 56.25vw - 35px); left: auto;
-                bottom: auto; right: 10px;
-                padding: 4px 8px; font-size: 9px;
-                background: rgba(0,0,0,0.6); border: none; color: white;
+                position: fixed;
+                top: calc(70px + 56.25vw); left: 0; right: auto; bottom: auto;
+                width: 33.33%; height: 40px;
+                padding: 0; font-size: 11px;
+                background: #1a1a1a; border: none; border-bottom: 1px solid #333; border-radius: 0; z-index: 45;
+                display: flex; align-items: center; justify-content: center; color: white;
             }
             #quality-menu {
-                top: calc(70px + 56.25vw - 120px) !important; left: auto !important;
-                bottom: auto; right: 10px;
+                top: calc(70px + 56.25vw - 120px) !important; left: 10px !important;
+                bottom: auto; right: auto;
             }
         }
 
@@ -255,7 +257,7 @@
             pointer-events: none; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); transition: opacity 0.8s ease-in-out;
         }
         /* Portrait: Positioned at Top Right inside 16:9 video */
-        @media (orientation: portrait) { #broadcast-watermark { top: 80px; left: auto; right: 55px; bottom: auto; z-index: 55; max-width: 35px; } }
+        @media (orientation: portrait) { #broadcast-watermark { top: 80px; left: auto; right: 10px; bottom: auto; z-index: 55; max-width: 35px; } }
         /* Landscape: Positioned at Top Left next to quality controls */
         @media (orientation: landscape) { #broadcast-watermark { top: 25px; left: 110px; bottom: auto; } }
         .show-watermark { opacity: 0.95 !important; }
@@ -281,22 +283,22 @@
         /* PORTRAIT OVERRIDES FOR STATS & CHAT TOGGLE */
         @media (orientation: portrait) {
             #live-stats-bar {
-                top: 80px; right: auto; left: 85px; 
-                padding: 4px 10px; font-size: 10px;
+                top: 80px; right: auto; left: 60px; 
+                padding: 2px 8px; font-size: 9px;
                 background: rgba(0,0,0,0.5); border: none;
                 gap: 4px; color: white; border-radius: 50px; z-index: 55;
             }
-            #live-stats-bar svg { width: 12px !important; height: 12px !important; fill: white !important; }
+            #live-stats-bar svg { width: 10px !important; height: 10px !important; fill: white !important; }
             
             #chat-toggle-btn {
                 position: fixed;
-                top: calc(70px + 56.25vw); left: 0; right: auto; bottom: auto;
-                width: 50%; height: 40px;
-                padding: 0; font-size: 12px;
-                background: #1a1a1a; border: none; border-bottom: 1px solid #333; border-radius: 0; z-index: 45;
+                top: calc(70px + 56.25vw); left: 33.33%; right: auto; bottom: auto;
+                width: 33.33%; height: 40px;
+                padding: 0; font-size: 11px;
+                background: #1a1a1a; border: none; border-bottom: 1px solid #333; border-left: 1px solid #333; border-radius: 0; z-index: 45;
                 display: flex; align-items: center; justify-content: center;
             }
-            #chat-toggle-btn svg { width: 18px !important; height: 18px !important; }
+            #chat-toggle-btn svg { width: 16px !important; height: 16px !important; }
 
             /* YouTube Style Chat Box overrides */
             #chat-container {
@@ -305,10 +307,10 @@
                 bottom: 0; left: 0; right: 0; width: 100%;
                 max-height: none; 
                 background: #000; border: none; border-radius: 0;
-                padding: 10px 15px env(safe-area-inset-bottom, 15px) 15px; pointer-events: auto;
+                padding: 5px 10px env(safe-area-inset-bottom, 10px) 10px; pointer-events: auto;
             }
             #chat-messages {
-                max-height: none; flex-grow: 1; height: calc(100% - 50px);
+                max-height: none; flex-grow: 1; height: calc(100% - 55px);
                 mask-image: linear-gradient(to bottom, transparent, black 5%); -webkit-mask-image: linear-gradient(to bottom, transparent, black 5%);
                 padding-bottom: 5px;
             }
@@ -318,9 +320,9 @@
             }
             .chat-user { color: #aaa; font-weight: normal; }
             #chat-input-area {
-                margin-top: auto; border-top: 1px solid #222; padding-top: 15px;
+                margin-top: auto; border-top: 1px solid #222; padding-top: 10px; height: 50px;
             }
-            #chat-input { background: #111; border-color: #222; color: white; border-radius: 50px; padding: 12px 20px; }
+            #chat-input { background: #111; border-color: #222; color: white; border-radius: 50px; padding: 10px 15px; }
             
             #heart-container {
                 bottom: 195px; right: 15px; height: 150px; /* Shifted above the action buttons */
