@@ -645,6 +645,7 @@
         
         // --- NEW DISMISSAL ANIMATION STATE ---
         let dismissalAnimState = { active: false, delayOver: false, startTime: 0 };
+        let scorebarAnimState = { active: false, type: "", startTime: 0 };
 
         // --- REPLAY VARIABLES ---
         let replayRecorder = null;
@@ -701,26 +702,27 @@
         });
 
         function resizeCanvas() {
-            // FIX: Use devicePixelRatio for SHARP rendering on mobile/retina screens
-            const dpr = window.devicePixelRatio || 1;
-            
-            // Set Internal Resolution (Physical Pixels) - MATCHES SCREEN EXACTLY
-            canvas.width = window.innerWidth * dpr;
-            canvas.height = window.innerHeight * dpr;
-            
-            // Scale Context to use Logical Coordinates (CSS Pixels)
-            ctx.scale(dpr, dpr);
-            
-            // CSS Display Size (Fit to Screen)
-            canvas.style.width = window.innerWidth + 'px';
-            canvas.style.height = window.innerHeight + 'px';
-            
-            // High Quality Smoothing
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-            
-            initParticles(window.innerWidth, window.innerHeight);
-        }
+            // FIX: Use devicePixelRatio for SHARP rendering on mobile/retina screens
+            const dpr = window.devicePixelRatio || 1;
+            
+            // Set Internal Resolution (Physical Pixels) - MATCHES SCREEN EXACTLY
+            canvas.width = window.innerWidth * dpr;
+            canvas.height = window.innerHeight * dpr;
+            
+            // Scale Context to use Logical Coordinates (CSS Pixels)
+            ctx.scale(dpr, dpr);
+            
+            // CSS Display Size (Force Full Viewport width/height to kill black borders)
+            canvas.style.width = '100vw';
+            canvas.style.height = '100vh';
+            canvas.style.display = 'block';
+            
+            // High Quality Smoothing
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            
+            initParticles(window.innerWidth, window.innerHeight);
+        }
 
        async function connectToMatch() {
             const id = document.getElementById('match-id').value;
@@ -730,16 +732,16 @@
             btn.disabled = true;
 
             // Force Fullscreen and Lock Orientation (Overrides device rotation lock)
-            try {
-                if (document.documentElement.requestFullscreen) {
-                    await document.documentElement.requestFullscreen();
-                }
-                if (screen.orientation && screen.orientation.lock) {
-                    await screen.orientation.lock("portrait"); 
-                }
-            } catch (err) { 
-                console.warn("Orientation lock failed:", err); 
-            }
+            try {
+                if (document.documentElement.requestFullscreen) {
+                    await document.documentElement.requestFullscreen();
+                }
+                if (screen.orientation && screen.orientation.lock) {
+                    await screen.orientation.lock("landscape"); 
+                }
+            } catch (err) { 
+                console.warn("Orientation lock failed:", err); 
+            }
 
             try { ['audio-four','audio-six','audio-wicket','audio-transition'].forEach(id => document.getElementById(id).load()); } catch(e){}
             const success = await startCameraStream(1920, 1080);
@@ -1300,40 +1302,69 @@ function goLiveOnDB(matchId, peerId) {
             // If data comes in "flat" from the new Controller, we build the objects needed by the display.
 
             // --- Reconstruct Striker ---
-            if (data.striker && typeof data.striker === 'string') {
-                match.striker = {
-                    name: data.striker,
-                    runs: data.strikerRuns || 0,
-                    balls: data.strikerBalls || 0
-                };
-            }
+            let sName = data.batter1_name || data.batter1Name || data.batsman1_name || data.strikerName || data.currentStriker || (data.strikerObj && data.strikerObj.name) || (data.batter1 && data.batter1.name) || (typeof data.striker === 'string' ? data.striker : (data.striker && data.striker.name ? data.striker.name : (match.striker ? match.striker.name : "")));
+            let sRuns = data.batter1_runs !== undefined ? data.batter1_runs : data.batter1Runs !== undefined ? data.batter1Runs : data.strikerRuns !== undefined ? data.strikerRuns : (data.strikerObj && data.strikerObj.runs !== undefined) ? data.strikerObj.runs : (data.batter1 && data.batter1.runs !== undefined ? data.batter1.runs : (data.striker && data.striker.runs !== undefined ? data.striker.runs : (match.striker ? match.striker.runs : 0)));
+            let sBalls = data.batter1_balls !== undefined ? data.batter1_balls : data.batter1Balls !== undefined ? data.batter1Balls : data.strikerBalls !== undefined ? data.strikerBalls : (data.strikerObj && data.strikerObj.balls !== undefined) ? data.strikerObj.balls : (data.batter1 && data.batter1.balls !== undefined ? data.batter1.balls : (data.striker && data.striker.balls !== undefined ? data.striker.balls : (match.striker ? match.striker.balls : 0)));
+            match.striker = { name: sName, runs: sRuns, balls: sBalls };
 
             // --- Reconstruct Non-Striker ---
-            if (data.nonStriker && typeof data.nonStriker === 'string') {
-                match.nonStriker = {
-                    name: data.nonStriker,
-                    runs: data.nonStrikerRuns || 0,
-                    balls: data.nonStrikerBalls || 0
-                };
-            }
+            let nsName = data.batter2_name || data.batter2Name || data.batsman2_name || data.nonStrikerName || data.currentNonStriker || (data.nonStrikerObj && data.nonStrikerObj.name) || (data.batter2 && data.batter2.name) || (typeof data.nonStriker === 'string' ? data.nonStriker : (data.nonStriker && data.nonStriker.name ? data.nonStriker.name : (match.nonStriker ? match.nonStriker.name : "")));
+            let nsRuns = data.batter2_runs !== undefined ? data.batter2_runs : data.batter2Runs !== undefined ? data.batter2Runs : data.nonStrikerRuns !== undefined ? data.nonStrikerRuns : (data.nonStrikerObj && data.nonStrikerObj.runs !== undefined) ? data.nonStrikerObj.runs : (data.batter2 && data.batter2.runs !== undefined ? data.batter2.runs : (data.nonStriker && data.nonStriker.runs !== undefined ? data.nonStriker.runs : (match.nonStriker ? match.nonStriker.runs : 0)));
+            let nsBalls = data.batter2_balls !== undefined ? data.batter2_balls : data.batter2Balls !== undefined ? data.batter2Balls : data.nonStrikerBalls !== undefined ? data.nonStrikerBalls : (data.nonStrikerObj && data.nonStrikerObj.balls !== undefined) ? data.nonStrikerObj.balls : (data.batter2 && data.batter2.balls !== undefined ? data.batter2.balls : (data.nonStriker && data.nonStriker.balls !== undefined ? data.nonStriker.balls : (match.nonStriker ? match.nonStriker.balls : 0)));
+            match.nonStriker = { name: nsName, runs: nsRuns, balls: nsBalls };
 
             // --- Reconstruct Bowler ---
-            if (data.bowler && typeof data.bowler === 'string') {
-                // Convert "1.2" overs string back to total balls for the display logic
-                let totalBalls = 0;
-                if (data.bowlerOvers) {
-                    const parts = String(data.bowlerOvers).split('.');
-                    const o = parseInt(parts[0]) || 0;
-                    const b = parseInt(parts[1]) || 0;
-                    totalBalls = (o * 6) + b;
-                }
+            let bName = data.bowler_name || data.bowlerName || data.currentBowler || (data.bowlerObj && data.bowlerObj.name) || (data.bowler && data.bowler.name) || (typeof data.bowler === 'string' ? data.bowler : (data.bowler && data.bowler.name ? data.bowler.name : (match.bowler ? match.bowler.name : "")));
+            let bWkts = data.bowler_wickets !== undefined ? data.bowler_wickets : data.bowlerWickets !== undefined ? data.bowlerWickets : (data.bowlerObj && data.bowlerObj.wickets !== undefined) ? data.bowlerObj.wickets : (data.bowler && data.bowler.wkts !== undefined ? data.bowler.wkts : (data.bowler && data.bowler.wickets !== undefined ? data.bowler.wickets : (match.bowler ? match.bowler.wkts : 0)));
+            let bRuns = data.bowler_runs !== undefined ? data.bowler_runs : data.bowlerRuns !== undefined ? data.bowlerRuns : (data.bowlerObj && data.bowlerObj.runsConceded !== undefined) ? data.bowlerObj.runsConceded : (data.bowler && data.bowler.runs !== undefined ? data.bowler.runs : (match.bowler ? match.bowler.runs : 0));
+            
+            let totalBalls = 0;
+            let bOversRaw = data.bowler_overs !== undefined ? data.bowler_overs : data.bowlerOvers !== undefined ? data.bowlerOvers : (data.bowlerObj && data.bowlerObj.ballsBowled !== undefined) ? (Math.floor(data.bowlerObj.ballsBowled / 6) + '.' + (data.bowlerObj.ballsBowled % 6)) : (data.bowler && data.bowler.overs !== undefined ? data.bowler.overs : null);
+            if (bOversRaw !== null && bOversRaw !== undefined) {
+                const parts = String(bOversRaw).split('.');
+                const o = parseInt(parts[0]) || 0;
+                const b = parseInt(parts[1]) || 0;
+                totalBalls = (o * 6) + b;
+            } else {
+                totalBalls = data.bowler_balls !== undefined ? data.bowler_balls : data.bowlerBalls !== undefined ? data.bowlerBalls : (data.bowlerObj && data.bowlerObj.ballsBowled !== undefined) ? data.bowlerObj.ballsBowled : (data.bowler && data.bowler.balls !== undefined ? data.bowler.balls : (match.bowler ? match.bowler.balls : 0));
+            }
+            match.bowler = { name: bName, wkts: bWkts, runs: bRuns, balls: totalBalls };
 
-                match.bowler = {
-                    name: data.bowler,
-                    wkts: data.bowlerWickets || 0,
-                    runs: data.bowlerRuns || 0,
-                    balls: totalBalls
-                };
+            // Fallbacks for main score if properties differ
+            if (data.score !== undefined) match.score = data.score;
+            else if (data.totalRuns !== undefined) match.score = data.totalRuns;
+            else if (data.runs !== undefined) match.score = data.runs;
+            
+            if (data.wickets !== undefined) match.wickets = data.wickets;
+            else if (data.totalWickets !== undefined) match.wickets = data.totalWickets;
+
+            if (data.overs !== undefined) match.overs = data.overs;
+            if (data.balls !== undefined) match.balls = data.balls;
+
+            if (data.scorecard && data.activeBattingTeam) {
+                let activeInningsData = (data.activeBattingTeam === 'team2') ? data.scorecard.innings2 : data.scorecard.innings1;
+                if (activeInningsData && activeInningsData.score) {
+                    let parts = activeInningsData.score.split('/');
+                    match.score = parseInt(parts[0]) || 0;
+                    match.wickets = parseInt(parts[1]) || 0;
+                }
+                if (activeInningsData && activeInningsData.overs) {
+                    let overParts = activeInningsData.overs.split('.');
+                    match.overs = parseInt(overParts[0]) || 0;
+                    match.balls = parseInt(overParts[1]) || 0;
+                }
+            } else if (data.scorecard) {
+                let activeInn = (data.currentInnings === 2) ? data.scorecard.innings2 : data.scorecard.innings1;
+                if (activeInn && activeInn.score) {
+                    let parts = activeInn.score.split('/');
+                    match.score = parseInt(parts[0]) || 0;
+                    match.wickets = parseInt(parts[1]) || 0;
+                }
+                if (activeInn && activeInn.overs) {
+                    let overParts = activeInn.overs.split('.');
+                    match.overs = parseInt(overParts[0]) || 0;
+                    match.balls = parseInt(overParts[1]) || 0;
+                }
             }
 
             // 3. Determine Active Overlay
@@ -1501,68 +1532,53 @@ function goLiveOnDB(matchId, peerId) {
 
         // --- NEW TRIGGER ANIM LOGIC (REPLACES OLD CANVAS) ---
         function triggerAnim(type) {
-            // 1. Map the code (4, 6, W) to the display text
-            let displayText = "";
-            if (type === '4') displayText = "FOUR";
-            else if (type === '6') displayText = "SIX";
-            else if (type === 'W') displayText = "OUT"; // Changed WICKET to OUT for impact
-            else return;
-
-            // 2. Handle Dismissal Card timing (existing logic kept)
-            if (type === 'W') {
-                dismissalAnimState.active = false; dismissalAnimState.delayOver = false;
-                setTimeout(() => {
-                    dismissalAnimState.active = true; dismissalAnimState.delayOver = true; dismissalAnimState.startTime = Date.now(); 
-                }, 3000); // Trigger card after animation
-            }
-
-            // 3. Trigger New CSS Animation
-            const stage = document.getElementById('ipl-stage-overlay');
-            const box = document.getElementById('ipl-box');
-            const spans = box.querySelectorAll('span');
-
-            // --- EVENT SPONSORS INTEGRATION ---
-            const sponsors = match.sponsors || {};
-            const eventSponsors = document.getElementById('event-sponsors-container');
-            if (eventSponsors) {
-                let html = '';
-                if (type === '6') {
-                    if (sponsors.main) html += createSponsorHTML(sponsors.main, 'event-sponsor-main');
-                } else if (type === '4') {
-                    if (sponsors.main) html += createSponsorHTML(sponsors.main, 'event-sponsor-main');
-                    if (sponsors.sponsor2) html += createSponsorHTML(sponsors.sponsor2, 'event-sponsor-sub');
-                } else if (type === 'W') {
-                    if (sponsors.main) html += createSponsorHTML(sponsors.main, 'event-sponsor-main');
-                    if (sponsors.sponsor2) html += createSponsorHTML(sponsors.sponsor2, 'event-sponsor-sub');
-                    if (sponsors.sponsor3) html += createSponsorHTML(sponsors.sponsor3, 'event-sponsor-sub');
-                    if (sponsors.sponsor4) html += createSponsorHTML(sponsors.sponsor4, 'event-sponsor-sub');
+            // 1. Check if it's a layout-based animation (4, 6, W)
+            if (type === '4' || type === '6' || type === 'W') {
+                scorebarAnimState.active = true;
+                scorebarAnimState.type = type;
+                scorebarAnimState.startTime = Date.now();
+                
+                // --- EVENT SPONSORS INTEGRATION FOR SCOREBAR ---
+                const sponsors = match.sponsors || {};
+                const eventSponsors = document.getElementById('event-sponsors-container');
+                if (eventSponsors) {
+                    let html = '';
+                    if (type === '6') {
+                        if (sponsors.main) html += createSponsorHTML(sponsors.main, 'event-sponsor-main');
+                    } else if (type === '4') {
+                        if (sponsors.main) html += createSponsorHTML(sponsors.main, 'event-sponsor-main');
+                        if (sponsors.sponsor2) html += createSponsorHTML(sponsors.sponsor2, 'event-sponsor-sub');
+                    } else if (type === 'W') {
+                        if (sponsors.main) html += createSponsorHTML(sponsors.main, 'event-sponsor-main');
+                        if (sponsors.sponsor2) html += createSponsorHTML(sponsors.sponsor2, 'event-sponsor-sub');
+                        if (sponsors.sponsor3) html += createSponsorHTML(sponsors.sponsor3, 'event-sponsor-sub');
+                        if (sponsors.sponsor4) html += createSponsorHTML(sponsors.sponsor4, 'event-sponsor-sub');
+                    }
+                    eventSponsors.innerHTML = html;
+                    eventSponsors.style.opacity = '1';
+                    setTimeout(() => {
+                        eventSponsors.style.opacity = '0';
+                    }, 4000);
                 }
-                eventSponsors.innerHTML = html;
+
+                // 2. Handle Dismissal Card timing specifically for 'W'
+                if (type === 'W') {
+                    dismissalAnimState.active = false; dismissalAnimState.delayOver = false;
+                    setTimeout(() => {
+                        dismissalAnimState.active = true; dismissalAnimState.delayOver = true; dismissalAnimState.startTime = Date.now(); 
+                    }, 4000); // Trigger card right after the scorebar animation finishes
+                }
+
+                // Turn off the layout animation after 4 seconds
+                setTimeout(() => {
+                    scorebarAnimState.active = false;
+                }, 4000);
+                
+                return; // SKIP the full screen shutters completely!
             }
-
-            // Reset Animation
-            stage.classList.remove('splitting');
-            box.classList.remove('active-boom');
-            void box.offsetWidth; // Force Reflow (Magic line to restart CSS anim)
-
-            // Update Text
-            spans.forEach(s => s.innerText = displayText);
-
-            // Play Sequence
-            // A. Close Shutters immediately (or slightly delayed)
-            stage.classList.add('splitting'); 
             
-            // B. Boom Text appears shortly after shutters close
-            setTimeout(() => {
-                box.classList.add('active-boom');
-                if (eventSponsors) eventSponsors.style.opacity = '1';
-            }, 100);
-
-            // C. Open Shutters after animation finishes
-            setTimeout(() => {
-                stage.classList.remove('splitting');
-                if (eventSponsors) eventSponsors.style.opacity = '0';
-            }, 3000);
+            // Fallback
+            return;
         }
 
         // --- BACKGROUND-SAFE RENDER LOOP ---
@@ -1860,7 +1876,7 @@ function goLiveOnDB(matchId, peerId) {
         }
 
         function formatTeamName(name) { if (!name) return "TEAM"; let formatted = String(name).toUpperCase(); formatted = formatted.replace(/\bCRICKET CLUB\b/g, "C.C").replace(/\bCRICKET\b/g, "C.C").replace(/\bCC\b/g, "C.C"); return formatted; }
-        function formatPlayerName(fullName) { if (!fullName) return ""; const parts = String(fullName).trim().split(/\s+/); if (parts.length > 1) { return (parts[0] + " " + parts[1].charAt(0) + ".").toUpperCase(); } return parts[0].toUpperCase(); }
+        function formatPlayerName(fullName) { if (!fullName) return ""; return String(fullName).trim().toUpperCase(); }
         function drawRoundRect(c, x, y, w, h, r) { if (w < 2 * r) r = w / 2; if (h < 2 * r) r = h / 2; c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
         function getTeamInitials(name) { if (!name) return '??'; const parts = name.trim().split(/\s+/); if (parts.length === 1) return name.substring(0, 2).toUpperCase(); return parts.map(p => p[0]).join('').substring(0, 3).toUpperCase(); }
         function drawLogo(c, name, img, x, y, s, isLeft) { c.save(); c.beginPath(); c.arc(x + s/2, y + s/2, s/2, 0, Math.PI*2); c.fillStyle = "white"; c.fill(); c.clip(); if(img && img.complete && img.naturalHeight !== 0) c.drawImage(img, x, y, s, s); else { c.fillStyle = "#334155"; c.fillRect(x, y, s, s); c.fillStyle = "white"; c.textAlign = "center"; c.textBaseline = "middle"; c.font = `bold ${s*0.45}px 'Roboto'`; c.fillText(getTeamInitials(safeStr(name)), x+s/2, y+s/2); } c.restore(); }
@@ -1868,14 +1884,14 @@ function goLiveOnDB(matchId, peerId) {
         function drawBallSquare(c, b, x, y, size) { let txt = String(b); let bgColor = "#ffffff"; let txtColor = "#000000"; if (txt === '4') { bgColor = "#0ea5e9"; txtColor = "white"; } else if (txt === '6') { bgColor = "#22c55e"; txtColor = "white"; } else if (txt.includes('W') && !txt.includes('WD')) { bgColor = "#dc2626"; txtColor = "white"; } else if (txt === '0' || txt === '•') { txt = "•"; bgColor = "white"; txtColor = "black"; } else { bgColor = "white"; txtColor = "black"; } c.save(); c.fillStyle = bgColor; c.fillRect(x, y, size, size); c.lineWidth = 0.5; c.strokeStyle = "white"; c.strokeRect(x, y, size, size); if (txt === "•") { c.fillStyle = "black"; c.beginPath(); c.arc(x + size/2, y + size/2, size * 0.18, 0, Math.PI * 2); c.fill(); } else { c.fillStyle = txtColor; c.textAlign = "center"; c.textBaseline = "middle"; if (txt.includes('+') || txt.length > 2) { c.font = `900 ${size * 0.45}px 'Roboto Condensed'`; } else { c.font = `900 ${size * 0.7}px 'Roboto Condensed'`; } c.fillText(txt, x + size/2, y + size/2 + (size * 0.05)); } c.restore(); }
         
         function drawNewLayout(c, w, h) {
-            const isChasing = (match.target && match.target > 0 && match.target < 9999);
-            const barH = h * 0.080;
-            const bottomY = h - barH - (h * 0.03);
-            const barW = w * 0.98;
-            const startX = (w - barW) / 2;
-            const brandGold = "#fbbf24";
-            const textMuted = "#cbd5e1";
-            const now = Date.now();
+            const isChasing = (match.target && match.target > 0 && match.target < 9999);
+            const barH = h * 0.090; // Slightly taller to enlarge the layout
+            const bottomY = h - barH - (h * 0.02); // Placed slightly snugger to the bottom
+            const barW = w; // Full width, spanning perfectly left to right
+            const startX = 0; // Starts exactly at the left edge
+            const brandGold = "#fbbf24";
+            const textMuted = "#cbd5e1";
+            const now = Date.now();
 
             const fmtTeam = (name) => {
                 if(!name) return "TEAM";
@@ -2064,20 +2080,24 @@ function goLiveOnDB(matchId, peerId) {
             c.beginPath(); c.moveTo(x3 + w3, bottomY); c.lineTo(x3 + w3, bottomY + barH); c.stroke();
             
             c.textAlign = "center";
-            c.fillStyle = "white";
-            c.font = `700 ${barH * 0.22}px 'Roboto'`;
-            
-            if (isChasing) {
-                const runsNeeded = Math.max(0, match.target - match.score);
-                const rrr = ballsRem > 0 ? (runsNeeded / (ballsRem/6)).toFixed(2) : "-"; 
-                c.fillText("REQ - RATE", x3 + w3/2, bottomY + barH * 0.28);
-                c.font = `900 ${barH * 0.60}px 'Anton'`; // Slightly scaled down
-                c.fillText(rrr, x3 + w3/2, bottomY + barH * 0.85);
-            } else {
-                c.fillText("RUN - RATE", x3 + w3/2, bottomY + barH * 0.28);
-                c.font = `900 ${barH * 0.60}px 'Anton'`; // Slightly scaled down
-                c.fillText(crr, x3 + w3/2, bottomY + barH * 0.85);
-            }
+            c.fillStyle = "white";
+            c.font = `700 ${barH * 0.22}px 'Roboto'`;
+            
+            if (isChasing) {
+                const runsNeeded = Math.max(0, match.target - match.score);
+                const rrr = ballsRem > 0 ? (runsNeeded / (ballsRem/6)).toFixed(2) : "-"; 
+                c.fillText("REQ - RATE", x3 + w3/2, bottomY + barH * 0.28);
+                c.font = `900 ${barH * 0.60}px 'Anton'`; // Slightly scaled down
+                if(c.letterSpacing !== undefined) c.letterSpacing = "2px"; // Untighten numbers
+                c.fillText(rrr, x3 + w3/2, bottomY + barH * 0.85);
+                if(c.letterSpacing !== undefined) c.letterSpacing = "0px";
+            } else {
+                c.fillText("RUN - RATE", x3 + w3/2, bottomY + barH * 0.25);
+                c.font = `900 ${barH * 0.60}px 'Anton'`; // Slightly scaled down
+                if(c.letterSpacing !== undefined) c.letterSpacing = "1px"; // Untighten numbers
+                c.fillText(crr, x3 + w3/2, bottomY + barH * 0.85);
+                if(c.letterSpacing !== undefined) c.letterSpacing = "0px";
+            }
 
             // 4 & 5. BOWLING SIDE (CONTINUOUS BRIGHT BLUE TO DARK NAVY GRADIENT)
             const x4 = x3 + w3;
@@ -2178,6 +2198,192 @@ function goLiveOnDB(matchId, peerId) {
                 c.shadowBlur = 8; c.shadowOffsetY = 4; 
                 c.drawImage(crickerrLogoImg, w - cLogoW - 20, bottomY - cLogoH - 10, cLogoW, cLogoH); 
                 c.restore(); 
+            }
+
+            // --- PREMIUM BROADCAST ANIMATION (REVISED DESIGN) ---
+            if (typeof scorebarAnimState !== 'undefined' && scorebarAnimState.active) {
+                const type = scorebarAnimState.type;
+                const animNow = Date.now();
+                const animElapsed = animNow - scorebarAnimState.startTime;
+                const animTotal = 4000; 
+                
+                if (animElapsed < animTotal) {
+                    c.save();
+                    
+                    // Container mask
+                    c.beginPath();
+                    if(c.roundRect) c.roundRect(startX, bottomY, barW, barH, 12);
+                    else c.rect(startX, bottomY, barW, barH);
+                    c.clip();
+
+                    const phase = animElapsed / animTotal;
+                    const isIntro = phase < 0.15;
+                    const isOutro = phase > 0.85;
+                    const alpha = isIntro ? (phase / 0.15) : (isOutro ? (1 - (phase - 0.85) / 0.15) : 1);
+
+                    // Configuration by Type
+                    let config = { bg1: "#0f172a", bg2: "#020617" };
+
+                    if (type === '4') {
+                        config.accent1 = "#0284c7"; config.accent2 = "#38bdf8"; 
+                        config.textGlow = "rgba(56, 189, 248, 0.9)";
+                        config.text1 = "FOUR"; config.text2 = "BOUNDARY";
+                        config.depthColor = "#b45309"; 
+                    } else if (type === '6') {
+                        config.accent1 = "#047857"; config.accent2 = "#34d399"; 
+                        config.textGlow = "rgba(52, 211, 153, 0.9)";
+                        config.text1 = "SIX"; config.text2 = "MAXIMUM";
+                        config.depthColor = "#064e3b"; 
+                    } else if (type === 'W') {
+                        config.accent1 = "#991b1b"; config.accent2 = "#ef4444"; 
+                        config.textGlow = "rgba(239, 68, 68, 0.9)";
+                        config.text1 = "OUT"; config.text2 = "WICKET";
+                        config.depthColor = "#450a0a"; 
+                    }
+
+                    // 1. Draw Base Dark Plate
+                    c.globalAlpha = alpha;
+                    const baseGrad = c.createLinearGradient(startX, bottomY, startX, bottomY + barH);
+                    baseGrad.addColorStop(0, config.bg1);
+                    baseGrad.addColorStop(1, config.bg2);
+                    c.fillStyle = baseGrad;
+                    c.fillRect(startX, bottomY, barW, barH);
+
+                    // 2. High-End Sweeping Chevrons
+                    const sweepProgress = (animElapsed % 1500) / 1500; 
+                    const sweepWidth = barW * 0.4;
+                    const sweepX = startX + (sweepProgress * (barW + sweepWidth)) - sweepWidth;
+                    
+                    c.save();
+                    c.beginPath();
+                    c.moveTo(sweepX, bottomY);
+                    c.lineTo(sweepX + sweepWidth, bottomY);
+                    c.lineTo(sweepX + sweepWidth - (barH * 0.8), bottomY + barH);
+                    c.lineTo(sweepX - (barH * 0.8), bottomY + barH);
+                    c.closePath();
+                    
+                    const sweepGrad = c.createLinearGradient(sweepX, bottomY, sweepX + sweepWidth, bottomY);
+                    sweepGrad.addColorStop(0, "rgba(255,255,255,0)");
+                    sweepGrad.addColorStop(0.5, config.accent1);
+                    sweepGrad.addColorStop(0.8, config.accent2);
+                    sweepGrad.addColorStop(1, "rgba(255,255,255,0)");
+                    
+                    c.globalAlpha = alpha * 0.7;
+                    c.fillStyle = sweepGrad;
+                    c.fill();
+                    c.restore();
+
+                    // 3. Grid Pattern Overlay
+                    c.save();
+                    c.strokeStyle = "rgba(255, 255, 255, 0.06)";
+                    c.lineWidth = 2;
+                    const gridOffset = (animElapsed * 0.1) % 40;
+                    for (let i = -40; i < barW; i += 40) {
+                        c.beginPath();
+                        c.moveTo(startX + i + gridOffset, bottomY);
+                        c.lineTo(startX + i + gridOffset - (barH * 0.5), bottomY + barH);
+                        c.stroke();
+                    }
+                    c.restore();
+
+                    // Wicket Glitch Effect
+                    if (type === 'W') {
+                        c.save();
+                        c.globalAlpha = alpha * 0.5;
+                        c.fillStyle = config.accent2;
+                        for(let j=0; j<6; j++) {
+                            let rectY = bottomY + (Math.random() * barH);
+                            let rectH = Math.random() * 5 + 1;
+                            c.fillRect(startX, rectY, barW, rectH);
+                        }
+                        c.restore();
+                    }
+
+                    // 4. Center Impact Text
+                    let textScale = 1;
+                    let textDraw = config.text1;
+                    if (animElapsed > 2000) {
+                        textDraw = config.text2; 
+                    }
+
+                    // Intense Slam-in Effect
+                    if (phase < 0.1) {
+                        const p = phase / 0.1;
+                        textScale = 4 - (3 * (1 - Math.pow(1 - p, 4))); // Slam from 4x to 1x
+                    } else if (phase > 0.48 && phase < 0.55) {
+                        const p = (phase - 0.48) / 0.07;
+                        textScale = 1 + Math.sin(p * Math.PI) * 0.2; // Switch bounce
+                    }
+
+                    // Screen Shake
+                    let shakeX = 0, shakeY = 0;
+                    if ((phase < 0.15) || (type === 'W' && textScale > 1.1)) {
+                        shakeX = (Math.random() - 0.5) * 12;
+                        shakeY = (Math.random() - 0.5) * 12;
+                    }
+
+                    c.save();
+                    c.translate(startX + barW / 2 + shakeX, bottomY + barH / 2 + shakeY);
+                    c.scale(textScale, textScale);
+                    
+                    c.textAlign = "center";
+                    c.textBaseline = "middle";
+                    c.font = `900 ${barH * 0.75}px 'Anton'`; // Massive Font
+                    if(c.letterSpacing !== undefined) c.letterSpacing = "4px";
+
+                    // 3D Depth Generation (Extrusion)
+                    const depthLayers = 6;
+                    for (let i = depthLayers; i > 0; i--) {
+                        c.fillStyle = config.depthColor;
+                        c.fillText(textDraw, i * 2, i * 2 + 2);
+                    }
+
+                    // Top Text Face Gradient
+                    const faceGrad = c.createLinearGradient(0, -barH/3, 0, barH/3);
+                    if (type === '4') {
+                        faceGrad.addColorStop(0, "#fef08a");
+                        faceGrad.addColorStop(0.5, "#fbbf24");
+                        faceGrad.addColorStop(1, "#d97706");
+                    } else if (type === '6') {
+                        faceGrad.addColorStop(0, "#ffffff");
+                        faceGrad.addColorStop(0.5, "#e2e8f0");
+                        faceGrad.addColorStop(1, "#94a3b8");
+                    } else {
+                        faceGrad.addColorStop(0, "#ffffff");
+                        faceGrad.addColorStop(0.5, "#fca5a5");
+                        faceGrad.addColorStop(1, "#dc2626");
+                    }
+                    
+                    c.fillStyle = faceGrad;
+                    c.shadowColor = config.textGlow;
+                    c.shadowBlur = 30;
+                    c.fillText(textDraw, 0, 2);
+                    
+                    // Crisp Outline
+                    c.shadowBlur = 0;
+                    c.strokeStyle = "rgba(255,255,255,0.9)";
+                    c.lineWidth = 2;
+                    c.strokeText(textDraw, 0, 2);
+                    
+                    if(c.letterSpacing !== undefined) c.letterSpacing = "0px";
+                    c.restore();
+
+                    // 5. Light Flash over the entire bar
+                    if (phase < 0.05) {
+                        c.fillStyle = `rgba(255, 255, 255, ${1 - (phase/0.05)})`;
+                        c.fillRect(startX, bottomY, barW, barH);
+                    }
+
+                    // 6. Border Pulse Highlight
+                    c.strokeStyle = config.accent2;
+                    c.lineWidth = 4 * alpha;
+                    c.beginPath();
+                    if(c.roundRect) c.roundRect(startX, bottomY, barW, barH, 12);
+                    else c.rect(startX, bottomY, barW, barH);
+                    c.stroke();
+
+                    c.restore();
+                }
             }
         }
 
