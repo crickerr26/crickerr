@@ -116,7 +116,7 @@
             background: rgba(239, 68, 68, 0.7); border: 1px solid rgba(239, 68, 68, 0.4);
             padding: 6px 15px; border-radius: 50px; color: white;
             font-family: 'Roboto', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 1px;
-            display: none; align-items: center; gap: 8px; z-index: 950;
+            display: none; align-items: center; gap: 8px; z-index: 9999;
             box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
         }
         .live-dot {
@@ -153,7 +153,7 @@
                 background: rgba(239, 68, 68, 0.9);
                 border: none;
                 box-shadow: 0 0 8px rgba(239, 68, 68, 0.6); gap: 3px;
-                z-index: 950;
+                z-index: 9999;
             }
             .live-dot { width: 4px; height: 4px; }
             
@@ -1658,6 +1658,14 @@
         function startVideo() {
             playOverlay.style.display = 'none';
             video.muted = false; 
+            
+            // CRITICAL FIX: Re-attaching the WebRTC stream forces Safari/Mobile browsers to render the video when unmuting
+            if (video.srcObject) {
+                const stream = video.srcObject;
+                video.srcObject = null;
+                video.srcObject = stream;
+            }
+            
             const playPromise = video.play();
             if (playPromise !== undefined) {
                 playPromise.catch(error => {
