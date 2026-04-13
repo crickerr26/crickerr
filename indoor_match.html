@@ -2790,8 +2790,7 @@ window.generateProfessionalSchedule = function(selectedFlow = null) {
                     <button onclick="openModal('wide-modal')" class="watery-btn btn-dark-grey font-bold text-sm">WD</button>
                     <button onclick="openModal('noball-modal')" class="watery-btn btn-dark-grey font-bold text-sm">NB</button>
                     <button onclick="openModal('mid-over-modal')" class="watery-btn btn-purple font-bold text-[10px] leading-tight flex flex-col items-center justify-center">
-                        <span>PEN /</span>
-                        <span>EVENTS</span>
+                        <span>PENALTY</span>
                     </button>
                 </div>
 
@@ -4360,10 +4359,10 @@ function uploadPlayerImage(input, teamKey, playerId) {
             showScreen('app');
         }
 function generateBroadcastCode() {
-            // 1. Generate ID (Fixed Format: Crickerr_XXXXXX)
+            // 1. Generate ID (Fixed Format: Numbers only)
             // Unified for both Single & Tournament modes to keep it short
             const randomNum = Math.floor(100000 + Math.random() * 900000);
-            broadcastId = `Crickerr_${randomNum}`;
+            broadcastId = `${randomNum}`;
 
             // 2. Update UI (New Compact Design)
             const codeBox = document.getElementById('match-code-box');
@@ -4707,6 +4706,18 @@ function generateBroadcastCode() {
                 overlay.classList.remove('opacity-0');
                 textEl.innerHTML = ""; // Reset
             }, 300);
+
+            // Format team names to keep first two words and abbreviate the rest
+            function formatTeamName(name) {
+                if (!name) return "";
+                let words = name.trim().split(/\s+/);
+                if (words.length <= 2) return name.toUpperCase();
+                let firstTwo = words.slice(0, 2).join(" ").toUpperCase();
+                let rest = words.slice(2).map(w => w.charAt(0).toUpperCase()).join(".");
+                return firstTwo + " " + rest;
+            }
+            state.team1.name = formatTeamName(state.team1.name);
+            state.team2.name = formatTeamName(state.team2.name);
 
             // --- Original Match Setup Logic ---
             state.totalOvers = parseInt(ui.totalOversInput.value);
