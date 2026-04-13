@@ -768,14 +768,14 @@
 
         async function startCameraStream(width, height) {
             if(currentStream) { currentStream.getTracks().forEach(track => track.stop()); }
-            const constraintsHQ = { video: { facingMode: "environment", width: { ideal: width }, height: { ideal: height } }, audio: true };
+            const constraintsHQ = { video: { facingMode: "environment", width: { ideal: width }, height: { ideal: height }, frameRate: { ideal: 60, max: 60 } }, audio: true };
             try {
                 const stream = await navigator.mediaDevices.getUserMedia(constraintsHQ);
                 return handleStreamSuccess(stream);
             } catch (e) {
                 console.warn("High-res camera failed, trying fallback...", e);
                 try {
-                    const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                    const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: { frameRate: { ideal: 60 } }, audio: true });
                     return handleStreamSuccess(fallbackStream);
                 } catch (e2) {
                     alert("Camera failed to start.\n\nError: " + e2.message);
@@ -1167,8 +1167,8 @@ function goLiveOnDB(matchId, peerId) {
     const btn = document.getElementById('live-button');
     const txt = document.getElementById('live-text');
 
-    // 1. Capture the stream from your canvas
-    const stream = canvas.captureStream(30);
+    // 1. Capture the stream from your canvas (60 FPS for cinematic sports motion)
+    const stream = canvas.captureStream(60);
     
     // Ensure live audio continues to be sent along with the canvas stream
     if (currentStream && currentStream.getAudioTracks().length > 0) {
