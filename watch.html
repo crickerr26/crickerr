@@ -1488,6 +1488,12 @@
                         if (data.isStreaming && data.streamId) {
                             if (!peer) {
                                 connectToStream(data.streamId);
+                            } else if (activePeerId !== data.streamId) {
+                                // Reconnect if the broadcaster refreshed their stream ID
+                                if (activeCall) activeCall.close();
+                                peer.destroy();
+                                peer = null;
+                                connectToStream(data.streamId);
                             }
                             document.getElementById('live-badge').style.display = 'flex';
                             document.getElementById('live-stats-bar').style.display = 'flex';
@@ -1597,12 +1603,15 @@
             }
 
             // Standardize call connection
-            activeCall = peer.call(targetPeerId, dummyStream); 
+            activeCall = peer.call(targetPeerId, dummyStream, {
+                metadata: { bandwidth: currentBandwidth }
+            }); 
             
             activeCall.on('stream', (remoteStream) => {
                 isSwitchingQuality = false;
                 statusOverlay.style.display = 'none';
                 video.srcObject = remoteStream;
+                video.load(); // Forces mobile browsers to register the new stream
                 
                 const playPromise = video.play();
                 if (playPromise !== undefined) {
