@@ -847,7 +847,7 @@
     <div id="live-sponsors-container"></div>
     <img id="broadcast-watermark" src="/my-logo.png" alt="Broadcast Logo">
 
-    <video id="viewer-video" autoplay playsinline></video>
+    <video id="viewer-video" autoplay playsinline webkit-playsinline></video>
     
     <div id="yt-title-container">
         <div class="yt-logo"><img src="/my-logo.png" alt="Logo"></div>
@@ -1612,14 +1612,21 @@
                 statusOverlay.style.display = 'none';
                 video.srcObject = remoteStream;
                 
-                // Wait for the stream metadata to load before playing (fixes mobile black screen)
-                video.onloadedmetadata = () => {
+                // iOS mobile fix: onloadedmetadata sometimes won't fire unless play() is explicitly called first
+                const attemptPlay = () => {
                     const playPromise = video.play();
                     if (playPromise !== undefined) {
                         playPromise.catch(() => {
                             playOverlay.style.display = 'flex';
                         });
                     }
+                };
+                
+                attemptPlay(); // Call immediately to bypass the mobile deadlock
+                
+                // Keep the metadata listener as a safe fallback for other browsers
+                video.onloadedmetadata = () => {
+                    attemptPlay();
                 };
             });
             
