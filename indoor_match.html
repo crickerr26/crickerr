@@ -4678,117 +4678,87 @@ function generateBroadcastCode() {
         }
 
         function startMatch() {
-    // --- NEW: Intro Text & Glitter Animation ---
-    const overlay = document.getElementById('event-animation-overlay');
-    const textEl = document.getElementById('event-animation-text');
-    
-    textEl.innerHTML = "LET'S START! 🏏";
-    textEl.className = "text-5xl md:text-7xl font-black uppercase drop-shadow-2xl text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-yellow-400 to-green-400 transform scale-50 opacity-0 transition-all duration-700 ease-out";
-    
-    overlay.classList.remove('hidden');
-    
-    // Trigger pop-in animation
-    setTimeout(() => {
-        textEl.classList.remove('scale-50', 'opacity-0');
-        textEl.classList.add('scale-110', 'opacity-100');
-    }, 50);
-    
-    // Settle animation
-    setTimeout(() => {
-        textEl.classList.remove('scale-110');
-        textEl.classList.add('scale-100');
-    }, 750);
+        // --- NEW: Crickerr Logo Popup Animation ---
+        const overlay = document.getElementById('event-animation-overlay');
+        const textEl = document.getElementById('event-animation-text');
+        
+        textEl.innerHTML = "<img src='my-logo.png' alt='Crickerr Logo' class='w-32 h-32 md:w-48 md:h-48 mx-auto drop-shadow-2xl object-contain'>";
+        textEl.className = "transform scale-50 opacity-0 transition-all duration-700 ease-out flex justify-center items-center w-full";
+        
+        overlay.classList.remove('hidden');
 
-    // Continuous Glitter Confetti for 2 seconds
-    const duration = 2000;
-    const end = Date.now() + duration;
-
-    (function frame() {
-        confetti({
-            particleCount: 5,
-            angle: 60,
-            spread: 55,
-            origin: { x: 0 },
-            colors: ['#2563eb', '#facc15', '#ef4444', '#22c55e']
-        });
-        confetti({
-            particleCount: 5,
-            angle: 120,
-            spread: 55,
-            origin: { x: 1 },
-            colors: ['#2563eb', '#facc15', '#ef4444', '#22c55e']
-        });
-
-        if (Date.now() < end) {
-            requestAnimationFrame(frame);
-        }
-    }());
-
-    // Proceed to match after animation finishes
-    setTimeout(() => {
-        overlay.classList.add('opacity-0');
+        // Trigger pop-in animation
         setTimeout(() => {
-            overlay.classList.add('hidden');
-            overlay.classList.remove('opacity-0');
-            textEl.innerHTML = ""; // Reset
-        }, 300);
+            textEl.classList.remove('scale-50', 'opacity-0');
+            textEl.classList.add('scale-110', 'opacity-100');
+        }, 50);
 
-        // --- Original Match Setup Logic ---
-        state.totalOvers = parseInt(ui.totalOversInput.value);
-        state.playersPerSide = parseInt(ui.playersPerSideInput.value);
-        state.venue = ui.venueInput.value;
-        
-        state.team1.score = 0;
-        state.team1.wickets = 0;
-        state.team1.overs = 0;
-        state.team1.balls = 0;
-        
-        state.team2.score = 0;
-        state.team2.wickets = 0;
-        state.team2.overs = 0;
-        state.team2.balls = 0;
+        // Settle animation
+        setTimeout(() => {
+            textEl.classList.remove('scale-110');
+            textEl.classList.add('scale-100');
+        }, 750);
 
-        if ((tossWinner === 'team1' && tossDecision === 'bat') || (tossWinner === 'team2' && tossDecision === 'bowl')) {
-            state.battingTeam = 'team1';
-            state.bowlingTeam = 'team2';
-        } else {
-            state.battingTeam = 'team2';
-            state.bowlingTeam = 'team1';
-        }
+        // Proceed to match after animation finishes
+        setTimeout(() => {
+            overlay.classList.add('opacity-0');
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                overlay.classList.remove('opacity-0');
+                textEl.innerHTML = ""; // Reset
+            }, 300);
 
-        syncToLiveDB();
+            // --- Original Match Setup Logic ---
+            state.totalOvers = parseInt(ui.totalOversInput.value);
+            state.playersPerSide = parseInt(ui.playersPerSideInput.value);
+            state.venue = ui.venueInput.value;
+            state.team1.score = 0;
+            state.team1.wickets = 0;
+            state.team1.overs = 0;
+            state.team1.balls = 0;
+            state.team2.score = 0;
+            state.team2.wickets = 0;
+            state.team2.overs = 0;
+            state.team2.balls = 0;
 
-        state.rules.wicketRuns = parseInt(document.getElementById('rule-wicket').value);
-        
-        document.getElementById('btn-wicket').textContent = `WKT (-${state.rules.wicketRuns})`;
-        document.getElementById('wicket-modal-title').textContent = `WICKET! (-${state.rules.wicketRuns} Runs)`;
+            if ((tossWinner === 'team1' && tossDecision === 'bat') || (tossWinner === 'team2' && tossDecision === 'bowl')) {
+                state.battingTeam = 'team1';
+                state.bowlingTeam = 'team2';
+            } else {
+                state.battingTeam = 'team2';
+                state.bowlingTeam = 'team1';
+            }
 
-        const wVal = state.rules.wideRuns;
-        const nbVal = state.rules.noBallRuns;
+            syncToLiveDB();
+            state.rules.wicketRuns = parseInt(document.getElementById('rule-wicket').value);
+            document.getElementById('btn-wicket').textContent = `WKT (-${state.rules.wicketRuns})`;
+            document.getElementById('wicket-modal-title').textContent = `WICKET! (-${state.rules.wicketRuns} Runs)`;
+            
+            const wVal = state.rules.wideRuns;
+            const nbVal = state.rules.noBallRuns;
 
-        // Wide Buttons + Run Out Option
-        let wButtons = `<button onclick="handleAddExtra('wd', ${wVal})" class="col-span-3 p-4 bg-blue-100 text-blue-900 font-bold rounded-xl mb-1">Standard (+${wVal})</button>`;
-        [3, 4, 5, 6].forEach(r => {
-            if (r !== wVal) wButtons += `<button onclick="handleAddExtra('wd', ${r})" class="p-4 bg-gray-100 font-bold rounded-xl">+${r}</button>`;
-        });
-        wButtons += `<button onclick="setupExtraRunOut('wd')" class="col-span-3 mt-2 p-3 bg-red-50 text-red-900 font-bold rounded-xl border border-red-200">RUN OUT</button>`;
-        document.getElementById('wide-options').innerHTML = wButtons;
+            // Wide Buttons + Run Out Option
+            let wButtons = `<button onclick="handleAddExtra('wd', ${wVal})" class="col-span-3 p-4 bg-blue-100 text-blue-900 font-bold rounded-xl mb-1">Standard (+${wVal})</button>`;
+            [3, 4, 5, 6].forEach(r => {
+                if (r !== wVal) wButtons += `<button onclick="handleAddExtra('wd', ${r})" class="p-4 bg-gray-100 font-bold rounded-xl">+${r}</button>`;
+            });
+            wButtons += `<button onclick="setupExtraRunOut('wd')" class="col-span-3 mt-2 p-3 bg-red-50 text-red-900 font-bold rounded-xl border border-red-200">RUN OUT</button>`;
+            document.getElementById('wide-options').innerHTML = wButtons;
 
-        // No Ball Buttons + Run Out Option
-        let nbButtons = `<button onclick="handleAddExtra('nb', ${nbVal})" class="col-span-3 p-4 bg-blue-100 text-blue-900 font-bold rounded-xl mb-1">Standard (+${nbVal})</button>`;
-        [3, 4, 5, 6].forEach(r => {
-            if (r !== nbVal) nbButtons += `<button onclick="handleAddExtra('nb', ${r})" class="p-4 bg-gray-100 font-bold rounded-xl">+${r}</button>`;
-        });
-        nbButtons += `<button onclick="setupExtraRunOut('nb')" class="col-span-3 mt-2 p-3 bg-red-50 text-red-900 font-bold rounded-xl border border-red-200">RUN OUT</button>`;
-        document.getElementById('noball-options').innerHTML = nbButtons;
+            // No Ball Buttons + Run Out Option
+            let nbButtons = `<button onclick="handleAddExtra('nb', ${nbVal})" class="col-span-3 p-4 bg-blue-100 text-blue-900 font-bold rounded-xl mb-1">Standard (+${nbVal})</button>`;
+            [3, 4, 5, 6].forEach(r => {
+                if (r !== nbVal) nbButtons += `<button onclick="handleAddExtra('nb', ${r})" class="p-4 bg-gray-100 font-bold rounded-xl">+${r}</button>`;
+            });
+            nbButtons += `<button onclick="setupExtraRunOut('nb')" class="col-span-3 mt-2 p-3 bg-red-50 text-red-900 font-bold rounded-xl border border-red-200">RUN OUT</button>`;
+            document.getElementById('noball-options').innerHTML = nbButtons;
 
-        updateMatchHeader();
-        updateScoreboard();
-
-        showScreen('app');
-        initInnings();
-    }, 2200); // 2.2 seconds wait for the whole animation to shine before rendering the app screen
-}
+            updateMatchHeader();
+            updateScoreboard();
+            showScreen('app');
+            initInnings();
+        }, 1500); // 1.5 seconds wait for the logo animation to shine before rendering the app screen
+    }
 
         function updateMatchHeader() {
             const t1 = state.team1.name;
