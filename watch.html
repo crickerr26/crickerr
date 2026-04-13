@@ -15,8 +15,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Anton&family=Montserrat:wght@400;600;800;900&family=Roboto:wght@400;500;700;900&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-        body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Roboto', sans-serif; position: fixed; top: 0; left: 0; }
         
         #viewer-video { 
             position: fixed; /* Changed BACK to fixed to prevent the browser from panning it off-screen */
@@ -272,7 +272,7 @@
         }
         
         #chat-toggle-btn {
-            position: absolute; bottom: 15px; right: 15px; top: auto;
+            position: absolute; bottom: 70px; right: 15px; top: auto;
             background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2);
             padding: 6px 12px; border-radius: 50px; color: white;
             font-family: 'Roboto', sans-serif; font-size: 11px; font-weight: bold; letter-spacing: 1px;
@@ -303,7 +303,7 @@
             /* PORTRAIT CHAT OVERRIDES - FLOATING AT BOTTOM */
             #chat-container {
                 position: fixed;
-                top: auto; bottom: 15px; left: 15px; right: auto; width: calc(100% - 70px);
+                top: auto; bottom: 15px; left: 15px; right: auto; width: calc(100% - 30px);
                 max-height: 250px; 
                 background: transparent; border: none; border-radius: 0;
                 padding: 0; pointer-events: none;
@@ -311,7 +311,7 @@
             #chat-messages {
                 max-height: 200px; flex-grow: 1; height: auto;
                 mask-image: linear-gradient(to bottom, transparent, black 15%); -webkit-mask-image: linear-gradient(to bottom, transparent, black 15%);
-                padding: 0 0 5px 0;
+                padding: 0 0 5px 0; width: calc(100% - 50px);
             }
             .chat-msg {
                 width: max-content; max-width: 100%; background: rgba(0,0,0,0.5);
@@ -320,8 +320,9 @@
             .chat-user { color: #fbbf24; font-weight: bold; }
             #chat-input-area {
                 margin-top: auto; border-top: none; background: transparent; padding: 0; height: auto; pointer-events: auto;
+                width: 100%; display: flex; gap: 10px; align-items: center;
             }
-            #chat-input { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 50px; padding: 10px 15px; backdrop-filter: blur(5px); }
+            #chat-input { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 50px; padding: 10px 15px; backdrop-filter: blur(5px); flex-grow: 1; }
             
             #heart-container {
                 bottom: 195px; right: 15px; height: 150px; /* Shifted above the action buttons */
@@ -351,7 +352,7 @@
         }
 
         #heart-container {
-            position: absolute; bottom: 65px; right: 15px; z-index: 800; display: none; flex-direction: column; align-items: center; justify-content: flex-end; pointer-events: none; height: 250px; width: 40px;
+            position: absolute; bottom: 115px; right: 15px; z-index: 800; display: none; flex-direction: column; align-items: center; justify-content: flex-end; pointer-events: none; height: 250px; width: 40px;
         }
         #heart-btn {
             width: 40px; height: 40px; background: rgba(239, 68, 68, 0.15); border-radius: 50%; border: 1px solid rgba(239, 68, 68, 0.4); display: flex; align-items: center; justify-content: center; cursor: pointer; pointer-events: auto; transition: transform 0.1s; margin-top: auto; backdrop-filter: blur(5px);
