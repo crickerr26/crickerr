@@ -1581,9 +1581,9 @@
                 
                 // Safari and WebKit browsers require a specific prefix
                 if (dummyCanvas.captureStream) {
-                    dummyStream = dummyCanvas.captureStream(30); 
+                    dummyStream = dummyCanvas.captureStream(60); 
                 } else if (dummyCanvas.webkitCaptureStream) {
-                    dummyStream = dummyCanvas.webkitCaptureStream(30);
+                    dummyStream = dummyCanvas.webkitCaptureStream(60);
                 } else {
                     dummyStream = new MediaStream();
                 }
