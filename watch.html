@@ -300,29 +300,28 @@
             }
             #chat-toggle-btn svg { width: 16px !important; height: 16px !important; }
 
-            /* YouTube Style Chat Box overrides */
+            /* PORTRAIT CHAT OVERRIDES - FLOATING AT BOTTOM */
             #chat-container {
                 position: fixed;
-                top: calc(70px + 56.25vw + 40px); /* Below the control bar */
-                bottom: 0; left: 0; right: 0; width: 100%;
-                max-height: none; 
-                background: #000; border: none; border-radius: 0;
-                padding: 5px 0 0 0; pointer-events: auto;
+                top: auto; bottom: 15px; left: 15px; right: auto; width: calc(100% - 70px);
+                max-height: 250px; 
+                background: transparent; border: none; border-radius: 0;
+                padding: 0; pointer-events: none;
             }
             #chat-messages {
-                max-height: none; flex-grow: 1; height: calc(100% - 65px);
-                mask-image: linear-gradient(to bottom, transparent, black 5%); -webkit-mask-image: linear-gradient(to bottom, transparent, black 5%);
-                padding: 0 10px 5px 10px;
+                max-height: 200px; flex-grow: 1; height: auto;
+                mask-image: linear-gradient(to bottom, transparent, black 15%); -webkit-mask-image: linear-gradient(to bottom, transparent, black 15%);
+                padding: 0 0 5px 0;
             }
             .chat-msg {
-                width: 100%; max-width: 100%; background: transparent;
-                padding: 4px 0; border-radius: 0; font-size: 13px; text-shadow: none; color: #ddd;
+                width: max-content; max-width: 100%; background: rgba(0,0,0,0.5);
+                padding: 6px 12px; border-radius: 12px; font-size: 12px; text-shadow: 1px 1px 2px #000; color: white; margin-bottom: 6px;
             }
-            .chat-user { color: #aaa; font-weight: normal; }
+            .chat-user { color: #fbbf24; font-weight: bold; }
             #chat-input-area {
-                margin-top: auto; border-top: 1px solid #222; background: #000; padding: 10px 10px env(safe-area-inset-bottom, 10px) 10px; height: auto;
+                margin-top: auto; border-top: none; background: transparent; padding: 0; height: auto; pointer-events: auto;
             }
-            #chat-input { background: #111; border-color: #222; color: white; border-radius: 50px; padding: 10px 15px; }
+            #chat-input { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 50px; padding: 10px 15px; backdrop-filter: blur(5px); }
             
             #heart-container {
                 bottom: 195px; right: 15px; height: 150px; /* Shifted above the action buttons */
