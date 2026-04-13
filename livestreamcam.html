@@ -1876,7 +1876,7 @@ function goLiveOnDB(matchId, peerId) {
         }
 
         function formatTeamName(name) { if (!name) return "TEAM"; let formatted = String(name).toUpperCase(); formatted = formatted.replace(/\bCRICKET CLUB\b/g, "C.C").replace(/\bCRICKET\b/g, "C.C").replace(/\bCC\b/g, "C.C"); return formatted; }
-        function formatPlayerName(fullName) { if (!fullName) return ""; return String(fullName).trim().toUpperCase(); }
+        function formatPlayerName(fullName) { if (!fullName) return ""; let parts = String(fullName).trim().split(/\s+/); if (parts.length === 1) return parts[0].charAt(0).toUpperCase() + parts[0].slice(1); let lastName = parts.pop(); let firstName = parts.join(" "); return firstName.charAt(0).toUpperCase() + firstName.slice(1) + " " + lastName.charAt(0).toUpperCase() + "."; }
         function drawRoundRect(c, x, y, w, h, r) { if (w < 2 * r) r = w / 2; if (h < 2 * r) r = h / 2; c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
         function getTeamInitials(name) { if (!name) return '??'; const parts = name.trim().split(/\s+/); if (parts.length === 1) return name.substring(0, 2).toUpperCase(); return parts.map(p => p[0]).join('').substring(0, 3).toUpperCase(); }
         function drawLogo(c, name, img, x, y, s, isLeft) { c.save(); c.beginPath(); c.arc(x + s/2, y + s/2, s/2, 0, Math.PI*2); c.fillStyle = "white"; c.fill(); c.clip(); if(img && img.complete && img.naturalHeight !== 0) c.drawImage(img, x, y, s, s); else { c.fillStyle = "#334155"; c.fillRect(x, y, s, s); c.fillStyle = "white"; c.textAlign = "center"; c.textBaseline = "middle"; c.font = `bold ${s*0.45}px 'Roboto'`; c.fillText(getTeamInitials(safeStr(name)), x+s/2, y+s/2); } c.restore(); }
@@ -1895,11 +1895,20 @@ function goLiveOnDB(matchId, peerId) {
 
             const fmtTeam = (name) => {
                 if(!name) return "TEAM";
-                return String(name).toUpperCase()
+                let formatted = String(name).toUpperCase()
                     .replace(/\bCRICKET CLUB\b/g, "C.C")
                     .replace(/\bCRICKET\b/g, "C.C")
                     .replace(/\bCC\b/g, "C.C")
                     .trim();
+                
+                if (formatted.length > 17) {
+                    const words = formatted.split(" ");
+                    if (words.length > 2 && words[1].length > 4 && words[1] !== "C.C") {
+                        words[1] = words[1].substring(0, 2) + ".";
+                        formatted = words.join(" ");
+                    }
+                }
+                return formatted;
             };
 
             const displayImg1 = (t1CapImg && t1CapImg.src) ? t1CapImg : team1Logo;
@@ -1966,9 +1975,9 @@ function goLiveOnDB(matchId, peerId) {
             c.shadowOffsetY = 0;
             
             // Layout Box Widths
-            const w1 = barW * 0.28; // Batting Base
+            const w1 = barW * 0.31; // Batting Base (Wider to fix overlap)
             const w2 = barW * 0.18; // Batting Batters
-            const w3 = barW * 0.12; // Run Rate Middle
+            const w3 = barW * 0.09; // Run Rate Middle (Smaller)
             const w4 = barW * 0.22; // Bowling Bowler
             const w5 = barW * 0.20; // Bowling Base
             
@@ -2002,7 +2011,8 @@ function goLiveOnDB(matchId, peerId) {
             
             // Direct Score Logic (Instant Update)
             const displayScoreText = parseInt(match.score) || 0;
-            const scoreText = `${displayScoreText} - ${match.wickets}`;
+            // Using a unicode "thin space" (\u2009) to bring numbers a bit closer to the dash
+            const scoreText = `${displayScoreText}\u2009-\u2009${match.wickets}`; 
             const oversText = `${match.overs}.${match.balls}`;
             const scoreX = x1 + w1 - 20;
             
@@ -2014,14 +2024,18 @@ function goLiveOnDB(matchId, peerId) {
             
             c.textBaseline = "middle";
             c.font = `900 ${barH * 0.8}px 'Anton'`;
+            // Restored default letter spacing to stop numbers from squishing together
+            if(c.letterSpacing !== undefined) c.letterSpacing = "0px"; 
             
             // Tiny Black Border for Main Score
             c.lineWidth = 1;
             c.strokeStyle = "black";
-            c.strokeText(scoreText, scoreX - oversW - 10, bottomY + barH * 0.55); // Centered vertically
+            // Tweaked the offset to 8 so it perfectly centers next to the overs text
+            c.strokeText(scoreText, scoreX - oversW - 8, bottomY + barH * 0.60); 
             
             c.fillStyle = brandGold;
-            c.fillText(scoreText, scoreX - oversW - 10, bottomY + barH * 0.55); // Centered vertically
+            c.fillText(scoreText, scoreX - oversW - 8, bottomY + barH * 0.60); 
+            if(c.letterSpacing !== undefined) c.letterSpacing = "0px";
             c.textBaseline = "alphabetic"; // Restore default
 
             // Separator between Batting Base and Batters
@@ -2065,39 +2079,127 @@ function goLiveOnDB(matchId, peerId) {
             c.fillText(b2.balls || 0, bBallsX, bottomY + barH * 0.80);
 
             // 3. MIDDLE BOX (RUN RATE - SLICK DARK SLATE)
-            const x3 = x2 + w2;
-            const grad3 = c.createLinearGradient(x3, bottomY, x3, bottomY + barH);
-            grad3.addColorStop(0, "#4b5563"); // Grey
-            grad3.addColorStop(0.5, "#1f2937"); // Dark Grey
-            grad3.addColorStop(1, "#000000"); // Black
-            c.fillStyle = grad3;
-            c.fillRect(x3, bottomY, w3, barH);
+            const x3 = x2 + w2;
+            const grad3 = c.createLinearGradient(x3, bottomY, x3, bottomY + barH);
+            grad3.addColorStop(0, "#4b5563"); // Grey
+            grad3.addColorStop(0.5, "#1f2937"); // Dark Grey
+            grad3.addColorStop(1, "#000000"); // Black
+            c.fillStyle = grad3;
+            c.fillRect(x3, bottomY, w3, barH);
             
             // Bold Gold Dividers Encasing the Run Rate
             c.strokeStyle = brandGold;
             c.lineWidth = 2;
             c.beginPath(); c.moveTo(x3, bottomY); c.lineTo(x3, bottomY + barH); c.stroke();
-            c.beginPath(); c.moveTo(x3 + w3, bottomY); c.lineTo(x3 + w3, bottomY + barH); c.stroke();
+            // Shifted right line left by 1px so it isn't covered by the right-side box, fixing thickness
+            c.beginPath(); c.moveTo(x3 + w3 - 1, bottomY); c.lineTo(x3 + w3 - 1, bottomY + barH); c.stroke();
             
-            c.textAlign = "center";
-            c.fillStyle = "white";
-            c.font = `700 ${barH * 0.22}px 'Roboto'`;
-            
-            if (isChasing) {
-                const runsNeeded = Math.max(0, match.target - match.score);
-                const rrr = ballsRem > 0 ? (runsNeeded / (ballsRem/6)).toFixed(2) : "-"; 
-                c.fillText("REQ - RATE", x3 + w3/2, bottomY + barH * 0.28);
-                c.font = `900 ${barH * 0.60}px 'Anton'`; // Slightly scaled down
-                if(c.letterSpacing !== undefined) c.letterSpacing = "2px"; // Untighten numbers
-                c.fillText(rrr, x3 + w3/2, bottomY + barH * 0.85);
-                if(c.letterSpacing !== undefined) c.letterSpacing = "0px";
-            } else {
-                c.fillText("RUN - RATE", x3 + w3/2, bottomY + barH * 0.25);
-                c.font = `900 ${barH * 0.60}px 'Anton'`; // Slightly scaled down
-                if(c.letterSpacing !== undefined) c.letterSpacing = "1px"; // Untighten numbers
-                c.fillText(crr, x3 + w3/2, bottomY + barH * 0.85);
-                if(c.letterSpacing !== undefined) c.letterSpacing = "0px";
-            }
+            if (isChasing) {
+                const runsNeeded = Math.max(0, match.target - match.score);
+                const rrr = ballsRem > 0 ? (runsNeeded / (ballsRem/6)).toFixed(2) : "-"; 
+                
+                // --- Start of Over Animation Logic ---
+                if (typeof window._prevBalls === 'undefined') {
+                    window._prevBalls = match.balls;
+                    window._showRrrUntil = Date.now() + 8000; // Show RRR for 8 seconds initially
+                }
+                if (window._prevBalls !== match.balls) {
+                    if (match.balls === 0) { // New over started
+                        window._showRrrUntil = Date.now() + 8000;
+                    }
+                    window._prevBalls = match.balls;
+                }
+                
+                const timeRemaining = window._showRrrUntil - Date.now();
+                let alphaRRR = 0;
+                let alphaTarget = 0;
+                
+                // 1-second crossfade transition
+                if (timeRemaining > 0) {
+                    if (timeRemaining < 1000) {
+                        alphaRRR = timeRemaining / 1000; 
+                        alphaTarget = 1 - alphaRRR;      
+                    } else {
+                        alphaRRR = 1;
+                        alphaTarget = 0;
+                    }
+                } else {
+                    alphaRRR = 0;
+                    alphaTarget = 1;
+                }
+                
+                // Draw Needed (Target)
+                if (alphaTarget > 0) {
+                    c.save();
+                    c.globalAlpha = alphaTarget;
+                    const yOffsetTarget = (1 - alphaTarget) * 10;
+                    
+                    c.textAlign = "center";
+                    c.fillStyle = "white";
+                    c.font = `700 ${barH * 0.18}px 'Roboto'`;
+                    c.fillText("NEEDED", x3 + w3/2, bottomY + barH * 0.28 + yOffsetTarget);
+                    
+                    // "23-7balls" format
+                    const needTextY = bottomY + barH * 0.82 + yOffsetTarget;
+                    const runsText = `${runsNeeded}`;
+                    const dashText = `-`;
+                    const ballsNumText = `${ballsRem}`;
+                    
+                    c.textAlign = "left";
+                    c.font = `900 ${barH * 0.45}px 'Anton'`;
+                    const wRuns = c.measureText(runsText).width;
+                    const wDash = c.measureText(dashText).width;
+                    const wBallsNum = c.measureText(ballsNumText).width;
+                    c.font = `700 ${barH * 0.22}px 'Roboto Condensed'`;
+                    const wBallsStr = c.measureText("balls").width;
+                    
+                    const gap = 8; // Relaxed spacing
+                    const totalW = wRuns + gap + wDash + gap + wBallsNum + 6 + wBallsStr; 
+                    let drawX = x3 + (w3 - totalW) / 2;
+                    
+                    c.font = `900 ${barH * 0.45}px 'Anton'`;
+                    c.fillStyle = "white";
+                    c.fillText(runsText, drawX, needTextY);
+                    drawX += wRuns + gap;
+                    
+                    c.fillStyle = "white"; // Changed to white
+                    c.fillText(dashText, drawX, needTextY);
+                    drawX += wDash + gap; 
+                    
+                    c.fillStyle = "white";
+                    c.fillText(ballsNumText, drawX, needTextY);
+                    drawX += wBallsNum + 6; // Relaxed space before "balls"
+                    
+                    c.font = `700 ${barH * 0.22}px 'Roboto Condensed'`;
+                    c.fillStyle = "white"; // Changed to white
+                    c.fillText("balls", drawX, needTextY);
+                    
+                    c.restore();
+                }
+                
+                // Draw Required Run Rate
+                if (alphaRRR > 0) {
+                    c.save();
+                    c.globalAlpha = alphaRRR;
+                    const yOffsetRRR = (1 - alphaRRR) * -10;
+                    
+                    c.textAlign = "center";
+                    c.fillStyle = "white";
+                    c.font = `700 ${barH * 0.18}px 'Roboto'`;
+                    c.fillText("REQ - RATE", x3 + w3/2, bottomY + barH * 0.28 + yOffsetRRR);
+                    c.font = `900 ${barH * 0.50}px 'Anton'`;
+                    c.fillText(rrr, x3 + w3/2, bottomY + barH * 0.85 + yOffsetRRR);
+                    
+                    c.restore();
+                }
+            } else {
+                c.textAlign = "center";
+                c.fillStyle = "white";
+                c.font = `700 ${barH * 0.18}px 'Roboto'`;
+                c.fillText("RUN - RATE", x3 + w3/2, bottomY + barH * 0.25);
+                c.font = `900 ${barH * 0.50}px 'Anton'`; 
+                c.fillText(crr, x3 + w3/2, bottomY + barH * 0.85);
+            }
 
             // 4 & 5. BOWLING SIDE (CONTINUOUS BRIGHT BLUE TO DARK NAVY GRADIENT)
             const x4 = x3 + w3;
