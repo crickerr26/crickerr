@@ -1611,7 +1611,6 @@
                 isSwitchingQuality = false;
                 statusOverlay.style.display = 'none';
                 video.srcObject = remoteStream;
-                video.load(); // Forces mobile browsers to register the new stream
                 
                 const playPromise = video.play();
                 if (playPromise !== undefined) {
