@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>Live Match Broadcast</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -16,25 +19,108 @@
         body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; }
         
         #viewer-video { 
-            width: 100%; height: 100%; 
+            position: fixed; /* Changed BACK to fixed to prevent the browser from panning it off-screen */
+            top: 0; 
+            left: 0;
+            width: 100vw; 
+            height: 100vh; 
             object-fit: contain; 
             background: #000; 
             display: block; 
             transform: translateZ(0); 
             backface-visibility: hidden;
+            z-index: 1; 
+        }
+
+        #yt-title-container {
+            display: none;
+        }
+        #fullscreen-btn {
+            display: none;
+        }
+        
+        .fs-text::before { content: "FULL SCREEN"; }
+
+        @media (orientation: portrait) {
+            #viewer-video {
+                object-fit: contain;
+                object-position: center;
+                padding-top: 0; 
+                height: 56.25vw; /* Strict 16:9 YouTube style aspect ratio */
+                width: 100vw;
+                position: fixed;
+                top: 70px; /* Lowered for header */
+                left: 0;
+                z-index: 50;
+                background: #000;
+            }
+            #yt-title-container {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                position: fixed; 
+                top: 0; 
+                left: 0;
+                right: 0;
+                height: 70px;
+                background: #111;
+                z-index: 60;
+                padding: 0 15px;
+                gap: 12px;
+                font-family: 'Roboto', sans-serif;
+            }
+            .yt-logo {
+                width: 44px; height: 44px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden;
+            }
+            .yt-logo img { width: 80%; height: auto; object-fit: contain; }
+            .yt-info { display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
+            .yt-title-text { font-size: 14px; color: white; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
+            .yt-label { font-size: 11px; color: #aaa; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 0; }
+            
+            #fullscreen-btn {
+                display: flex;
+                position: fixed;
+                top: calc(70px + 56.25vw);
+                left: 66.66%; right: 0; width: 33.34%;
+                height: 40px;
+                background: #1a1a1a;
+                z-index: 45;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+                color: white; font-family: 'Roboto', sans-serif; font-size: 11px; font-weight: bold; cursor: pointer; border-bottom: 1px solid #333;
+                border-left: 1px solid #333;
+            }
+            #fullscreen-btn svg { width: 16px; height: 16px; fill: white; }
+        }
+
+        @media (orientation: landscape) {
+            .fs-text::before { content: "EXIT FULL SCREEN"; }
+            #viewer-video {
+                object-fit: contain;
+                object-position: center;
+                padding-top: 0;
+                top: 0; 
+                height: 100vh;
+            }
+            #yt-title-container { display: none !important; }
+            #fullscreen-btn {
+                display: flex; position: fixed; bottom: 25px; right: 110px; background: rgba(0,0,0,0.6); padding: 8px 12px; border-radius: 8px; color: white; z-index: 800; cursor: pointer; gap: 6px; font-family: 'Roboto', sans-serif; font-size: 10px; font-weight: bold; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(4px);
+            }
+            #fullscreen-btn svg { width: 14px; height: 14px; fill: white; }
         }
         
         /* LIVE BADGE */
         #live-badge {
             position: absolute; top: 25px; right: 25px;
-            background: #ef4444; border: 1px solid #ef4444;
-            padding: 8px 20px; border-radius: 50px; color: white;
-            font-family: 'Roboto', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 1px;
-            display: none; align-items: center; gap: 10px; z-index: 800;
-            box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
+            background: rgba(239, 68, 68, 0.7); border: 1px solid rgba(239, 68, 68, 0.4);
+            padding: 6px 15px; border-radius: 50px; color: white;
+            font-family: 'Roboto', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 1px;
+            display: none; align-items: center; gap: 8px; z-index: 800;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
         }
         .live-dot {
-            width: 10px; height: 10px; background: white; border-radius: 50%;
+            width: 8px; height: 8px; background: white; border-radius: 50%;
             animation: blinkRed 1s infinite;
         }
         @keyframes blinkRed {
@@ -45,13 +131,46 @@
 
         /* QUALITY INDICATOR & MENU */
         #quality-badge {
-            position: absolute; top: 25px; left: 25px;
-            background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255,255,255,0.3);
-            padding: 8px 15px; border-radius: 8px; color: white;
-            font-family: 'Roboto Condensed', sans-serif; font-size: 14px; font-weight: bold; letter-spacing: 1px;
+            position: absolute; top: 25px; left: 80px;
+            background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.2);
+            padding: 6px 12px; border-radius: 8px; color: white;
+            font-family: 'Roboto Condensed', sans-serif; font-size: 12px; font-weight: bold; letter-spacing: 1px;
             cursor: pointer; z-index: 800; backdrop-filter: blur(4px);
             transition: background 0.3s;
         }
+
+        @media (orientation: landscape) {
+            #live-badge { padding: 4px 12px; font-size: 10px; top: 15px; right: 15px; gap: 6px; }
+            .live-dot { width: 6px; height: 6px; }
+            #quality-badge { padding: 4px 10px; font-size: 10px; top: 15px; left: 65px; }
+        }
+
+        /* PORTRAIT OVERRIDES FOR BADGE & QUALITY */
+        @media (orientation: portrait) {
+            #live-badge {
+                top: 80px; left: 10px; right: auto;
+                padding: 2px 6px; font-size: 9px;
+                background: rgba(239, 68, 68, 0.9);
+                border: none;
+                box-shadow: 0 0 8px rgba(239, 68, 68, 0.6); gap: 3px;
+                z-index: 55;
+            }
+            .live-dot { width: 4px; height: 4px; }
+            
+            #quality-badge {
+                position: fixed;
+                top: calc(70px + 56.25vw); left: 0; right: auto; bottom: auto;
+                width: 33.33%; height: 40px;
+                padding: 0; font-size: 11px;
+                background: #1a1a1a; border: none; border-bottom: 1px solid #333; border-radius: 0; z-index: 45;
+                display: flex; align-items: center; justify-content: center; color: white;
+            }
+            #quality-menu {
+                top: calc(70px + 56.25vw - 120px) !important; left: 10px !important;
+                bottom: auto; right: auto;
+            }
+        }
+
         #quality-badge:hover { background: rgba(0,0,0,0.8); }
 
         #quality-menu {
@@ -69,35 +188,203 @@
 
         /* SHARE BUTTON */
         #share-btn {
-            position: absolute; bottom: 30px; right: 25px;
-            background: #3b82f6; border: 1px solid rgba(255,255,255,0.2);
-            padding: 10px 18px; border-radius: 50px; color: white;
-            font-family: 'Roboto', sans-serif; font-size: 14px; font-weight: bold; letter-spacing: 1px;
-            cursor: pointer; z-index: 800; display: none; align-items: center; gap: 6px;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.5); transition: transform 0.1s;
+            position: absolute; bottom: 15px; right: 62px;
+            background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.2);
+            width: 40px; height: 40px; border-radius: 50%; color: white;
+            cursor: pointer; z-index: 800; display: none; align-items: center; justify-content: center;
+            backdrop-filter: blur(4px); transition: transform 0.1s;
         }
         #share-btn:active { transform: scale(0.95); }
-        #share-btn svg { width: 16px; height: 16px; fill: white; }
+        #share-btn svg { width: 18px; height: 18px; fill: white; }
+
+        /* CLOSE BUTTON */
+        #close-btn {
+            position: absolute; top: 25px; left: 25px;
+            background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.2);
+            width: 40px; height: 40px; border-radius: 50%; color: white;
+            cursor: pointer; z-index: 800; display: none; align-items: center; justify-content: center;
+            backdrop-filter: blur(4px); transition: transform 0.1s;
+        }
+        #close-btn:active { transform: scale(0.95); }
+        #close-btn svg { width: 22px; height: 22px; fill: white; }
+
+        @media (orientation: landscape) {
+            #close-btn.match-active {
+                display: flex;
+                top: 15px;
+                left: 15px;
+                width: 34px;
+                height: 34px;
+            }
+            #close-btn svg { width: 18px; height: 18px; }
+        }
 
         @media (orientation: portrait) {
-            #share-btn.match-active { display: flex; }
+            #close-btn.match-active {
+                display: flex;
+                top: auto;
+                bottom: 140px; /* Above share button */
+                left: auto;
+                right: 15px;
+                width: 38px;
+                height: 38px;
+                background: rgba(0, 0, 0, 0.6);
+                border: 1px solid rgba(255,255,255,0.15);
+                z-index: 60;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            }
+            #share-btn.match-active { 
+                display: flex; 
+                top: auto; 
+                bottom: 90px; 
+                right: 15px; 
+                left: auto;
+                background: rgba(0,0,0,0.6); 
+                border: 1px solid rgba(255,255,255,0.15); 
+                width: 38px; 
+                height: 38px;
+                z-index: 60;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            }
+            #close-btn.match-active svg, #share-btn.match-active svg { width: 18px; height: 18px; }
         }
 
         /* --- BROADCAST WATERMARK LOGO --- */
         #broadcast-watermark {
-            position: absolute;
-            bottom: 140px; 
-            left: 25px;    
-            width: 60px;   
-            height: auto;
-            opacity: 0;    
-            z-index: 45;   
-            pointer-events: none; 
-            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); 
-            transition: opacity 0.8s ease-in-out;
+            position: absolute; /* Changed to absolute to float cleanly inside the dynamic viewport */
+            width: 45px; height: auto; opacity: 0;    
+            z-index: 950; /* Super high z-index to stay completely above scoreboard/UI */
+            pointer-events: none; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); transition: opacity 0.8s ease-in-out;
         }
-        .show-watermark {
-            opacity: 0.95 !important; 
+        /* Portrait: Positioned at Top Right inside 16:9 video */
+        @media (orientation: portrait) { #broadcast-watermark { top: 80px; left: auto; right: 10px; bottom: auto; z-index: 55; max-width: 35px; } }
+        /* Landscape: Positioned at Top Left next to quality controls */
+        @media (orientation: landscape) { #broadcast-watermark { top: 25px; left: 110px; bottom: auto; } }
+        .show-watermark { opacity: 0.95 !important; }
+
+        /* LIVE STATS & CHAT */
+        #live-stats-bar {
+            position: absolute; top: 25px; right: 110px;
+            background: rgba(0,0,0,0.4); padding: 6px 12px; border-radius: 50px;
+            color: white; font-family: 'Roboto', sans-serif; font-size: 12px; font-weight: bold;
+            display: none; align-items: center; gap: 8px; z-index: 800; border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(4px);
+        }
+        
+        #chat-toggle-btn {
+            position: absolute; top: 70px; right: 25px;
+            background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2);
+            padding: 6px 12px; border-radius: 50px; color: white;
+            font-family: 'Roboto', sans-serif; font-size: 11px; font-weight: bold; letter-spacing: 1px;
+            cursor: pointer; z-index: 800; display: none; align-items: center; gap: 6px;
+            backdrop-filter: blur(4px);
+        }
+
+        /* PORTRAIT OVERRIDES FOR STATS & CHAT TOGGLE */
+        @media (orientation: portrait) {
+            #live-stats-bar {
+                top: 80px; right: auto; left: 60px; 
+                padding: 2px 8px; font-size: 9px;
+                background: rgba(0,0,0,0.5); border: none;
+                gap: 4px; color: white; border-radius: 50px; z-index: 55;
+            }
+            #live-stats-bar svg { width: 10px !important; height: 10px !important; fill: white !important; }
+            
+            #chat-toggle-btn {
+                position: fixed;
+                top: calc(70px + 56.25vw); left: 33.33%; right: auto; bottom: auto;
+                width: 33.33%; height: 40px;
+                padding: 0; font-size: 11px;
+                background: #1a1a1a; border: none; border-bottom: 1px solid #333; border-left: 1px solid #333; border-radius: 0; z-index: 45;
+                display: flex; align-items: center; justify-content: center;
+            }
+            #chat-toggle-btn svg { width: 16px !important; height: 16px !important; }
+
+            /* YouTube Style Chat Box overrides */
+            #chat-container {
+                position: fixed;
+                top: calc(70px + 56.25vw + 40px); /* Below the control bar */
+                bottom: 0; left: 0; right: 0; width: 100%;
+                max-height: none; 
+                background: #000; border: none; border-radius: 0;
+                padding: 5px 0 0 0; pointer-events: auto;
+            }
+            #chat-messages {
+                max-height: none; flex-grow: 1; height: calc(100% - 65px);
+                mask-image: linear-gradient(to bottom, transparent, black 5%); -webkit-mask-image: linear-gradient(to bottom, transparent, black 5%);
+                padding: 0 10px 5px 10px;
+            }
+            .chat-msg {
+                width: 100%; max-width: 100%; background: transparent;
+                padding: 4px 0; border-radius: 0; font-size: 13px; text-shadow: none; color: #ddd;
+            }
+            .chat-user { color: #aaa; font-weight: normal; }
+            #chat-input-area {
+                margin-top: auto; border-top: 1px solid #222; background: #000; padding: 10px 10px env(safe-area-inset-bottom, 10px) 10px; height: auto;
+            }
+            #chat-input { background: #111; border-color: #222; color: white; border-radius: 50px; padding: 10px 15px; }
+            
+            #heart-container {
+                bottom: 195px; right: 15px; height: 150px; /* Shifted above the action buttons */
+            }
+        }
+
+        #chat-container {
+            position: absolute; bottom: 15px; left: 15px; width: calc(100% - 120px); max-height: 200px;
+            display: none; flex-direction: column; justify-content: flex-end; z-index: 800; pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        #chat-messages {
+            overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-bottom: 10px; pointer-events: auto;
+            max-height: 150px; scrollbar-width: none;
+            mask-image: linear-gradient(to bottom, transparent, black 15%); -webkit-mask-image: linear-gradient(to bottom, transparent, black 15%);
+        }
+        #chat-messages::-webkit-scrollbar { display: none; }
+        .chat-msg { background: rgba(0,0,0,0.4); padding: 6px 12px; border-radius: 12px; width: max-content; max-width: 100%; word-wrap: break-word; color: white; font-family: 'Roboto', sans-serif; font-size: 13px; text-shadow: 1px 1px 2px #000; display: inline-block; line-height: 1.3;}
+        .chat-user { font-weight: bold; color: #fbbf24; margin-right: 5px; }
+        #chat-input-area { display: flex; gap: 8px; pointer-events: auto; align-items: center; width: 100%; }
+        #chat-input { flex-grow: 1; padding: 10px 15px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.3); background: rgba(0,0,0,0.4); color: white; font-size: 13px; outline: none; backdrop-filter: blur(5px); }
+        #chat-send { background: rgba(59, 130, 246, 0.8); border: none; border-radius: 50%; width: 36px; height: 36px; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; backdrop-filter: blur(4px); }
+
+        @keyframes slideUpFade {
+            0% { transform: translateY(10px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 0.8; }
+        }
+
+        #heart-container {
+            position: absolute; bottom: 15px; right: 15px; z-index: 800; display: none; flex-direction: column; align-items: center; justify-content: flex-end; pointer-events: none; height: 250px; width: 40px;
+        }
+        #heart-btn {
+            width: 40px; height: 40px; background: rgba(239, 68, 68, 0.15); border-radius: 50%; border: 1px solid rgba(239, 68, 68, 0.4); display: flex; align-items: center; justify-content: center; cursor: pointer; pointer-events: auto; transition: transform 0.1s; margin-top: auto; backdrop-filter: blur(5px);
+        }
+        #heart-btn:active { transform: scale(0.9); }
+        #heart-btn svg { width: 18px; height: 18px; fill: #ef4444; }
+        .floating-heart {
+            position: absolute; bottom: 50px; width: 24px; height: 24px; pointer-events: none;
+            animation: floatUp 2s ease-in forwards;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-200px) scale(1.5) rotate(calc(var(--rot) * 1deg)); opacity: 0; }
+        }
+
+        /* --- LANDSCAPE UI OVERRIDES --- */
+        @media (orientation: landscape) { 
+            #live-stats-bar { padding: 4px 10px; font-size: 10px; top: 15px; right: 90px; gap: 4px; }
+            #live-stats-bar svg { width: 12px !important; height: 12px !important; }
+            
+            #chat-toggle-btn { padding: 4px 10px; font-size: 9px; top: 45px; right: 15px; gap: 4px; }
+            #chat-toggle-btn svg { width: 12px !important; height: 12px !important; }
+            
+            #heart-container { bottom: 35px; right: 15px; }
+            #heart-btn { width: 34px; height: 34px; }
+            #heart-btn svg { width: 16px; height: 16px; }
+
+            #chat-container { width: 350px; bottom: 35px; } 
+            #chat-input-area { display: none !important; }
+            #chat-messages { mask-image: none; -webkit-mask-image: none; justify-content: flex-end; }
+            .chat-msg { font-size: 10px; background: rgba(0,0,0,0.2); opacity: 0.8; animation: slideUpFade 0.3s ease-out; padding: 4px 8px; border-radius: 8px;}
+            .chat-msg:not(:nth-last-child(-n+3)) { display: none; }
         }
 
         /* Live Overlay Sponsors */
@@ -108,88 +395,207 @@
             display: flex;
             flex-direction: row;
             gap: 10px;
-            z-index: 45;
+            z-index: 950; /* Boosted to stay above everything */
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.5s ease;
         }
         .live-sponsor { height: 75px; width: auto; min-width: 120px; max-width: 220px; }
 
+        /* PORTRAIT OVERRIDES FOR LIVE SPONSORS */
+        @media (orientation: portrait) {
+            #live-sponsors-container {
+                top: 170px; /* Positioned below share buttons */
+                right: 10px;
+                z-index: 55; /* Higher than the portrait video's z-index: 50 */
+                gap: 6px;
+                flex-direction: column;
+            }
+            .live-sponsor { 
+                height: 25px; 
+                min-width: 50px; 
+                max-width: 80px; 
+            }
+        }
+
         /* OVERLAYS */
         .overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            background: #000; color: white; z-index: 10;
+            background: #000; color: white; z-index: 1000;
         }
 
         /* INPUT SCREEN & LIVE MATCHES LIST */
         #input-overlay { 
-            z-index: 30; display: none; 
-            background: #0a0a0a; 
+            z-index: 1000; display: none; 
+            background: linear-gradient(135deg, #3a3a3c 0%, #1c1c1e 100%);
             flex-direction: column; 
             justify-content: flex-start; 
             align-items: center; 
-            padding-top: 60px;
-            overflow-y: auto;
+            padding-top: 20px;
+            overflow-y: auto; overflow-x: hidden;
         }
+
+        #main-brand-logo {
+            width: 80px; max-width: 50%; height: auto; margin-bottom: 10px; margin-top: 5px;
+            filter: drop-shadow(0 4px 15px rgba(0,0,0,0.4));
+        }
+
+        .hero-tagline {
+            color: rgba(255, 255, 255, 0.95); font-size: 13px; font-family: 'Roboto', sans-serif; 
+            letter-spacing: 0.5px; margin-bottom: 20px; font-weight: 600; text-align: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .pagination-controls {
+            display: flex; justify-content: center; gap: 15px; margin-top: 20px; align-items: center; width: 100%;
+        }
+        .page-btn {
+            background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+            color: white; padding: 6px 16px; border-radius: 50px; font-size: 12px; font-weight: bold; cursor: pointer; backdrop-filter: blur(5px);
+            transition: all 0.2s;
+        }
+        .page-btn:hover:not(:disabled) { background: rgba(255,255,255,0.25); }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .page-info { color: white; font-size: 13px; font-weight: bold; font-family: 'Roboto', sans-serif; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+
+        .page-intro-anim {
+            animation: smoothSlideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0; transform: translateY(20px);
+        }
+
+        @keyframes smoothSlideUp {
+            0% { opacity: 0; transform: translateY(20px); filter: blur(4px); }
+            100% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+        }
+
         .search-container {
             display: flex; flex-direction: column; align-items: center;
-            width: 100%; max-width: 500px; margin-bottom: 40px;
+            width: 100%; padding: 0 15px; margin-bottom: 15px;
         }
-        .search-container h2 { margin-bottom: 15px; font-size: 22px; color: #fff; letter-spacing: 1px;}
         .search-box {
-            display: flex; gap: 10px; width: 90%; justify-content: center;
+            display: flex; align-items: center; gap: 8px; width: 100%; max-width: 450px; 
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); 
+            border-radius: 50px; padding: 5px 5px 5px 15px; 
+            transition: all 0.3s ease; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
         }
+        .search-box:focus-within { 
+            border-color: rgba(59, 130, 246, 0.5); background: rgba(255,255,255,0.07); 
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 3px rgba(59, 130, 246, 0.15); 
+        }
+        .search-icon { width: 16px; height: 16px; fill: #64748b; flex-shrink: 0; }
+        
         #match-input {
-            padding: 12px 20px; font-size: 18px; border-radius: 8px; 
-            border: 2px solid #333; background: #111; color: white; 
-            text-transform: uppercase; text-align: center;
-            flex-grow: 1; outline: none; transition: 0.2s;
+            flex-grow: 1; background: transparent; border: none; color: white; 
+            font-size: 13px; outline: none; font-family: 'Roboto', sans-serif; 
+            padding: 8px 0; letter-spacing: 0.5px; text-transform: uppercase;
         }
-        #match-input:focus { border-color: #3b82f6; }
+        #match-input::placeholder { color: #475569; font-weight: 400; text-transform: none; }
+        
         #submit-btn {
-            padding: 12px 25px; background: #3b82f6; color: white; border: none;
-            border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); transition: transform 0.1s;
+            padding: 8px 20px; background: #3b82f6; color: white; border: none;
+            border-radius: 50px; font-size: 11px; font-weight: 700; cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); text-transform: uppercase; 
+            letter-spacing: 0.5px; flex-shrink: 0;
         }
-        #submit-btn:active { transform: scale(0.95); }
+        #submit-btn:active { transform: scale(0.95); background: #2563eb; }
 
         .live-matches-container {
-            width: 90%; max-width: 800px;
-            padding-bottom: 50px;
+            width: 100%; max-width: 600px; padding: 0 15px 40px;
+        }
+        .live-matches-header {
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);
         }
         .live-matches-container h2 {
-            font-size: 20px; color: #fff; letter-spacing: 1px; margin-bottom: 20px; text-align: center;
+            font-size: 15px; color: #f8fafc; letter-spacing: 0; font-weight: 700; 
+            font-family: 'Montserrat', sans-serif; margin-bottom: 0;
         }
+        #admin-toggle-btn {
+            background: transparent; border: none; color: #64748b; font-size: 10px; 
+            font-weight: 600; text-transform: uppercase; cursor: pointer; 
+            letter-spacing: 1px; transition: color 0.2s; padding: 4px;
+        }
+        #admin-toggle-btn:hover { color: #f8fafc; }
+        
+        #admin-actions {
+            display: none; justify-content: flex-end; margin-bottom: 12px; gap: 10px;
+        }
+        .admin-btn {
+            padding: 6px 12px; background: #ef4444; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: bold;
+        }
+        .admin-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        
         .country-group {
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
         .country-header {
-            font-family: 'Roboto Condensed', sans-serif; font-size: 18px; font-weight: bold; color: #cbd5e1;
-            margin-bottom: 15px; border-bottom: 2px solid #333; padding-bottom: 5px; text-transform: uppercase;
+            font-family: 'Roboto Condensed', sans-serif; font-size: 11px; font-weight: 700; 
+            color: #64748b; margin-bottom: 10px; border-bottom: none; 
+            text-transform: uppercase; letter-spacing: 1px; padding-left: 4px;
         }
         .match-cards {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;
+            display: grid; grid-template-columns: 1fr; gap: 10px; /* Mobile first structure */
         }
+        
+        @media (min-width: 600px) {
+            .match-cards { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+        }
+
         .match-card {
-            background: #111; border: 1px solid #222; border-radius: 12px; padding: 15px;
-            cursor: pointer; transition: transform 0.2s, border-color 0.2s; position: relative;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); 
+            border-radius: 12px; padding: 12px 15px; cursor: pointer; 
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
+            display: flex; flex-direction: column; gap: 4px; backdrop-filter: blur(10px);
         }
-        .match-card:hover { transform: translateY(-3px); border-color: #3b82f6; }
+        .match-card:active { transform: scale(0.98); background: rgba(255, 255, 255, 0.04); border-color: rgba(59, 130, 246, 0.3); }
+        .match-card.admin-selected {
+            border-color: #ef4444; background: rgba(239, 68, 68, 0.05);
+        }
+        
+        .match-checkbox {
+            display: none; position: absolute; top: 12px; left: 12px; width: 16px; height: 16px; pointer-events: none; accent-color: #ef4444;
+        }
+        .admin-mode .match-checkbox { display: block; }
+        .admin-mode .match-card-teams { padding-left: 24px; } /* Room for checkbox */
+        
         .match-card-live {
-            position: absolute; top: 10px; right: 10px;
-            background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444;
-            padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: bold;
-            display: flex; align-items: center; gap: 5px; letter-spacing: 1px;
+            position: absolute; top: 12px; right: 12px;
+            background: rgba(239, 68, 68, 0.15); border: none; color: #f87171;
+            padding: 3px 8px; border-radius: 50px; font-size: 9px; font-weight: 800;
+            display: flex; align-items: center; gap: 4px; letter-spacing: 0.5px;
+            z-index: 5;
         }
-        .match-card-title {
-            font-family: 'Montserrat', sans-serif; font-size: 16px; font-weight: 800; color: white;
-            margin-top: 10px; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        
+        .match-card-teams {
+            display: flex; align-items: center; justify-content: space-between; 
+            margin-top: 6px; padding-right: 65px; transition: padding 0.2s;
         }
+        
+        .match-team {
+            display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;
+        }
+        .match-team.right { flex-direction: row-reverse; text-align: right; }
+        
+        .match-team-logo {
+            width: 30px; height: 30px; border-radius: 50%; object-fit: contain; 
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); 
+            padding: 3px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        
+        .match-team-name {
+            font-family: 'Roboto', sans-serif; font-size: 12px; font-weight: 700; color: #f8fafc;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;
+        }
+        
+        .match-vs {
+            font-size: 9px; font-weight: 800; color: #64748b; padding: 0 6px; font-style: italic;
+        }
+        
         .match-card-sub {
-            font-size: 12px; color: #888; font-weight: 500;
+            font-size: 10px; color: #94a3b8; font-weight: 500; font-family: 'Roboto', sans-serif;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px; margin-top: 8px; text-align: center;
         }
 
         /* STATUS SCREEN */
@@ -203,7 +609,7 @@
         
         /* PLAY FALLBACK SCREEN */
         #play-overlay {
-            background: rgba(0, 0, 0, 0.8); z-index: 20; display: none; cursor: pointer;
+            background: rgba(0, 0, 0, 0.8); z-index: 1000; display: none; cursor: pointer;
         }
         #play-btn {
             padding: 15px 40px; background: #22c55e; color: white; border: none;
@@ -211,66 +617,69 @@
             box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
         }
 
-        /* --- NEW IMPACT EVENT ANIMATION STYLES --- */
-        #event-stage-overlay {
-            position: absolute; inset: 0; pointer-events: none; z-index: 900;
+        /* --- NEW IPL 3D ANIMATION STYLES --- */
+        #ipl-stage-overlay {
+            position: fixed; inset: 0; pointer-events: none; z-index: 9999;
             display: flex; align-items: center; justify-content: center;
-            overflow: hidden; background: radial-gradient(circle, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 70%);
-            opacity: 0; transition: opacity 0.2s ease-out;
-        }
-        #event-stage-overlay.is-active { opacity: 1; }
-
-        .shockwave {
-            position: absolute; width: 10px; height: 10px;
-            border: 20px solid rgba(255,255,255,0.8); border-radius: 50%;
-            top: 50%; left: 50%; transform: translate(-50%, -50%);
-            opacity: 0; pointer-events: none;
-        }
-        .is-active .shockwave { animation: shockwaveAnim 1.2s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; }
-        @keyframes shockwaveAnim {
-            0% { transform: translate(-50%, -50%) scale(0); opacity: 1; border-width: 50px; }
-            100% { transform: translate(-50%, -50%) scale(150); opacity: 0; border-width: 0px; }
+            perspective: 2000px; overflow: hidden;
         }
 
-        #event-text-box {
-            position: relative; z-index: 905;
-            display: none; transform: scale(0);
+        /* SHUTTERS */
+        .shutter {
+            position: absolute; width: 100%; height: 50%;
+            background: rgba(0, 5, 16, 0.95); z-index: 901;
+            transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+            backdrop-filter: blur(5px);
         }
-        .is-active #event-text-box { 
-            display: block; 
-            animation: textImpactAnim 3.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; 
+        .top-s { top: 0; border-bottom: 4px solid #fbbf24; transform: translateY(-100%); }
+        .bot-s { bottom: 0; border-top: 4px solid #fbbf24; transform: translateY(100%); }
+
+        /* Trigger Class to Close Shutters */
+        .splitting .top-s { transform: translateY(0%); }
+        .splitting .bot-s { transform: translateY(0%); }
+
+        /* 3D TEXT CONTAINER */
+        .ipl-boom {
+            position: absolute; z-index: 905;
+            transform-style: preserve-3d;
+            display: none; opacity: 0;
         }
 
-        #event-text-box span {
+        .ipl-boom span {
             position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            font-family: 'Anton', sans-serif;
-            font-size: 28vw;
-            letter-spacing: 5px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 25vw;
+            font-weight: 900; text-transform: uppercase;
+            font-style: italic; line-height: 1; letter-spacing: -5px;
             white-space: nowrap;
-            text-transform: uppercase;
         }
 
-        .text-glow {
-            -webkit-text-stroke: 8px rgba(255, 255, 255, 0.5);
-            filter: blur(20px); z-index: 1;
-        }
-        .text-core {
-            color: #ffffff;
-            background: linear-gradient(180deg, #ffffff 0%, #e2e8f0 40%, #94a3b8 100%);
+        /* GOLD SHADER LAYERS */
+        .layer-gold-front {
+            z-index: 5;
+            background: linear-gradient(135deg, #fff9c4 0%, #fbc02d 40%, #f57f17 60%, #fff9c4 100%);
+            background-size: 200% auto;
             -webkit-background-clip: text; color: transparent;
-            z-index: 2;
-            filter: drop-shadow(0 20px 20px rgba(0,0,0,0.9));
-            -webkit-text-stroke: 3px rgba(0, 0, 0, 0.9);
+            transform: translate(-50%, -50%) translateZ(80px);
+            filter: drop-shadow(0 0 30px rgba(251, 191, 36, 0.6));
+            animation: goldShimmer 3s infinite linear;
         }
-        
-        @keyframes textImpactAnim {
-            0% { transform: scale(0) rotate(-15deg); opacity: 0; filter: brightness(4); }
-            8% { transform: scale(1.2) rotate(5deg); opacity: 1; filter: brightness(2); }
-            15% { transform: scale(1) rotate(0deg); filter: brightness(1); }
-            85% { transform: scale(1.1) rotate(0deg); opacity: 1; }
-            100% { transform: scale(1.5) translateY(100px); opacity: 0; filter: brightness(0); }
+        .layer-gold-depth { color: #827717; transform: translate(-50%, -50%) translateZ(40px); }
+        .layer-gold-base { color: #332b00; transform: translate(-50%, -50%) translateZ(0px); }
+
+        @keyframes goldShimmer { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+
+        /* PHYSICS ANIMATION */
+        @keyframes iplBoomAnim {
+            0% { transform: scale(0.1) rotateY(45deg) translateZ(-1500px); opacity: 0; }
+            15% { opacity: 1; }
+            35% { transform: scale(1.1) rotateY(-5deg) translateZ(100px); }
+            45% { transform: scale(1) rotateY(0deg) translateZ(0px); }
+            80% { transform: scale(1.05) translateZ(200px); opacity: 1; }
+            100% { transform: scale(4) translateZ(2500px); opacity: 0; }
         }
+        .active-boom { display: block !important; animation: iplBoomAnim 3.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
 
         /* --- CINEMATIC MATCH INTRO BANNER --- */
         #match-intro-overlay {
@@ -344,16 +753,60 @@
         #event-sponsors-container { position: absolute; bottom: 15%; left: 50%; transform: translateX(-50%); display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: center; gap: 15px; z-index: 910; opacity: 0; transition: opacity 0.5s ease; }
         .event-sponsor-main { height: 85px; min-width: 150px; }
         .event-sponsor-sub { height: 60px; min-width: 110px; }
+
+        /* PORTRAIT OVERRIDES FOR MATCH INTRO & EVENT SPONSORS */
+        @media (orientation: portrait) {
+            .intro-banner-container {
+                width: 95%; padding: 30px 20px; border-radius: 16px;
+            }
+            .intro-header-badge {
+                font-size: 12px; padding: 6px 20px; margin-bottom: 25px;
+            }
+            .intro-teams { gap: 10px; }
+            .intro-team { gap: 10px; }
+            .intro-team img { 
+                width: 80px; height: 80px; border-width: 2px; padding: 5px; 
+            }
+            .intro-team-name { font-size: 18px; text-shadow: 0 4px 10px rgba(0,0,0,0.9); }
+            .intro-vs { font-size: 24px; padding: 0 5px; }
+            .intro-divider { margin: 25px 0 20px 0; }
+            .intro-info { font-size: 14px; letter-spacing: 1px; text-align: center; }
+            #intro-sponsors-container { margin-top: 20px; gap: 10px; }
+            .intro-sponsors-row { gap: 10px; flex-wrap: wrap; }
+            .intro-sponsor-main { height: 45px; min-width: 80px; }
+            .intro-sponsor-sub { height: 35px; min-width: 60px; }
+            
+            #event-sponsors-container { bottom: 10%; width: 90%; }
+            .event-sponsor-main { height: 50px; min-width: 90px; }
+            .event-sponsor-sub { height: 40px; min-width: 70px; }
+        }
     </style>
 </head>
 <body>
 
-    <audio id="audio-four" src="four.mp3" preload="auto"></audio>
-    <audio id="audio-six" src="six.mp3" preload="auto"></audio>
-    <audio id="audio-wicket" src="wicket.mp3" preload="auto"></audio>
-    <audio id="audio-transition" src="transitionmusic.mp3" preload="auto"></audio>
+    <audio id="audio-four" src="/four.mp3" preload="auto"></audio>
+    <audio id="audio-six" src="/six.mp3" preload="auto"></audio>
+    <audio id="audio-wicket" src="/wicket.mp3" preload="auto"></audio>
+    <audio id="audio-transition" src="/transitionmusic.mp3" preload="auto"></audio>
 
-    <div id="live-badge"><div class="live-dot"></div>LIVE</div>
+    
+    
+    <div id="ipl-stage-overlay">
+        <div class="shutter top-s"></div>
+        <div class="shutter bot-s"></div>
+
+        <div id="ipl-box" class="ipl-boom">
+            <span class="layer-gold-front">SIX</span>
+            <span class="layer-gold-depth">SIX</span>
+            <span class="layer-gold-base">SIX</span>
+        </div>
+        <div id="event-sponsors-container"></div>
+    </div>
+<div id="live-badge"><div class="live-dot"></div>LIVE</div>
+    <div id="live-stats-bar">
+        <svg style="width:16px;height:16px;fill:white;" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+        <span id="viewer-count-text">0</span>
+    </div>
     
     <div id="quality-badge" onclick="toggleQualityMenu()">1080p (HIGH)</div>
     <div id="quality-menu">
@@ -362,23 +815,51 @@
         <div class="q-option" onclick="selectQuality(800, '480p (LOW)')">Low Quality (Data Saver)</div>
     </div>
 
-    <div id="share-btn" onclick="shareMatch()">
+    <div id="chat-toggle-btn" onclick="toggleChat()">
+        <svg id="chat-toggle-icon" style="width:16px;height:16px;fill:white;" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+        <span id="chat-toggle-text">HIDE CHAT</span>
+    </div>
+
+    <div id="share-btn" onclick="shareMatch()" title="Share">
         <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
-        SHARE
+    </div>
+
+    <div id="close-btn" onclick="closeMatch()" title="Close Match">
+        <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+    </div>
+
+    <div id="chat-container">
+        <div id="chat-messages"></div>
+        <form id="chat-input-area" onsubmit="event.preventDefault(); sendChatMessage();">
+            <input type="text" id="chat-input" placeholder="Say something..." autocomplete="off" enterkeyhint="send">
+            <button type="submit" id="chat-send">
+                <svg style="width:18px;height:18px;fill:white;margin-left:2px;" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            </button>
+        </form>
+    </div>
+
+    <div id="heart-container">
+        <div id="heart-btn" onclick="sendHeart()">
+            <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        </div>
     </div>
 
     <div id="live-sponsors-container"></div>
-    <img id="broadcast-watermark" src="my-logo.png" alt="Broadcast Logo">
+    <img id="broadcast-watermark" src="/my-logo.png" alt="Broadcast Logo">
 
-    <video id="viewer-video" autoplay playsinline></video>
+    <video id="viewer-video" autoplay playsinline webkit-playsinline></video>
     
-    <div id="event-stage-overlay">
-        <div class="shockwave"></div>
-        <div id="event-text-box">
-            <span class="text-glow">SIX</span>
-            <span class="text-core">SIX</span>
+    <div id="yt-title-container">
+        <div class="yt-logo"><img src="/my-logo.png" alt="Logo"></div>
+        <div class="yt-info">
+            <div class="yt-title-text" id="yt-title-text">Loading Match Info...</div>
+            <div class="yt-label" id="yt-label-text">Live Match</div>
         </div>
-        <div id="event-sponsors-container"></div>
+    </div>
+    
+    <div id="fullscreen-btn" onclick="toggleFullScreen()">
+        <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+        <span class="fs-text"></span>
     </div>
 
     <div id="match-intro-overlay">
@@ -402,16 +883,24 @@
     </div>
 
     <div id="input-overlay" class="overlay">
-        <div class="search-container">
-            <h2>Search Match Code</h2>
+        <div class="search-container page-intro-anim">
+            <img src="/my-logo.png" alt="Crickerr Logo" id="main-brand-logo">
+            <p class="hero-tagline">Watch Live Crickerr Matches</p>
             <div class="search-box">
-                <input type="text" id="match-input" placeholder="e.g. FINALS123" autocomplete="off">
-                <button id="submit-btn" onclick="submitMatchId()">SEARCH</button>
+                <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                <input type="text" id="match-input" placeholder="Enter Match Code" autocomplete="off">
+                <button id="submit-btn" onclick="submitMatchId()">Search</button>
             </div>
         </div>
 
-        <div class="live-matches-container">
-            <h2>Currently Ongoing Matches</h2>
+        <div class="live-matches-container page-intro-anim" style="animation-delay: 0.15s;">
+            <div class="live-matches-header">
+                <h2>Live Matches</h2>
+                <button id="admin-toggle-btn" onclick="toggleAdminMode()">Admin</button>
+            </div>
+            <div id="admin-actions">
+                <button class="admin-btn" id="delete-selected-btn" onclick="deleteSelectedMatches()" disabled>Delete Selected</button>
+            </div>
             <div id="live-matches-list">
                 <div class="spinner" style="margin: 0 auto;"></div>
             </div>
@@ -460,16 +949,43 @@
         let introPlayed = false;
         let currentMatchData = {};
 
+        let activeMatchId = null;
+        let chatUnsubscribe = null;
+        let heartUnsubscribe = null;
+        let isViewerAdded = false;
+        let lastHeartCount = 0;
+        const currentUserId = "User" + Math.floor(Math.random() * 9000 + 1000);
+
         function toggleQualityMenu() {
             const menu = document.getElementById('quality-menu');
             menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        let isChatVisible = true;
+        function toggleChat() {
+            isChatVisible = !isChatVisible;
+            const chatContainer = document.getElementById('chat-container');
+            const toggleText = document.getElementById('chat-toggle-text');
+            const toggleIcon = document.getElementById('chat-toggle-icon');
+            
+            if (isChatVisible) {
+                chatContainer.style.opacity = '1';
+                chatContainer.style.pointerEvents = 'auto';
+                toggleText.innerText = 'HIDE CHAT';
+                toggleIcon.innerHTML = '<path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>';
+            } else {
+                chatContainer.style.opacity = '0';
+                chatContainer.style.pointerEvents = 'none';
+                toggleText.innerText = 'SHOW CHAT';
+                toggleIcon.innerHTML = '<path d="M19.36 2.72l1.42 1.42-15.06 15.06-1.42-1.42L19.36 2.72zM20 2H4c-.8 0-1.49.47-1.81 1.14L18.86 19.82c.15-.02.29-.07.44-.14l.7-.7V4c0-1.1-.9-2-2-2zM4.14 4.86L2 6.99v13.01l4-4h9.86l-11.72-11.14z"/>';
+            }
         }
 
         function shareMatch() {
             const matchId = document.getElementById('match-input').value.trim() || new URLSearchParams(window.location.search).get('matchId');
             if (!matchId) return;
 
-            const shareUrl = window.location.origin + window.location.pathname + '?matchId=' + matchId.toUpperCase();
+            const shareUrl = window.location.origin + window.location.pathname + '?matchId=' + matchId;
             const shareData = {
                 title: 'Live Cricket Match',
                 text: 'Watch this cricket match live right now!',
@@ -479,7 +995,7 @@
             if (navigator.share) {
                 navigator.share(shareData).catch((err) => console.log('Error sharing:', err));
             } else {
-                // Fallback for desktop/unsupported browsers: Copy to clipboard
+                // Fallback: Copy to clipboard
                 const tempInput = document.createElement('input');
                 document.body.appendChild(tempInput);
                 tempInput.value = shareUrl;
@@ -488,6 +1004,60 @@
                 document.body.removeChild(tempInput);
                 alert('Match link copied to clipboard!');
             }
+        }
+
+        function closeMatch() {
+            removeViewerPresence();
+            
+            if (unsubscribe) {
+                unsubscribe();
+                unsubscribe = null;
+            }
+            if (chatUnsubscribe) {
+                chatUnsubscribe();
+                chatUnsubscribe = null;
+            }
+            if (heartUnsubscribe) {
+                heartUnsubscribe();
+                heartUnsubscribe = null;
+            }
+            
+            if (peer) {
+                peer.destroy();
+                peer = null;
+            }
+            
+            video.srcObject = null;
+            
+            document.getElementById('live-badge').style.display = 'none';
+            document.getElementById('live-stats-bar').style.display = 'none';
+            document.getElementById('chat-container').style.display = 'none';
+            document.getElementById('chat-toggle-btn').style.display = 'none';
+            document.getElementById('heart-container').style.display = 'none';
+            document.getElementById('share-btn').classList.remove('match-active');
+            document.getElementById('close-btn').classList.remove('match-active');
+            
+            const introOverlay = document.getElementById('match-intro-overlay');
+            if (introOverlay) introOverlay.style.display = 'none';
+            
+            const wm = document.getElementById('broadcast-watermark');
+            if (wm) wm.classList.remove('show-watermark');
+            
+            const ls = document.getElementById('live-sponsors-container');
+            if (ls) ls.style.opacity = '0';
+            
+            document.getElementById('yt-title-text').innerText = "Loading Match Info...";
+            
+            window.history.replaceState(null, '', window.location.pathname);
+            
+            activeMatchId = null;
+            document.getElementById('match-input').value = '';
+            
+            statusOverlay.style.display = 'none';
+            playOverlay.style.display = 'none';
+            inputOverlay.style.display = 'flex';
+            
+            fetchLiveMatches();
         }
 
         function selectQuality(bw, label) {
@@ -517,8 +1087,228 @@
                 fetchLiveMatches();
             } else {
                 inputOverlay.style.display = 'none';
-                checkLiveStatus(matchId.toUpperCase());
+                checkLiveStatus(matchId);
             }
+        };
+
+        let isAdminMode = false;
+        let selectedAdminMatches = new Set();
+
+        function toggleAdminMode() {
+            if (!isAdminMode) {
+                const pwd = prompt("Enter Admin Password:");
+                if (pwd !== "2626") {
+                    if (pwd !== null) alert("Incorrect Password");
+                    return;
+                }
+                isAdminMode = true;
+                document.getElementById('admin-toggle-btn').innerText = "Exit Admin";
+                document.getElementById('admin-toggle-btn').style.color = "#ef4444";
+                document.getElementById('admin-toggle-btn').style.borderColor = "#ef4444";
+                document.getElementById('admin-actions').style.display = "flex";
+                document.getElementById('live-matches-list').classList.add('admin-mode');
+            } else {
+                isAdminMode = false;
+                selectedAdminMatches.clear();
+                document.getElementById('admin-toggle-btn').innerText = "Admin";
+                document.getElementById('admin-toggle-btn').style.color = "#888";
+                document.getElementById('admin-toggle-btn').style.borderColor = "#555";
+                document.getElementById('admin-actions').style.display = "none";
+                document.getElementById('live-matches-list').classList.remove('admin-mode');
+                updateAdminDeleteButton();
+                
+                // Clear any UI selections if disabling admin mode
+                document.querySelectorAll('.match-card.admin-selected').forEach(card => {
+                    card.classList.remove('admin-selected');
+                    const cb = card.querySelector('.match-checkbox');
+                    if (cb) cb.checked = false;
+                });
+            }
+        }
+
+        function updateAdminDeleteButton() {
+            const btn = document.getElementById('delete-selected-btn');
+            if (selectedAdminMatches.size > 0) {
+                btn.disabled = false;
+                btn.innerText = `Delete Selected (${selectedAdminMatches.size})`;
+            } else {
+                btn.disabled = true;
+                btn.innerText = "Delete Selected";
+            }
+        }
+
+        function deleteSelectedMatches() {
+            if (selectedAdminMatches.size === 0) return;
+            if (confirm(`Are you sure you want to permanently delete ${selectedAdminMatches.size} match(es)?`)) {
+                selectedAdminMatches.forEach(matchId => {
+                    db.collection("live_matches").doc(matchId).delete().catch(err => {
+                        console.error("Error deleting match (falling back to isStreaming:false):", err);
+                        db.collection("live_matches").doc(matchId).update({ isStreaming: false });
+                    });
+                });
+                selectedAdminMatches.clear();
+                updateAdminDeleteButton();
+            }
+        }
+
+        let globalLiveMatches = [];
+        let currentMatchPage = 1;
+        const matchesPerPage = 4;
+
+        function getFlagEmoji(country) {
+            if (!country) return "🏳️";
+            const c = country.trim().toLowerCase();
+            if(c === 'india') return '🇮🇳';
+            if(c === 'australia') return '🇦🇺';
+            if(c === 'england' || c === 'uk') return '🇬🇧';
+            if(c === 'pakistan') return '🇵🇰';
+            if(c === 'sri lanka') return '🇱🇰';
+            if(c === 'bangladesh') return '🇧🇩';
+            if(c === 'new zealand') return '🇳🇿';
+            if(c === 'south africa') return '🇿🇦';
+            if(c === 'west indies') return '🌴';
+            if(c === 'afghanistan') return '🇦🇫';
+            if(c === 'canada') return '🇨🇦';
+            if(c === 'usa' || c === 'united states') return '🇺🇸';
+            if(c === 'nepal') return '🇳🇵';
+            if(c === 'ireland') return '🇮🇪';
+            if(c === 'zimbabwe') return '🇿🇼';
+            if(c === 'uae') return '🇦🇪';
+            return '🌍';
+        }
+
+        function renderMatchesPage() {
+            const listContainer = document.getElementById('live-matches-list');
+            if (globalLiveMatches.length === 0) {
+                listContainer.innerHTML = '<div style="text-align: center; color: rgba(255,255,255,0.8); font-size: 16px;">No live broadcasts at the moment.</div>';
+                return;
+            }
+
+            const totalPages = Math.ceil(globalLiveMatches.length / matchesPerPage);
+            if (currentMatchPage > totalPages) currentMatchPage = totalPages;
+            if (currentMatchPage < 1) currentMatchPage = 1;
+
+            const startIndex = (currentMatchPage - 1) * matchesPerPage;
+            const endIndex = startIndex + matchesPerPage;
+            const currentMatches = globalLiveMatches.slice(startIndex, endIndex);
+
+            const matchesByCountry = {};
+            currentMatches.forEach(m => {
+                const country = m.country || "International";
+                if (!matchesByCountry[country]) matchesByCountry[country] = [];
+                matchesByCountry[country].push(m);
+            });
+
+            const oldSelected = new Set(selectedAdminMatches);
+            let html = '';
+
+            for (const [country, matches] of Object.entries(matchesByCountry)) {
+                const flag = getFlagEmoji(country);
+                html += `
+                <div class="country-group">
+                    <div class="country-header" style="color: rgba(255,255,255,0.9); text-shadow: 0 1px 2px rgba(0,0,0,0.4);">${flag} ${country}</div>
+                    <div class="match-cards">
+                        ${matches.map(m => {
+                            const isSel = oldSelected.has(m.id);
+                            
+                            const defaultLogo = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23475569'><path d='M12 2L3 7v9.82c0 3.61 2.5 6.94 5.92 7.95L12 22l3.08-.23c3.42-1.01 5.92-4.34 5.92-7.95V7l-9-5zm0 2.18l7.5 4.17v8.47c0 2.82-1.95 5.43-4.63 6.22L12 19.88l-2.87.82C6.45 19.91 4.5 17.3 4.5 14.48V8.35L12 4.18z'/></svg>";
+                            const t1Img = m.t1Logo ? m.t1Logo : defaultLogo;
+                            const t2Img = m.t2Logo ? m.t2Logo : defaultLogo;
+                            
+                            function shrinkName(name) {
+                                if (!name) return '';
+                                let words = name.trim().split(/\s+/);
+                                if (words.length <= 2) return name;
+                                let firstTwo = words[0] + " " + words[1];
+                                let rest = words.slice(2).map(w => w.charAt(0).toUpperCase()).join('.');
+                                if (words.length === 3) rest += '.';
+                                return firstTwo + " " + rest;
+                            }
+
+                            let t1Name = m.t1 ? shrinkName(m.t1) : '';
+                            let t2Name = m.t2 ? shrinkName(m.t2) : '';
+                            
+                            if (!t1Name && !t2Name) {
+                                t1Name = 'Match Code';
+                                t2Name = m.id;
+                            } else if (!t1Name) {
+                                t1Name = 'TBA';
+                            } else if (!t2Name) {
+                                t2Name = 'TBA';
+                            }
+                            
+                            const isEnded = m.matchStatus === "COMPLETE" || m.isStreaming === false;
+                            
+                            let dateStr = "";
+                            const matchDate = m.matchDate || m.date;
+                            if (matchDate) {
+                                const d = new Date(matchDate);
+                                if (!isNaN(d.getTime())) {
+                                    dateStr = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+                                } else {
+                                    dateStr = matchDate.trim();
+                                }
+                            }
+
+                            let subInfo = [];
+                            if (dateStr) subInfo.push(dateStr);
+                            if (m.venue) subInfo.push(m.venue);
+                            if (m.matchType) subInfo.push(m.matchType);
+                            let subText = subInfo.length > 0 ? subInfo.join(' • ') : 'Tap to Watch Live';
+
+                            if (isEnded) {
+                                let resultText = m.result && m.result.trim() !== "" ? m.result : "Live match ended";
+                                subText = `<span style="color: #fca5a5; font-weight: 700;">${resultText}</span>`;
+                            }
+
+                            const cardStyle = isEnded ? 'opacity: 0.6; filter: grayscale(100%);' : '';
+                            const liveBadgeHtml = isEnded 
+                                ? `<div class="match-card-live" style="background: rgba(255, 255, 255, 0.15); color: #cbd5e1;">ENDED</div>` 
+                                : `<div class="match-card-live"><div class="live-dot" style="width:6px;height:6px;"></div> LIVE</div>`;
+
+                            return `
+                            <div class="match-card ${isSel ? 'admin-selected' : ''}" id="card-${m.id}" onclick="selectMatchFromList('${m.id}')" style="${cardStyle}">
+                                <input type="checkbox" class="match-checkbox" ${isSel ? 'checked' : ''}>
+                                ${liveBadgeHtml}
+                                
+                                <div class="match-card-teams">
+                                    <div class="match-team left">
+                                        <img src="${t1Img}" class="match-team-logo" alt="T1">
+                                        <span class="match-team-name">${t1Name}</span>
+                                    </div>
+                                    
+                                    <div class="match-vs">VS</div>
+                                    
+                                    <div class="match-team right">
+                                        <img src="${t2Img}" class="match-team-logo" alt="T2">
+                                        <span class="match-team-name">${t2Name}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="match-card-sub">${subText}</div>
+                            </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>`;
+            }
+
+            if (totalPages > 1) {
+                html += `
+                <div class="pagination-controls">
+                    <button class="page-btn" onclick="changeMatchPage(-1)" ${currentMatchPage === 1 ? 'disabled' : ''}>PREV</button>
+                    <span class="page-info">Page ${currentMatchPage} of ${totalPages}</span>
+                    <button class="page-btn" onclick="changeMatchPage(1)" ${currentMatchPage === totalPages ? 'disabled' : ''}>NEXT</button>
+                </div>
+                `;
+            }
+
+            listContainer.innerHTML = html;
+        }
+
+        window.changeMatchPage = function(dir) {
+            currentMatchPage += dir;
+            renderMatchesPage();
         };
 
         function fetchLiveMatches() {
@@ -527,40 +1317,14 @@
             // Sign in anonymously first to satisfy Firebase security rules
             firebase.auth().signInAnonymously().then(() => {
                 db.collection("live_matches")
-                  .where("isStreaming", "==", true)
                   .onSnapshot((snapshot) => {
-                    if (snapshot.empty) {
-                        listContainer.innerHTML = '<div style="text-align: center; color: #888; font-size: 16px;">No live broadcasts at the moment.</div>';
-                        return;
+                    globalLiveMatches = [];
+                    if (!snapshot.empty) {
+                        snapshot.forEach(doc => {
+                            globalLiveMatches.push({ id: doc.id, ...doc.data() });
+                        });
                     }
-
-                    const matchesByCountry = {};
-                    snapshot.forEach(doc => {
-                        const data = doc.data();
-                        const country = data.country || "International"; // Grouping fallback
-                        if (!matchesByCountry[country]) {
-                            matchesByCountry[country] = [];
-                        }
-                        matchesByCountry[country].push({ id: doc.id, ...data });
-                    });
-
-                    let html = '';
-                    for (const [country, matches] of Object.entries(matchesByCountry)) {
-                        html += `
-                        <div class="country-group">
-                            <div class="country-header">${country}</div>
-                            <div class="match-cards">
-                                ${matches.map(m => `
-                                    <div class="match-card" onclick="selectMatchFromList('${m.id}')">
-                                        <div class="match-card-live"><div class="live-dot" style="width:6px;height:6px;"></div> LIVE</div>
-                                        <div class="match-card-title">${m.t1 || 'Team 1'} vs ${m.t2 || 'Team 2'}</div>
-                                        <div class="match-card-sub">${m.matchType || 'Match'} • ${m.venue || 'Venue'}</div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>`;
-                    }
-                    listContainer.innerHTML = html;
+                    renderMatchesPage();
                 }, (error) => {
                     console.error("Error fetching live matches:", error);
                     listContainer.innerHTML = '<div style="text-align: center; color: #ef4444;">Error loading matches.</div>';
@@ -572,12 +1336,27 @@
         }
 
         function selectMatchFromList(matchId) {
-            matchInput.value = matchId;
-            submitMatchId();
+            if (isAdminMode) {
+                const card = document.getElementById(`card-${matchId}`);
+                const cb = card.querySelector('.match-checkbox');
+                if (selectedAdminMatches.has(matchId)) {
+                    selectedAdminMatches.delete(matchId);
+                    card.classList.remove('admin-selected');
+                    cb.checked = false;
+                } else {
+                    selectedAdminMatches.add(matchId);
+                    card.classList.add('admin-selected');
+                    cb.checked = true;
+                }
+                updateAdminDeleteButton();
+            } else {
+                matchInput.value = matchId;
+                submitMatchId();
+            }
         }
 
         function submitMatchId() {
-            const val = matchInput.value.trim().toUpperCase();
+            const val = matchInput.value.trim();
             if (!val) {
                 alert("Please enter a valid Match ID");
                 return;
@@ -606,20 +1385,59 @@
                         const data = doc.data();
                         currentMatchData = data;
 
+                        // --- POPULATE YOUTUBE TITLE (PORTRAIT) ---
+                        const ytTitle = document.getElementById('yt-title-text');
+                        if (ytTitle) {
+                            let teamsText = "";
+                            
+                            // 1. Add Teams dynamically
+                            if (data.t1 && data.t2) {
+                                teamsText = `${data.t1} vs ${data.t2}`;
+                            } else if (data.t1 || data.t2) {
+                                teamsText = data.t1 || data.t2; 
+                            }
+                            
+                            let subParts = [];
+                            // 2. Add Venue cleanly
+                            if (data.venue && data.venue.trim() !== "") {
+                                subParts.push(data.venue.trim());
+                            }
+                            
+                            // 3. Add Date cleanly
+                            const matchDate = data.matchDate || data.date;
+                            if (matchDate && matchDate.trim() !== "") {
+                                const d = new Date(matchDate);
+                                if (!isNaN(d.getTime())) {
+                                    subParts.push(d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }));
+                                } else {
+                                    subParts.push(matchDate.trim());
+                                }
+                            }
+                            
+                            // 4. Overwrite text immediately. 
+                            ytTitle.innerText = teamsText;
+                            const ytLabel = document.getElementById('yt-label-text');
+                            if (ytLabel) ytLabel.innerText = subParts.length > 0 ? subParts.join(' • ') : "Live Match";
+        }
+
                         // --- ANIMATION / INTRO SYNC LOGIC ---
                         if (data.t1 && data.t2 && data.t1 !== "HOME" && !introPlayed) {
                             introPlayed = true;
                             setTimeout(() => triggerMatchIntro(data), 1500);
                         }
                         
+                        // Clean, fail-proof logic to track new actions securely via Unique IDs
                         if (data.lastAction && data.lastAction.id !== lastActionId) {
                             const isInitialLoad = (lastActionId === null);
                             lastActionId = data.lastAction.id;
                             
-                            // Ensure it only triggers if it's a genuinely NEW action (not initial load)
-                            if (!isInitialLoad && ['4', '6', 'W'].includes(data.lastAction.type)) {
-                                triggerAudio(data.lastAction.type);
-                                triggerAnim(data.lastAction.type, data.sponsors);
+                            // Only trigger the animation if this is a genuinely NEW action (not a page refresh)
+                            if (!isInitialLoad) {
+                                const actionType = String(data.lastAction.type || data.lastAction).toUpperCase();
+                                if (['4', '6', 'W'].includes(actionType)) {
+                                    triggerAudio(actionType);
+                                    triggerAnim(actionType, data.sponsors);
+                                }
                             }
                         }
 
@@ -635,43 +1453,73 @@
                         const wm = document.getElementById('broadcast-watermark');
                         const ls = document.getElementById('live-sponsors-container');
                         
+                        // ALWAYS populate the sponsor HTML so it is fully loaded and ready when overlays close
+                        if (ls) {
+                            if (data.sponsors && (data.sponsors.main || data.sponsors.sponsor2)) {
+                                let html = '';
+                                if (data.sponsors.main) html += createSponsorHTML(data.sponsors.main, 'live-sponsor');
+                                if (data.sponsors.sponsor2) html += createSponsorHTML(data.sponsors.sponsor2, 'live-sponsor');
+                                ls.innerHTML = html;
+                            } else {
+                                ls.innerHTML = '';
+                            }
+                        }
+                        
+                        // Toggle Visibility based on overlays
                         if (isIntroActive || hasOverlay) {
                             if (wm) wm.classList.remove('show-watermark');
                             if (ls) ls.style.opacity = '0';
                         } else {
                             if (wm) wm.classList.add('show-watermark');
-                            
-                            // Update Live Sponsors dynamically
-                            if (data.sponsors && (data.sponsors.main || data.sponsors.sponsor2)) {
-                                let html = '';
-                                if (data.sponsors.main) html += createSponsorHTML(data.sponsors.main, 'live-sponsor');
-                                if (data.sponsors.sponsor2) html += createSponsorHTML(data.sponsors.sponsor2, 'live-sponsor');
-                                if (ls) {
-                                    ls.innerHTML = html;
-                                    ls.style.opacity = '1';
-                                }
-                            } else {
-                                if (ls) ls.style.opacity = '0';
+                            if (ls && data.sponsors && (data.sponsors.main || data.sponsors.sponsor2)) {
+                                ls.style.opacity = '1';
+                            } else if (ls) {
+                                ls.style.opacity = '0';
                             }
                         }
 
-                        // --- STREAM LOGIC ---
+                        // --- LIVE FEATURES & STREAM LOGIC ---
+                        activeMatchId = matchId;
+                        
+                        if (data.viewers !== undefined) {
+                            document.getElementById('viewer-count-text').innerText = data.viewers;
+                        }
+
                         if (data.isStreaming && data.streamId) {
                             if (!peer) {
                                 connectToStream(data.streamId);
+                            } else if (activePeerId !== data.streamId) {
+                                // Reconnect if the broadcaster refreshed their stream ID
+                                if (activeCall) activeCall.close();
+                                peer.destroy();
+                                peer = null;
+                                connectToStream(data.streamId);
                             }
                             document.getElementById('live-badge').style.display = 'flex';
+                            document.getElementById('live-stats-bar').style.display = 'flex';
+                            document.getElementById('chat-container').style.display = 'flex';
+                            document.getElementById('chat-toggle-btn').style.display = 'flex';
+                            document.getElementById('heart-container').style.display = 'flex';
                             document.getElementById('share-btn').classList.add('match-active');
+                            document.getElementById('close-btn').classList.add('match-active');
+                            
+                            initLiveFeatures(matchId);
                         } else {
                             showError("The broadcaster is currently offline.");
                             if (peer) { peer.destroy(); peer = null; }
                             video.srcObject = null;
                             document.getElementById('live-badge').style.display = 'none';
+                            document.getElementById('live-stats-bar').style.display = 'none';
+                            document.getElementById('chat-container').style.display = 'none';
+                            document.getElementById('chat-toggle-btn').style.display = 'none';
+                            document.getElementById('heart-container').style.display = 'none';
                             document.getElementById('share-btn').classList.remove('match-active');
+                            document.getElementById('close-btn').classList.remove('match-active');
                         }
                     } else {
                         showError("Match not found.\nMake sure the Broadcaster has clicked 'GO LIVE'.");
                         document.getElementById('live-badge').style.display = 'none';
+                        document.getElementById('live-stats-bar').style.display = 'none';
                     }
                 }, (error) => {
                     console.error("Firestore error:", error);
@@ -723,27 +1571,40 @@
             let dummyStream;
             try {
                 const dummyCanvas = document.createElement('canvas');
+                dummyCanvas.style.display = 'none';
+                document.body.appendChild(dummyCanvas); // Fixes iOS empty track issue
                 dummyCanvas.width = 1920; 
                 dummyCanvas.height = 1080;
                 const dummyCtx = dummyCanvas.getContext('2d');
                 dummyCtx.fillStyle = '#000';
                 dummyCtx.fillRect(0, 0, 1920, 1080);
-                dummyStream = dummyCanvas.captureStream(1); 
+                
+                // Safari and WebKit browsers require a specific prefix
+                if (dummyCanvas.captureStream) {
+                    dummyStream = dummyCanvas.captureStream(30); 
+                } else if (dummyCanvas.webkitCaptureStream) {
+                    dummyStream = dummyCanvas.webkitCaptureStream(30);
+                } else {
+                    dummyStream = new MediaStream();
+                }
+                
+                // Add dummy audio track to ensure WebRTC negotiates an audio channel
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    const actx = new AudioContext();
+                    const dest = actx.createMediaStreamDestination();
+                    if (dest.stream.getAudioTracks().length > 0) {
+                        dummyStream.addTrack(dest.stream.getAudioTracks()[0]);
+                    }
+                }
             } catch(e) {
+                console.error("Dummy stream error:", e);
                 dummyStream = new MediaStream();
             }
 
-            // Apply selected bandwidth and FORCE high starting bitrate to avoid slow start blur
+            // Standardize call connection
             activeCall = peer.call(targetPeerId, dummyStream, {
-                sdpTransform: (sdp) => {
-                    let newSdp = sdp;
-                    if (newSdp.includes('a=mid:video')) {
-                        newSdp = newSdp.replace(/a=mid:video\r\n/g, `a=mid:video\r\nb=AS:${currentBandwidth}\r\n`);
-                    }
-                    // This specific line guarantees it skips "auto-detecting network speed" and jumps straight to crisp quality
-                    newSdp = newSdp.replace(/(a=fmtp:\d+ .*)\r\n/g, `$1;x-google-start-bitrate=${currentBandwidth};x-google-min-bitrate=${Math.floor(currentBandwidth/2)}\r\n`);
-                    return newSdp;
-                }
+                metadata: { bandwidth: currentBandwidth }
             }); 
             
             activeCall.on('stream', (remoteStream) => {
@@ -751,12 +1612,22 @@
                 statusOverlay.style.display = 'none';
                 video.srcObject = remoteStream;
                 
-                const playPromise = video.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(() => {
-                        playOverlay.style.display = 'flex';
-                    });
-                }
+                // iOS mobile fix: onloadedmetadata sometimes won't fire unless play() is explicitly called first
+                const attemptPlay = () => {
+                    const playPromise = video.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(() => {
+                            playOverlay.style.display = 'flex';
+                        });
+                    }
+                };
+                
+                attemptPlay(); // Call immediately to bypass the mobile deadlock
+                
+                // Keep the metadata listener as a safe fallback for other browsers
+                video.onloadedmetadata = () => {
+                    attemptPlay();
+                };
             });
             
             activeCall.on('close', () => {
@@ -777,6 +1648,52 @@
             video.play();
         }
 
+        function toggleFullScreen() {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                const docEl = document.documentElement;
+                if (docEl.requestFullscreen) {
+                    docEl.requestFullscreen().then(() => {
+                        if (screen.orientation && screen.orientation.lock) {
+                            screen.orientation.lock('landscape').catch(e => console.log(e));
+                        }
+                    }).catch(err => console.log(err));
+                } else if (docEl.webkitRequestFullscreen) { /* Safari */
+                    docEl.webkitRequestFullscreen();
+                    if (screen.orientation && screen.orientation.lock) {
+                        screen.orientation.lock('landscape').catch(e => console.log(e));
+                    }
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().then(() => {
+                        if (screen.orientation && screen.orientation.unlock) {
+                            screen.orientation.unlock();
+                        }
+                    }).catch(err => console.log(err));
+                } else if (document.webkitExitFullscreen) { /* Safari */
+                    document.webkitExitFullscreen();
+                    if (screen.orientation && screen.orientation.unlock) {
+                        screen.orientation.unlock();
+                    }
+                }
+            }
+        }
+            
+
+        function removeViewerPresence() {
+            if (isViewerAdded && activeMatchId) {
+                db.collection("live_matches").doc(activeMatchId).update({
+                    viewers: firebase.firestore.FieldValue.increment(-1)
+                }).catch(e => console.log("Viewer decrement error", e));
+                isViewerAdded = false;
+            }
+        }
+
+        // Catch multiple exit events to ensure viewer is removed reliably across desktop & mobile
+        window.addEventListener("beforeunload", removeViewerPresence);
+        window.addEventListener("pagehide", removeViewerPresence);
+        window.addEventListener("unload", removeViewerPresence);
+
         function showError(msg) {
             statusOverlay.style.display = 'flex';
             spinner.style.display = 'none';
@@ -791,6 +1708,7 @@
                 backBtn.onmouseout = () => backBtn.style.borderColor = "#555";
                 
                 backBtn.onclick = () => {
+                    removeViewerPresence(); // Minus the viewer count when backing out manually
                     window.history.replaceState(null, '', window.location.pathname);
                     statusOverlay.style.display = 'none';
                     inputOverlay.style.display = 'flex';
@@ -807,6 +1725,95 @@
             }
         });
 
+        // Chat Enter key is now handled natively via the <form> onsubmit in HTML
+
+        // --- LIVE ENGAGEMENT FUNCTIONS ---
+        function initLiveFeatures(matchId) {
+            // Track Viewer Presence (Join & Leave)
+            if (!isViewerAdded) {
+                isViewerAdded = true;
+                db.collection("live_matches").doc(matchId).update({
+                    viewers: firebase.firestore.FieldValue.increment(1)
+                }).catch(e => console.log("Viewer increment error", e));
+            }
+
+            // Sync Realtime Chat
+            if (!chatUnsubscribe) {
+                chatUnsubscribe = db.collection("live_matches").doc(matchId).collection("chat")
+                    .orderBy("timestamp", "desc").limit(30)
+                    .onSnapshot((snapshot) => {
+                        const chatBox = document.getElementById('chat-messages');
+                        let html = '';
+                        const msgs = [];
+                        snapshot.forEach(doc => msgs.push(doc.data()));
+                        // Render oldest to newest
+                        msgs.reverse().forEach(msg => {
+                            html += `<div class="chat-msg"><span class="chat-user">${msg.user}:</span>${msg.text}</div>`;
+                        });
+                        chatBox.innerHTML = html;
+                        chatBox.scrollTop = chatBox.scrollHeight;
+                    });
+            }
+
+            // Sync Floating Hearts for Everyone
+            if (!heartUnsubscribe) {
+                heartUnsubscribe = db.collection("live_matches").doc(matchId).onSnapshot((doc) => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        const currentHearts = data.hearts || 0;
+                        if (currentHearts > lastHeartCount) {
+                            let diff = currentHearts - lastHeartCount;
+                            if (diff > 15) diff = 15; // Prevent screen spam limit
+                            for(let i=0; i<diff; i++) {
+                                setTimeout(spawnFloatingHeart, i * 150);
+                            }
+                            lastHeartCount = currentHearts;
+                        } else {
+                            lastHeartCount = currentHearts; 
+                        }
+                    }
+                });
+            }
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text || !activeMatchId) return;
+            
+            input.value = '';
+            db.collection("live_matches").doc(activeMatchId).collection("chat").add({
+                user: currentUserId,
+                text: text,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+
+        function sendHeart() {
+            if (!activeMatchId) return;
+            spawnFloatingHeart(); // Immediate visual feedback for the user who clicked
+            db.collection("live_matches").doc(activeMatchId).update({
+                hearts: firebase.firestore.FieldValue.increment(1)
+            }).catch(() => {
+                // If it's the very first heart on the match, set it up
+                db.collection("live_matches").doc(activeMatchId).set({ hearts: 1 }, { merge: true });
+            });
+        }
+
+        function spawnFloatingHeart() {
+            const container = document.getElementById('heart-container');
+            const heart = document.createElement('div');
+            heart.className = 'floating-heart';
+            heart.innerHTML = '<svg viewBox="0 0 24 24" fill="#ef4444"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>';
+            
+            const rot = Math.floor(Math.random() * 60) - 30; // Random angle
+            heart.style.setProperty('--rot', rot);
+            heart.style.left = (Math.random() * 20 + 10) + 'px';
+            
+            container.appendChild(heart);
+            setTimeout(() => { heart.remove(); }, 2000);
+        }
+
         // --- ANIMATION HELPER FUNCTIONS ---
         function createSponsorHTML(src, className) {
             if (!src) return '';
@@ -816,7 +1823,7 @@
         function formatIntroTeamName(name) { 
             if (!name) return "TEAM"; 
             let formatted = String(name); 
-            formatted = formatted.replace(/\bCRICKET CLUB\b/gi, "C.C").replace(/\bCRICKET\b/gi, "C.C").replace(/\bCC\b/gi, "C.C"); 
+            formatted = formatted.replace(/\bCRICKET CLUB\b/gi, "C.C").replace(/\bCRICKET\b/gi, "C.").replace(/\bCC\b/gi, "C.C"); 
             return formatted; 
         }
 
@@ -909,18 +1916,16 @@
 
         function triggerAnim(type, sponsorsObj) {
             let displayText = "";
-            let accentColor = "";
             
-            // Assign Dynamic Colors based on the event
-            if (type === '4') { displayText = "FOUR"; accentColor = "rgba(56, 189, 248, 0.8)"; } // Bright Blue
-            else if (type === '6') { displayText = "SIX"; accentColor = "rgba(34, 197, 94, 0.8)"; } // Bright Green
-            else if (type === 'W') { displayText = "OUT"; accentColor = "rgba(239, 68, 68, 0.8)"; } // Bright Red
+            // Assign Text based on the event
+            if (type === '4') { displayText = "FOUR"; }
+            else if (type === '6') { displayText = "SIX"; }
+            else if (type === 'W') { displayText = "OUT"; }
             else return;
 
-            const stage = document.getElementById('event-stage-overlay');
-            const box = document.getElementById('event-text-box');
+            const stage = document.getElementById('ipl-stage-overlay');
+            const box = document.getElementById('ipl-box');
             const spans = box.querySelectorAll('span');
-            const shockwave = document.querySelector('.shockwave');
 
             const sponsors = sponsorsObj || {};
             const eventSponsors = document.getElementById('event-sponsors-container');
@@ -940,35 +1945,30 @@
                 eventSponsors.innerHTML = html;
             }
 
-            // Remove class immediately to reset the state
-            stage.classList.remove('is-active');
+            // Reset Animation
+            stage.classList.remove('splitting');
+            box.classList.remove('active-boom');
             
-            // Apply Dynamic Color to Shockwave & Glow based on the event
-            if (shockwave) {
-                shockwave.style.boxShadow = `0 0 80px ${accentColor}, inset 0 0 80px ${accentColor}`;
-                shockwave.style.borderColor = accentColor;
-            }
-            const textGlow = document.querySelector('.text-glow');
-            if (textGlow) textGlow.style.color = accentColor;
+            // FORCE DOM REFLOW INSTANTLY (Fixes animation stuck/not triggering bug)
+            void box.offsetWidth; 
             
-            // Double requestAnimationFrame ensures WebKit/Mobile Safari actually paints 
-            // the cleared state before applying the active state, guaranteeing the animation plays every time.
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    spans.forEach(s => s.innerText = displayText);
+            spans.forEach(s => s.innerText = displayText);
 
-                    // Trigger the new animation classes
-                    stage.classList.add('is-active'); 
-                    
-                    if (eventSponsors) eventSponsors.style.opacity = '1';
+            // Play Sequence
+            // A. Close Shutters immediately
+            stage.classList.add('splitting'); 
+            
+            // B. Boom Text appears shortly after shutters close
+            setTimeout(() => {
+                box.classList.add('active-boom');
+                if (eventSponsors) eventSponsors.style.opacity = '1';
+            }, 100);
 
-                    // Cleanup after animation completes (matches the 3.5s CSS animation)
-                    setTimeout(() => {
-                        stage.classList.remove('is-active');
-                        if (eventSponsors) eventSponsors.style.opacity = '0';
-                    }, 3500);
-                });
-            });
+            // C. Open Shutters after animation finishes
+            setTimeout(() => {
+                stage.classList.remove('splitting');
+                if (eventSponsors) eventSponsors.style.opacity = '0';
+            }, 3000);
         }
     </script>
 </body>
