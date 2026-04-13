@@ -1211,7 +1211,7 @@
                         ${matches.map(m => {
                             const isSel = oldSelected.has(m.id);
                             
-                            const defaultLogo = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23475569"><path d="M12 2L3 7v9.82c0 3.61 2.5 6.94 5.92 7.95L12 22l3.08-.23c3.42-1.01 5.92-4.34 5.92-7.95V7l-9-5zm0 2.18l7.5 4.17v8.47c0 2.82-1.95 5.43-4.63 6.22L12 19.88l-2.87.82C6.45 19.91 4.5 17.3 4.5 14.48V8.35L12 4.18z"/></svg>';
+                            const defaultLogo = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23475569'><path d='M12 2L3 7v9.82c0 3.61 2.5 6.94 5.92 7.95L12 22l3.08-.23c3.42-1.01 5.92-4.34 5.92-7.95V7l-9-5zm0 2.18l7.5 4.17v8.47c0 2.82-1.95 5.43-4.63 6.22L12 19.88l-2.87.82C6.45 19.91 4.5 17.3 4.5 14.48V8.35L12 4.18z'/></svg>";
                             const t1Img = m.t1Logo ? m.t1Logo : defaultLogo;
                             const t2Img = m.t2Logo ? m.t2Logo : defaultLogo;
                             
@@ -1612,12 +1612,15 @@
                 statusOverlay.style.display = 'none';
                 video.srcObject = remoteStream;
                 
-                const playPromise = video.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(() => {
-                        playOverlay.style.display = 'flex';
-                    });
-                }
+                // Wait for the stream metadata to load before playing (fixes mobile black screen)
+                video.onloadedmetadata = () => {
+                    const playPromise = video.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(() => {
+                            playOverlay.style.display = 'flex';
+                        });
+                    }
+                };
             });
             
             activeCall.on('close', () => {
