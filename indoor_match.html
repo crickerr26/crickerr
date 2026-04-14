@@ -831,7 +831,10 @@
                             </div>
                             
                             <div class="flex-grow space-y-2">
-                                <select id="team1-select" class="w-full p-2 bg-white/80 backdrop-blur-sm border border-blue-200 rounded-lg text-xs font-bold uppercase text-blue-700 shadow-sm focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer hover:bg-white transition-colors"><option value="">▼ Load Saved Team</option></select>
+                                <button id="team1-select-btn" onclick="openTeamPicker('team1')" class="w-full p-2 bg-white/80 backdrop-blur-sm border border-blue-200 rounded-lg text-xs font-bold uppercase text-blue-700 shadow-sm outline-none cursor-pointer hover:bg-blue-50 transition-colors flex justify-between items-center text-left">
+                                    <span>▼ Load Saved Team</span>
+                                </button>
+                                <input type="hidden" id="team1-select" value="">
                                 
                                 <input type="text" id="team1-name-input" 
                                         onblur="this.value = this.value.replace(/Cricket Club/gi, 'C.C').replace(/Cricket/gi, 'C.').trim().toUpperCase()"
@@ -859,7 +862,10 @@
                             </div>
 
                             <div class="flex-grow space-y-2">
-                                <select id="team2-select" class="w-full p-2 bg-white/80 backdrop-blur-sm border border-red-200 rounded-lg text-xs font-bold uppercase text-red-700 shadow-sm focus:ring-2 focus:ring-red-500 outline-none cursor-pointer hover:bg-white transition-colors"><option value="">▼ Load Saved Team</option></select>
+                                <button id="team2-select-btn" onclick="openTeamPicker('team2')" class="w-full p-2 bg-white/80 backdrop-blur-sm border border-red-200 rounded-lg text-xs font-bold uppercase text-red-700 shadow-sm outline-none cursor-pointer hover:bg-red-50 transition-colors flex justify-between items-center text-left">
+                                    <span>▼ Load Saved Team</span>
+                                </button>
+                                <input type="hidden" id="team2-select" value="">
                                 
                                 <input type="text" id="team2-name-input" 
                                         onblur="this.value = this.value.replace(/Cricket Club/gi, 'C.C').replace(/Cricket/gi, 'C.').trim().toUpperCase()"
@@ -1908,34 +1914,11 @@
         }
         
         // --- 1. DUPLICATE PREVENTION LOGIC (Real-time Grey out) ---
-        window.preventDuplicateTeams = function(changedSelect) {
-            const selects = document.querySelectorAll('.tourney-team-select');
-            const selectedValues = Array.from(selects).map(s => s.value).filter(v => v);
-
-            selects.forEach(sel => {
-                const currentVal = sel.value;
-                Array.from(sel.options).forEach(opt => {
-                    if (!opt.value) return; 
-                    
-                    if (selectedValues.includes(opt.value) && opt.value !== currentVal) {
-                        // Disable and strictly grey out across all devices
-                        opt.disabled = true;
-                        opt.style.color = '#9ca3af'; // Grey text
-                        opt.style.backgroundColor = '#f3f4f6'; // Light grey background
-                        opt.innerText = `${opt.value} (Taken)`;
-                    } else {
-                        // Enable and restore default styling
-                        opt.disabled = false;
-                        opt.style.color = '#1f2937'; 
-                        opt.style.backgroundColor = '#ffffff';
-                        opt.innerText = opt.value;
-                    }
-                });
-            });
-            
-            // Maintain original logo update functionality
-            if(typeof updateSlotLogo === 'function' && changedSelect) {
-                updateSlotLogo(changedSelect);
+        window.preventDuplicateTeams = function(changedInputId) {
+            // Disabled native option mutator since we use the modal.
+            // Just update the logo
+            if(typeof updateSlotLogo === 'function' && changedInputId) {
+                updateSlotLogo(document.getElementById(changedInputId));
             }
         };
 
@@ -1974,13 +1957,6 @@
             `;
 
             container.innerHTML = headerHTML;
-
-            // Use ALL saved teams
-            let allTeams = (typeof savedTeamsData !== 'undefined' && savedTeamsData.length > 0) ? savedTeamsData : [];
-            
-            // Build Dropdown Options
-            let teamOptionsHTML = '<option value="">Select Team...</option>';
-            allTeams.forEach(t => { teamOptionsHTML += `<option value="${t.name}">${t.name}</option>`; });
 
             const allGroups = Array.from({length: 26}, (_, i) => String.fromCharCode(65 + i)); 
             const getGroupOptions = (defaultIdx) => {
@@ -2022,15 +1998,15 @@
                         <img class="team-slot-logo w-10 h-10 rounded-full object-cover border border-gray-200 hidden bg-gray-100">
                         <div class="flex-1">
                             <label class="block text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Select Team</label>
-                            <select onchange="preventDuplicateTeams(this)" class="tourney-team-select w-full bg-transparent text-sm font-bold text-gray-800 outline-none uppercase cursor-pointer">
-                                ${teamOptionsHTML}
-                            </select>
+                            <button onclick="openTeamPicker('slot_${i}')" id="btn-slot_${i}" class="w-full bg-transparent text-sm font-bold text-gray-800 outline-none uppercase cursor-pointer text-left flex justify-between items-center pr-2">
+                                <span id="text-slot_${i}">-- SELECT TEAM --</span>
+                                <span class="text-gray-300 text-[10px]">▼</span>
+                            </button>
+                            <input type="hidden" class="tourney-team-select" id="input-slot_${i}" value="">
                         </div>
-                        <div class="text-gray-300 text-[10px]">▼</div>
                     `;
                 }
 
-                // FIX: Use DOM APIs instead of innerHTML concatenation to preserve state + Added missing .mobile-card classes
                 const div = document.createElement('div');
                 div.className = "mobile-card bg-gray-50 p-3 rounded-lg border border-gray-200 flex items-center gap-3 animate-slide-up mb-3";
                 div.style.animationDelay = `${i*50}ms`;
@@ -2041,7 +2017,6 @@
                 container.appendChild(div);
             }
             
-            // Initialize gray-out states & default logos instantly
             preventDuplicateTeams(null);
         };
 
@@ -3244,6 +3219,178 @@ window.generateProfessionalSchedule = function(selectedFlow = null) {
             </div>
         </div>
     </div>
+
+    <div id="team-picker-modal" class="modal-overlay fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-[300] flex items-end md:items-center justify-center">
+        <div class="bg-white w-full md:max-w-md h-[85vh] md:h-[70vh] rounded-t-3xl md:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-slide-up">
+            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
+                <button id="tp-back-btn" class="hidden text-blue-600 font-bold px-2">← Back</button>
+                <h3 id="tp-title" class="text-lg font-black text-gray-800 uppercase tracking-tight mx-auto">Select Team</h3>
+                <button onclick="closeTeamPicker()" class="text-gray-400 hover:text-gray-600 font-bold px-2 text-xl">✕</button>
+            </div>
+            <div id="tp-search-container" class="p-3 border-b border-gray-100 hidden shrink-0 bg-white">
+                <div class="relative">
+                    <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
+                    <input type="text" id="tp-search" placeholder="Search teams..." class="w-full bg-gray-100 border-none rounded-xl pl-9 pr-4 py-2.5 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-shadow">
+                </div>
+            </div>
+            <div id="tp-content" class="flex-grow overflow-y-auto custom-scroll p-2 bg-gray-50/50">
+            </div>
+        </div>
+    </div>
+
+    <script>
+    let tpTarget = null;
+    let tpCurrentView = 'modes';
+    let tpSelectedTournament = null;
+
+    function openTeamPicker(target) {
+        tpTarget = target;
+        tpCurrentView = 'modes';
+        tpSelectedTournament = null;
+        document.getElementById('team-picker-modal').classList.remove('hidden');
+        document.getElementById('tp-search').value = '';
+        renderTeamPicker();
+    }
+
+    function closeTeamPicker() {
+        document.getElementById('team-picker-modal').classList.add('hidden');
+    }
+
+    function renderTeamPicker() {
+        const content = document.getElementById('tp-content');
+        const backBtn = document.getElementById('tp-back-btn');
+        const title = document.getElementById('tp-title');
+        const searchCont = document.getElementById('tp-search-container');
+        const searchTerm = document.getElementById('tp-search').value.toLowerCase();
+        
+        content.innerHTML = '';
+
+        const selectedValues = Array.from(document.querySelectorAll('.tourney-team-select')).map(s => s.value).filter(v => v);
+        if (document.getElementById('team1-select') && document.getElementById('team1-select').value) selectedValues.push(document.getElementById('team1-select').value);
+        if (document.getElementById('team2-select') && document.getElementById('team2-select').value) selectedValues.push(document.getElementById('team2-select').value);
+
+        if (tpCurrentView === 'modes') {
+            backBtn.classList.add('hidden');
+            searchCont.classList.add('hidden');
+            title.textContent = "Select Mode";
+            
+            content.innerHTML = `
+                <div class="flex flex-col gap-4 p-2">
+                    <button onclick="tpCurrentView='single'; renderTeamPicker();" class="p-6 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl shadow-md hover:shadow-lg hover:scale-[1.02] transition-all text-left relative overflow-hidden group border border-blue-400">
+                        <div class="absolute right-[-10px] top-[-10px] text-6xl opacity-20 group-hover:scale-110 transition-transform">🏏</div>
+                        <h4 class="text-xl font-black uppercase tracking-wider mb-1">Single Match Mode</h4>
+                        <p class="text-xs font-medium text-blue-100">Select standard teams</p>
+                    </button>
+                    
+                    <button onclick="tpCurrentView='tournaments'; renderTeamPicker();" class="p-6 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-2xl shadow-md hover:shadow-lg hover:scale-[1.02] transition-all text-left relative overflow-hidden group border border-purple-400">
+                        <div class="absolute right-[-10px] top-[-10px] text-6xl opacity-20 group-hover:scale-110 transition-transform">🏆</div>
+                        <h4 class="text-xl font-black uppercase tracking-wider mb-1">Tournament Mode</h4>
+                        <p class="text-xs font-medium text-purple-100">Select teams from an active tournament</p>
+                    </button>
+                </div>
+            `;
+        } else if (tpCurrentView === 'single') {
+            backBtn.classList.remove('hidden');
+            searchCont.classList.remove('hidden');
+            title.textContent = "Single Match Teams";
+            backBtn.onclick = () => { tpCurrentView = 'modes'; renderTeamPicker(); };
+            
+            const teams = (savedTeamsData || []).filter(t => t.teamCategory !== "Tournament" && t.name.toLowerCase().includes(searchTerm));
+            renderTeamList(teams, selectedValues, content);
+            
+        } else if (tpCurrentView === 'tournaments') {
+            backBtn.classList.remove('hidden');
+            searchCont.classList.add('hidden');
+            title.textContent = "Select Tournament";
+            backBtn.onclick = () => { tpCurrentView = 'modes'; renderTeamPicker(); };
+            
+            const tourneys = [...new Set((savedTeamsData || []).filter(t => t.teamCategory === "Tournament").map(t => t.tournamentName))].filter(n => n);
+            
+            if(tourneys.length === 0) {
+                content.innerHTML = `<div class="p-8 text-center text-gray-400 font-bold text-sm">No tournament teams available.</div>`;
+                return;
+            }
+            
+            tourneys.forEach(tName => {
+                const btn = document.createElement('button');
+                btn.className = "w-full p-4 bg-white border border-gray-100 rounded-xl mb-2 hover:bg-purple-50 hover:border-purple-200 flex items-center justify-between transition-all shadow-sm";
+                btn.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-lg font-bold">🏆</div>
+                        <span class="font-black text-gray-800 text-sm uppercase tracking-wide text-left">${tName}</span>
+                    </div>
+                    <span class="text-purple-400 font-bold text-lg">→</span>
+                `;
+                btn.onclick = () => { tpSelectedTournament = tName; tpCurrentView = 'tournament_teams'; renderTeamPicker(); };
+                content.appendChild(btn);
+            });
+            
+        } else if (tpCurrentView === 'tournament_teams') {
+            backBtn.classList.remove('hidden');
+            searchCont.classList.remove('hidden');
+            title.textContent = tpSelectedTournament;
+            backBtn.onclick = () => { tpCurrentView = 'tournaments'; renderTeamPicker(); };
+            
+            const teams = (savedTeamsData || []).filter(t => t.teamCategory === "Tournament" && t.tournamentName === tpSelectedTournament && t.name.toLowerCase().includes(searchTerm));
+            renderTeamList(teams, selectedValues, content);
+        }
+    }
+
+    function renderTeamList(teams, selectedValues, container) {
+        if(teams.length === 0) {
+            container.innerHTML = `<div class="p-8 text-center text-gray-400 font-bold text-sm">No teams found.</div>`;
+            return;
+        }
+        
+        teams.forEach(team => {
+            const isTaken = selectedValues.includes(team.name);
+            const logoFlag = window.countryFlags ? (window.countryFlags[team.country] || '🏏') : '🏏';
+            const logoHTML = team.logo 
+                ? `<img src="${team.logo}" class="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-sm bg-white">`
+                : `<div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold border border-blue-200">${logoFlag}</div>`;
+                
+            const btn = document.createElement('button');
+            btn.className = `w-full p-3 mb-2 rounded-xl border flex items-center justify-between transition-all shadow-sm ${isTaken ? 'border-red-200 bg-red-50 opacity-60 cursor-not-allowed' : 'border-gray-100 bg-white hover:border-blue-300 hover:bg-blue-50'}`;
+            btn.disabled = isTaken;
+            
+            btn.innerHTML = `
+                <div class="flex items-center gap-3 text-left">
+                    ${logoHTML}
+                    <div>
+                        <div class="font-black text-gray-800 text-xs sm:text-sm uppercase tracking-wide leading-tight">${team.name}</div>
+                        <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">${team.country}</div>
+                    </div>
+                </div>
+                ${isTaken ? '<span class="text-[9px] font-black text-red-500 bg-white border border-red-200 px-2 py-1 rounded shadow-sm uppercase tracking-widest">Taken</span>' : ''}
+            `;
+            
+            btn.onclick = () => {
+                if(tpTarget === 'team1' || tpTarget === 'team2') {
+                    // Update hidden input explicitly
+                    document.getElementById(tpTarget + '-select').value = team.name;
+                    // Update visual button text
+                    document.getElementById(tpTarget + '-select-btn').innerHTML = `<span class="text-gray-900 truncate pr-2">${team.name}</span><span class="text-[10px] text-blue-500">CHANGE</span>`;
+                    // Fire exact existing callback
+                    handleTeamSelection(team.name, tpTarget);
+                } else if (tpTarget.startsWith('slot_')) {
+                    const btnEl = document.getElementById(`btn-${tpTarget}`);
+                    const textEl = document.getElementById(`text-${tpTarget}`);
+                    const inputEl = document.getElementById(`input-${tpTarget}`);
+                    
+                    if(textEl) textEl.textContent = team.name;
+                    if(inputEl) {
+                        inputEl.value = team.name;
+                        preventDuplicateTeams(inputEl.id);
+                    }
+                }
+                closeTeamPicker();
+            };
+            container.appendChild(btn);
+        });
+    }
+
+    document.getElementById('tp-search')?.addEventListener('input', renderTeamPicker);
+    </script>
     
     <script>
         // --- ADD THIS FUNCTION TO YOUR CONTROLLER SCRIPT (51 - .html) ---
@@ -3739,8 +3886,10 @@ function broadcastMatchResult() {
 
         // --- DATA LOADING & SETUP LOGIC ---
         function loadSavedTeams() {
+            savedTeamsData = [];
+            
+            // 1. Fetch Single Match Teams
             db.collection("teams").orderBy("updatedAt", "desc").get().then((querySnapshot) => {
-                savedTeamsData = [];
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
                     const players = (data.players || []).map(p => {
@@ -3751,84 +3900,93 @@ function broadcastMatchResult() {
                             id: p.id || null 
                         };
                     });
-                    // Capture Country, Default to Canada if missing (for testing)
                     savedTeamsData.push({ 
                         id: doc.id, 
                         name: data.name, 
                         logo: data.logo, 
                         players: players,
-                        country: data.country || "Canada" 
+                        country: data.country || "Canada",
+                        teamCategory: "Single Match"
                     });
                 });
                 populateTeamDropdowns();
+                
+                // Helper to fetch tournament teams securely from any collection structure
+                const fetchTourneyTeams = (collectionName) => {
+                    db.collection(collectionName).get().then((tSnap) => {
+                        tSnap.forEach(tDoc => {
+                            const tData = tDoc.data();
+                            const tName = (tData.meta && tData.meta.name) ? tData.meta.name : (tData.name || "Unnamed Tournament");
+                            
+                            // Method A: Check if teams are stored directly in an array on the document (Match Controller style)
+                            if (tData.teams && Array.isArray(tData.teams)) {
+                                tData.teams.forEach(teamObj => {
+                                    if (!savedTeamsData.find(t => t.name === teamObj.name && t.teamCategory === "Tournament")) {
+                                        const players = (teamObj.players || []).map(p => {
+                                            if (typeof p === 'string') return { name: p, image: '' };
+                                            return { name: p.name, image: p.avatar || p.image || '', id: p.id || null };
+                                        });
+                                        savedTeamsData.push({ 
+                                            id: teamObj.id || tDoc.id + '_' + teamObj.name, 
+                                            name: teamObj.name, 
+                                            logo: teamObj.logo, 
+                                            players: players,
+                                            country: teamObj.country || "Tournament", 
+                                            teamCategory: "Tournament",
+                                            tournamentName: tName
+                                        });
+                                    }
+                                });
+                                populateTeamDropdowns();
+                            }
+
+                            // Method B: Check if teams are stored in a subcollection (Manage Teams style)
+                            db.collection(collectionName).doc(tDoc.id).collection("teams").get().then(teamsSnap => {
+                                teamsSnap.forEach(doc => {
+                                    const data = doc.data();
+                                    if (!savedTeamsData.find(t => t.name === data.name && t.teamCategory === "Tournament")) {
+                                        const players = (data.players || []).map(p => {
+                                            if (typeof p === 'string') return { name: p, image: '' };
+                                            return { name: p.name, image: p.avatar || p.image || '', id: p.id || null };
+                                        });
+                                        savedTeamsData.push({ 
+                                            id: doc.id, 
+                                            name: data.name, 
+                                            logo: data.logo, 
+                                            players: players,
+                                            country: data.country || "Tournament", 
+                                            teamCategory: "Tournament",
+                                            tournamentName: tName
+                                        });
+                                    }
+                                });
+                                populateTeamDropdowns(); 
+                            }).catch(err => { /* Subcollection might not exist, silently ignore */ });
+                        });
+                    }).catch(err => console.warn("Could not fetch from " + collectionName));
+                };
+
+                // 2. Fetch Tournament Teams (Checking both possible collections to catch all teams)
+                fetchTourneyTeams("tournaments_v2");
+                fetchTourneyTeams("tournaments");
             });
         }
+        window.countryFlags = {};
         function populateTeamDropdowns() {
-            // Extract country flags from the existing match-country dropdown for visual logos
+            // Extract country flags from the existing match-country dropdown for visual logos in picker
             const countrySelect = document.getElementById('match-country');
-            const countryFlags = {};
             if (countrySelect) {
                 Array.from(countrySelect.options).forEach(opt => {
                     const text = opt.textContent;
                     if (text.includes(' - ')) {
                         const parts = text.split(' - ');
-                        countryFlags[parts[1].trim()] = parts[0].trim();
+                        window.countryFlags[parts[1].trim()] = parts[0].trim();
                     }
                 });
             }
-
-            // Sort teams by country first, then alphabetical order by name
-            const sortedTeams = savedTeamsData.sort((a, b) => {
-                const countryA = (a.country || "Unknown").toUpperCase();
-                const countryB = (b.country || "Unknown").toUpperCase();
-                if (countryA < countryB) return -1;
-                if (countryA > countryB) return 1;
-                return a.name.localeCompare(b.name);
-            });
-
-            // Group teams by country (like iPhone contacts layout)
-            const groupedTeams = {};
-            sortedTeams.forEach(team => {
-                const country = team.country || "Unknown";
-                if (!groupedTeams[country]) {
-                    groupedTeams[country] = [];
-                }
-                groupedTeams[country].push(team);
-            });
-
-            ['team1-select', 'team2-select'].forEach(id => {
-                const select = document.getElementById(id);
-                select.innerHTML = '<option value="">+ Load Saved Team</option>';
-                
-                Object.keys(groupedTeams).forEach(country => {
-                    const optgroup = document.createElement('optgroup');
-                    optgroup.label = country;
-                    
-                    groupedTeams[country].forEach(team => {
-                        const opt = document.createElement('option');
-                        opt.value = team.name;
-                        
-                        // Add team logos next to the team name (Logo - Team Name format)
-                        // Natively <select> doesn't render <img>, so we use the country flag as the logo indicator
-                        const logoFlag = countryFlags[team.country] || '🏏';
-                        opt.textContent = `${logoFlag} - ${team.name}`;
-                        
-                        // We also set the uploaded logo as a background image for browsers that support it
-                        if (team.logo) {
-                            opt.style.backgroundImage = `url(${team.logo})`;
-                            opt.style.backgroundSize = '16px 16px';
-                            opt.style.backgroundPosition = 'left center';
-                            opt.style.backgroundRepeat = 'no-repeat';
-                        }
-                        
-                        optgroup.appendChild(opt);
-                    });
-                    
-                    select.appendChild(optgroup);
-                });
-                
-                select.onchange = (e) => handleTeamSelection(e.target.value, id.includes('team1') ? 'team1' : 'team2');
-            });
+            // Sorting is handled inside the Team Picker Modal now.
+            // Just ensure base array is sorted alphabetically
+            if(savedTeamsData) savedTeamsData.sort((a, b) => a.name.localeCompare(b.name));
         }
         function handleTeamSelection(teamName, teamKey) {
             if(!teamName) return;
@@ -7417,49 +7575,41 @@ function renderGroundInputs() {
 }
 
 function renderTournamentSlots() {
-    const totalTeams = parseInt(document.getElementById('tourney-team-count').value);
-    const container = document.getElementById('tournament-slots-container');
-    
-    // Don't render if selection is invalid/empty
-    if (!totalTeams || isNaN(totalTeams)) {
+        const totalTeams = parseInt(document.getElementById('tourney-team-count').value);
+        const container = document.getElementById('tournament-slots-container');
+        
+        // Don't render if selection is invalid/empty
+        if (!totalTeams || isNaN(totalTeams)) {
+            container.innerHTML = '';
+            return;
+        }
+
         container.innerHTML = '';
-        return;
-    }
 
-    container.innerHTML = '';
-    
-    // 1. Use ALL saved teams (Fix for empty dropdowns)
-    let teamOptions = savedTeamsData || [];
-    
-    // 2. Build Options
-    let optionsHTML = '<option value="">-- Select Team --</option>';
-    teamOptions.forEach(t => {
-        optionsHTML += `<option value="${t.name}">${t.name}</option>`;
-    });
-
-    // 3. Render Cards
-    for (let i = 0; i < totalTeams; i++) {
-        const div = document.createElement('div');
-        div.className = "mobile-card flex items-center gap-3 p-4";
-        div.innerHTML = `
-            <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-black text-xs border border-blue-100 shadow-sm">${i+1}</div>
-            
-            <img class="team-slot-logo w-10 h-10 rounded-full object-cover border border-gray-200 hidden bg-gray-100">
-            
-            <div class="flex-grow">
-                <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1">Select Team</label>
-                <select onchange="preventDuplicateTeams(this)" class="tourney-team-select w-full bg-transparent text-sm font-bold text-gray-800 outline-none uppercase cursor-pointer">
-                    ${optionsHTML}
-                </select>
-            </div>
-            <div class="text-gray-300 text-[10px]">▼</div>
-        `;
-        container.appendChild(div);
+        // 3. Render Cards
+        for (let i = 0; i < totalTeams; i++) {
+            const div = document.createElement('div');
+            div.className = "mobile-card flex items-center gap-3 p-4";
+            div.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-black text-xs border border-blue-100 shadow-sm">${i+1}</div>
+                
+                <img class="team-slot-logo w-10 h-10 rounded-full object-cover border border-gray-200 hidden bg-gray-100">
+                
+                <div class="flex-grow">
+                    <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1">Select Team</label>
+                    <button onclick="openTeamPicker('slot_${i}')" id="btn-slot_${i}" class="w-full bg-transparent text-sm font-bold text-gray-800 outline-none uppercase cursor-pointer text-left flex justify-between items-center pr-2">
+                        <span id="text-slot_${i}">-- SELECT TEAM --</span>
+                        <span class="text-gray-300 text-[10px]">▼</span>
+                    </button>
+                    <input type="hidden" class="tourney-team-select" id="input-slot_${i}" value="">
+                </div>
+            `;
+            container.appendChild(div);
+        }
+        
+        // Initialize the grey-out state instantly on render
+        preventDuplicateTeams(null);
     }
-    
-    // Initialize the grey-out state instantly on render
-    preventDuplicateTeams(null);
-}
 
 // Helper to update the logo when a user picks a team
 function updateSlotLogo(selectEl) {
