@@ -3911,64 +3911,36 @@ function broadcastMatchResult() {
                 });
                 populateTeamDropdowns();
                 
-                // Helper to fetch tournament teams securely from any collection structure
-                const fetchTourneyTeams = (collectionName) => {
-                    db.collection(collectionName).get().then((tSnap) => {
-                        tSnap.forEach(tDoc => {
-                            const tData = tDoc.data();
-                            const tName = (tData.meta && tData.meta.name) ? tData.meta.name : (tData.name || "Unnamed Tournament");
-                            
-                            // Method A: Check if teams are stored directly in an array on the document (Match Controller style)
-                            if (tData.teams && Array.isArray(tData.teams)) {
-                                tData.teams.forEach(teamObj => {
-                                    if (!savedTeamsData.find(t => t.name === teamObj.name && t.teamCategory === "Tournament")) {
-                                        const players = (teamObj.players || []).map(p => {
-                                            if (typeof p === 'string') return { name: p, image: '' };
-                                            return { name: p.name, image: p.avatar || p.image || '', id: p.id || null };
-                                        });
-                                        savedTeamsData.push({ 
-                                            id: teamObj.id || tDoc.id + '_' + teamObj.name, 
-                                            name: teamObj.name, 
-                                            logo: teamObj.logo, 
-                                            players: players,
-                                            country: teamObj.country || "Tournament", 
-                                            teamCategory: "Tournament",
-                                            tournamentName: tName
-                                        });
-                                    }
-                                });
-                                populateTeamDropdowns();
-                            }
-
-                            // Method B: Check if teams are stored in a subcollection (Manage Teams style)
-                            db.collection(collectionName).doc(tDoc.id).collection("teams").get().then(teamsSnap => {
-                                teamsSnap.forEach(doc => {
-                                    const data = doc.data();
-                                    if (!savedTeamsData.find(t => t.name === data.name && t.teamCategory === "Tournament")) {
-                                        const players = (data.players || []).map(p => {
-                                            if (typeof p === 'string') return { name: p, image: '' };
-                                            return { name: p.name, image: p.avatar || p.image || '', id: p.id || null };
-                                        });
-                                        savedTeamsData.push({ 
-                                            id: doc.id, 
-                                            name: data.name, 
-                                            logo: data.logo, 
-                                            players: players,
-                                            country: data.country || "Tournament", 
-                                            teamCategory: "Tournament",
-                                            tournamentName: tName
-                                        });
-                                    }
-                                });
-                                populateTeamDropdowns(); 
-                            }).catch(err => { /* Subcollection might not exist, silently ignore */ });
-                        });
-                    }).catch(err => console.warn("Could not fetch from " + collectionName));
-                };
-
-                // 2. Fetch Tournament Teams (Checking both possible collections to catch all teams)
-                fetchTourneyTeams("tournaments_v2");
-                fetchTourneyTeams("tournaments");
+                // 2. Fetch Tournament Teams (Only from active tournaments_v2)
+                db.collection("tournaments_v2").get().then((tSnap) => {
+                    tSnap.forEach(tDoc => {
+                        const tData = tDoc.data();
+                        const tName = tData.name || "Unnamed Tournament";
+                        
+                        db.collection("tournaments_v2").doc(tDoc.id).collection("teams").get().then(teamsSnap => {
+                            teamsSnap.forEach(doc => {
+                                const data = doc.data();
+                                // Prevent duplicates
+                                if (!savedTeamsData.find(t => t.name === data.name && t.teamCategory === "Tournament")) {
+                                    const players = (data.players || []).map(p => {
+                                        if (typeof p === 'string') return { name: p, image: '' };
+                                        return { name: p.name, image: p.avatar || p.image || '', id: p.id || null };
+                                    });
+                                    savedTeamsData.push({ 
+                                        id: doc.id, 
+                                        name: data.name, 
+                                        logo: data.logo, 
+                                        players: players,
+                                        country: data.country || "Tournament", 
+                                        teamCategory: "Tournament",
+                                        tournamentName: tName
+                                    });
+                                }
+                            });
+                            populateTeamDropdowns(); 
+                        }).catch(err => { /* Subcollection might not exist, silently ignore */ });
+                    });
+                }).catch(err => console.warn("Could not fetch tournaments_v2"));
             });
         }
         window.countryFlags = {};
