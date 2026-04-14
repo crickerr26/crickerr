@@ -997,9 +997,8 @@
             
             // Fix: Avoid composite index requirement by sorting client-side
             let query = db.collection("tournaments_v2");
-            if (state.currentUserUid) {
-                query = query.where("ownerId", "==", state.currentUserUid);
-            }
+            // Removed ownerId restriction so tournaments created in Safari show up in the PWA Web App context
+            // which assigns a new isolated anonymous UID.
 
             query.get().then(snapshot => {
                 container.innerHTML = '';
