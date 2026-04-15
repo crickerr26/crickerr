@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Pro Broadcast Unit - ICC Elite Layout</title>
+
+    <!-- PWA: Hides Safari browser bar / tabs when opened from home screen -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Broadcast Unit">
+    <link rel="apple-touch-icon" href="my-logo.png">
+    <link rel="manifest" href="data:application/json,{&quot;name&quot;:&quot;Broadcast Unit&quot;,&quot;short_name&quot;:&quot;Broadcast&quot;,&quot;display&quot;:&quot;fullscreen&quot;,&quot;orientation&quot;:&quot;landscape&quot;,&quot;background_color&quot;:&quot;%23000000&quot;,&quot;theme_color&quot;:&quot;%23000000&quot;}">
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -30,6 +38,20 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
         body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Roboto', sans-serif; }
+
+        /* FORCE LANDSCAPE — physically rotates the entire page when phone is held portrait */
+        @media screen and (orientation: portrait) {
+            body {
+                width: 100vh;
+                height: 100vw;
+                transform: rotate(90deg);
+                transform-origin: bottom left;
+                position: absolute;
+                top: -100vw;
+                left: 0;
+                overflow: hidden;
+            }
+        }
         
         /* --- MAIN APP MODES --- */
         #app-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
@@ -603,20 +625,16 @@
         }
 
         function updateLiveSponsors() {
+            // Sponsors are now drawn directly on the canvas via drawCanvasSponsors()
+            // so they appear both on screen AND inside the video recording.
+            // Pre-load the images into the cache so they are ready when the canvas draws them.
+            const sponsors = match.sponsors || {};
+            if (sponsors.main)     getSponsorImg(sponsors.main);
+            if (sponsors.sponsor2) getSponsorImg(sponsors.sponsor2);
+
+            // Keep the HTML overlay hidden — canvas handles display now
             const container = document.getElementById('live-sponsors-container');
-            if (!container) return;
-            
-            if (isScoreboardHidden || !match.sponsors || (!match.sponsors.main && !match.sponsors.sponsor2)) {
-                container.style.opacity = '0';
-                return;
-            }
-            
-            let html = '';
-            if (match.sponsors.main) html += createSponsorHTML(match.sponsors.main, 'live-sponsor');
-            if (match.sponsors.sponsor2) html += createSponsorHTML(match.sponsors.sponsor2, 'live-sponsor');
-            
-            container.innerHTML = html;
-            container.style.opacity = html ? '1' : '0';
+            if (container) container.style.opacity = '0';
         }
 
         const video = document.getElementById('video-source');
@@ -687,6 +705,13 @@
             initParticles(window.innerWidth, window.innerHeight);
             requestWakeLock(); 
             setInterval(requestWakeLock, 60000);
+
+            // Force landscape orientation immediately on page load
+            try {
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock("landscape").catch(e => {});
+                }
+            } catch(e) {}
         };
 
         async function requestWakeLock() {
@@ -1832,6 +1857,70 @@ function goLiveOnDB(matchId, peerId) {
                 else drawProfessionalSummary(c, w, h); 
                 c.restore();
             }
+
+            // 4. Draw Sponsor Logos ON THE CANVAS (so they appear on screen AND in recordings)
+            if (overlayTransition.phase === "CLOSED" && !isDismissalActive) {
+                drawCanvasSponsors(c, w, h);
+            }
+        }
+
+        // Sponsor image cache for canvas drawing
+        if (!window.sponsorImgCache) window.sponsorImgCache = {};
+
+        function getSponsorImg(url) {
+            if (!url) return null;
+            if (!window.sponsorImgCache[url]) {
+                const img = new Image();
+                img.crossOrigin = "anonymous";
+                img.src = url;
+                window.sponsorImgCache[url] = img;
+            }
+            return window.sponsorImgCache[url];
+        }
+
+        function drawCanvasSponsors(c, w, h) {
+            const sponsors = match.sponsors || {};
+            const urls = [];
+            if (sponsors.main)     urls.push(sponsors.main);
+            if (sponsors.sponsor2) urls.push(sponsors.sponsor2);
+            if (urls.length === 0) return;
+
+            // Professional sizing: max logo height = 7% of screen height, capped at 80px
+            const logoH = Math.min(h * 0.07, 80);
+            const pad = 18;          // gap between logos
+            const rightMargin = 20;  // distance from right edge
+            const topMargin = 20;    // distance from top edge
+
+            let drawX = w - rightMargin; // Start from right, draw leftwards
+
+            urls.forEach(url => {
+                const img = getSponsorImg(url);
+                if (!img || !img.complete || img.naturalWidth === 0) return;
+
+                // Keep aspect ratio, fit within logoH
+                const aspect = img.naturalWidth / img.naturalHeight;
+                const logoW = Math.min(logoH * aspect, w * 0.18); // Cap at 18% screen width
+
+                drawX -= logoW;
+
+                c.save();
+                // Subtle dark backing pill for visibility on any background
+                const pillPad = 8;
+                c.fillStyle = "rgba(0, 0, 0, 0.35)";
+                c.beginPath();
+                c.roundRect(drawX - pillPad, topMargin - pillPad, logoW + pillPad * 2, logoH + pillPad * 2, 10);
+                c.fill();
+
+                // Drop shadow on the logo itself
+                c.shadowColor = "rgba(0,0,0,0.7)";
+                c.shadowBlur = 12;
+                c.shadowOffsetY = 4;
+
+                c.drawImage(img, drawX, topMargin, logoW, logoH);
+                c.restore();
+
+                drawX -= pad; // gap before next logo
+            });
         }
 
         function drawRunRateGraphic(c, w, h) {
