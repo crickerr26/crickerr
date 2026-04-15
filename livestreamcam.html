@@ -618,6 +618,15 @@
         crickerrLogoImg.crossOrigin = "anonymous"; 
         crickerrLogoImg.src = 'crickerrlogo.png';
 
+        // --- CRICKERR LOGO SPIN ANIMATION STATE ---
+        let crickerrSpinState = { active: false, startTime: 0, duration: 1800 };
+        let _prevOversForSpin = -1;
+
+        function triggerCrickerrSpin() {
+            crickerrSpinState.active = true;
+            crickerrSpinState.startTime = Date.now();
+        }
+
         // --- SPONSOR SYSTEM UTILITIES ---
         function createSponsorHTML(src, className) {
             if (!src) return '';
@@ -1512,6 +1521,12 @@ function goLiveOnDB(matchId, peerId) {
                 setTimeout(triggerMatchIntro, 1500); // Wait slightly for logos to initialize
             }
 
+            // --- TRIGGER CRICKERR LOGO SPIN ON EVERY NEW OVER ---
+            if (_prevOversForSpin !== -1 && data.balls === 0 && data.overs !== _prevOversForSpin) {
+                triggerCrickerrSpin();
+            }
+            if (data.overs !== undefined) _prevOversForSpin = data.overs;
+
             // 5. Trigger Audio & Animations (4, 6, OUT)
             if (data.lastAction && data.lastAction.id !== lastActionId) {
                 const isInitialLoad = (lastActionId === null);
@@ -2308,29 +2323,33 @@ function goLiveOnDB(matchId, peerId) {
                     alphaTarget = 1;
                 }
                 
-                // Draw Needed (Target) — centered and clipped so it can never overflow
+                // Draw Needed (Target) — 3 stacked lines using textBaseline TOP so nothing overlaps
                 if (alphaTarget > 0) {
                     c.save();
                     c.globalAlpha = alphaTarget;
-                    // Hard clip to this box — nothing escapes
+                    // Hard clip — nothing escapes this box
                     c.beginPath(); c.rect(x3 + 2, bottomY, w3 - 4, barH); c.clip();
-                    const yOffsetTarget = (1 - alphaTarget) * 10;
 
+                    const cx = x3 + w3 / 2;
                     c.textAlign = "center";
-                    c.fillStyle = "rgba(255,255,255,0.75)";
+                    c.textBaseline = "top"; // Anchor text from TOP — no overlap possible
+
+                    // Line 1 — "NEEDED" label — sits at very top of box
                     c.font = `700 ${barH * 0.18}px 'Roboto Condensed'`;
-                    c.fillText("NEEDED", x3 + w3/2, bottomY + barH * 0.27 + yOffsetTarget);
+                    c.fillStyle = "white";
+                    c.fillText("NEEDED", cx, bottomY + barH * 0.05);
 
-                    // Big runs number in gold
-                    c.font = `900 ${barH * 0.52}px 'Anton'`;
+                    // Line 2 — big runs number in gold — starts right after NEEDED
+                    c.font = `900 ${barH * 0.50}px 'Anton'`;
                     c.fillStyle = "#fbbf24";
-                    c.fillText(`${runsNeeded}`, x3 + w3/2, bottomY + barH * 0.72 + yOffsetTarget);
+                    c.fillText(`${runsNeeded}`, cx, bottomY + barH * 0.24);
 
-                    // Small "from X balls" label
-                    c.font = `700 ${barH * 0.17}px 'Roboto Condensed'`;
-                    c.fillStyle = "rgba(255,255,255,0.65)";
-                    c.fillText(`from ${ballsRem} balls`, x3 + w3/2, bottomY + barH * 0.91 + yOffsetTarget);
+                    // Line 3 — "FROM X BALLS" — sits at bottom of box
+                    c.font = `700 ${barH * 0.16}px 'Roboto Condensed'`;
+                    c.fillStyle = "white";
+                    c.fillText(`FROM ${ballsRem} BALLS`, cx, bottomY + barH * 0.78);
 
+                    c.textBaseline = "alphabetic"; // restore default
                     c.restore();
                 }
                 
@@ -2448,15 +2467,49 @@ function goLiveOnDB(matchId, peerId) {
 
             c.restore();
 
-            // Floating Brand Logo — TV broadcast standard size
-            if (crickerrLogoImg.complete && crickerrLogoImg.naturalHeight !== 0) { 
-                const cLogoH = barH * 1.2; 
-                const cLogoW = cLogoH * (crickerrLogoImg.naturalWidth / crickerrLogoImg.naturalHeight); 
-                c.save(); 
-                c.shadowColor = "rgba(0,0,0,0.8)"; 
-                c.shadowBlur = 14; c.shadowOffsetY = 4; 
-                c.drawImage(crickerrLogoImg, w - cLogoW - 15, bottomY - cLogoH - 6, cLogoW, cLogoH); 
-                c.restore(); 
+            // Crickerr Logo — bottom-left corner, always visible above scorebar
+            if (crickerrLogoImg.complete && crickerrLogoImg.naturalHeight !== 0) {
+                const cLogoH = barH * 1.4; // TV-standard size
+                const cLogoW = cLogoH * (crickerrLogoImg.naturalWidth / crickerrLogoImg.naturalHeight);
+                const cLogoX = 18; // left edge
+                const cLogoY = bottomY - cLogoH - 8; // just above the bar
+
+                c.save();
+                c.shadowColor = "rgba(0,0,0,0.85)";
+                c.shadowBlur = 16;
+                c.shadowOffsetY = 4;
+
+                // Check if spin animation is active
+                const spinNow = Date.now();
+                const spinElapsed = spinNow - crickerrSpinState.startTime;
+
+                if (crickerrSpinState.active && spinElapsed < crickerrSpinState.duration) {
+                    // Cinematic one full rotation — ease in then ease out
+                    const spinProgress = spinElapsed / crickerrSpinState.duration;
+                    // Ease: slow start, fast middle, slow end
+                    const eased = spinProgress < 0.5
+                        ? 2 * spinProgress * spinProgress
+                        : 1 - Math.pow(-2 * spinProgress + 2, 2) / 2;
+                    const angle = eased * Math.PI * 2; // one full spin
+
+                    // Gentle scale pulse during spin
+                    const scalePulse = 1 + Math.sin(spinProgress * Math.PI) * 0.12;
+
+                    c.translate(cLogoX + cLogoW / 2, cLogoY + cLogoH / 2);
+                    c.rotate(angle);
+                    c.scale(scalePulse, scalePulse);
+                    c.drawImage(crickerrLogoImg, -cLogoW / 2, -cLogoH / 2, cLogoW, cLogoH);
+
+                    if (spinElapsed >= crickerrSpinState.duration) {
+                        crickerrSpinState.active = false;
+                    }
+                } else {
+                    // Normal static draw — no animation
+                    crickerrSpinState.active = false;
+                    c.drawImage(crickerrLogoImg, cLogoX, cLogoY, cLogoW, cLogoH);
+                }
+
+                c.restore();
             }
 
             // --- PREMIUM BROADCAST ANIMATION (REVISED DESIGN) ---
