@@ -2209,29 +2209,36 @@ function goLiveOnDB(matchId, peerId) {
             // Standard cricket format: runs/wickets
             const scoreText = `${displayScoreText}/${match.wickets}`; 
             const oversText = `${match.overs}.${match.balls} ov`;
-            const scoreX = x1 + w1 - 18;
+            const scoreX = x1 + w1 - 14;
 
-            // Use textBaseline TOP so nothing overflows below the bar
-            c.textBaseline = "top";
+            c.textBaseline = "alphabetic";
             c.textAlign = "right";
             if(c.letterSpacing !== undefined) c.letterSpacing = "0px";
 
-            // Score: 4/0 — takes top 58% of bar
-            c.font = `900 ${barH * 0.56}px 'Anton'`;
-            const scoreW = c.measureText(scoreText).width;
-            // Black border for contrast
+            // --- Measure overs text width first so we know where score ends ---
+            c.font = `700 ${barH * 0.24}px 'Roboto'`;
+            const oversW = c.measureText(oversText).width;
+            const scoreDrawX = scoreX - oversW - 8; // score sits left of overs
+
+            // Shared baseline: vertically centers 4/0 in bar
+            // Anton caps ≈ 72% of font size. To center caps: baseline = barCenter + capHeight/2
+            const scoreFontSize = barH * 0.72;
+            const sharedBaselineY = bottomY + barH * 0.5 + scoreFontSize * 0.36;
+
+            // Draw 4/0 — large, gold, centered vertically
+            c.font = `900 ${scoreFontSize}px 'Anton'`;
             c.lineWidth = 2;
-            c.strokeStyle = "rgba(0,0,0,0.8)";
-            c.strokeText(scoreText, scoreX, bottomY + barH * 0.05);
+            c.strokeStyle = "rgba(0,0,0,0.85)";
+            c.strokeText(scoreText, scoreDrawX, sharedBaselineY);
             c.fillStyle = brandGold;
-            c.fillText(scoreText, scoreX, bottomY + barH * 0.05);
+            c.fillText(scoreText, scoreDrawX, sharedBaselineY);
 
-            // Overs: 0.1 ov — sits cleanly below score
-            c.font = `700 ${barH * 0.26}px 'Roboto'`;
-            c.fillStyle = "rgba(255,255,255,0.85)";
-            c.fillText(oversText, scoreX, bottomY + barH * 0.67);
+            // Draw "0.1 ov" — smaller, white, bottom edge aligned with 4/0
+            c.font = `700 ${barH * 0.24}px 'Roboto'`;
+            c.fillStyle = "rgba(255,255,255,0.90)";
+            c.fillText(oversText, scoreX, sharedBaselineY);
 
-            c.textBaseline = "alphabetic"; // Restore default
+            c.textBaseline = "alphabetic";
 
             // Separator between Batting Base and Batters
             c.strokeStyle = "rgba(255, 255, 255, 0.2)";
@@ -2467,12 +2474,12 @@ function goLiveOnDB(matchId, peerId) {
 
             c.restore();
 
-            // Crickerr Logo — bottom-left, sitting flush on top of scorebar
+            // Crickerr Logo — bottom-left corner, planted into the bar edge
             if (crickerrLogoImg.complete && crickerrLogoImg.naturalHeight !== 0) {
                 const cLogoH = barH * 1.4; // TV-standard size
                 const cLogoW = cLogoH * (crickerrLogoImg.naturalWidth / crickerrLogoImg.naturalHeight);
                 const cLogoX = 14; // left edge
-                const cLogoY = bottomY - cLogoH; // flush — sits directly on top of bar, no gap
+                const cLogoY = bottomY - cLogoH + barH * 0.45; // moved down: 45% of logo sits inside bar top
 
                 c.save();
                 c.shadowColor = "rgba(0,0,0,0.85)";
