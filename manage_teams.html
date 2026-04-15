@@ -184,6 +184,16 @@
                 <div class="px-4 py-2">
                     <button onclick="openEditor(null, true)" id="dash-add-team-btn" class="w-full py-3 bg-[#007AFF] text-white font-bold rounded-xl shadow-sm text-sm transform active:scale-95 transition-transform">Add Tournament Team</button>
                 </div>
+                <div class="px-4 pb-2 flex gap-2">
+                    <button onclick="generateTournamentPDF()" id="dash-pdf-btn" class="flex-1 py-3 bg-white text-[#007AFF] font-bold rounded-xl shadow-sm text-sm border border-[#007AFF] transform active:scale-95 transition-transform flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Download PDF
+                    </button>
+                    <button onclick="shareTournamentPDF()" id="dash-share-btn" class="flex-1 py-3 bg-white text-[#34C759] font-bold rounded-xl shadow-sm text-sm border border-[#34C759] transform active:scale-95 transition-transform flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                        Share to Captains
+                    </button>
+                </div>
                 <div id="tournament-teams-list" class="bg-white mt-2 flex-1">
                 </div>
             </div>
@@ -1722,6 +1732,277 @@
                 document.getElementById('editor-team-name').disabled = true; // Optional: Lock Name
                 
             }).catch(err => showiOSAlert("Error", err.message));
+        }
+
+        // --- TOURNAMENT PDF GENERATION ---
+        function getTournamentTeamsData() {
+            return new Promise((resolve) => {
+                db.collection("tournaments_v2").doc(state.activeTournamentId).collection("teams").orderBy("name").get().then(snapshot => {
+                    const teams = [];
+                    snapshot.forEach(doc => {
+                        const t = doc.data(); t.id = doc.id;
+                        teams.push(t);
+                    });
+                    resolve(teams);
+                }).catch(() => resolve([]));
+            });
+        }
+
+        function buildPDFContent(teams) {
+            const data = state.activeTournamentData;
+            const tourneyName = data.name || "Tournament";
+            const maxTeams = data.maxTeams || "—";
+            const playersPerTeam = data.playersPerTeam || "—";
+            const generatedDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const generatedTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+            let teamsHTML = '';
+
+            teams.forEach((team, tIdx) => {
+                const teamColor = getColorForInitials(team.name);
+                const initials = getInitials(team.name);
+                let initialSize = "32px";
+                if (initials.length === 3) initialSize = "26px";
+                if (initials.length === 4) initialSize = "22px";
+
+                const logoHTML = team.logo 
+                    ? `<img src="${team.logo}" style="width:70px;height:70px;border-radius:50%;object-fit:cover;border:3px solid #fff;box-shadow:0 4px 15px rgba(0,0,0,0.15);">` 
+                    : `<div style="width:70px;height:70px;border-radius:50%;background:${teamColor};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:${initialSize};border:3px solid #fff;box-shadow:0 4px 15px rgba(0,0,0,0.15);">${initials}</div>`;
+
+                const captain = team.captain || "Not Selected";
+                const players = team.players || [];
+
+                let playersRows = '';
+                players.forEach((p, pIdx) => {
+                    const isCaptain = p.name && p.name === team.captain;
+                    const roles = [];
+                    if (p.roles) {
+                        if (p.roles.bat) roles.push('🏏 Bat');
+                        if (p.roles.bowl) roles.push('⚾ Bowl');
+                        if (p.roles.wk) roles.push('🧤 WK');
+                    }
+                    const rolesStr = roles.length > 0 ? roles.join(' · ') : '—';
+                    const bgColor = pIdx % 2 === 0 ? '#FAFBFC' : '#FFFFFF';
+
+                    const avatarHTML = p.avatar 
+                        ? `<img src="${p.avatar}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #E5E7EB;">` 
+                        : `<div style="width:36px;height:36px;border-radius:50%;background:${getColorForInitials(p.name)};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;border:2px solid #E5E7EB;">${p.name ? p.name.charAt(0).toUpperCase() : '?'}</div>`;
+
+                    playersRows += `
+                        <tr style="background:${bgColor};">
+                            <td style="padding:10px 12px;font-size:13px;color:#6B7280;font-weight:600;width:30px;text-align:center;">${pIdx + 1}</td>
+                            <td style="padding:10px 8px;width:50px;">${avatarHTML}</td>
+                            <td style="padding:10px 12px;">
+                                <div style="font-size:14px;font-weight:600;color:#1F2937;${isCaptain ? '' : ''}">${p.name || 'Unnamed'}${isCaptain ? ' <span style="display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#FFD700,#FDB931);color:#fff;font-size:9px;font-weight:900;width:18px;height:18px;border-radius:50%;margin-left:6px;vertical-align:middle;box-shadow:0 1px 3px rgba(0,0,0,0.15);">C</span>' : ''}</div>
+                            </td>
+                            <td style="padding:10px 12px;text-align:right;">
+                                <span style="font-size:12px;color:#9CA3AF;font-weight:500;">${rolesStr}</span>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                teamsHTML += `
+                    <div style="page-break-inside:avoid;margin-bottom:30px;background:#FFFFFF;border-radius:16px;overflow:hidden;border:1px solid #E5E7EB;box-shadow:0 4px 20px rgba(0,0,0,0.06);">
+                        <div style="background:linear-gradient(135deg,${teamColor},${teamColor}dd);padding:20px 24px;display:flex;align-items:center;gap:16px;">
+                            ${logoHTML}
+                            <div>
+                                <div style="font-size:22px;font-weight:800;color:#FFFFFF;letter-spacing:0.5px;text-shadow:0 1px 3px rgba(0,0,0,0.2);">${team.name}</div>
+                                <div style="font-size:13px;color:rgba(255,255,255,0.85);margin-top:4px;font-weight:500;">Captain: <b style="color:#fff;">${captain}</b> · ${players.length} Players</div>
+                            </div>
+                            <div style="margin-left:auto;background:rgba(255,255,255,0.2);border-radius:12px;padding:8px 16px;text-align:center;">
+                                <div style="font-size:24px;font-weight:900;color:#fff;">${tIdx + 1}</div>
+                                <div style="font-size:9px;color:rgba(255,255,255,0.7);font-weight:700;text-transform:uppercase;letter-spacing:1px;">TEAM</div>
+                            </div>
+                        </div>
+                        <table style="width:100%;border-collapse:collapse;">
+                            <thead>
+                                <tr style="background:#F9FAFB;border-bottom:2px solid #E5E7EB;">
+                                    <th style="padding:10px 12px;text-align:center;font-size:10px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:1px;width:30px;">#</th>
+                                    <th style="padding:10px 8px;width:50px;"></th>
+                                    <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:1px;">PLAYER NAME</th>
+                                    <th style="padding:10px 12px;text-align:right;font-size:10px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:1px;">ROLE</th>
+                                </tr>
+                            </thead>
+                            <tbody>${playersRows}</tbody>
+                        </table>
+                    </div>
+                `;
+            });
+
+            return `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        @page { size: A4; margin: 0; }
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #F2F2F7; }
+                        @media print {
+                            body { background: white; }
+                            .no-print { display: none !important; }
+                            .page-content { padding: 20px !important; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="page-content" style="max-width:800px;margin:0 auto;padding:30px 20px;">
+                        
+                        <!-- HEADER -->
+                        <div style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);border-radius:20px;padding:40px 30px;margin-bottom:30px;text-align:center;position:relative;overflow:hidden;">
+                            <div style="position:absolute;top:-40px;right:-40px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,0.03);"></div>
+                            <div style="position:absolute;bottom:-60px;left:-30px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,0.02);"></div>
+                            
+                            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:3px;margin-bottom:12px;">🏏 Official Tournament Document</div>
+                            <div style="font-size:32px;font-weight:900;color:#FFFFFF;letter-spacing:1px;margin-bottom:8px;text-shadow:0 2px 4px rgba(0,0,0,0.3);">${tourneyName}</div>
+                            
+                            <div style="display:flex;justify-content:center;gap:8px;margin-top:20px;flex-wrap:wrap;">
+                                <div style="background:rgba(255,255,255,0.12);backdrop-filter:blur(10px);border-radius:12px;padding:12px 20px;min-width:100px;">
+                                    <div style="font-size:22px;font-weight:900;color:#FFFFFF;">${teams.length}/${maxTeams}</div>
+                                    <div style="font-size:10px;color:rgba(255,255,255,0.6);font-weight:600;text-transform:uppercase;letter-spacing:1px;">Teams</div>
+                                </div>
+                                <div style="background:rgba(255,255,255,0.12);backdrop-filter:blur(10px);border-radius:12px;padding:12px 20px;min-width:100px;">
+                                    <div style="font-size:22px;font-weight:900;color:#FFFFFF;">${playersPerTeam}</div>
+                                    <div style="font-size:10px;color:rgba(255,255,255,0.6);font-weight:600;text-transform:uppercase;letter-spacing:1px;">Per Team</div>
+                                </div>
+                                <div style="background:rgba(255,255,255,0.12);backdrop-filter:blur(10px);border-radius:12px;padding:12px 20px;min-width:100px;">
+                                    <div style="font-size:22px;font-weight:900;color:#FFFFFF;">${teams.reduce((a, t) => a + (t.players || []).length, 0)}</div>
+                                    <div style="font-size:10px;color:rgba(255,255,255,0.6);font-weight:600;text-transform:uppercase;letter-spacing:1px;">Total Players</div>
+                                </div>
+                            </div>
+
+                            <div style="margin-top:18px;font-size:11px;color:rgba(255,255,255,0.4);font-weight:500;">Generated on ${generatedDate} at ${generatedTime}</div>
+                        </div>
+
+                        <!-- TEAM CARDS -->
+                        ${teamsHTML}
+
+                        <!-- FOOTER -->
+                        <div style="text-align:center;padding:30px 0 20px;border-top:1px solid #E5E7EB;margin-top:20px;">
+                            <div style="font-size:11px;font-weight:700;color:#C7C7CC;text-transform:uppercase;letter-spacing:2px;">Generated by CRiCKERR</div>
+                            <div style="font-size:10px;color:#D1D5DB;margin-top:4px;">Team Management System</div>
+                        </div>
+
+                    </div>
+
+                    <!-- ACTION BUTTONS (no-print) -->
+                    <div class="no-print" style="position:fixed;bottom:0;left:0;right:0;padding:16px;background:rgba(255,255,255,0.95);backdrop-filter:blur(20px);border-top:1px solid #E5E7EB;display:flex;gap:12px;max-width:800px;margin:0 auto;z-index:100;">
+                        <button onclick="window.print()" style="flex:1;padding:14px;background:#007AFF;color:white;font-weight:700;font-size:15px;border:none;border-radius:14px;cursor:pointer;">
+                            📥 Save as PDF
+                        </button>
+                        <button onclick="window.close()" style="flex:1;padding:14px;background:#F2F2F7;color:#007AFF;font-weight:700;font-size:15px;border:1px solid #E5E7EB;border-radius:14px;cursor:pointer;">
+                            Close
+                        </button>
+                    </div>
+                    <div class="no-print" style="height:80px;"></div>
+                </body>
+                </html>
+            `;
+        }
+
+        function generateTournamentPDF() {
+            const btn = document.getElementById('dash-pdf-btn');
+            btn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" style="opacity:0.25"></circle><path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" style="opacity:0.75"></path></svg> Generating...';
+            btn.disabled = true;
+
+            getTournamentTeamsData().then(teams => {
+                if (teams.length === 0) {
+                    showiOSAlert("No Teams", "Add teams to the tournament before generating PDF.");
+                    btn.innerHTML = '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg> Download PDF';
+                    btn.disabled = false;
+                    return;
+                }
+
+                const htmlContent = buildPDFContent(teams);
+                const pdfWindow = window.open('', '_blank');
+                if (pdfWindow) {
+                    pdfWindow.document.write(htmlContent);
+                    pdfWindow.document.close();
+                } else {
+                    showiOSAlert("Popup Blocked", "Please allow popups to generate the PDF view.");
+                }
+
+                btn.innerHTML = '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg> Download PDF';
+                btn.disabled = false;
+            });
+        }
+
+        function shareTournamentPDF() {
+            const btn = document.getElementById('dash-share-btn');
+            btn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" style="opacity:0.25"></circle><path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" style="opacity:0.75"></path></svg> Preparing...';
+            btn.disabled = true;
+
+            getTournamentTeamsData().then(teams => {
+                if (teams.length === 0) {
+                    showiOSAlert("No Teams", "Add teams before sharing.");
+                    btn.innerHTML = '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg> Share to Captains';
+                    btn.disabled = false;
+                    return;
+                }
+
+                const data = state.activeTournamentData;
+                const tourneyName = data.name || "Tournament";
+
+                // Build a clean shareable text summary
+                let shareText = `🏏 ${tourneyName}\n`;
+                shareText += `📋 Team Squads\n`;
+                shareText += `━━━━━━━━━━━━━━━\n\n`;
+
+                teams.forEach((team, tIdx) => {
+                    const captain = team.captain || "TBD";
+                    const players = team.players || [];
+                    shareText += `🔹 TEAM ${tIdx + 1}: ${team.name}\n`;
+                    shareText += `   Captain: ${captain}\n`;
+                    players.forEach((p, pIdx) => {
+                        const cMark = (p.name === team.captain) ? ' (C)' : '';
+                        const roles = [];
+                        if (p.roles) {
+                            if (p.roles.bat) roles.push('Bat');
+                            if (p.roles.bowl) roles.push('Bowl');
+                            if (p.roles.wk) roles.push('WK');
+                        }
+                        const roleStr = roles.length > 0 ? ` [${roles.join(', ')}]` : '';
+                        shareText += `   ${pIdx + 1}. ${p.name || 'Unnamed'}${cMark}${roleStr}\n`;
+                    });
+                    shareText += `\n`;
+                });
+
+                shareText += `━━━━━━━━━━━━━━━\n`;
+                shareText += `Generated by CRiCKERR`;
+
+                // Use Web Share API if available, else copy to clipboard
+                if (navigator.share) {
+                    navigator.share({
+                        title: `${tourneyName} - Team Squads`,
+                        text: shareText
+                    }).catch(() => {
+                        // Fallback to clipboard
+                        fallbackCopyShare(shareText, tourneyName);
+                    });
+                } else {
+                    fallbackCopyShare(shareText, tourneyName);
+                }
+
+                btn.innerHTML = '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg> Share to Captains';
+                btn.disabled = false;
+            });
+        }
+
+        function fallbackCopyShare(text, name) {
+            navigator.clipboard.writeText(text).then(() => {
+                showiOSAlert("Copied!", `
+                    <div class="mt-2">
+                        <p class="text-[15px] font-semibold text-black mb-2">${name} Squad List</p>
+                        <p class="text-[13px] text-gray-600 mb-3">Complete team list copied to clipboard. Share it via WhatsApp, Telegram or any messaging app!</p>
+                        <div class="bg-green-50 text-green-600 text-[11px] font-bold py-1 px-3 rounded-full inline-block">
+                            ✅ Ready to paste & share
+                        </div>
+                    </div>
+                `);
+            }).catch(() => {
+                showiOSAlert("Error", "Could not copy. Please allow clipboard permissions.");
+            });
         }
 
         // --- UTILS ---
