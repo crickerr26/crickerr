@@ -978,22 +978,95 @@
             const savedType = localStorage.getItem("recMimeType") || 'video/webm';
             const blob = new Blob(allChunks, { type: savedType });
             const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none'; a.href = url;
             const now = new Date();
             let ext = savedType.includes('mp4') ? 'mp4' : 'webm';
-            a.download = `MATCH_${currentRecMatchId}_REC_${now.getHours()}-${now.getMinutes()}.${ext}`;
-            document.body.appendChild(a);
-            a.click();
+            const fileName = `MATCH_${currentRecMatchId}_REC_${now.getHours()}-${now.getMinutes()}.${ext}`;
 
-            setTimeout(() => {
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-                showSavedMessage(); 
-                clearDB();
-                resetRecUI();
-                if(video.paused) video.play().catch(e => {});
-            }, 1000);
+            // Detect mobile (iOS / Android)
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+            if (isMobile) {
+                // --- MOBILE: Show full-screen save modal so user can long-press to save ---
+                const modal = document.createElement('div');
+                modal.id = 'save-video-modal';
+                modal.style.cssText = `
+                    position: fixed; inset: 0; z-index: 99999;
+                    background: rgba(0,0,0,0.97);
+                    display: flex; flex-direction: column;
+                    align-items: center; justify-content: center;
+                    gap: 20px; padding: 30px;
+                    font-family: 'Roboto', sans-serif;
+                `;
+
+                const title = document.createElement('div');
+                title.innerText = '🎬 YOUR MATCH RECORDING IS READY!';
+                title.style.cssText = 'color: #fbbf24; font-size: 18px; font-weight: 900; text-align: center; letter-spacing: 1px;';
+
+                const instruction = document.createElement('div');
+                instruction.innerText = 'Tap and hold the video below → then tap "Save Video" or "Download" to save it to your phone.';
+                instruction.style.cssText = 'color: rgba(255,255,255,0.7); font-size: 14px; text-align: center; line-height: 1.6; max-width: 340px;';
+
+                const videoEl = document.createElement('video');
+                videoEl.src = url;
+                videoEl.controls = true;
+                videoEl.playsInline = true;
+                videoEl.setAttribute('playsinline', '');
+                videoEl.style.cssText = 'width: 100%; max-width: 480px; border-radius: 12px; border: 2px solid #fbbf24; background: #000; max-height: 50vh; object-fit: contain;';
+
+                // Also provide a direct download link as a tap-to-save button
+                const dlLink = document.createElement('a');
+                dlLink.href = url;
+                dlLink.download = fileName;
+                dlLink.innerText = '⬇️  TAP HERE TO DOWNLOAD';
+                dlLink.style.cssText = `
+                    display: block; background: #22c55e; color: white;
+                    font-family: 'Roboto', sans-serif; font-weight: 900; font-size: 15px;
+                    padding: 14px 32px; border-radius: 50px; text-decoration: none;
+                    letter-spacing: 1px; text-align: center;
+                    box-shadow: 0 4px 20px rgba(34,197,94,0.5);
+                `;
+
+                const closeBtn = document.createElement('button');
+                closeBtn.innerText = '✅  DONE — CLOSE';
+                closeBtn.style.cssText = `
+                    background: transparent; border: 1px solid rgba(255,255,255,0.3);
+                    color: rgba(255,255,255,0.6); font-family: 'Roboto', sans-serif;
+                    font-size: 13px; font-weight: 700; padding: 10px 28px;
+                    border-radius: 50px; cursor: pointer; letter-spacing: 1px;
+                `;
+                closeBtn.onclick = () => {
+                    document.body.removeChild(modal);
+                    window.URL.revokeObjectURL(url);
+                    showSavedMessage();
+                    clearDB();
+                    resetRecUI();
+                    if (video.paused) video.play().catch(e => {});
+                };
+
+                modal.appendChild(title);
+                modal.appendChild(instruction);
+                modal.appendChild(videoEl);
+                modal.appendChild(dlLink);
+                modal.appendChild(closeBtn);
+                document.body.appendChild(modal);
+
+            } else {
+                // --- DESKTOP: Standard anchor click download ---
+                const a = document.createElement('a');
+                a.style.display = 'none'; a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                    showSavedMessage();
+                    clearDB();
+                    resetRecUI();
+                    if (video.paused) video.play().catch(e => {});
+                }, 1000);
+            }
         }
 
         function showSavedMessage() {
@@ -1369,7 +1442,8 @@ function goLiveOnDB(matchId, peerId) {
 
             // 3. Determine Active Overlay
             let desiredType = null;
-            if (data.showSquad) desiredType = "SQUAD";
+            if (data.inningsBreak) desiredType = "INNINGS_BREAK";
+            else if (data.showSquad) desiredType = "SQUAD";
             else if (data.showBattingCard) desiredType = "BATTING";
             else if (data.showBowlingCard) desiredType = "BOWLING";
             else if (data.showRunRate) desiredType = "RUN_RATE";
@@ -1732,6 +1806,7 @@ function goLiveOnDB(matchId, peerId) {
                 if (match.summaryType === "RUN_RATE") drawRunRateGraphic(c, w, h);
                 else if (match.summaryType === "SQUAD") drawSquadBoard(c, w, h);
                 else if (match.summaryType === "MATCH_RESULT") drawFinalResult(c, w, h);
+                else if (match.summaryType === "INNINGS_BREAK") drawInningsBreakSummary(c, w, h);
                 else drawProfessionalSummary(c, w, h); 
                 c.restore();
             }
@@ -2624,6 +2699,296 @@ function goLiveOnDB(matchId, peerId) {
         function drawLogoWithBorder(c, img, x, y, s) { c.save(); c.shadowColor = "black"; c.shadowBlur = 10; c.shadowOffsetY = 5; c.beginPath(); c.arc(x + s/2, y + s/2, s/2, 0, Math.PI*2); c.fillStyle = "white"; c.fill(); c.shadowColor = "transparent"; c.beginPath(); c.arc(x + s/2, y + s/2, (s/2)-4, 0, Math.PI*2); c.clip(); if(img && img.complete) c.drawImage(img, x, y, s, s); else { c.fillStyle = "#334155"; c.fillRect(x,y,s,s); } c.restore(); }
         function drawSimpleList(c, squad, xPos, startY, rowH, align, progress) { c.textAlign = align; squad.forEach((name, i) => { const itemStart = 0.3 + (i * 0.05); let p = (progress - itemStart) / 0.15; p = Math.min(1, Math.max(0, p)); if (p > 0) { c.globalAlpha = p; const y = startY + (i * rowH) + (rowH/2); const xOff = (1 - p) * (align === 'left' ? -20 : 20); c.font = `700 ${rowH * 0.55}px 'Montserrat'`; c.fillStyle = "white"; c.fillText(name.toUpperCase(), xPos + xOff, y); } }); c.globalAlpha = 1; }
         
+        function drawInningsBreakSummary(c, w, h) {
+            const cardW = w * 0.88;
+            const cardH = h * 0.80;
+            const x = (w - cardW) / 2;
+            const y = (h - cardH) / 2;
+            const time = Date.now() * 0.001;
+
+            // --- Background ---
+            c.save();
+            c.shadowColor = "rgba(0,0,0,0.9)";
+            c.shadowBlur = 60;
+            c.shadowOffsetY = 20;
+            const bgGrad = c.createLinearGradient(x, y, x, y + cardH);
+            bgGrad.addColorStop(0, "#0a0f2e");
+            bgGrad.addColorStop(1, "#0d1b4b");
+            c.fillStyle = bgGrad;
+            drawRoundRect(c, x, y, cardW, cardH, 22);
+            c.fill();
+            c.shadowColor = "transparent";
+
+            // Animated border
+            const pulse = (Math.sin(time * 2) + 1) / 2;
+            c.strokeStyle = `rgba(251, 191, 36, ${0.5 + pulse * 0.5})`;
+            c.lineWidth = 3;
+            c.stroke();
+
+            // --- LEFT PANEL (Team Info + Score + Target) ---
+            const leftW = cardW * 0.42;
+            const leftGrad = c.createLinearGradient(x, y, x + leftW, y + cardH);
+            leftGrad.addColorStop(0, "#1a3a8f");
+            leftGrad.addColorStop(1, "#0a1a5c");
+            c.fillStyle = leftGrad;
+            drawRoundRect(c, x, y, leftW, cardH, 22);
+            c.fill();
+
+            // Team Logo
+            const logoS = cardH * 0.18;
+            const logoX = x + (leftW - logoS) / 2;
+            const logoY = y + cardH * 0.07;
+            drawLogo(c, match.t1 || "TEAM", team1Logo, logoX, logoY, logoS, true);
+
+            // Team Name
+            c.textAlign = "center";
+            c.textBaseline = "alphabetic";
+            c.fillStyle = "white";
+            c.font = `900 ${cardH * 0.07}px 'Montserrat'`;
+            c.shadowColor = "rgba(0,0,0,0.6)";
+            c.shadowBlur = 8;
+            const teamDisplayName = (match.t1 || "TEAM").toUpperCase().replace(/\bCRICKET CLUB\b/g, "C.C").replace(/\bCRICKET\b/g, "C.").replace(/\bCC\b/g, "C.C");
+            c.fillText(teamDisplayName, x + leftW / 2, logoY + logoS + cardH * 0.08);
+            c.shadowBlur = 0;
+
+            // "FIRST INNINGS TOTAL" label
+            c.fillStyle = "rgba(255,255,255,0.6)";
+            c.font = `700 ${cardH * 0.035}px 'Roboto Condensed'`;
+            c.letterSpacing = "2px";
+            c.fillText("FIRST INNINGS TOTAL", x + leftW / 2, logoY + logoS + cardH * 0.16);
+            if (c.letterSpacing !== undefined) c.letterSpacing = "0px";
+
+            // Main Score
+            c.fillStyle = "white";
+            c.font = `900 ${cardH * 0.22}px 'Anton'`;
+            c.shadowColor = "rgba(0,0,0,0.5)";
+            c.shadowBlur = 10;
+            const scoreStr = `${match.score || 0}`;
+            const wicketStr = `/${match.wickets || 0}`;
+            const scoreW = c.measureText(scoreStr).width;
+            c.font = `900 ${cardH * 0.22}px 'Anton'`;
+            c.fillStyle = "#fbbf24";
+            c.fillText(scoreStr, x + leftW / 2 - c.measureText(wicketStr).width / 2, y + cardH * 0.58);
+            c.fillStyle = "rgba(255,255,255,0.7)";
+            c.font = `900 ${cardH * 0.14}px 'Anton'`;
+            c.fillText(wicketStr, x + leftW / 2 + scoreW / 2, y + cardH * 0.58);
+            c.shadowBlur = 0;
+
+            // Overs badge
+            const ovText = `${match.overs || 0}.${match.balls || 0} Overs`;
+            const ovW = c.measureText(ovText).width + 40;
+            const ovH = cardH * 0.07;
+            const ovX = x + (leftW - ovW) / 2;
+            const ovY = y + cardH * 0.62;
+            c.fillStyle = "rgba(0,0,0,0.4)";
+            drawRoundRect(c, ovX, ovY, ovW, ovH, 12);
+            c.fill();
+            c.strokeStyle = "rgba(255,255,255,0.2)";
+            c.lineWidth = 1;
+            c.stroke();
+            c.fillStyle = "white";
+            c.font = `700 ${cardH * 0.04}px 'Roboto'`;
+            c.textBaseline = "middle";
+            c.fillText(ovText, x + leftW / 2, ovY + ovH / 2);
+            c.textBaseline = "alphabetic";
+
+            // Target box
+            const tBoxH = cardH * 0.20;
+            const tBoxW = leftW * 0.80;
+            const tBoxX = x + (leftW - tBoxW) / 2;
+            const tBoxY = y + cardH * 0.74;
+            const tBoxGrad = c.createLinearGradient(tBoxX, tBoxY, tBoxX, tBoxY + tBoxH);
+            tBoxGrad.addColorStop(0, "rgba(30, 58, 138, 0.8)");
+            tBoxGrad.addColorStop(1, "rgba(15, 23, 42, 0.9)");
+            c.fillStyle = tBoxGrad;
+            drawRoundRect(c, tBoxX, tBoxY, tBoxW, tBoxH, 14);
+            c.fill();
+            c.strokeStyle = "rgba(251, 191, 36, 0.3)";
+            c.lineWidth = 1;
+            c.stroke();
+
+            c.fillStyle = "#fbbf24";
+            c.font = `700 ${cardH * 0.035}px 'Roboto Condensed'`;
+            c.letterSpacing = "2px";
+            c.fillText("TARGET TO WIN", x + leftW / 2, tBoxY + tBoxH * 0.33);
+            if (c.letterSpacing !== undefined) c.letterSpacing = "0px";
+
+            const target = (match.target && match.target > 0 && match.target < 9999) ? match.target : (parseInt(match.score || 0) + 1);
+            c.fillStyle = "white";
+            c.font = `900 ${cardH * 0.14}px 'Anton'`;
+            c.fillText(target, x + leftW / 2, tBoxY + tBoxH * 0.80);
+
+            // Required Run Rate
+            const totalBallsForRRR = (match.totalOvers || 6) * 6;
+            const rrr = totalBallsForRRR > 0 ? ((target / totalBallsForRRR) * 6).toFixed(2) : "0.00";
+            c.fillStyle = "rgba(255,255,255,0.6)";
+            c.font = `600 ${cardH * 0.028}px 'Roboto'`;
+            c.fillText(`REQUIRED RUN RATE: ${rrr}`, x + leftW / 2, tBoxY + tBoxH * 1.05);
+
+            // --- RIGHT PANEL (Match Summary) ---
+            const rightX = x + leftW + cardW * 0.02;
+            const rightW = cardW - leftW - cardW * 0.02;
+            const rightPad = 20;
+
+            // Title bar
+            c.textAlign = "left";
+            c.textBaseline = "alphabetic";
+            c.fillStyle = "white";
+            c.font = `900 ${cardH * 0.055}px 'Montserrat'`;
+            c.shadowColor = "rgba(0,0,0,0.5)";
+            c.shadowBlur = 6;
+
+            // Live dot
+            c.beginPath();
+            const dotPulse = (Math.sin(time * 4) + 1) / 2;
+            c.arc(rightX + rightPad, y + cardH * 0.10, cardH * 0.018, 0, Math.PI * 2);
+            c.fillStyle = `rgba(34, 197, 94, ${0.7 + dotPulse * 0.3})`;
+            c.fill();
+            c.shadowBlur = 0;
+            c.fillStyle = "white";
+            c.fillText("MATCH SUMMARY", rightX + rightPad + cardH * 0.045, y + cardH * 0.115);
+
+            // CRR
+            const ballsBowled = (match.overs * 6) + match.balls;
+            const crr = ballsBowled > 0 ? (match.score / (ballsBowled / 6)).toFixed(2) : "0.00";
+            c.textAlign = "right";
+            c.fillStyle = "rgba(255,255,255,0.5)";
+            c.font = `600 ${cardH * 0.030}px 'Roboto'`;
+            c.fillText(`CRR: ${crr}`, x + cardW - rightPad, y + cardH * 0.115);
+
+            // Divider
+            c.beginPath();
+            c.moveTo(rightX + rightPad, y + cardH * 0.16);
+            c.lineTo(x + cardW - rightPad, y + cardH * 0.16);
+            c.strokeStyle = "rgba(255,255,255,0.1)";
+            c.lineWidth = 1;
+            c.stroke();
+
+            // --- TOP BATTERS ---
+            c.textAlign = "left";
+            c.fillStyle = "#fbbf24";
+            c.font = `800 ${cardH * 0.038}px 'Roboto Condensed'`;
+            c.fillText("TOP BATTERS", rightX + rightPad, y + cardH * 0.225);
+            c.textAlign = "right";
+            c.fillStyle = "rgba(255,255,255,0.4)";
+            c.font = `600 ${cardH * 0.028}px 'Roboto'`;
+            c.fillText("R (B)", x + cardW - rightPad, y + cardH * 0.225);
+
+            const batters = match.topBatters || [];
+            let batRowY = y + cardH * 0.30;
+            const rowSpacing = cardH * 0.115;
+
+            batters.slice(0, 3).forEach((p, i) => {
+                // Player image
+                if (p.image) {
+                    if (!window.playerImageCache) window.playerImageCache = {};
+                    if (!window.playerImageCache[p.name]) {
+                        const img = new Image(); img.crossOrigin = "anonymous"; img.src = p.image;
+                        window.playerImageCache[p.name] = img;
+                    }
+                    const avS = cardH * 0.065;
+                    const avX = rightX + rightPad;
+                    const avY = batRowY - avS * 0.75;
+                    const imgObj = window.playerImageCache[p.name];
+                    if (imgObj.complete && imgObj.naturalHeight !== 0) {
+                        c.save(); c.beginPath(); c.arc(avX + avS/2, avY + avS/2, avS/2, 0, Math.PI*2); c.clip();
+                        c.drawImage(imgObj, avX, avY, avS, avS); c.restore();
+                    }
+                    c.textAlign = "left";
+                    c.fillStyle = "white";
+                    c.font = `700 ${cardH * 0.042}px 'Roboto'`;
+                    c.fillText(safeStr(p.name), rightX + rightPad + avS + 12, batRowY);
+                } else {
+                    c.textAlign = "left";
+                    c.fillStyle = "white";
+                    c.font = `700 ${cardH * 0.042}px 'Roboto'`;
+                    c.fillText(safeStr(p.name), rightX + rightPad, batRowY);
+                }
+                c.textAlign = "right";
+                c.fillStyle = "#fbbf24";
+                c.font = `900 ${cardH * 0.045}px 'Roboto'`;
+                c.fillText(safeStr(p.runs), x + cardW - rightPad - cardH * 0.09, batRowY);
+                c.fillStyle = "rgba(255,255,255,0.5)";
+                c.font = `500 ${cardH * 0.032}px 'Roboto'`;
+                c.fillText(`(${safeStr(p.balls)})`, x + cardW - rightPad, batRowY);
+                batRowY += rowSpacing;
+            });
+
+            // Divider
+            c.beginPath();
+            c.moveTo(rightX + rightPad, batRowY);
+            c.lineTo(x + cardW - rightPad, batRowY);
+            c.strokeStyle = "rgba(255,255,255,0.08)";
+            c.lineWidth = 1;
+            c.stroke();
+            batRowY += cardH * 0.04;
+
+            // --- TOP BOWLERS ---
+            c.textAlign = "left";
+            c.fillStyle = "#f97316";
+            c.font = `800 ${cardH * 0.038}px 'Roboto Condensed'`;
+            c.fillText("TOP BOWLERS", rightX + rightPad, batRowY);
+            c.textAlign = "right";
+            c.fillStyle = "rgba(255,255,255,0.4)";
+            c.font = `600 ${cardH * 0.028}px 'Roboto'`;
+            c.fillText("W – R (O)", x + cardW - rightPad, batRowY);
+            batRowY += rowSpacing * 0.75;
+
+            const bowlers = match.topBowlers || [];
+            bowlers.slice(0, 2).forEach((p) => {
+                if (p.image) {
+                    if (!window.playerImageCache) window.playerImageCache = {};
+                    if (!window.playerImageCache[p.name]) {
+                        const img = new Image(); img.crossOrigin = "anonymous"; img.src = p.image;
+                        window.playerImageCache[p.name] = img;
+                    }
+                    const avS = cardH * 0.065;
+                    const avX = rightX + rightPad;
+                    const avY = batRowY - avS * 0.75;
+                    const imgObj = window.playerImageCache[p.name];
+                    if (imgObj.complete && imgObj.naturalHeight !== 0) {
+                        c.save(); c.beginPath(); c.arc(avX + avS/2, avY + avS/2, avS/2, 0, Math.PI*2); c.clip();
+                        c.drawImage(imgObj, avX, avY, avS, avS); c.restore();
+                    }
+                    c.textAlign = "left";
+                    c.fillStyle = "white";
+                    c.font = `700 ${cardH * 0.042}px 'Roboto'`;
+                    c.fillText(safeStr(p.name), rightX + rightPad + avS + 12, batRowY);
+                } else {
+                    c.textAlign = "left";
+                    c.fillStyle = "white";
+                    c.font = `700 ${cardH * 0.042}px 'Roboto'`;
+                    c.fillText(safeStr(p.name), rightX + rightPad, batRowY);
+                }
+                c.textAlign = "right";
+                c.fillStyle = "white";
+                c.font = `900 ${cardH * 0.042}px 'Roboto'`;
+                const bOv = p.balls ? `${Math.floor(p.balls/6)}.${p.balls%6}` : (p.overs || "0.0");
+                c.fillText(`${safeStr(p.wickets)} – ${safeStr(p.runs)}  (${bOv})`, x + cardW - rightPad, batRowY);
+                batRowY += rowSpacing;
+            });
+
+            // Bottom bar "INNINGS BREAK"
+            const breakBarH = cardH * 0.08;
+            const breakBarY = y + cardH - breakBarH;
+            const breakGrad = c.createLinearGradient(x, breakBarY, x + cardW, breakBarY);
+            breakGrad.addColorStop(0, "rgba(251, 191, 36, 0.15)");
+            breakGrad.addColorStop(0.5, "rgba(251, 191, 36, 0.35)");
+            breakGrad.addColorStop(1, "rgba(251, 191, 36, 0.15)");
+            c.fillStyle = breakGrad;
+            c.fillRect(x, breakBarY, cardW, breakBarH);
+            c.textAlign = "center";
+            c.textBaseline = "middle";
+            c.fillStyle = "#fbbf24";
+            c.font = `900 ${breakBarH * 0.45}px 'Montserrat'`;
+            c.letterSpacing = "4px";
+            c.fillText("⏸  INNINGS BREAK", x + cardW / 2, breakBarY + breakBarH / 2);
+            if (c.letterSpacing !== undefined) c.letterSpacing = "0px";
+            c.textBaseline = "alphabetic";
+
+            c.restore();
+        }
+
         function drawProfessionalSummary(c, w, h) {
             const cardW = w * 0.82; 
             const cardH = h * 0.72; 
