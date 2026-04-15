@@ -2205,33 +2205,33 @@ function goLiveOnDB(matchId, peerId) {
             c.fillText("BATTING", teamTextX, bottomY + barH * 0.75);
             
             // Direct Score Logic (Instant Update)
-            const displayScoreText = parseInt(match.score) || 0;
-            // Using a unicode "thin space" (\u2009) to bring numbers a bit closer to the dash
-            const scoreText = `${displayScoreText}\u2009-\u2009${match.wickets}`; 
-            const oversText = `${match.overs}.${match.balls}`;
-            const scoreX = x1 + w1 - 20;
-            
-            c.textAlign = "right";
-            c.fillStyle = "white";
-            c.font = `800 ${barH * 0.35}px 'Roboto'`;
-            const oversW = c.measureText(oversText).width;
-            c.fillText(oversText, scoreX, bottomY + barH * 0.75);
-            
-            c.textBaseline = "middle";
-            c.font = `900 ${barH * 0.8}px 'Anton'`;
-            // Restored default letter spacing to stop numbers from squishing together
-            if(c.letterSpacing !== undefined) c.letterSpacing = "0px"; 
-            
-            // Tiny Black Border for Main Score
-            c.lineWidth = 1;
-            c.strokeStyle = "black";
-            // Tweaked the offset to 8 so it perfectly centers next to the overs text
-            c.strokeText(scoreText, scoreX - oversW - 8, bottomY + barH * 0.60); 
-            
-            c.fillStyle = brandGold;
-            c.fillText(scoreText, scoreX - oversW - 8, bottomY + barH * 0.60); 
+            const displayScoreText = parseInt(match.score) || 0;
+            // Standard cricket format: runs/wickets
+            const scoreText = `${displayScoreText}/${match.wickets}`; 
+            const oversText = `${match.overs}.${match.balls} ov`;
+            const scoreX = x1 + w1 - 18;
+
+            // Use textBaseline TOP so nothing overflows below the bar
+            c.textBaseline = "top";
+            c.textAlign = "right";
             if(c.letterSpacing !== undefined) c.letterSpacing = "0px";
-            c.textBaseline = "alphabetic"; // Restore default
+
+            // Score: 4/0 — takes top 58% of bar
+            c.font = `900 ${barH * 0.56}px 'Anton'`;
+            const scoreW = c.measureText(scoreText).width;
+            // Black border for contrast
+            c.lineWidth = 2;
+            c.strokeStyle = "rgba(0,0,0,0.8)";
+            c.strokeText(scoreText, scoreX, bottomY + barH * 0.05);
+            c.fillStyle = brandGold;
+            c.fillText(scoreText, scoreX, bottomY + barH * 0.05);
+
+            // Overs: 0.1 ov — sits cleanly below score
+            c.font = `700 ${barH * 0.26}px 'Roboto'`;
+            c.fillStyle = "rgba(255,255,255,0.85)";
+            c.fillText(oversText, scoreX, bottomY + barH * 0.67);
+
+            c.textBaseline = "alphabetic"; // Restore default
 
             // Separator between Batting Base and Batters
             c.strokeStyle = "rgba(255, 255, 255, 0.2)";
@@ -2323,33 +2323,33 @@ function goLiveOnDB(matchId, peerId) {
                     alphaTarget = 1;
                 }
                 
-                // Draw Needed (Target) — 3 stacked lines using textBaseline TOP so nothing overlaps
+                // Draw Needed (Target) — 3 stacked lines, textBaseline TOP, clipped, no overlap
                 if (alphaTarget > 0) {
                     c.save();
                     c.globalAlpha = alphaTarget;
-                    // Hard clip — nothing escapes this box
+                    // Hard clip — nothing escapes this box ever
                     c.beginPath(); c.rect(x3 + 2, bottomY, w3 - 4, barH); c.clip();
 
                     const cx = x3 + w3 / 2;
                     c.textAlign = "center";
-                    c.textBaseline = "top"; // Anchor text from TOP — no overlap possible
+                    c.textBaseline = "top";
 
-                    // Line 1 — "NEEDED" label — sits at very top of box
+                    // Line 1 — "NEEDED" — top 4% to 22%
                     c.font = `700 ${barH * 0.18}px 'Roboto Condensed'`;
                     c.fillStyle = "white";
-                    c.fillText("NEEDED", cx, bottomY + barH * 0.05);
+                    c.fillText("NEEDED", cx, bottomY + barH * 0.04);
 
-                    // Line 2 — big runs number in gold — starts right after NEEDED
-                    c.font = `900 ${barH * 0.50}px 'Anton'`;
+                    // Line 2 — runs number — top 23% to 65% (font 42% of barH)
+                    c.font = `900 ${barH * 0.42}px 'Anton'`;
                     c.fillStyle = "#fbbf24";
-                    c.fillText(`${runsNeeded}`, cx, bottomY + barH * 0.24);
+                    c.fillText(`${runsNeeded}`, cx, bottomY + barH * 0.23);
 
-                    // Line 3 — "FROM X BALLS" — sits at bottom of box
+                    // Line 3 — "FROM X BALLS" — top 70% to 86% — clear gap above
                     c.font = `700 ${barH * 0.16}px 'Roboto Condensed'`;
                     c.fillStyle = "white";
-                    c.fillText(`FROM ${ballsRem} BALLS`, cx, bottomY + barH * 0.78);
+                    c.fillText(`FROM ${ballsRem} BALLS`, cx, bottomY + barH * 0.70);
 
-                    c.textBaseline = "alphabetic"; // restore default
+                    c.textBaseline = "alphabetic";
                     c.restore();
                 }
                 
@@ -2467,12 +2467,12 @@ function goLiveOnDB(matchId, peerId) {
 
             c.restore();
 
-            // Crickerr Logo — bottom-left corner, always visible above scorebar
+            // Crickerr Logo — bottom-left, sitting flush on top of scorebar
             if (crickerrLogoImg.complete && crickerrLogoImg.naturalHeight !== 0) {
                 const cLogoH = barH * 1.4; // TV-standard size
                 const cLogoW = cLogoH * (crickerrLogoImg.naturalWidth / crickerrLogoImg.naturalHeight);
-                const cLogoX = 18; // left edge
-                const cLogoY = bottomY - cLogoH - 8; // just above the bar
+                const cLogoX = 14; // left edge
+                const cLogoY = bottomY - cLogoH; // flush — sits directly on top of bar, no gap
 
                 c.save();
                 c.shadowColor = "rgba(0,0,0,0.85)";
