@@ -4642,16 +4642,16 @@ function generateBroadcastCode() {
                 statusText = `1st INNINGS`;
             }
 
-            // --- EXTRACT SQUAD NAMES FOR BROADCAST GRAPHICS ---
+            // --- EXTRACT SQUAD NAMES + PHOTOS FOR BROADCAST GRAPHICS ---
             const squad1Names = (state.team1.playing || []).map(id => {
                 const p = state.team1.squad.find(sq => sq.id === id);
-                return p ? p.name : "";
-            }).filter(n => n);
+                return p ? { name: p.name, image: p.image || null } : null;
+            }).filter(n => n && n.name);
 
             const squad2Names = (state.team2.playing || []).map(id => {
                 const p = state.team2.squad.find(sq => sq.id === id);
-                return p ? p.name : "";
-            }).filter(n => n);
+                return p ? { name: p.name, image: p.image || null } : null;
+            }).filter(n => n && n.name);
 
             // --- Prepare Payload ---
             const payload = {
