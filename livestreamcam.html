@@ -932,8 +932,12 @@
                 if (!selectedType) return alert("Recording not supported.");
                 localStorage.setItem("recMimeType", selectedType);
 
-                // FIX: Increased to 8 Mbps (8000000) for high quality video
-                const options = { mimeType: selectedType, videoBitsPerSecond: 8000000 };
+                // PROFESSIONAL QUALITY: 25 Mbps video + 320kbps audio = broadcast-grade
+                const options = { 
+                    mimeType: selectedType, 
+                    videoBitsPerSecond: 25000000,
+                    audioBitsPerSecond: 320000
+                };
                 recorder = new MediaRecorder(combinedStream, options);
 
                 recorder.ondataavailable = (e) => {
@@ -976,17 +980,38 @@
 
             btnText.innerText = "READY!";
             const savedType = localStorage.getItem("recMimeType") || 'video/webm';
-            const blob = new Blob(allChunks, { type: savedType });
-            const url = URL.createObjectURL(blob);
+            // Always force mp4 blob type for maximum gallery compatibility on mobile
+            const blobType = savedType.includes('mp4') ? 'video/mp4' : savedType;
+            const blob = new Blob(allChunks, { type: blobType });
             const now = new Date();
-            let ext = savedType.includes('mp4') ? 'mp4' : 'webm';
-            const fileName = `MATCH_${currentRecMatchId}_REC_${now.getHours()}-${now.getMinutes()}.${ext}`;
+            const ext = blobType.includes('mp4') ? 'mp4' : 'webm';
+            const fileName = `MATCH_${currentRecMatchId}_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}.${ext}`;
 
-            // Detect mobile (iOS / Android)
+            // Try Web Share API first — this is the ONLY method that reliably saves to gallery on iOS & Android
+            const shareFile = new File([blob], fileName, { type: blobType });
+            if (navigator.canShare && navigator.canShare({ files: [shareFile] })) {
+                try {
+                    await navigator.share({ files: [shareFile], title: fileName });
+                    showSavedMessage();
+                    clearDB();
+                    resetRecUI();
+                    if (video.paused) video.play().catch(e => {});
+                    return;
+                } catch (shareErr) {
+                    // User cancelled share sheet — fall through to modal below
+                    if (shareErr.name === 'AbortError') {
+                        resetRecUI();
+                        if (video.paused) video.play().catch(e => {});
+                        return;
+                    }
+                }
+            }
+
+            // Fallback: Show full-screen save modal with video player + download button
+            const url = URL.createObjectURL(blob);
             const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
             if (isMobile) {
-                // --- MOBILE: Show full-screen save modal so user can long-press to save ---
                 const modal = document.createElement('div');
                 modal.id = 'save-video-modal';
                 modal.style.cssText = `
@@ -994,36 +1019,35 @@
                     background: rgba(0,0,0,0.97);
                     display: flex; flex-direction: column;
                     align-items: center; justify-content: center;
-                    gap: 20px; padding: 30px;
+                    gap: 18px; padding: 24px;
                     font-family: 'Roboto', sans-serif;
                 `;
 
                 const title = document.createElement('div');
-                title.innerText = '🎬 YOUR MATCH RECORDING IS READY!';
+                title.innerText = '🎬 RECORDING READY!';
                 title.style.cssText = 'color: #fbbf24; font-size: 18px; font-weight: 900; text-align: center; letter-spacing: 1px;';
 
                 const instruction = document.createElement('div');
-                instruction.innerText = 'Tap and hold the video below → then tap "Save Video" or "Download" to save it to your phone.';
-                instruction.style.cssText = 'color: rgba(255,255,255,0.7); font-size: 14px; text-align: center; line-height: 1.6; max-width: 340px;';
+                instruction.innerText = 'Tap and HOLD the video below → then tap "Save Video" to save to your Gallery.';
+                instruction.style.cssText = 'color: rgba(255,255,255,0.75); font-size: 13px; text-align: center; line-height: 1.7; max-width: 320px;';
 
                 const videoEl = document.createElement('video');
                 videoEl.src = url;
                 videoEl.controls = true;
                 videoEl.playsInline = true;
                 videoEl.setAttribute('playsinline', '');
-                videoEl.style.cssText = 'width: 100%; max-width: 480px; border-radius: 12px; border: 2px solid #fbbf24; background: #000; max-height: 50vh; object-fit: contain;';
+                videoEl.style.cssText = 'width:100%; max-width:460px; border-radius:12px; border:2px solid #fbbf24; background:#000; max-height:45vh; object-fit:contain;';
 
-                // Also provide a direct download link as a tap-to-save button
                 const dlLink = document.createElement('a');
                 dlLink.href = url;
                 dlLink.download = fileName;
-                dlLink.innerText = '⬇️  TAP HERE TO DOWNLOAD';
+                dlLink.innerText = '⬇️  TAP TO DOWNLOAD / SAVE';
                 dlLink.style.cssText = `
                     display: block; background: #22c55e; color: white;
                     font-family: 'Roboto', sans-serif; font-weight: 900; font-size: 15px;
                     padding: 14px 32px; border-radius: 50px; text-decoration: none;
                     letter-spacing: 1px; text-align: center;
-                    box-shadow: 0 4px 20px rgba(34,197,94,0.5);
+                    box-shadow: 0 4px 20px rgba(34,197,94,0.5); width: 100%; max-width: 320px;
                 `;
 
                 const closeBtn = document.createElement('button');
@@ -1051,13 +1075,11 @@
                 document.body.appendChild(modal);
 
             } else {
-                // --- DESKTOP: Standard anchor click download ---
+                // Desktop: standard auto-download
                 const a = document.createElement('a');
-                a.style.display = 'none'; a.href = url;
-                a.download = fileName;
+                a.style.display = 'none'; a.href = url; a.download = fileName;
                 document.body.appendChild(a);
                 a.click();
-
                 setTimeout(() => {
                     document.body.removeChild(a);
                     window.URL.revokeObjectURL(url);
