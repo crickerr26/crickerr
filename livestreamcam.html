@@ -918,7 +918,7 @@
         }
 
         function startRollingReplayBuffer(stream) {
-            const bitRate = 25000000; 
+            const bitRate = 8000000; 
             const types = ["video/mp4", "video/mp4;codecs=avc1", "video/webm;codecs=h264", "video/webm;codecs=vp9", "video/webm"];
             let selectedType = types.find(t => MediaRecorder.isTypeSupported(t)) || "";
             if (!selectedType) return;
@@ -952,7 +952,7 @@
             replayVideo.style.cssText = "position:absolute; top:0; left:0; width:1px; height:1px; opacity:0.01; pointer-events:none;";
             document.body.appendChild(replayVideo);
             replayVideo.src = replayBlobUrl;
-            replayVideo.playbackRate = 0.5; 
+            replayVideo.playbackRate = 0.7; 
             replayVideo.play().then(() => {
                 replayState = "TRANSITION_IN";
                 transitionStartTime = Date.now();
@@ -1831,7 +1831,7 @@ function goLiveOnDB(matchId, peerId) {
             }
 
             // 60fps Loop
-            setTimeout(renderLoop, 16); 
+            requestAnimationFrame(renderLoop); 
         }
 
         function drawVideoObject(vidObj, w, h) {
@@ -1857,7 +1857,7 @@ function goLiveOnDB(matchId, peerId) {
         }
 
         function drawCoolStinger(w, h, direction) {
-            const now = Date.now(); const elapsed = now - transitionStartTime; const duration = 2500; let p = elapsed / duration;
+            const now = Date.now(); const elapsed = now - transitionStartTime; const duration = 1500; let p = elapsed / duration;
             if (p > 1) return true;
             const ease = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
             ctx.save();
@@ -1870,7 +1870,7 @@ function goLiveOnDB(matchId, peerId) {
                 ctx.fillStyle = "rgba(59, 130, 246, 0.6)"; ctx.fill();
                 if (coverAlpha > 0.8 && crickerrLogoImg.complete) {
                     const ls = h * 0.4; const pulse = 1 + Math.sin(p * 10) * 0.05; const dW = ls * pulse; const dH = ls * pulse;
-                    ctx.shadowColor = "white"; ctx.shadowBlur = 20; ctx.drawImage(crickerrLogoImg, (w-dW)/2, (h-dH)/2, dW, dH); ctx.shadowBlur = 0;
+                    ctx.drawImage(crickerrLogoImg, (w-dW)/2, (h-dH)/2, dW, dH);
                 }
             }
             ctx.restore(); return false;
@@ -1886,24 +1886,20 @@ function goLiveOnDB(matchId, peerId) {
             const animDelay = 300; const animTime = Math.max(0, elapsed - animDelay);
             let progress = animTime / 600; let scale = getElasticScale(progress);
             if (progress >= 1) scale = 1 + (Math.sin(now / 400) * 0.02);
-            const sheenPos = (now % 2000) / 2000; const badgeSize = h * 0.16; 
+            const badgeSize = h * 0.16; 
             const barH = h * 0.095; const bottomY = h - barH - (h * 0.03); const goldH = barH * 0.04; const goldY = bottomY - goldH - 2; 
             const posX = w * 0.09; const posY = goldY - (badgeSize / 1.7); 
             ctx.save(); ctx.translate(posX, posY); ctx.scale(scale, scale);
-            ctx.save(); ctx.shadowColor = "rgba(0,0,0,0.7)"; ctx.shadowBlur = 20; ctx.shadowOffsetY = 10; ctx.fillStyle = "black"; drawBadgeShape(ctx, shape, badgeSize); ctx.fill(); ctx.restore();
+            ctx.fillStyle = "rgba(0,0,0,0.5)"; drawBadgeShape(ctx, shape, badgeSize); ctx.fill();
             const grad = ctx.createLinearGradient(-badgeSize/2, -badgeSize/2, badgeSize/2, badgeSize/2); grad.addColorStop(0, color1); grad.addColorStop(1, color2); ctx.fillStyle = grad; drawBadgeShape(ctx, shape, badgeSize); ctx.fill();
-            ctx.save(); drawBadgeShape(ctx, shape, badgeSize); ctx.clip(); 
-            const sheenX = (sheenPos * badgeSize * 3) - (badgeSize * 1.5); const sheenW = badgeSize * 0.4;
-            const sheenGrad = ctx.createLinearGradient(sheenX, -badgeSize, sheenX + sheenW, badgeSize); sheenGrad.addColorStop(0, "rgba(255,255,255,0)"); sheenGrad.addColorStop(0.5, "rgba(255,255,255,0.4)"); sheenGrad.addColorStop(1, "rgba(255,255,255,0)");
-            ctx.fillStyle = sheenGrad; ctx.transform(1, 0, -0.5, 1, 0, 0); ctx.fillRect(sheenX - badgeSize, -badgeSize, sheenW * 2, badgeSize * 2); ctx.restore();
             ctx.strokeStyle = "white"; ctx.lineWidth = 4; drawBadgeShape(ctx, shape, badgeSize); ctx.stroke();
             ctx.fillStyle = "white"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; const fontSize = text.length > 2 ? badgeSize * 0.45 : badgeSize * 0.85; ctx.font = `900 ${fontSize}px 'Anton', sans-serif`;
-            ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 0; ctx.shadowOffsetX = 3; ctx.shadowOffsetY = 3; ctx.fillText(text, 0, badgeSize * textOffset); ctx.shadowColor = "transparent";
+            ctx.fillText(text, 0, badgeSize * textOffset);
             const subY = badgeSize * 0.65; const pillW = badgeSize * 1.3; const pillH = badgeSize * 0.22;
             ctx.fillStyle = "#0f172a"; ctx.beginPath(); ctx.roundRect(-pillW/2, subY, pillW, pillH, 8); ctx.fill();
             ctx.strokeStyle = "#fbbf24"; ctx.lineWidth = 2; ctx.stroke();
             ctx.fillStyle = "#fbbf24"; ctx.font = `700 ${badgeSize * 0.16}px 'Roboto Condensed'`; ctx.fillText(subText, 0, subY + (pillH/2) + 1);
-            ctx.fillStyle = "white"; ctx.font = `700 ${badgeSize * 0.14}px 'Roboto'`; ctx.shadowColor = "black"; ctx.shadowBlur = 4; ctx.fillText("ACTION REPLAY", 0, -badgeSize * 0.82);
+            ctx.fillStyle = "white"; ctx.font = `700 ${badgeSize * 0.14}px 'Roboto'`; ctx.fillText("ACTION REPLAY", 0, -badgeSize * 0.82);
             ctx.restore();
         }
 
