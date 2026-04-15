@@ -39,9 +39,9 @@
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
         body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Roboto', sans-serif; }
 
-        /* FORCE LANDSCAPE — physically rotates the entire page when phone is held portrait */
+        /* FORCE LANDSCAPE — only rotates the APP screen, setup screen stays portrait */
         @media screen and (orientation: portrait) {
-            body {
+            #app-container.landscape-active {
                 width: 100vh;
                 height: 100vw;
                 transform: rotate(90deg);
@@ -705,13 +705,6 @@
             initParticles(window.innerWidth, window.innerHeight);
             requestWakeLock(); 
             setInterval(requestWakeLock, 60000);
-
-            // Force landscape orientation immediately on page load
-            try {
-                if (screen.orientation && screen.orientation.lock) {
-                    screen.orientation.lock("landscape").catch(e => {});
-                }
-            } catch(e) {}
         };
 
         async function requestWakeLock() {
@@ -773,6 +766,7 @@
             if (success) {
                 document.getElementById('setup-screen').style.display = 'none';
                 document.getElementById('app-container').style.display = 'block';
+                document.getElementById('app-container').classList.add('landscape-active');
                 resizeCanvas();
                 requestAnimationFrame(renderLoop);
                 listenToDB(id);
@@ -1885,11 +1879,11 @@ function goLiveOnDB(matchId, peerId) {
             if (sponsors.sponsor2) urls.push(sponsors.sponsor2);
             if (urls.length === 0) return;
 
-            // Professional sizing: max logo height = 7% of screen height, capped at 80px
-            const logoH = Math.min(h * 0.07, 80);
-            const pad = 18;          // gap between logos
+            // TV broadcast sizing — clearly visible on any screen
+            const logoH = Math.min(h * 0.14, 130);
+            const pad = 20;          // gap between logos
             const rightMargin = 20;  // distance from right edge
-            const topMargin = 20;    // distance from top edge
+            const topMargin = 15;    // distance from top edge
 
             let drawX = w - rightMargin; // Start from right, draw leftwards
 
@@ -2160,12 +2154,12 @@ function goLiveOnDB(matchId, peerId) {
             c.shadowBlur = 0;
             c.shadowOffsetY = 0;
             
-            // Layout Box Widths
-            const w1 = barW * 0.31; // Batting Base (Wider to fix overlap)
-            const w2 = barW * 0.18; // Batting Batters
-            const w3 = barW * 0.09; // Run Rate Middle (Smaller)
+            // Layout Box Widths — middle box widened to prevent overflow
+            const w1 = barW * 0.27; // Batting Base
+            const w2 = barW * 0.17; // Batting Batters
+            const w3 = barW * 0.13; // Run Rate Middle (wider — prevents text overflow)
             const w4 = barW * 0.22; // Bowling Bowler
-            const w5 = barW * 0.20; // Bowling Base
+            const w5 = barW * 0.21; // Bowling Base
             
             // 1 & 2. BATTING SIDE (CONTINUOUS RED TO DARK RED GRADIENT)
             const x1 = startX;
@@ -2314,52 +2308,29 @@ function goLiveOnDB(matchId, peerId) {
                     alphaTarget = 1;
                 }
                 
-                // Draw Needed (Target)
+                // Draw Needed (Target) — centered and clipped so it can never overflow
                 if (alphaTarget > 0) {
                     c.save();
                     c.globalAlpha = alphaTarget;
+                    // Hard clip to this box — nothing escapes
+                    c.beginPath(); c.rect(x3 + 2, bottomY, w3 - 4, barH); c.clip();
                     const yOffsetTarget = (1 - alphaTarget) * 10;
-                    
+
                     c.textAlign = "center";
-                    c.fillStyle = "white";
-                    c.font = `700 ${barH * 0.18}px 'Roboto'`;
-                    c.fillText("NEEDED", x3 + w3/2, bottomY + barH * 0.28 + yOffsetTarget);
-                    
-                    // "23-7balls" format
-                    const needTextY = bottomY + barH * 0.82 + yOffsetTarget;
-                    const runsText = `${runsNeeded}`;
-                    const dashText = `-`;
-                    const ballsNumText = `${ballsRem}`;
-                    
-                    c.textAlign = "left";
-                    c.font = `900 ${barH * 0.45}px 'Anton'`;
-                    const wRuns = c.measureText(runsText).width;
-                    const wDash = c.measureText(dashText).width;
-                    const wBallsNum = c.measureText(ballsNumText).width;
-                    c.font = `700 ${barH * 0.22}px 'Roboto Condensed'`;
-                    const wBallsStr = c.measureText("balls").width;
-                    
-                    const gap = 8; // Relaxed spacing
-                    const totalW = wRuns + gap + wDash + gap + wBallsNum + 6 + wBallsStr; 
-                    let drawX = x3 + (w3 - totalW) / 2;
-                    
-                    c.font = `900 ${barH * 0.45}px 'Anton'`;
-                    c.fillStyle = "white";
-                    c.fillText(runsText, drawX, needTextY);
-                    drawX += wRuns + gap;
-                    
-                    c.fillStyle = "white"; // Changed to white
-                    c.fillText(dashText, drawX, needTextY);
-                    drawX += wDash + gap; 
-                    
-                    c.fillStyle = "white";
-                    c.fillText(ballsNumText, drawX, needTextY);
-                    drawX += wBallsNum + 6; // Relaxed space before "balls"
-                    
-                    c.font = `700 ${barH * 0.22}px 'Roboto Condensed'`;
-                    c.fillStyle = "white"; // Changed to white
-                    c.fillText("balls", drawX, needTextY);
-                    
+                    c.fillStyle = "rgba(255,255,255,0.75)";
+                    c.font = `700 ${barH * 0.18}px 'Roboto Condensed'`;
+                    c.fillText("NEEDED", x3 + w3/2, bottomY + barH * 0.27 + yOffsetTarget);
+
+                    // Big runs number in gold
+                    c.font = `900 ${barH * 0.52}px 'Anton'`;
+                    c.fillStyle = "#fbbf24";
+                    c.fillText(`${runsNeeded}`, x3 + w3/2, bottomY + barH * 0.72 + yOffsetTarget);
+
+                    // Small "from X balls" label
+                    c.font = `700 ${barH * 0.17}px 'Roboto Condensed'`;
+                    c.fillStyle = "rgba(255,255,255,0.65)";
+                    c.fillText(`from ${ballsRem} balls`, x3 + w3/2, bottomY + barH * 0.91 + yOffsetTarget);
+
                     c.restore();
                 }
                 
@@ -2477,14 +2448,14 @@ function goLiveOnDB(matchId, peerId) {
 
             c.restore();
 
-            // Floating Brand Logo Placement
+            // Floating Brand Logo — TV broadcast standard size
             if (crickerrLogoImg.complete && crickerrLogoImg.naturalHeight !== 0) { 
-                const cLogoH = barH * 0.55; 
-                const cLogoW = cLogoH * (crickerrLogoImg.width / crickerrLogoImg.height); 
+                const cLogoH = barH * 1.2; 
+                const cLogoW = cLogoH * (crickerrLogoImg.naturalWidth / crickerrLogoImg.naturalHeight); 
                 c.save(); 
-                c.shadowColor = "rgba(0,0,0,0.6)"; 
-                c.shadowBlur = 8; c.shadowOffsetY = 4; 
-                c.drawImage(crickerrLogoImg, w - cLogoW - 20, bottomY - cLogoH - 10, cLogoW, cLogoH); 
+                c.shadowColor = "rgba(0,0,0,0.8)"; 
+                c.shadowBlur = 14; c.shadowOffsetY = 4; 
+                c.drawImage(crickerrLogoImg, w - cLogoW - 15, bottomY - cLogoH - 6, cLogoW, cLogoH); 
                 c.restore(); 
             }
 
