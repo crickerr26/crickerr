@@ -17,15 +17,49 @@
             --glass-bg: rgba(255, 255, 255, 0.85);
             --glass-border: rgba(255, 255, 255, 0.5);
             --shadow-soft: 0 8px 30px rgba(0,0,0,0.06);
+            --bg-page: #F2F2F7;
+            --text-primary: #1c1c1e;
+            --text-secondary: #6B7280;
+            --card-bg: rgba(255, 255, 255, 0.75);
+            --card-border: rgba(255, 255, 255, 0.6);
+            --nav-bg: rgba(255, 255, 255, 0.9);
+            --nav-border: rgba(0,0,0,0.05);
+            --stat-bg: #f9fafb;
+            --tab-bg: rgba(118, 118, 128, 0.12);
+            --tab-active-bg: #ffffff;
+            --tab-active-text: #000000;
+            --tab-inactive-text: #666666;
+            --table-border: #F3F4F6;
+            --table-row-alt: #F9FAFB;
+            --input-bg: rgba(118, 118, 128, 0.12);
+        }
+
+        [data-theme="dark"] {
+            --bg-page: #0d0d0f;
+            --text-primary: #f2f2f7;
+            --text-secondary: #98989f;
+            --card-bg: rgba(28, 28, 32, 0.85);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --nav-bg: rgba(18, 18, 22, 0.95);
+            --nav-border: rgba(255,255,255,0.06);
+            --stat-bg: rgba(255,255,255,0.05);
+            --tab-bg: rgba(255, 255, 255, 0.08);
+            --tab-active-bg: rgba(255, 255, 255, 0.15);
+            --tab-active-text: #ffffff;
+            --tab-inactive-text: #888;
+            --table-border: rgba(255,255,255,0.06);
+            --table-row-alt: rgba(255,255,255,0.02);
+            --input-bg: rgba(255, 255, 255, 0.08);
         }
 
         body {
             margin: 0;
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
-            background-color: #F2F2F7;
-            color: #1c1c1e;
+            background-color: var(--bg-page);
+            color: var(--text-primary);
             -webkit-tap-highlight-color: transparent;
             overflow-x: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         /* --- AMBIENT BACKGROUND --- */
@@ -110,117 +144,478 @@
         .hidden { display: none !important; }
         
         /* Table Styles */
-        .score-table th { font-size: 10px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; padding: 8px 4px; border-bottom: 1px solid #F3F4F6; }
-        .score-table td { font-size: 13px; font-weight: 500; color: #111827; padding: 8px 4px; border-bottom: 1px solid #F9FAFB; }
+        .score-table th { font-size: 10px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; padding: 8px 4px; border-bottom: 1px solid var(--table-border); }
+        .score-table td { font-size: 13px; font-weight: 500; color: var(--text-primary); padding: 8px 4px; border-bottom: 1px solid var(--table-row-alt); }
         .score-table tr:last-child td { border-bottom: none; }
         .bowler-name, .batter-name { font-weight: 600; }
-        .dismissal-text { font-size: 10px; color: #6B7280; font-weight: 400; display: block; }
+        .dismissal-text { font-size: 10px; color: var(--text-secondary); font-weight: 400; display: block; }
+
+        /* --- DARK MODE GLASS --- */
+        [data-theme="dark"] .glass-card {
+            background: var(--card-bg);
+            border-color: var(--card-border);
+        }
+        [data-theme="dark"] .nav-glass {
+            background: var(--nav-bg);
+            border-bottom-color: var(--nav-border);
+        }
+        [data-theme="dark"] .tab-segment {
+            background: var(--tab-bg);
+        }
+        [data-theme="dark"] .tab-btn { color: var(--tab-inactive-text); }
+        [data-theme="dark"] .tab-btn.active { background: var(--tab-active-bg); color: var(--tab-active-text); }
+        [data-theme="dark"] .ambient-bg {
+            background:
+                radial-gradient(circle at 15% 50%, rgba(56, 189, 248, 0.08), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(99, 102, 241, 0.08), transparent 25%);
+        }
+        [data-theme="dark"] .search-bar {
+            background: var(--input-bg); color: var(--text-primary);
+        }
+        [data-theme="dark"] .bg-gray-50 { background-color: rgba(255,255,255,0.04) !important; }
+        [data-theme="dark"] .bg-white { background-color: rgba(28,28,32,0.9) !important; }
+        [data-theme="dark"] .text-gray-900 { color: #f2f2f7 !important; }
+        [data-theme="dark"] .text-gray-800 { color: #d1d1d6 !important; }
+        [data-theme="dark"] .text-gray-700 { color: #aeaeb2 !important; }
+        [data-theme="dark"] .text-gray-500 { color: #8e8e93 !important; }
+        [data-theme="dark"] .text-gray-400 { color: #636366 !important; }
+        [data-theme="dark"] .border-gray-100 { border-color: rgba(255,255,255,0.06) !important; }
+        [data-theme="dark"] .border-gray-200 { border-color: rgba(255,255,255,0.08) !important; }
+        [data-theme="dark"] .bg-gray-100 { background-color: rgba(255,255,255,0.08) !important; }
+        [data-theme="dark"] #news-reader { background: #0d0d0f; }
+        [data-theme="dark"] .article-body { color: #aeaeb2; }
+
+        /* --- TOAST NOTIFICATION SYSTEM --- */
+        #toast-container {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+            z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+        }
+        .toast {
+            background: rgba(28, 28, 32, 0.96); color: #fff;
+            padding: 12px 20px; border-radius: 14px;
+            font-size: 14px; font-weight: 600;
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+            display: flex; align-items: center; gap: -10px gap 10px;
+            pointer-events: all;
+            animation: toastIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            white-space: nowrap;
+        }
+        [data-theme="dark"] .toast { background: rgba(48, 48, 56, 0.98); border-color: rgba(255,255,255,0.15); }
+        .toast.toast-out { animation: toastOut 0.3s ease forwards; }
+        @keyframes toastIn { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes toastOut { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(10px) scale(0.95); } }
+
+        /* --- WIN PREDICTOR BAR --- */
+        .predictor-bar { height: 10px; border-radius: 999px; background: #e5e7eb; overflow: hidden; }
+        .predictor-fill { height: 100%; border-radius: 999px; transition: width 1s cubic-bezier(0.16, 1, 0.3, 1); }
+
+        /* --- NRR CALCULATOR --- */
+        .nrr-input { background: var(--input-bg); border: 1px solid var(--table-border); border-radius: 8px; padding: 8px 12px; font-size: 14px; outline: none; color: var(--text-primary); width: 100%; }
+
+        /* ============================================================
+           PROFESSIONAL REDESIGN STYLES
+        ============================================================ */
+
+        /* --- ENHANCED NAV --- */
+        .nav-glass {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+            position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.04), 0 4px 20px rgba(0,0,0,0.04);
+        }
+        [data-theme="dark"] .nav-glass {
+            background: rgba(14,14,18,0.96);
+            box-shadow: 0 1px 0 rgba(255,255,255,0.04), 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        /* --- CRICKERR LOGO BADGE --- */
+        .crickerr-logo-badge {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, #1d4ed8 0%, #4f46e5 100%);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 12px rgba(79,70,229,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative; overflow: hidden;
+        }
+        .crickerr-logo-badge::before {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
+        }
+        .crickerr-logo-badge:active { transform: scale(0.93); }
+
+        /* --- HOME HERO BANNER --- */
+        .home-hero {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 40%, #4f46e5 70%, #7c3aed 100%);
+            border-radius: 24px;
+            padding: 24px 20px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(79,70,229,0.35), 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .home-hero::before {
+            content: ''; position: absolute;
+            top: -40px; right: -40px;
+            width: 160px; height: 160px;
+            background: rgba(255,255,255,0.07);
+            border-radius: 50%;
+        }
+        .home-hero::after {
+            content: ''; position: absolute;
+            bottom: -60px; right: 20px;
+            width: 200px; height: 200px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 50%;
+        }
+
+        /* --- MATCH CARD PRO --- */
+        .match-card-pro {
+            background: rgba(255,255,255,0.82);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.7);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.03);
+            transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s;
+            cursor: pointer;
+        }
+        .match-card-pro:active { transform: scale(0.98); box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
+        [data-theme="dark"] .match-card-pro {
+            background: rgba(28,28,36,0.88);
+            border-color: rgba(255,255,255,0.07);
+            box-shadow: 0 2px 16px rgba(0,0,0,0.3);
+        }
+        .match-card-accent { height: 3px; width: 100%; }
+        .match-card-accent.live { background: linear-gradient(90deg, #ef4444, #f97316, #ef4444); background-size: 200%; animation: shimmerLive 2s linear infinite; }
+        .match-card-accent.final { background: linear-gradient(90deg, #6b7280, #9ca3af); }
+        @keyframes shimmerLive { 0% { background-position: 200% center; } 100% { background-position: 0% center; } }
+
+        .team-logo-circle {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: rgba(248,250,252,0.9);
+            border: 2px solid rgba(255,255,255,0.8);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; flex-shrink: 0;
+        }
+        [data-theme="dark"] .team-logo-circle {
+            background: rgba(40,40,50,0.9);
+            border-color: rgba(255,255,255,0.1);
+        }
+        .team-logo-circle img { width: 32px; height: 32px; object-fit: contain; }
+
+        /* --- DETAIL VIEW HERO --- */
+        .match-hero {
+            background: linear-gradient(160deg, #0f172a 0%, #1e1b4b 40%, #1e3a8a 100%);
+            position: relative; overflow: hidden;
+        }
+        .match-hero::before {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(ellipse at 30% 50%, rgba(99,102,241,0.3) 0%, transparent 60%),
+                        radial-gradient(ellipse at 80% 20%, rgba(59,130,246,0.2) 0%, transparent 50%);
+        }
+        .match-hero-logo {
+            width: 72px; height: 72px; border-radius: 50%;
+            background: rgba(255,255,255,0.12);
+            border: 2px solid rgba(255,255,255,0.2);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; backdrop-filter: blur(10px);
+        }
+        .match-hero-logo img { width: 52px; height: 52px; object-fit: contain; }
+
+        /* --- DETAIL STAT PILL --- */
+        .stat-pill {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 12px; padding: 8px 10px;
+            text-align: center; backdrop-filter: blur(10px);
+            flex: 1;
+        }
+        .stat-pill-label { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255,255,255,0.5); display: block; }
+        .stat-pill-value { font-size: 15px; font-weight: 900; color: #fff; font-family: 'SF Mono', 'Fira Code', monospace; display: block; margin-top: 2px; }
+        .stat-pill-value.highlight { color: #60a5fa; }
+
+        /* --- ACTION BUTTON ROW --- */
+        .action-btn {
+            flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 12px; padding: 9px 8px; font-size: 11px; font-weight: 700;
+            color: rgba(255,255,255,0.9); cursor: pointer;
+            transition: all 0.2s; -webkit-tap-highlight-color: transparent;
+            backdrop-filter: blur(10px);
+        }
+        .action-btn:active { transform: scale(0.96); background: rgba(255,255,255,0.14); }
+
+        /* --- DETAIL TAB BAR --- */
+        .detail-tab-bar {
+            display: flex; gap: 0; overflow-x: auto; -webkit-overflow-scrolling: touch;
+            scrollbar-width: none; padding: 0 16px; margin: 0 -16px;
+        }
+        .detail-tab-bar::-webkit-scrollbar { display: none; }
+        .detail-tab-item {
+            flex-shrink: 0; padding: 10px 16px; font-size: 12px; font-weight: 700;
+            color: rgba(255,255,255,0.45); border-bottom: 2px solid transparent;
+            white-space: nowrap; cursor: pointer; transition: all 0.2s;
+        }
+        .detail-tab-item.active { color: #fff; border-bottom-color: #60a5fa; }
+
+        /* --- INNINGS HEADER --- */
+        .innings-header {
+            background: linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(99,102,241,0.05) 100%);
+            border-bottom: 1px solid rgba(59,130,246,0.1);
+            padding: 14px 16px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .innings-header.i2 {
+            background: linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(217,119,6,0.05) 100%);
+            border-bottom-color: rgba(245,158,11,0.1);
+        }
+
+        /* --- SECTION LABEL --- */
+        .section-label {
+            display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding: 0 2px;
+        }
+        .section-label-line { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(99,102,241,0.3), transparent); }
+        .section-label-text { font-size: 10px; font-weight: 800; color: #6366f1; text-transform: uppercase; letter-spacing: 0.1em; white-space: nowrap; }
+
+        /* --- NEWS CARD PRO --- */
+        .news-card-pro {
+            border-radius: 18px; overflow: hidden;
+            background: rgba(255,255,255,0.8); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.6);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            cursor: pointer; transition: transform 0.2s;
+            display: flex; gap: 0; flex-direction: column;
+        }
+        .news-card-pro:active { transform: scale(0.98); }
+        [data-theme="dark"] .news-card-pro {
+            background: rgba(28,28,36,0.85); border-color: rgba(255,255,255,0.07);
+        }
+
+        /* --- SCORE BADGE --- */
+        .score-badge {
+            font-family: -apple-system-ui-serif, 'SF Pro Rounded', sans-serif;
+            font-weight: 900; letter-spacing: -0.02em;
+        }
+
+        /* --- COMMENTARY BALL --- */
+        .comm-ball {
+            width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 900; letter-spacing: -0.02em;
+        }
+
+        /* --- SQUAD CARD PRO --- */
+        .squad-player-row {
+            padding: 12px 16px; display: flex; align-items: center; gap: 14px;
+            border-bottom: 1px solid rgba(0,0,0,0.03); transition: background 0.15s;
+        }
+        .squad-player-row:last-child { border-bottom: none; }
+        .squad-player-row:active { background: rgba(0,0,0,0.02); }
+        [data-theme="dark"] .squad-player-row { border-bottom-color: rgba(255,255,255,0.04); }
+
+        /* --- RESPONSIVE --- */
+        @media (min-width: 640px) {
+            .match-hero-logo { width: 88px; height: 88px; }
+            .match-hero-logo img { width: 64px; height: 64px; }
+            .home-hero { padding: 32px 28px; }
+        }
+        @media (min-width: 1024px) {
+            .detail-tab-item { padding: 12px 20px; font-size: 13px; }
+        }
     </style>
 </head>
 <body class="pb-safe">
 
     <div class="ambient-bg"></div>
 
-    <nav class="nav-glass px-4 py-3 shadow-sm">
+    <nav class="nav-glass px-4 shadow-sm" style="padding-top: max(12px, env(safe-area-inset-top)); padding-bottom: 12px;">
         <div class="max-w-3xl mx-auto flex items-center justify-between">
-            <div class="flex items-center gap-3 cursor-pointer group" onclick="showHome()">
-                <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg group-active:scale-95 transition-transform">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <div class="flex items-center gap-3 cursor-pointer" onclick="showHome()">
+                <div class="crickerr-logo-badge">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="9" stroke="rgba(255,255,255,0.9)" stroke-width="1.5"/>
+                        <path d="M5 12 Q12 6 19 12" stroke="rgba(255,255,255,0.6)" stroke-width="1" fill="none"/>
+                        <path d="M5 12 Q12 18 19 12" stroke="rgba(255,255,255,0.6)" stroke-width="1" fill="none"/>
+                        <line x1="12" y1="3" x2="12" y2="21" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+                        <path d="M14 8 L10 12 L13 12 L9 16" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
                 </div>
                 <div>
-                    <h1 class="text-xl font-black text-gray-900 tracking-tight leading-none">CriCKERR</h1>
-                    <span class="text-[11px] font-bold text-blue-600 uppercase tracking-widest">Score Viewer</span>
+                    <h1 class="text-[19px] font-black text-gray-900 tracking-tight leading-none" style="letter-spacing: -0.03em;">CriCKERR</h1>
+                    <span class="text-[9px] font-black text-indigo-500 uppercase tracking-[0.15em]">Live Score Viewer</span>
                 </div>
             </div>
             
-            <button id="back-btn" onclick="showHome()" class="hidden bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-full text-sm font-bold transition">Close</button>
+            <div class="flex items-center gap-2">
+                <button id="theme-toggle-btn" onclick="toggleDarkMode()" title="Toggle Dark Mode" class="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all text-base active:scale-90" style="box-shadow: 0 1px 4px rgba(0,0,0,0.08);">🌙</button>
+                <button id="back-btn" onclick="showHome()" class="hidden items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 pl-3 pr-4 py-2 rounded-full text-sm font-bold transition-all active:scale-95">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                    Home
+                </button>
+            </div>
         </div>
     </nav>
 
-    <div id="home-view" class="max-w-2xl mx-auto w-full p-5 page-enter">
-        
-        <div class="tab-segment mb-6">
-            <button onclick="switchHomeTab('local')" id="ht-local" class="tab-btn active">Local</button>
-            <button onclick="switchHomeTab('intl')" id="ht-intl" class="tab-btn">International</button>
-            <button onclick="switchHomeTab('news')" id="ht-news" class="tab-btn">News</button>
-            <button onclick="switchHomeTab('tourn')" id="ht-tourn" class="tab-btn">Tournaments</button>
+    <div id="home-view" class="max-w-2xl mx-auto w-full page-enter" style="padding: 16px 16px 40px;">
+
+        <!-- Hero Banner -->
+        <div class="home-hero mb-5">
+            <div class="relative z-10">
+                <div class="flex items-center gap-2 mb-3">
+                    <div class="w-6 h-6 bg-white/15 rounded-lg flex items-center justify-center">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="white" stroke-width="1.5"/><path d="M14 8 L10 12 L13 12 L9 16" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <span class="text-white/60 text-[10px] font-black uppercase tracking-[0.15em]">CriCKERR · Live Cricket</span>
+                </div>
+                <h2 class="text-white text-2xl font-black leading-tight mb-1" style="letter-spacing: -0.02em;">Live Scores &<br>Real-time Updates</h2>
+                <p class="text-white/55 text-[12px] font-medium mt-2">Ball-by-ball commentary, scorecards &amp; stats</p>
+                <div class="flex items-center gap-3 mt-4">
+                    <div class="flex items-center gap-1.5 bg-white/10 border border-white/15 rounded-lg px-3 py-1.5">
+                        <span class="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse"></span>
+                        <span class="text-white/80 text-[10px] font-bold">LIVE</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 bg-white/10 border border-white/15 rounded-lg px-3 py-1.5">
+                        <span class="text-white/80 text-[10px] font-bold">🏏 Cricket</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 bg-white/10 border border-white/15 rounded-lg px-3 py-1.5">
+                        <span class="text-white/80 text-[10px] font-bold">📊 Stats</span>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div id="search-container" class="relative mb-6">
-            <svg class="absolute left-3 top-3.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            <input type="text" placeholder="Search Matches..." class="search-bar" oninput="handleSearch(this.value)">
+        <!-- Main Tabs -->
+        <div class="flex gap-1 mb-5 p-1 rounded-[14px]" style="background: rgba(118,118,128,0.1);">
+            <button onclick="switchHomeTab('local')" id="ht-local" class="tab-btn active flex items-center justify-center gap-1.5 text-[12px]">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+                Local
+            </button>
+            <button onclick="switchHomeTab('intl')" id="ht-intl" class="tab-btn flex items-center justify-center gap-1.5 text-[12px]">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20"/></svg>
+                Intl
+            </button>
+            <button onclick="switchHomeTab('news')" id="ht-news" class="tab-btn flex items-center justify-center gap-1.5 text-[12px]">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/></svg>
+                News
+            </button>
+            <button onclick="switchHomeTab('tourn')" id="ht-tourn" class="tab-btn flex items-center justify-center gap-1.5 text-[12px]">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                Tourn
+            </button>
         </div>
 
+        <!-- Search Bar -->
+        <div id="search-container" class="relative mb-5">
+            <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" placeholder="Search matches, teams..." class="search-bar" style="padding-left: 44px; padding-right: 16px; font-size: 15px; border-radius: 14px; height: 46px;" oninput="handleSearch(this.value)">
+        </div>
+
+        <!-- LOCAL SECTION -->
         <div id="section-local">
-            <div class="flex justify-between items-center mb-4 px-1">
-                <h2 class="text-2xl font-bold text-gray-900">Local Matches</h2>
-                <button id="delete-selected-btn" onclick="initMultiDelete()" class="hidden bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-md hover:bg-red-600 transition">Delete Selected</button>
+            <div class="flex justify-between items-center mb-4">
+                <div class="section-label" style="margin-bottom: 0; flex: 1;">
+                    <span class="section-label-text">🏏 Local Matches</span>
+                    <div class="section-label-line"></div>
+                </div>
+                <button id="delete-selected-btn" onclick="initMultiDelete()" class="hidden ml-3 bg-red-500 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-md shadow-red-200 hover:bg-red-600 transition active:scale-95">🗑 Delete</button>
             </div>
             
-            <div class="tab-segment mb-6">
-                <button onclick="switchLocalTab('single')" id="lt-single" class="tab-btn active">Single Match</button>
-                <button onclick="switchLocalTab('tournament')" id="lt-tournament" class="tab-btn">Tournament</button>
+            <div class="flex gap-1.5 mb-5 p-1 rounded-[12px]" style="background: rgba(118,118,128,0.1);">
+                <button onclick="switchLocalTab('single')" id="lt-single" class="tab-btn active text-[12px]">Single Match</button>
+                <button onclick="switchLocalTab('tournament')" id="lt-tournament" class="tab-btn text-[12px]">Tournament</button>
             </div>
 
-            <div id="matches-container" class="space-y-4">
-                <div class="text-center py-12"><div class="inline-block w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div></div>
+            <div id="matches-container" class="space-y-3">
+                <div class="text-center py-16">
+                    <div class="inline-block w-10 h-10 border-4 border-indigo-100 border-t-indigo-500 rounded-full animate-spin mb-3"></div>
+                    <div class="text-sm font-medium text-gray-400">Loading matches…</div>
+                </div>
             </div>
-            <div class="text-center mt-6">
-                <button id="load-more-btn" onclick="loadMatchList(true)" class="hidden text-blue-600 font-bold text-sm bg-blue-50 px-6 py-2 rounded-full hover:bg-blue-100 transition">View More</button>
+            <div class="text-center mt-5">
+                <button id="load-more-btn" onclick="loadMatchList(true)" class="hidden text-indigo-600 font-bold text-sm bg-indigo-50 border border-indigo-100 px-8 py-2.5 rounded-full hover:bg-indigo-100 transition active:scale-95">View More Matches</button>
             </div>
         </div>
 
+        <!-- INTERNATIONAL SECTION -->
         <div id="section-intl" class="hidden">
-            <div class="flex justify-between items-end mb-4 px-1">
-                <h2 class="text-2xl font-bold text-gray-900">International</h2>
-                <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">LIVE UPDATES</span>
+            <div class="flex justify-between items-center mb-4">
+                <div class="section-label" style="margin-bottom: 0; flex: 1;">
+                    <span class="section-label-text">🌍 International</span>
+                    <div class="section-label-line"></div>
+                </div>
+                <span class="ml-3 text-[9px] font-black text-red-500 bg-red-50 border border-red-100 px-2.5 py-1 rounded-full flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>LIVE
+                </span>
             </div>
-            <div id="intl-container" class="space-y-4"></div>
+            <div id="intl-container" class="space-y-3"></div>
         </div>
 
+        <!-- NEWS SECTION -->
         <div id="section-news" class="hidden">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4 px-1">Top Stories</h2>
-            <div id="news-container" class="grid grid-cols-1 gap-4"></div>
+            <div class="section-label mb-4">
+                <span class="section-label-text">📰 Top Stories</span>
+                <div class="section-label-line"></div>
+            </div>
+            <div id="news-container" class="space-y-3"></div>
         </div>
 
+        <!-- TOURNAMENTS SECTION -->
         <div id="section-tourn" class="hidden">
-            <div class="flex justify-between items-center mb-4 px-1">
-                <h2 class="text-2xl font-bold text-gray-900">Tournaments</h2>
+            <div class="section-label mb-4">
+                <span class="section-label-text">🏆 Tournaments</span>
+                <div class="section-label-line"></div>
             </div>
             
-            <div class="glass-card p-3 mb-6 flex gap-2">
-                <input type="text" id="tourn-search-id" placeholder="Enter Tournament ID..." class="bg-gray-50/50 border-none rounded-lg px-4 py-2 w-full text-sm outline-none focus:bg-white transition">
-                <button onclick="fetchTournament()" class="bg-blue-600 text-white rounded-lg px-4 font-bold text-xs uppercase tracking-wide shadow-lg shadow-blue-200">Load</button>
+            <div class="glass-card p-3 mb-5 flex gap-2 items-center">
+                <div class="flex-1 flex items-center gap-2 bg-gray-50/80 rounded-xl px-3 py-2">
+                    <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    <input type="text" id="tourn-search-id" placeholder="Enter Tournament ID…" class="bg-transparent border-none w-full text-sm outline-none text-gray-700" style="color: var(--text-primary);">
+                </div>
+                <button onclick="fetchTournament()" class="bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-xl px-5 py-2.5 font-bold text-xs uppercase tracking-wide shadow-lg shadow-blue-200 active:scale-95 transition">Load</button>
             </div>
 
-            <div id="tourn-loader" class="hidden text-center py-12">
-                <div class="inline-block w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+            <div id="tourn-loader" class="hidden text-center py-16">
+                <div class="inline-block w-10 h-10 border-4 border-indigo-100 border-t-indigo-500 rounded-full animate-spin mb-3"></div>
+                <div class="text-sm font-medium text-gray-400">Loading tournament…</div>
             </div>
 
-            <div id="tourn-content" class="hidden space-y-6">
+            <div id="tourn-content" class="hidden space-y-5">
                 
-                <div class="glass-card p-6 text-center relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
-                    <div id="t-status" class="inline-block bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-3">UPCOMING</div>
-                    <h1 id="t-name" class="text-2xl font-black text-gray-900 uppercase leading-tight tracking-tight mb-2">Tournament Name</h1>
-                    <div class="flex items-center justify-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wide">
-                        <span id="t-category">Category</span> • <span id="t-location">Location</span>
+                <div class="glass-card relative overflow-hidden" style="padding: 0;">
+                    <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
+                    <div class="p-6 text-center">
+                        <div id="t-status" class="inline-block bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-3">UPCOMING</div>
+                        <h1 id="t-name" class="text-2xl font-black text-gray-900 uppercase leading-tight tracking-tight mb-2" style="letter-spacing: -0.02em;">Tournament Name</h1>
+                        <div class="flex items-center justify-center gap-2 text-[11px] font-bold text-gray-400 uppercase tracking-wide">
+                            <span id="t-category">Category</span>
+                            <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
+                            <span id="t-location">Location</span>
+                        </div>
                     </div>
                 </div>
 
                 <div>
-                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 px-1">Standings</h3>
+                    <div class="section-label mb-3">
+                        <span class="section-label-text">Standings</span>
+                        <div class="section-label-line"></div>
+                    </div>
                     <div class="glass-card overflow-hidden p-0">
                         <div class="overflow-x-auto hide-scroll">
                             <table class="w-full text-left whitespace-nowrap">
                                 <thead>
-                                    <tr class="bg-gray-50/50 border-b border-gray-100 text-[9px] font-black uppercase text-gray-400 tracking-wider">
+                                    <tr class="border-b text-[9px] font-black uppercase tracking-wider" style="background: rgba(99,102,241,0.04); border-color: rgba(99,102,241,0.08); color: #9ca3af;">
                                         <th class="p-3 pl-4">Team</th>
                                         <th class="p-3 text-center">P</th>
                                         <th class="p-3 text-center">W</th>
                                         <th class="p-3 text-center">L</th>
                                         <th class="p-3 text-center">NRR</th>
-                                        <th class="p-3 pr-4 text-center text-blue-600">PTS</th>
+                                        <th class="p-3 pr-4 text-center text-indigo-500">PTS</th>
                                     </tr>
                                 </thead>
                                 <tbody id="standings-body" class="text-xs font-bold text-gray-700 divide-y divide-gray-50"></tbody>
@@ -230,116 +625,247 @@
                 </div>
 
                 <div>
-                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 px-1">Schedule</h3>
+                    <div class="section-label mb-3">
+                        <span class="section-label-text">Schedule</span>
+                        <div class="section-label-line"></div>
+                    </div>
                     <div id="schedule-list" class="space-y-3"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="detail-view" class="hidden max-w-2xl mx-auto w-full flex flex-col h-full">
+    <div id="detail-view" class="hidden max-w-2xl mx-auto w-full flex flex-col">
         
-        <div class="bg-white/80 backdrop-blur-xl border-b border-gray-200 sticky top-[68px] z-30 pt-2 pb-2 shadow-sm">
-            <div class="px-5 py-2">
+        <!-- MATCH HERO HEADER -->
+        <div class="match-hero sticky z-30" style="top: 64px;">
+            <div class="relative z-10 px-4 pt-4 pb-0">
+
+                <!-- Series + Status Row -->
                 <div class="flex justify-between items-center mb-4">
-                    <span id="d-series" class="text-[10px] font-bold text-gray-500 uppercase tracking-wider truncate max-w-[200px]">SERIES NAME</span>
-                    <span id="d-status-badge" class="text-[10px] font-bold bg-red-50 text-red-600 px-2 py-1 rounded flex items-center gap-1">
-                        <span class="live-dot"></span> LIVE
+                    <div class="flex items-center gap-2">
+                        <div class="w-5 h-5 rounded-md flex items-center justify-center" style="background: rgba(255,255,255,0.12);">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="white" stroke-width="1.5"/><path d="M14 8 L10 12 L13 12 L9 16" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </div>
+                        <span id="d-series" class="text-[10px] font-black text-white/60 uppercase tracking-[0.1em] truncate max-w-[180px]">SERIES NAME</span>
+                    </div>
+                    <span id="d-status-badge" class="text-[9px] font-black bg-red-500/20 text-red-300 border border-red-400/30 px-2.5 py-1 rounded-full flex items-center gap-1.5 backdrop-blur-sm">
+                        <span class="live-dot" style="background: #f87171;"></span> LIVE
                     </span>
                 </div>
 
-                <div class="flex justify-between items-center mb-6">
-                    <div class="text-center w-1/3">
-                        <img id="d-t1-logo" class="w-14 h-14 mx-auto mb-2 object-contain bg-gray-50 rounded-lg p-1">
-                        <div id="d-t1-name" class="font-bold text-xs text-gray-900 truncate">TEAM 1</div>
-                        <div id="d-t1-score" class="text-xl font-black text-gray-900 mt-1">0/0</div>
+                <!-- Teams Hero Section -->
+                <div class="flex items-center justify-between mb-4">
+                    <!-- Team 1 -->
+                    <div class="flex flex-col items-center" style="width: 38%;">
+                        <div class="match-hero-logo mb-2">
+                            <img id="d-t1-logo" class="object-contain" style="width: 52px; height: 52px;" src="" alt="">
+                        </div>
+                        <div id="d-t1-name" class="text-white/90 font-black text-xs uppercase text-center truncate w-full" style="letter-spacing: 0.03em;">TEAM 1</div>
+                        <div id="d-t1-score" class="text-white font-black mt-1 score-badge" style="font-size: 22px; letter-spacing: -0.03em;">0/0</div>
                     </div>
-                    <div class="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded-full">VS</div>
-                    <div class="text-center w-1/3">
-                        <img id="d-t2-logo" class="w-14 h-14 mx-auto mb-2 object-contain bg-gray-50 rounded-lg p-1">
-                        <div id="d-t2-name" class="font-bold text-xs text-gray-900 truncate">TEAM 2</div>
-                        <div id="d-t2-score" class="text-xl font-black text-gray-900 mt-1">0/0</div>
+
+                    <!-- VS Divider -->
+                    <div class="flex flex-col items-center gap-1" style="width: 20%;">
+                        <div class="text-white/20 font-black text-xs uppercase tracking-widest">vs</div>
+                        <div id="d-note" class="text-center text-[9px] font-bold text-white/50 leading-tight px-1" style="max-width: 68px;">Match Status</div>
+                    </div>
+
+                    <!-- Team 2 -->
+                    <div class="flex flex-col items-center" style="width: 38%;">
+                        <div class="match-hero-logo mb-2">
+                            <img id="d-t2-logo" class="object-contain" style="width: 52px; height: 52px;" src="" alt="">
+                        </div>
+                        <div id="d-t2-name" class="text-white/90 font-black text-xs uppercase text-center truncate w-full" style="letter-spacing: 0.03em;">TEAM 2</div>
+                        <div id="d-t2-score" class="text-white/70 font-black mt-1 score-badge" style="font-size: 18px; letter-spacing: -0.03em;">Yet to Bat</div>
                     </div>
                 </div>
 
-                <div class="text-center mb-4">
-                    <span id="d-note" class="text-xs font-semibold text-blue-800 bg-blue-50 border border-blue-100 px-3 py-1.5 rounded-lg shadow-sm">Match Status Note</span>
-                </div>
-
-                <div class="grid grid-cols-3 gap-2 mb-2">
-                    <div class="bg-gray-50 p-2 rounded-lg text-center">
-                        <div class="text-[9px] text-gray-400 font-bold uppercase">CRR</div>
-                        <div id="d-crr" class="font-mono font-bold text-sm">-</div>
+                <!-- Stat Pills -->
+                <div class="flex gap-2 mb-3">
+                    <div class="stat-pill">
+                        <span class="stat-pill-label">CRR</span>
+                        <span id="d-crr" class="stat-pill-value">-</span>
                     </div>
-                    <div class="bg-gray-50 p-2 rounded-lg text-center">
-                        <div class="text-[9px] text-gray-400 font-bold uppercase">Target</div>
-                        <div id="d-target" class="font-mono font-bold text-sm">-</div>
+                    <div class="stat-pill">
+                        <span class="stat-pill-label">Target</span>
+                        <span id="d-target" class="stat-pill-value">-</span>
                     </div>
-                    <div class="bg-gray-50 p-2 rounded-lg text-center">
-                        <div class="text-[9px] text-gray-400 font-bold uppercase">RRR</div>
-                        <div id="d-rrr" class="font-mono font-bold text-blue-600 text-sm">-</div>
+                    <div class="stat-pill">
+                        <span class="stat-pill-label">RRR</span>
+                        <span id="d-rrr" class="stat-pill-value highlight">-</span>
                     </div>
                 </div>
 
-                <div class="tab-segment">
-                    <button onclick="switchDetailTab('scorecard')" id="dt-scorecard" class="tab-btn active">Scorecard</button>
-                    <button onclick="switchDetailTab('comm')" id="dt-comm" class="tab-btn">Comm</button>
-                    <button onclick="switchDetailTab('squad')" id="dt-squad" class="tab-btn">Squads</button>
-                    <button onclick="switchDetailTab('charts')" id="dt-charts" class="tab-btn">Stats</button>
+                <!-- Action Buttons -->
+                <div class="flex gap-2 mb-3">
+                    <button id="notify-btn" onclick="handleNotifyMe()" class="action-btn">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+                        Notify Me
+                    </button>
+                    <button onclick="handleShareMatch()" class="action-btn">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
+                        Share Score
+                    </button>
+                </div>
+
+                <!-- Scrollable Tab Bar -->
+                <div class="detail-tab-bar">
+                    <button onclick="switchDetailTab('scorecard')" id="dt-scorecard" class="detail-tab-item active">📋 Scorecard</button>
+                    <button onclick="switchDetailTab('comm')" id="dt-comm" class="detail-tab-item">💬 Commentary</button>
+                    <button onclick="switchDetailTab('squad')" id="dt-squad" class="detail-tab-item">👥 Squads</button>
+                    <button onclick="switchDetailTab('charts')" id="dt-charts" class="detail-tab-item">📊 Stats</button>
+                    <button onclick="switchDetailTab('insights')" id="dt-insights" class="detail-tab-item">🔮 Insights</button>
                 </div>
             </div>
         </div>
 
-        <div class="p-5 space-y-4">
+        <!-- TAB CONTENT PANELS -->
+        <div style="padding: 16px 16px 48px;" class="space-y-4">
+
+            <!-- SCORECARD -->
             <div id="dv-scorecard" class="space-y-4 page-enter">
                 <div class="glass-card p-0">
-                    <div class="bg-gray-50 px-4 py-3 border-b border-gray-100 flex justify-between">
-                        <span id="i1-name" class="font-bold text-sm text-gray-900">Innings 1</span>
-                        <span id="i1-total" class="font-mono font-bold text-blue-600 text-sm"></span>
+                    <div class="innings-header">
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                            <span id="i1-name" class="font-black text-sm text-gray-900">1st Innings</span>
+                        </div>
+                        <span id="i1-total" class="font-mono font-black text-blue-600 text-sm score-badge"></span>
                     </div>
                     <div id="i1-body" class="p-2"></div>
                 </div>
                 <div class="glass-card p-0">
-                    <div class="bg-gray-50 px-4 py-3 border-b border-gray-100 flex justify-between">
-                        <span id="i2-name" class="font-bold text-sm text-gray-900">Innings 2</span>
-                        <span id="i2-total" class="font-mono font-bold text-amber-600 text-sm"></span>
+                    <div class="innings-header i2">
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 rounded-full bg-amber-500"></div>
+                            <span id="i2-name" class="font-black text-sm text-gray-900">2nd Innings</span>
+                        </div>
+                        <span id="i2-total" class="font-mono font-black text-amber-600 text-sm score-badge"></span>
                     </div>
                     <div id="i2-body" class="p-2"></div>
                 </div>
             </div>
 
-            <div id="dv-comm" class="hidden page-enter">
-                <div class="glass-card p-4 mb-4">
-                    <h3 class="text-xs font-bold text-gray-400 uppercase mb-3">Recent Overs</h3>
-                    <div id="recent-balls" class="flex gap-2 overflow-x-auto pb-2 hide-scroll"></div>
+            <!-- COMMENTARY -->
+            <div id="dv-comm" class="hidden page-enter space-y-3">
+                <div class="glass-card p-4">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Recent Balls</span>
+                        <div class="flex-1 h-px" style="background: linear-gradient(90deg, rgba(99,102,241,0.2), transparent);"></div>
+                    </div>
+                    <div id="recent-balls" class="flex gap-2 overflow-x-auto pb-1 hide-scroll"></div>
                 </div>
-                <div id="comm-feed" class="glass-card divide-y divide-gray-100">
-                    <div class="p-6 text-center text-gray-400 text-sm">Loading Commentary...</div>
+                <div id="comm-feed" class="glass-card divide-y" style="border-color: rgba(0,0,0,0.04);">
+                    <div class="p-8 text-center text-gray-400 text-sm">Loading commentary…</div>
                 </div>
             </div>
 
+            <!-- SQUADS -->
             <div id="dv-squad" class="hidden page-enter">
                 <div class="flex gap-2 mb-4">
-                    <button onclick="toggleSquadList(1)" id="sq-btn-1" class="flex-1 py-2 bg-white text-sm font-bold rounded-lg shadow-sm border border-gray-100 transition">Home XI</button>
-                    <button onclick="toggleSquadList(2)" id="sq-btn-2" class="flex-1 py-2 bg-gray-100 text-gray-500 text-sm font-bold rounded-lg transition">Away XI</button>
+                    <button onclick="toggleSquadList(1)" id="sq-btn-1" class="flex-1 py-3 bg-white text-sm font-bold rounded-xl shadow-sm border border-gray-100 transition active:scale-98">Home XI</button>
+                    <button onclick="toggleSquadList(2)" id="sq-btn-2" class="flex-1 py-3 bg-gray-100/80 text-gray-400 text-sm font-bold rounded-xl transition active:scale-98">Away XI</button>
                 </div>
-                <div id="squad-list-content" class="glass-card"></div>
+                <div id="squad-list-content" class="glass-card overflow-hidden"></div>
             </div>
 
+            <!-- CHARTS -->
             <div id="dv-charts" class="hidden space-y-4 page-enter">
                 <div class="glass-card p-4">
-                    <h4 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Innings Comparison (Worm)</h4>
-                    <div class="relative h-56 w-full"><canvas id="wormChart"></canvas></div>
+                    <div class="section-label mb-4">
+                        <span class="section-label-text">Innings Comparison</span>
+                        <div class="section-label-line"></div>
+                    </div>
+                    <div class="relative w-full" style="height: 220px;"><canvas id="wormChart"></canvas></div>
                 </div>
                 <div class="glass-card p-4">
-                    <h4 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Run Rate Per Over</h4>
-                    <div class="relative h-48 w-full"><canvas id="rpoChart"></canvas></div>
+                    <div class="section-label mb-4">
+                        <span class="section-label-text">Run Rate Per Over</span>
+                        <div class="section-label-line"></div>
+                    </div>
+                    <div class="relative w-full" style="height: 190px;"><canvas id="rpoChart"></canvas></div>
                 </div>
                 <div class="glass-card p-4">
-                    <h4 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Partnerships</h4>
-                    <div class="relative h-56 w-full"><canvas id="partnershipChart"></canvas></div>
+                    <div class="section-label mb-4">
+                        <span class="section-label-text">Partnerships</span>
+                        <div class="section-label-line"></div>
+                    </div>
+                    <div class="relative w-full" style="height: 220px;"><canvas id="partnershipChart"></canvas></div>
                 </div>
             </div>
+
+            <!-- INSIGHTS -->
+            <div id="dv-insights" class="hidden space-y-4 page-enter">
+                <div class="glass-card p-4">
+                    <div class="section-label mb-4">
+                        <span class="section-label-text">🏆 Win Predictor</span>
+                        <div class="section-label-line"></div>
+                    </div>
+                    <div id="insights-win-predictor">
+                        <div class="flex justify-between text-xs font-bold mb-2">
+                            <span id="wp-t1-label" class="text-blue-600">Team 1</span>
+                            <span id="wp-t2-label" class="text-amber-600">Team 2</span>
+                        </div>
+                        <div class="predictor-bar mb-2">
+                            <div id="wp-fill" class="predictor-fill bg-gradient-to-r from-blue-500 to-blue-400" style="width: 50%"></div>
+                        </div>
+                        <div class="flex justify-between text-sm font-black">
+                            <span id="wp-t1-pct" class="text-blue-600">50%</span>
+                            <span id="wp-t2-pct" class="text-amber-600">50%</span>
+                        </div>
+                        <p id="wp-note" class="text-center text-[10px] text-gray-400 mt-2 font-medium">Based on current run rate & wickets in hand</p>
+                    </div>
+                </div>
+
+                <div class="glass-card p-4">
+                    <div class="section-label mb-4">
+                        <span class="section-label-text">🌤 Weather & Pitch</span>
+                        <div class="section-label-line"></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <div class="bg-gray-50 rounded-xl p-3 text-center">
+                            <div class="text-2xl mb-1">☀️</div>
+                            <div class="text-xs font-bold text-gray-700">Clear Sky</div>
+                            <div class="text-[10px] text-gray-400 font-medium">32°C • Humidity 68%</div>
+                        </div>
+                        <div class="bg-gray-50 rounded-xl p-3 text-center">
+                            <div class="text-2xl mb-1">🌬</div>
+                            <div class="text-xs font-bold text-gray-700">Wind: 12 km/h</div>
+                            <div class="text-[10px] text-gray-400 font-medium">SE Direction</div>
+                        </div>
+                    </div>
+                    <div id="insights-pitch" class="space-y-2.5">
+                        <div class="flex justify-between items-center gap-3">
+                            <span class="text-xs font-bold text-gray-600 w-28 flex-shrink-0">Batting Friendly</span>
+                            <div class="flex-1 predictor-bar"><div class="predictor-fill bg-green-500" style="width:75%"></div></div>
+                            <span class="text-xs font-bold text-green-600 w-7 text-right">75%</span>
+                        </div>
+                        <div class="flex justify-between items-center gap-3">
+                            <span class="text-xs font-bold text-gray-600 w-28 flex-shrink-0">Pace Assistance</span>
+                            <div class="flex-1 predictor-bar"><div class="predictor-fill bg-red-500" style="width:40%"></div></div>
+                            <span class="text-xs font-bold text-red-500 w-7 text-right">40%</span>
+                        </div>
+                        <div class="flex justify-between items-center gap-3">
+                            <span class="text-xs font-bold text-gray-600 w-28 flex-shrink-0">Spin Turn</span>
+                            <div class="flex-1 predictor-bar"><div class="predictor-fill bg-purple-500" style="width:55%"></div></div>
+                            <span class="text-xs font-bold text-purple-600 w-7 text-right">55%</span>
+                        </div>
+                    </div>
+                    <div class="mt-3 text-[10px] text-gray-500 bg-indigo-50 rounded-xl p-3 font-medium border border-indigo-100">📋 Pitch Report: Good batting surface. Expect fast outfield. Ball likely to skid onto bat in first 10 overs.</div>
+                </div>
+
+                <div class="glass-card p-4">
+                    <div class="section-label mb-4">
+                        <span class="section-label-text">⚡ Key Matchups</span>
+                        <div class="section-label-line"></div>
+                    </div>
+                    <div id="insights-matchups" class="space-y-3">
+                        <div class="text-center text-xs text-gray-400 italic py-4">Loading matchup data...</div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -362,6 +888,8 @@
         </div>
     </div>
 
+    <div id="toast-container"></div>
+
     <script>
         // --- CONFIG & STATE ---
         const firebaseConfig = { apiKey: "AIzaSyBqcD59IAPpKqk98oDZkgzgkoVZ8b8LGgY", authDomain: "livecricketscoring-92087.firebaseapp.com", databaseURL: "https://livecricketscoring-92087-default-rtdb.firebaseio.com", projectId: "livecricketscoring-92087", storageBucket: "livecricketscoring-92087.firebasestorage.app", messagingSenderId: "522927197627", appId: "1:522927197627:web:f1df5db736cae96893089e" };
@@ -375,6 +903,9 @@
         let localMatchesLastDoc = null;
         let activeLocalTab = 'single';
         let chartInstances = {};
+        let showFantasyPoints = false;
+        let notifyActive = false;
+        let isDarkMode = false;
 
         function switchLocalTab(tab) {
             document.querySelectorAll('#section-local .tab-btn').forEach(b => b.classList.remove('active'));
@@ -550,44 +1081,78 @@
         }
 
         function createMatchCard(id, m, type) {
-            let s1 = "0/0", s2 = "Yet to Bat";
+            let s1 = "—", s2 = "Yet to Bat";
             if(m.scorecard) {
-                s1 = m.scorecard.innings1?.score || "0/0";
+                s1 = m.scorecard.innings1?.score || "—";
                 s2 = m.scorecard.innings2?.score || "Yet to Bat";
-            } else if (m.score) s1 = `${m.score}/${m.wickets}`;
+            } else if (m.score) s1 = m.score;
 
-            const liveBadge = m.matchStatus !== 'COMPLETE' 
-                ? `<span class="bg-red-50 text-red-600 px-2 py-0.5 rounded text-[10px] font-bold border border-red-100 flex items-center gap-1"><span class="live-dot"></span>LIVE</span>`
-                : `<span class="bg-gray-100 text-gray-500 px-2 py-0.5 rounded text-[10px] font-bold">FINAL</span>`;
-            
+            const isLive = m.matchStatus !== 'COMPLETE';
+            const accentClass = isLive ? 'live' : 'final';
             const isChecked = selectedMatches.includes(id) ? 'checked' : '';
-            const deleteBtn = type === 'local' ? `<input type="checkbox" ${isChecked} onclick="toggleSelection(event, '${id}')" class="w-5 h-5 mr-3 z-20 cursor-pointer accent-blue-600 rounded">` : '';
+            const deleteCheck = type === 'local' 
+                ? `<input type="checkbox" ${isChecked} onclick="toggleSelection(event, '${id}')" class="w-5 h-5 accent-blue-600 rounded cursor-pointer flex-shrink-0 z-20">` 
+                : '';
+
+            const matchTypeBadge = m.matchType 
+                ? `<span class="text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wide" style="background: rgba(99,102,241,0.08); color: #6366f1;">${m.matchType}</span>`
+                : '';
+
+            const t1Logo = m.t1Logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.t1||'T1')}&background=dbeafe&color=1e3a8a&bold=true&size=80`;
+            const t2Logo = m.t2Logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.t2||'T2')}&background=fef3c7&color=92400e&bold=true&size=80`;
+
+            const statusRow = isLive
+                ? `<div class="flex items-center gap-1.5 bg-red-50 border border-red-100 rounded-full px-2.5 py-1"><span class="live-dot"></span><span class="text-[9px] font-black text-red-600 uppercase tracking-wide">Live</span></div>`
+                : `<div class="flex items-center gap-1.5 bg-gray-100 rounded-full px-2.5 py-1"><span class="text-[9px] font-black text-gray-400 uppercase tracking-wide">Final</span></div>`;
+
+            const footerText = m.resultMain || m.req || m.note || 'Tap for full scorecard →';
+            const footerColor = isLive ? 'color: #6366f1;' : 'color: #6b7280;';
 
             return `
-            <div onclick="openMatch('${id}', '${type}')" class="glass-card p-4 relative group cursor-pointer hover:shadow-lg transition">
-                <div class="flex justify-between items-center mb-3">
-                    <div class="flex items-center">
-                        ${deleteBtn}
-                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">${m.series || m.venue || 'Friendly Match'}</span>
+            <div onclick="openMatch('${id}', '${type}')" class="match-card-pro" style="cursor: pointer;">
+                <div class="match-card-accent ${accentClass}"></div>
+                <div style="padding: 14px 14px 0;">
+                    <div class="flex justify-between items-center mb-3">
+                        <div class="flex items-center gap-2">
+                            ${deleteCheck}
+                            <span class="text-[10px] font-bold uppercase tracking-wide" style="color: #9ca3af; max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${m.series || m.venue || 'Friendly Match'}</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            ${matchTypeBadge}
+                            ${statusRow}
+                        </div>
                     </div>
-                    ${liveBadge}
-                </div>
-                <div class="flex justify-between items-center mb-2">
-                    <div class="flex items-center gap-3">
-                        <img src="${m.t1Logo || 'https://via.placeholder.com/40'}" class="w-8 h-8 object-contain rounded bg-gray-50 p-0.5">
-                        <span class="font-bold text-gray-900">${m.t1}</span>
+
+                    <!-- Teams Row -->
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="team-logo-circle">
+                            <img src="${t1Logo}" alt="${m.t1}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(m.t1||'T')}&background=dbeafe&color=1e3a8a&bold=true'">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-baseline">
+                                <span class="font-black text-gray-900 text-sm truncate" style="max-width: 55%; letter-spacing: -0.01em;">${m.t1 || 'Team 1'}</span>
+                                <span class="font-black text-gray-900 score-badge" style="font-size: 16px; letter-spacing: -0.03em; flex-shrink: 0;">${s1}</span>
+                            </div>
+                        </div>
                     </div>
-                    <span class="font-mono font-bold text-gray-900">${s1}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <div class="flex items-center gap-3">
-                        <img src="${m.t2Logo || 'https://via.placeholder.com/40'}" class="w-8 h-8 object-contain rounded bg-gray-50 p-0.5">
-                        <span class="font-bold text-gray-900">${m.t2}</span>
+
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="team-logo-circle">
+                            <img src="${t2Logo}" alt="${m.t2}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(m.t2||'T')}&background=fef3c7&color=92400e&bold=true'">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-baseline">
+                                <span class="font-black text-gray-900 text-sm truncate" style="max-width: 55%; letter-spacing: -0.01em;">${m.t2 || 'Team 2'}</span>
+                                <span class="font-bold score-badge" style="font-size: 14px; letter-spacing: -0.03em; flex-shrink: 0; color: ${isLive ? '#6b7280' : '#374151'};">${s2}</span>
+                            </div>
+                        </div>
                     </div>
-                    <span class="font-mono font-bold text-gray-900">${s2}</span>
                 </div>
-                <div class="mt-3 pt-2 border-t border-gray-100 text-xs text-blue-600 font-medium truncate">
-                    ${m.resultMain || m.req || m.note || 'Click for Scorecard'}
+
+                <!-- Footer -->
+                <div style="margin: 0 14px; border-top: 1px solid rgba(0,0,0,0.05); padding: 8px 0; display: flex; align-items: center; justify-content: space-between;">
+                    <span class="text-xs font-semibold truncate" style="${footerColor}; max-width: 85%;">${footerText}</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="2.5" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
                 </div>
             </div>`;
         }
@@ -660,6 +1225,33 @@
             let timelineEvents = [];
             let generatedComm = [];
 
+            // --- Wicket Icon Parser ---
+            function getWicketIcon(dismissal) {
+                if (!dismissal) return '🏏';
+                const d = dismissal.toLowerCase();
+                if (d.includes('caught') || d.startsWith('c ') || /^c\s/.test(d)) return '🧤';
+                if (d.includes('bowled') || d.startsWith('b ') || /^b\s/.test(d)) return '🎯';
+                if (d.includes('lbw')) return '🦵';
+                if (d.includes('run out')) return '🏃';
+                if (d.includes('stumped')) return '🧱';
+                if (d.includes('hit wicket')) return '💥';
+                if (d.includes('caught & bowled') || d.includes('c&b')) return '🎯🧤';
+                return '❌';
+            }
+
+            function getWicketCommentaryText(bowler, batsman, dismissal) {
+                const icon = getWicketIcon(dismissal);
+                const d = (dismissal || '').toLowerCase();
+                let typeText = dismissal || 'Dismissed';
+                if (d.includes('caught') || d.startsWith('c ')) typeText = `${icon} Caught! ${dismissal}`;
+                else if (d.startsWith('b ') || d.includes('bowled')) typeText = `${icon} Bowled'em! ${dismissal}`;
+                else if (d.includes('lbw')) typeText = `${icon} LBW! Plumb in front. ${dismissal}`;
+                else if (d.includes('run out')) typeText = `${icon} Run Out! Direct hit! ${dismissal}`;
+                else if (d.includes('stumped')) typeText = `${icon} Stumped! Quick work by the keeper. ${dismissal}`;
+                else typeText = `${icon} ${dismissal}`;
+                return `<strong class="text-red-600">OUT!</strong> ${typeText}`;
+            }
+
             d.innings.forEach((inn, idx) => {
                 let innKey = idx === 0 ? 'innings1' : 'innings2';
                 let balls = inn.balls || [];
@@ -671,6 +1263,8 @@
                 let fow = [], partnerships = [], currentPartnershipRuns = 0;
                 let overRuns = 0;
                 let wormRuns = [0], rpoArr = [0];
+                // --- Extras tracking ---
+                let extrasWides = 0, extrasNoBalls = 0, extrasByes = 0, extrasLegByes = 0;
 
                 balls.forEach((b, ballIdx) => {
                     let runs = parseInt(b.runs) || 0;
@@ -678,11 +1272,19 @@
                     let isWicket = b.type === 'wicket' || b.dismissal;
                     let isWide = b.type === 'wide';
                     let isNoBall = b.type === 'no-ball';
+                    let isBye = b.type === 'bye';
+                    let isLegBye = b.type === 'leg-bye';
                     let isLegal = !isWide && !isNoBall;
                     
                     totalRuns += (runs + extras);
                     currentPartnershipRuns += (runs + extras);
                     if (isLegal) validBalls++;
+
+                    // Extras accumulation
+                    if (isWide) extrasWides += (runs + extras) || 1;
+                    if (isNoBall) extrasNoBalls += 1;
+                    if (isBye) extrasByes += (runs + extras);
+                    if (isLegBye) extrasLegByes += (runs + extras);
 
                     // Batting calculation
                     if (b.batsman) {
@@ -718,9 +1320,11 @@
                     if (validBalls % 6 === 0 && isLegal) overStr = `${Math.floor(validBalls/6)}.0`;
                     
                     let text = `${b.bowler || 'Bowler'} to ${b.batsman || 'Batsman'}, `;
-                    if (isWicket) text += `<strong class="text-red-600">OUT!</strong> ${b.dismissal}`;
+                    if (isWicket) text += getWicketCommentaryText(b.bowler, b.batsman, b.dismissal);
                     else if (runs === 4) text += `<strong class="text-blue-600">FOUR!</strong> Driven beautifully.`;
                     else if (runs === 6) text += `<strong class="text-purple-600">SIX!</strong> Massive hit over the ropes!`;
+                    else if (isWide) text += `<span class="text-amber-600 font-bold">Wide!</span> ${runs > 0 ? runs + ' run(s).' : ''}`;
+                    else if (isNoBall) text += `<span class="text-amber-600 font-bold">No Ball!</span> ${runs > 0 ? runs + ' run(s) off the bat.' : ''}`;
                     else if (runs === 0 && isLegal) text += `Solid defense, no run.`;
                     else text += `${runs} run${runs > 1 ? 's' : ''}.`;
                     
@@ -729,7 +1333,8 @@
                     // Fall of wicket tracking
                     if (isWicket) {
                         wickets++;
-                        fow.push(`<strong>${totalRuns}-${wickets}</strong> (${b.batsman || 'Unknown'}, ${overStr})`);
+                        const wkIcon = getWicketIcon(b.dismissal);
+                        fow.push(`<strong>${totalRuns}-${wickets}</strong> ${wkIcon} (${b.batsman || 'Unknown'}, ${overStr})`);
                         partnerships.push({ label: `${wickets} Wkt`, runs: currentPartnershipRuns });
                         currentPartnershipRuns = 0;
                     }
@@ -785,7 +1390,8 @@
                     overs: oversStr,
                     batting: Object.values(batStats).map(b => ({...b, sr: b.balls > 0 ? ((b.runs/b.balls)*100).toFixed(1) : '0.0'})),
                     bowling: Object.values(bowlStats).map(b => ({...b, o: `${Math.floor(b.balls/6)}.${b.balls%6}`, econ: b.balls > 0 ? (b.runs/(b.balls/6)).toFixed(1) : '0.0'})),
-                    fow: fow.join(', ')
+                    fow: fow.join(', '),
+                    extras: { wides: extrasWides, noBalls: extrasNoBalls, byes: extrasByes, legByes: extrasLegByes, total: extrasWides + extrasNoBalls + extrasByes + extrasLegByes }
                 };
 
                 // Match Status Engine Update
@@ -807,17 +1413,21 @@
                             d.rrr = (remRuns / (remBalls / 6)).toFixed(2);
                             let reqRatio = parseFloat(d.rrr) / (crr || 1);
                             let winProb = Math.max(1, Math.min(99, 50 + ((1 - reqRatio) * 30) - (wickets * 4)));
+                            d.winProb = winProb;
                             d.note = `Win Prob: ${inn.battingTeam} ${winProb.toFixed(0)}% | Need ${remRuns} runs from ${remBalls} balls`;
                         } else if (remRuns <= 0) {
                             d.note = `${inn.battingTeam} won the match!`;
                             d.rrr = "0.00";
+                            d.winProb = 99;
                             d.matchStatus = 'COMPLETE';
                         } else {
                             d.note = `Match tied or innings ended.`;
                             d.rrr = "0.00";
+                            d.winProb = 50;
                         }
                     } else {
                         d.note = `1st Innings | Proj Score: ${Math.floor(crr * (d.matchInfo?.overs || 20))}`;
+                        d.winProb = 50;
                     }
                 }
             });
@@ -832,18 +1442,26 @@
             document.getElementById('d-series').innerText = procD.series || procD.venue || 'Match Center';
             document.getElementById('d-t1-name').innerText = procD.t1 || 'Team 1';
             document.getElementById('d-t2-name').innerText = procD.t2 || 'Team 2';
-            document.getElementById('d-t1-logo').src = procD.t1Logo || '';
-            document.getElementById('d-t2-logo').src = procD.t2Logo || '';
+
+            // Team Logos - with fallback avatars
+            const t1LogoEl = document.getElementById('d-t1-logo');
+            const t2LogoEl = document.getElementById('d-t2-logo');
+            t1LogoEl.src = procD.t1Logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(procD.t1||'T1')}&background=dbeafe&color=1e3a8a&bold=true&size=128`;
+            t2LogoEl.src = procD.t2Logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(procD.t2||'T2')}&background=fef3c7&color=92400e&bold=true&size=128`;
+            t1LogoEl.onerror = function() { this.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(procD.t1||'T1')}&background=dbeafe&color=1e3a8a&bold=true&size=128`; };
+            t2LogoEl.onerror = function() { this.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(procD.t2||'T2')}&background=fef3c7&color=92400e&bold=true&size=128`; };
             
-            // Status
+            // Status Badge
+            const badge = document.getElementById('d-status-badge');
+            const noteEl = document.getElementById('d-note');
             if(procD.matchStatus === 'COMPLETE') {
-                document.getElementById('d-status-badge').innerHTML = 'FINAL';
-                document.getElementById('d-status-badge').className = "text-[10px] font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded";
-                document.getElementById('d-note').innerText = procD.resultMain || procD.note || "Match Concluded";
+                badge.innerHTML = '🏁 FINAL';
+                badge.className = "text-[9px] font-black bg-gray-500/20 text-gray-300 border border-gray-400/30 px-2.5 py-1 rounded-full backdrop-blur-sm";
+                noteEl.innerText = procD.resultMain || procD.note || "Match Concluded";
             } else {
-                document.getElementById('d-status-badge').innerHTML = '<span class="live-dot"></span> LIVE';
-                document.getElementById('d-status-badge').className = "text-[10px] font-bold bg-red-50 text-red-600 px-2 py-1 rounded flex items-center gap-1";
-                document.getElementById('d-note').innerText = procD.req || procD.note || (procD.target ? `Target: ${procD.target}` : "1st Innings");
+                badge.innerHTML = '<span class="live-dot" style="background:#f87171;"></span> LIVE';
+                badge.className = "text-[9px] font-black bg-red-500/20 text-red-300 border border-red-400/30 px-2.5 py-1 rounded-full flex items-center gap-1.5 backdrop-blur-sm";
+                noteEl.innerText = procD.req || procD.note || (procD.target ? `Target: ${procD.target}` : "1st Innings");
             }
 
             // Scores
@@ -851,11 +1469,28 @@
             const i2 = procD.scorecard?.innings2 || {score:'Yet to Bat', overs:''};
             if(!procD.scorecard && procD.score) { i1.score = `${procD.score}/${procD.wickets}`; i1.overs = `${procD.overs}`; }
 
-            document.getElementById('d-t1-score').innerHTML = i1.score + `<span class="text-sm text-gray-400 font-medium ml-1">${i1.overs}</span>`;
-            document.getElementById('d-t2-score').innerHTML = i2.score === 'Yet to Bat' ? '<span class="text-sm text-gray-400">Yet to Bat</span>' : i2.score + `<span class="text-sm text-gray-400 font-medium ml-1">${i2.overs}</span>`;
-            document.getElementById('d-crr').innerText = procD.crr || "-";
-            document.getElementById('d-target').innerText = procD.target || "-";
-            document.getElementById('d-rrr').innerText = procD.rrr || "-";
+            const t1ScoreEl = document.getElementById('d-t1-score');
+            const t2ScoreEl = document.getElementById('d-t2-score');
+
+            t1ScoreEl.innerHTML = i1.score + (i1.overs ? `<span style="font-size:12px; font-weight:500; color:rgba(255,255,255,0.4); margin-left:4px;">(${i1.overs})</span>` : '');
+
+            if (i2.score === 'Yet to Bat') {
+                t2ScoreEl.innerHTML = '<span style="font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.35);">Yet to Bat</span>';
+                t2ScoreEl.style.fontSize = '13px';
+            } else {
+                t2ScoreEl.innerHTML = i2.score + (i2.overs ? `<span style="font-size:11px; font-weight:500; color:rgba(255,255,255,0.35); margin-left:4px;">(${i2.overs})</span>` : '');
+                t2ScoreEl.style.fontSize = '18px';
+            }
+
+            document.getElementById('d-crr').innerText = procD.crr || "—";
+            document.getElementById('d-target').innerText = procD.target || "—";
+            document.getElementById('d-rrr').innerText = procD.rrr || "—";
+
+            // Update innings names in scorecard
+            const i1NameEl = document.getElementById('i1-name');
+            const i2NameEl = document.getElementById('i2-name');
+            if (i1NameEl) i1NameEl.innerText = i1.name || procD.t1 || '1st Innings';
+            if (i2NameEl) i2NameEl.innerText = i2.name || procD.t2 || '2nd Innings';
 
             // Render Tabs
             renderScoreTable('i1', i1);
@@ -867,15 +1502,11 @@
             toggleSquadList(1);
         }
 
-        // --- NEW: CHARTS & STATS RENDERER ---
+        // --- CHARTS & STATS RENDERER (smooth .update() - no flashing) ---
         function renderCharts(d) {
-            // Clear existing charts to prevent canvas ghosting
-            ['wormChart', 'rpoChart', 'partnershipChart'].forEach(id => {
-                if(chartInstances[id]) { chartInstances[id].destroy(); }
-            });
-
             const t1Color = '#3b82f6'; // Blue
             const t2Color = '#f59e0b'; // Amber
+            const gridColor = isDarkMode ? 'rgba(255,255,255,0.06)' : '#f3f4f6';
             
             // Checking if real data was generated by the Match Engine
             const hasRealCharts = d.chartData && d.chartData.worm.labels.length > 1;
@@ -888,9 +1519,30 @@
             let pLabels = hasRealCharts ? d.chartData.partnerships.labels : ['1st Wkt'];
             let pData = hasRealCharts ? d.chartData.partnerships.data : [0];
 
+            // --- Helper: update existing chart or create new one ---
+            function updateOrCreate(id, config) {
+                if (chartInstances[id]) {
+                    const chart = chartInstances[id];
+                    chart.data.labels = config.data.labels;
+                    config.data.datasets.forEach((ds, i) => {
+                        if (chart.data.datasets[i]) {
+                            chart.data.datasets[i].data = ds.data;
+                            chart.data.datasets[i].label = ds.label;
+                        } else {
+                            chart.data.datasets.push(ds);
+                        }
+                    });
+                    // Remove extra datasets if new data has fewer
+                    chart.data.datasets.splice(config.data.datasets.length);
+                    chart.options.scales.y.grid.color = gridColor;
+                    chart.update('active'); // smooth animation, no flash
+                } else {
+                    chartInstances[id] = new Chart(document.getElementById(id).getContext('2d'), config);
+                }
+            }
+
             // 1. Worm Chart (Innings Comparison)
-            const ctxWorm = document.getElementById('wormChart').getContext('2d');
-            chartInstances['wormChart'] = new Chart(ctxWorm, {
+            updateOrCreate('wormChart', {
                 type: 'line',
                 data: {
                     labels: commonLabels,
@@ -899,12 +1551,11 @@
                         { label: d.t2 || 'Innings 2', data: w2, borderColor: t2Color, backgroundColor: t2Color, tension: 0.3, borderWidth: 3, pointRadius: 0, pointHitRadius: 10 }
                     ]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8, font: {size: 10, weight: 'bold'} } } }, scales: { y: { beginAtZero: true, grid: { color: '#f3f4f6' } }, x: { grid: { display: false } } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8, font: {size: 10, weight: 'bold'} } } }, scales: { y: { beginAtZero: true, grid: { color: gridColor } }, x: { grid: { display: false } } } }
             });
 
             // 2. RPO Chart (Over by Over)
-            const ctxRpo = document.getElementById('rpoChart').getContext('2d');
-            chartInstances['rpoChart'] = new Chart(ctxRpo, {
+            updateOrCreate('rpoChart', {
                 type: 'bar',
                 data: {
                     labels: commonLabels,
@@ -913,22 +1564,38 @@
                         { label: d.t2 || 'Innings 2', data: rpo2, backgroundColor: 'rgba(245, 158, 11, 0.8)', borderRadius: 4 }
                     ]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f3f4f6' } }, x: { grid: { display: false } } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: gridColor } }, x: { grid: { display: false } } } }
             });
 
             // 3. Partnership Chart
-            const ctxPart = document.getElementById('partnershipChart').getContext('2d');
-            chartInstances['partnershipChart'] = new Chart(ctxPart, {
+            updateOrCreate('partnershipChart', {
                 type: 'bar',
                 data: {
                     labels: pLabels,
                     datasets: [{ label: 'Partnership Runs', data: pData, backgroundColor: '#8b5cf6', borderRadius: 6 }]
                 },
-                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, grid: { color: '#f3f4f6' } }, y: { grid: { display: false } } } }
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, grid: { color: gridColor } }, y: { grid: { display: false } } } }
             });
         }
 
-        // --- NEW: FULL SCORECARD RENDERER ---
+        // --- FULL SCORECARD RENDERER (with Fantasy Points + Extras) ---
+        function calcBatFP(b) {
+            let fp = (b.runs || 0);
+            fp += (b.fours || 0) * 0.5;
+            fp += (b.sixes || 0) * 1.5;
+            if ((b.runs || 0) >= 100) fp += 8;
+            else if ((b.runs || 0) >= 50) fp += 4;
+            return fp.toFixed(1);
+        }
+        function calcBowlFP(b) {
+            let fp = (b.w || 0) * 25;
+            fp += (b.maidens || 0) * 4;
+            fp -= (b.r || 0) * 0.5;
+            if ((b.w || 0) >= 5) fp += 8;
+            else if ((b.w || 0) >= 3) fp += 4;
+            return Math.max(0, fp).toFixed(1);
+        }
+
         function renderScoreTable(id, inn) {
             document.getElementById(`${id}-total`).innerText = inn.score;
             const body = document.getElementById(`${id}-body`);
@@ -937,8 +1604,16 @@
                 return;
             }
 
-            let html = `<table class="w-full text-left score-table mb-4">
-                <thead><tr><th class="pl-2">Batting</th><th class="text-right">R</th><th class="text-right">B</th><th class="text-right">4s/6s</th><th class="text-right pr-2">SR</th></tr></thead>
+            const fpToggleId = `fp-toggle-${id}`;
+            const fpColHeader = showFantasyPoints ? `<th class="text-right pr-2 text-amber-500">FP ⭐</th>` : `<th class="text-right pr-2">SR</th>`;
+            const fpToggleLabel = showFantasyPoints ? '⭐ Hide FP' : '⭐ Show FP';
+
+            let html = `
+            <div class="flex justify-end px-2 pt-2 pb-1">
+                <button onclick="toggleFantasyPoints()" class="text-[10px] font-bold px-2 py-1 rounded-full border ${showFantasyPoints ? 'bg-amber-50 border-amber-300 text-amber-700' : 'bg-gray-50 border-gray-200 text-gray-500'} transition">${fpToggleLabel}</button>
+            </div>
+            <table class="w-full text-left score-table mb-4">
+                <thead><tr><th class="pl-2">Batting</th><th class="text-right">R</th><th class="text-right">B</th><th class="text-right">4s/6s</th>${fpColHeader}</tr></thead>
                 <tbody>
                     ${(inn.batting || []).map(b => `
                         <tr>
@@ -954,7 +1629,10 @@
                             <td class="text-right font-bold">${b.runs}</td>
                             <td class="text-right text-gray-500">${b.balls}</td>
                             <td class="text-right text-gray-400 text-[10px]">${b.fours||0}/${b.sixes||0}</td>
-                            <td class="text-right text-gray-500 pr-2 font-mono text-xs">${b.sr||'0.0'}</td>
+                            ${showFantasyPoints
+                                ? `<td class="text-right pr-2 font-mono text-xs font-bold text-amber-600">${calcBatFP(b)}</td>`
+                                : `<td class="text-right text-gray-500 pr-2 font-mono text-xs">${b.sr||'0.0'}</td>`
+                            }
                         </tr>
                     `).join('')}
                 </tbody>
@@ -964,9 +1642,18 @@
                 html += `<div class="text-[10px] text-gray-500 bg-gray-50 p-2 rounded mb-4 border border-gray-100"><strong class="text-gray-700">Fall of Wickets:</strong> ${inn.fow}</div>`;
             }
 
+            // Extras Breakdown
+            if (inn.extras && inn.extras.total > 0) {
+                html += `<div class="text-[10px] bg-blue-50 border border-blue-100 rounded-lg p-2 mb-4 text-blue-800 font-medium">
+                    <strong class="font-bold">Extras: ${inn.extras.total}</strong>
+                    <span class="ml-2 text-blue-600">(Wides: ${inn.extras.wides}, No Balls: ${inn.extras.noBalls}, Byes: ${inn.extras.byes}, Leg Byes: ${inn.extras.legByes})</span>
+                </div>`;
+            }
+
             if(inn.bowling && inn.bowling.length > 0) {
+                const fpBowlHeader = showFantasyPoints ? `<th class="text-right pr-2 text-amber-500">FP ⭐</th>` : `<th class="text-right pr-2">ECON</th>`;
                 html += `<table class="w-full text-left score-table">
-                    <thead><tr><th class="pl-2">Bowling</th><th class="text-right">O</th><th class="text-right">M</th><th class="text-right">R</th><th class="text-right">W</th><th class="text-right pr-2">ECON</th></tr></thead>
+                    <thead><tr><th class="pl-2">Bowling</th><th class="text-right">O</th><th class="text-right">M</th><th class="text-right">R</th><th class="text-right">W</th>${fpBowlHeader}</tr></thead>
                     <tbody>
                         ${inn.bowling.map(b => `
                             <tr>
@@ -980,7 +1667,10 @@
                                 <td class="text-right text-gray-400">${b.m || 0}</td>
                                 <td class="text-right">${b.r}</td>
                                 <td class="text-right font-bold text-gray-900">${b.w}</td>
-                                <td class="text-right text-gray-500 pr-2 font-mono text-xs">${b.econ||'0.0'}</td>
+                                ${showFantasyPoints
+                                    ? `<td class="text-right pr-2 font-mono text-xs font-bold text-amber-600">${calcBowlFP(b)}</td>`
+                                    : `<td class="text-right text-gray-500 pr-2 font-mono text-xs">${b.econ||'0.0'}</td>`
+                                }
                             </tr>
                         `).join('')}
                     </tbody>
@@ -1128,10 +1818,19 @@
             if(unsubscribeMatch) { unsubscribeMatch(); unsubscribeMatch = null; }
         }
         function switchDetailTab(t) {
-            document.querySelectorAll('#detail-view .tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(`dt-${t}`).classList.add('active');
-            ['scorecard','comm','squad','charts'].forEach(v => document.getElementById(`dv-${v}`).classList.add('hidden'));
-            document.getElementById(`dv-${t}`).classList.remove('hidden');
+            document.querySelectorAll('#detail-view .detail-tab-item').forEach(b => b.classList.remove('active'));
+            const activeBtn = document.getElementById(`dt-${t}`);
+            if (activeBtn) activeBtn.classList.add('active');
+            ['scorecard','comm','squad','charts','insights'].forEach(v => {
+                const el = document.getElementById(`dv-${v}`);
+                if (el) el.classList.add('hidden');
+            });
+            const panel = document.getElementById(`dv-${t}`);
+            if (panel) {
+                panel.classList.remove('hidden');
+                panel.classList.add('page-enter');
+            }
+            if (t === 'insights' && currentMatchData) renderInsightsTab(currentMatchData);
         }
 
         function toggleSelection(e, id) {
@@ -1197,86 +1896,181 @@
             });
         }
 
-        function renderTournamentData(data) {
-            // 1. Header
-            const meta = data.meta || {};
-            document.getElementById('t-name').textContent = meta.name || "Tournament";
-            document.getElementById('t-category').textContent = meta.category || "Open";
-            document.getElementById('t-location').textContent = meta.country || "Global";
 
-            const completedCount = (data.fixtures || []).filter(f => f.status === 'COMPLETED').length;
-            const totalCount = (data.fixtures || []).length;
-            const statusEl = document.getElementById('t-status');
+        // ============================================================
+        // NEW FEATURE FUNCTIONS
+        // ============================================================
 
-            if (completedCount === totalCount && totalCount > 0) {
-                statusEl.textContent = "COMPLETED";
-                statusEl.className = "inline-block bg-green-50 text-green-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-3";
-            } else if (completedCount > 0) {
-                statusEl.textContent = "LIVE NOW";
-                statusEl.className = "inline-block bg-red-50 text-red-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-3 animate-pulse";
+        // --- DARK MODE TOGGLE ---
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : '');
+            const btn = document.getElementById('theme-toggle-btn');
+            btn.textContent = isDarkMode ? '☀️' : '🌙';
+            // Refresh charts to use updated grid colors
+            if (currentMatchData && currentMatchData.chartData) {
+                renderCharts(currentMatchData);
+            }
+            showToast(isDarkMode ? '🌙 Dark Mode On' : '☀️ Light Mode On');
+        }
+
+        // --- TOAST SYSTEM ---
+        function showToast(message, duration = 3000) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = message;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('toast-out');
+                toast.addEventListener('animationend', () => toast.remove());
+            }, duration);
+        }
+
+        // --- NOTIFY ME ---
+        function handleNotifyMe() {
+            const btn = document.getElementById('notify-btn');
+            notifyActive = !notifyActive;
+            if (notifyActive) {
+                btn.innerHTML = '🔕 Alerts On';
+                btn.classList.remove('bg-amber-50','hover:bg-amber-100','text-amber-700','border-amber-200');
+                btn.classList.add('bg-green-50','hover:bg-green-100','text-green-700','border-green-200');
+                const matchName = currentMatchData ? `${currentMatchData.t1} vs ${currentMatchData.t2}` : 'this match';
+                showToast(`🔔 Alerts enabled for ${matchName}`);
             } else {
-                statusEl.textContent = "UPCOMING";
-                statusEl.className = "inline-block bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-3";
+                btn.innerHTML = '🔔 Notify Me';
+                btn.classList.remove('bg-green-50','hover:bg-green-100','text-green-700','border-green-200');
+                btn.classList.add('bg-amber-50','hover:bg-amber-100','text-amber-700','border-amber-200');
+                showToast('🔕 Alerts turned off');
+            }
+        }
+
+        // --- SOCIAL SHARE ---
+        function handleShareMatch() {
+            if (!currentMatchData) return;
+            const d = currentMatchData;
+            const i1 = d.scorecard?.innings1 || {};
+            const i2 = d.scorecard?.innings2 || {};
+            const shareText = `🏏 ${d.t1} vs ${d.t2}\n${d.series || d.venue || 'Cricket Match'}\n${i1.score || '0/0'} (${i1.overs || '0'}) | ${i2.score || 'Yet to Bat'}\n${d.note || ''}\n\nLive via CriCKERR`;
+            const shareData = {
+                title: `${d.t1} vs ${d.t2} - CriCKERR`,
+                text: shareText,
+                url: window.location.href
+            };
+            if (navigator.share) {
+                navigator.share(shareData).catch(() => {});
+            } else {
+                navigator.clipboard.writeText(shareText).then(() => {
+                    showToast('📋 Score copied to clipboard!');
+                }).catch(() => {
+                    showToast('ℹ️ Share not supported on this browser');
+                });
+            }
+        }
+
+        // --- FANTASY POINTS TOGGLE ---
+        function toggleFantasyPoints() {
+            showFantasyPoints = !showFantasyPoints;
+            if (currentMatchData) {
+                const i1 = currentMatchData.scorecard?.innings1 || { score: '', batting: [], bowling: [] };
+                const i2 = currentMatchData.scorecard?.innings2 || { score: '', batting: [], bowling: [] };
+                renderScoreTable('i1', i1);
+                renderScoreTable('i2', i2);
+            }
+            showToast(showFantasyPoints ? '⭐ Fantasy Points ON' : '⭐ Fantasy Points OFF');
+        }
+
+        // --- NRR CALCULATOR ---
+        function calculateNRR() {
+            const rs = parseFloat(document.getElementById('nrr-rs').value) || 0;
+            const of_ = parseFloat(document.getElementById('nrr-of').value) || 1;
+            const rc = parseFloat(document.getElementById('nrr-rc').value) || 0;
+            const ob = parseFloat(document.getElementById('nrr-ob').value) || 1;
+            const nrr = (rs / of_) - (rc / ob);
+            const resultEl = document.getElementById('nrr-result');
+            const valueEl = document.getElementById('nrr-value');
+            resultEl.classList.remove('hidden');
+            valueEl.textContent = (nrr >= 0 ? '+' : '') + nrr.toFixed(3);
+            valueEl.className = `text-2xl font-black font-mono ${nrr >= 0 ? 'text-green-600' : 'text-red-500'}`;
+        }
+
+        // --- INSIGHTS TAB RENDERER ---
+        function renderInsightsTab(d) {
+            // Win Predictor
+            const t1Name = d.t1 || 'Team 1';
+            const t2Name = d.t2 || 'Team 2';
+            let winProb = d.winProb || 50;
+            // If 2nd innings batting team is winning, winProb is their chance; t1 chance is inverse
+            const battingTeamIn2nd = d.scorecard?.innings2?.name || d.t2;
+            const t2IsWinning = battingTeamIn2nd === t2Name;
+            const t1Prob = t2IsWinning ? Math.round(100 - winProb) : Math.round(winProb);
+            const t2Prob = 100 - t1Prob;
+
+            const t1LabelEl = document.getElementById('wp-t1-label');
+            const t2LabelEl = document.getElementById('wp-t2-label');
+            const fillEl = document.getElementById('wp-fill');
+            const t1PctEl = document.getElementById('wp-t1-pct');
+            const t2PctEl = document.getElementById('wp-t2-pct');
+            const wpNoteEl = document.getElementById('wp-note');
+
+            if (t1LabelEl) t1LabelEl.textContent = t1Name;
+            if (t2LabelEl) t2LabelEl.textContent = t2Name;
+            if (fillEl) fillEl.style.width = `${t1Prob}%`;
+            if (t1PctEl) t1PctEl.textContent = `${t1Prob}%`;
+            if (t2PctEl) t2PctEl.textContent = `${t2Prob}%`;
+            if (wpNoteEl) {
+                if (d.matchStatus === 'COMPLETE') {
+                    wpNoteEl.textContent = d.note || 'Match Concluded';
+                } else if (d.scorecard?.innings2?.batting?.length > 0) {
+                    wpNoteEl.textContent = `Based on CRR ${d.crr || '-'}, RRR ${d.rrr || '-'} & wickets in hand`;
+                } else {
+                    wpNoteEl.textContent = '1st Innings — predicted on projected score';
+                }
             }
 
-            // 2. Standings
-            const tbody = document.getElementById('standings-body');
-            const sortedStandings = (data.standings || []).sort((a,b) => b.pts - a.pts || b.nrr - a.nrr);
-            
-            tbody.innerHTML = sortedStandings.length ? sortedStandings.map((t, i) => `
-                <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="p-3 pl-4 flex items-center gap-3">
-                        <span class="font-mono text-gray-300 text-[10px]">${i+1}</span>
-                        <span class="font-bold text-gray-800">${t.name}</span>
-                    </td>
-                    <td class="p-3 text-center text-gray-400 font-mono">${t.p}</td>
-                    <td class="p-3 text-center text-green-600 font-bold bg-green-50/50 rounded-lg">${t.w}</td>
-                    <td class="p-3 text-center text-red-400 font-medium">${t.l}</td>
-                    <td class="p-3 text-center text-gray-500 font-mono text-[10px]">${t.nrr ? t.nrr.toFixed(3) : '0.000'}</td>
-                    <td class="p-3 pr-4 text-center text-sm font-black text-blue-900 bg-blue-50/50 rounded-lg">${t.pts}</td>
-                </tr>
-            `).join('') : `<tr><td colspan="6" class="text-center p-4 text-gray-400 italic">No standings available</td></tr>`;
+            // Key Matchups
+            const matchupsEl = document.getElementById('insights-matchups');
+            if (matchupsEl) {
+                const batting = d.scorecard?.innings1?.batting || d.scorecard?.innings2?.batting || [];
+                const bowling = d.scorecard?.innings1?.bowling || d.scorecard?.innings2?.bowling || [];
+                const topBatsman = [...batting].sort((a,b) => (b.runs||0) - (a.runs||0)).slice(0, 2);
+                const topBowler = [...bowling].sort((a,b) => (b.w||0) - (a.w||0) || (a.econ||99) - (b.econ||99)).slice(0, 2);
 
-            // 3. Schedule
-            const list = document.getElementById('schedule-list');
-            const fixtures = (data.fixtures || []).sort((a,b) => a.matchNo - b.matchNo);
-            
-            list.innerHTML = fixtures.map((f, i) => {
-                let badge = "";
-                let resultRow = "";
-                
-                if (f.status === 'COMPLETED') {
-                    badge = `<span class="bg-gray-100 text-gray-500 text-[9px] font-black px-2 py-0.5 rounded uppercase">Finished</span>`;
-                    resultRow = `<div class="mt-3 text-center text-[10px] font-bold text-green-600 uppercase bg-green-50 py-1.5 rounded border border-green-100">${f.result}</div>`;
-                } else if (f.status === 'LIVE') {
-                    badge = `<span class="bg-red-100 text-red-600 text-[9px] font-black px-2 py-0.5 rounded uppercase animate-pulse">● LIVE</span>`;
-                } else {
-                    badge = `<span class="bg-blue-50 text-blue-600 text-[9px] font-black px-2 py-0.5 rounded uppercase">${f.time || 'Upcoming'}</span>`;
+                if (topBatsman.length === 0 && topBowler.length === 0) {
+                    matchupsEl.innerHTML = '<div class="text-center text-xs text-gray-400 italic py-4">Not enough data yet for matchups.</div>';
+                    return;
                 }
 
-                const isFinal = (f.stage || '').includes('Final');
-                const delay = i * 50; // Stagger animation
-
-                return `
-                <div class="glass-card p-4 relative group stagger-item" style="animation-delay: ${delay}ms">
-                    ${isFinal ? '<div class="absolute top-0 left-0 w-1 h-full bg-yellow-400"></div>' : ''}
-                    <div class="flex justify-between items-center mb-3">
-                        <span class="text-[9px] font-black text-gray-400 uppercase tracking-wider">${f.stage || 'Match ' + f.matchNo} • ${f.ground || 'TBA'}</span>
-                        ${badge}
-                    </div>
-                    <div class="flex justify-between items-center px-1">
-                        <div class="w-5/12 text-center">
-                            <div class="text-xs font-black text-gray-900 uppercase truncate">${f.t1}</div>
-                        </div>
-                        <div class="text-[10px] font-black text-gray-300">VS</div>
-                        <div class="w-5/12 text-center">
-                            <div class="text-xs font-black text-gray-900 uppercase truncate">${f.t2}</div>
-                        </div>
-                    </div>
-                    ${resultRow}
-                </div>
-                `;
-            }).join('');
+                let html = '';
+                topBatsman.forEach(bat => {
+                    topBowler.forEach(bowl => {
+                        html += `
+                        <div class="bg-gray-50 rounded-xl p-3">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="flex items-center gap-2">
+                                    <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(bat.name)}&background=dbeafe&color=1d4ed8&bold=true" class="w-8 h-8 rounded-full">
+                                    <div>
+                                        <div class="text-xs font-bold text-gray-800">${bat.name}</div>
+                                        <div class="text-[9px] text-gray-400 font-medium">${bat.runs}R (${bat.balls}B) • SR ${bat.sr||0}</div>
+                                    </div>
+                                </div>
+                                <span class="text-[10px] font-black text-gray-400 bg-white border border-gray-100 rounded-full px-2 py-0.5">vs</span>
+                                <div class="flex items-center gap-2 text-right">
+                                    <div>
+                                        <div class="text-xs font-bold text-gray-800">${bowl.name}</div>
+                                        <div class="text-[9px] text-gray-400 font-medium">${bowl.w}W/${bowl.r}R • ECON ${bowl.econ||0}</div>
+                                    </div>
+                                    <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(bowl.name)}&background=fef3c7&color=92400e&bold=true" class="w-8 h-8 rounded-full">
+                                </div>
+                            </div>
+                            <div class="text-[9px] text-center text-gray-400 font-medium italic">
+                                🎯 Key battle — ${bowl.w > 0 ? 'Bowler has the edge' : bat.runs > 30 ? 'Batsman dominating' : 'Evenly matched'}
+                            </div>
+                        </div>`;
+                    });
+                });
+                matchupsEl.innerHTML = html || '<div class="text-center text-xs text-gray-400 italic py-4">No matchup data available yet.</div>';
+            }
         }
     </script>
 </body>
