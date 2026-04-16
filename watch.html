@@ -896,10 +896,10 @@
     </div>
 
     <div id="live-sponsors-container"></div>
-    <img id="broadcast-watermark" src="/my-logo.png" alt="Broadcast Logo">
 
     <div id="player-container">
         <video id="viewer-video" autoplay muted playsinline webkit-playsinline></video>
+        <img id="broadcast-watermark" src="/my-logo.png" alt="Broadcast Logo">
     </div>
     
     <div id="yt-title-container">
@@ -1890,20 +1890,28 @@
         // FIX: Prevent video from freezing when swiping down to exit fullscreen on mobile
         document.addEventListener('fullscreenchange', () => {
             const videoElement = document.getElementById('viewer-video');
-            if (!document.fullscreenElement && videoElement && videoElement.paused) {
-                videoElement.play().catch(e => console.log("Play restored:", e));
+            if (!document.fullscreenElement && videoElement) {
+                setTimeout(() => { if (videoElement.paused) videoElement.play().catch(e => console.log(e)); }, 200);
             }
         });
         document.addEventListener('webkitfullscreenchange', () => {
             const videoElement = document.getElementById('viewer-video');
-            if (!document.webkitFullscreenElement && videoElement && videoElement.paused) {
-                videoElement.play().catch(e => console.log("Play restored:", e));
+            if (!document.webkitFullscreenElement && videoElement) {
+                setTimeout(() => { if (videoElement.paused) videoElement.play().catch(e => console.log(e)); }, 200);
             }
         });
         // Native Safari Video Player exit hook
         document.getElementById('viewer-video').addEventListener('webkitendfullscreen', function() {
-            if (this.paused) {
-                this.play().catch(e => console.log("Play restored:", e));
+            setTimeout(() => { if (this.paused) this.play().catch(e => console.log(e)); }, 200);
+        });
+
+        // AGGRESSIVE ANTI-PAUSE: If video pauses unexpectedly (like swiping away), force resume
+        document.getElementById('viewer-video').addEventListener('pause', function() {
+            // Only force resume if we are currently connected to a live stream and not manually changing quality
+            if (activeCall && !isSwitchingQuality) {
+                setTimeout(() => {
+                    if (this.paused) this.play().catch(e => console.log("Force resumed:", e));
+                }, 250);
             }
         });
             
