@@ -302,14 +302,14 @@
         /* --- BROADCAST WATERMARK LOGO --- */
         #broadcast-watermark {
             position: absolute; /* Changed to absolute to float cleanly inside the dynamic viewport */
-            width: 45px; height: auto; opacity: 0;    
-            z-index: 950; /* Super high z-index to stay completely above scoreboard/UI */
+            width: 45px; height: auto; opacity: 0.95 !important; display: block !important;    
+            z-index: 9999 !important; /* Forced to the absolute top layer */
             pointer-events: none; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); transition: opacity 0.8s ease-in-out;
         }
         /* Portrait: Positioned at Bottom Left inside 16:9 video above scoring */
-        @media (orientation: portrait) { #broadcast-watermark { top: calc(100px + 56.25vw - 90px); left: 10px; right: auto; bottom: auto; z-index: 55; max-width: 35px; } }
+        @media (orientation: portrait) { #broadcast-watermark { top: calc(100px + 56.25vw - 90px); left: 10px; right: auto; bottom: auto; z-index: 9999 !important; max-width: 35px; } }
         /* Landscape: Positioned at Bottom Left above the scoring layout */
-        @media (orientation: landscape) { #broadcast-watermark { top: auto; left: 15px; bottom: 60px; max-width: 45px; } }
+        @media (orientation: landscape) { #broadcast-watermark { top: auto; left: 15px; bottom: 60px; z-index: 9999 !important; max-width: 45px; } }
         .show-watermark { opacity: 0.95 !important; }
 
         /* LIVE STATS & CHAT */
