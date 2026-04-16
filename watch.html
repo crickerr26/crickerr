@@ -153,24 +153,52 @@
             #fullscreen-btn svg { width: 16px; height: 16px; fill: white; }
         }
         
-        /* LIVE BADGE */
+        /* LIVE BADGE & DVR UI */
         #live-badge {
             position: absolute; top: 25px; right: 25px;
-            background: rgba(239, 68, 68, 0.7); border: 1px solid rgba(239, 68, 68, 0.4);
+            background: rgba(239, 68, 68, 0.9); border: 1px solid rgba(239, 68, 68, 0.4);
             padding: 6px 15px; border-radius: 50px; color: white;
             font-family: 'Roboto', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 1px;
             display: none; align-items: center; gap: 8px; z-index: 9999;
-            box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+            cursor: pointer; transition: all 0.3s ease;
+        }
+        #live-badge.live-off {
+            background: rgba(100, 100, 100, 0.8); border-color: rgba(150, 150, 150, 0.5);
+            box-shadow: none;
         }
         .live-dot {
             width: 8px; height: 8px; background: white; border-radius: 50%;
             animation: blinkRed 1s infinite;
+        }
+        #live-badge.live-off .live-dot {
+            background: #9ca3af; animation: none;
         }
         @keyframes blinkRed {
             0% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.4; transform: scale(0.9); }
             100% { opacity: 1; transform: scale(1); }
         }
+
+        /* DVR SCRUBBER UI */
+        #dvr-ui {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 50px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            z-index: 900; display: none; align-items: center; padding: 0 20px; gap: 15px;
+            transition: opacity 0.3s;
+        }
+        #dvr-scrubber {
+            flex-grow: 1; -webkit-appearance: none; appearance: none; height: 6px;
+            background: rgba(255, 255, 255, 0.3); border-radius: 5px; outline: none;
+            cursor: pointer; position: relative;
+        }
+        #dvr-scrubber::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; width: 14px; height: 14px;
+            border-radius: 50%; background: #ef4444; cursor: pointer;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.8); transition: transform 0.1s;
+        }
+        #dvr-scrubber::-webkit-slider-thumb:active { transform: scale(1.3); }
+        .dvr-time-text { font-family: 'Roboto Condensed', sans-serif; font-size: 13px; font-weight: 700; color: white; text-shadow: 1px 1px 3px black; min-width: 45px; text-align: center; }
 
         /* QUALITY INDICATOR & MENU */
         #quality-badge {
@@ -853,7 +881,7 @@
         </div>
         <div id="event-sponsors-container"></div>
     </div>
-<div id="live-badge"><div class="live-dot"></div>LIVE</div>
+<div id="live-badge" onclick="jumpToLive()"><div class="live-dot"></div><span id="live-badge-text">LIVE</span></div>
     <div id="live-stats-bar">
         <svg style="width:16px;height:16px;fill:white;" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
         <span id="viewer-count-text">0</span>
@@ -899,7 +927,15 @@
 
     <div id="player-container">
         <video id="viewer-video" autoplay muted playsinline webkit-playsinline></video>
+        <video id="dvr-video" playsinline webkit-playsinline style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; object-fit:contain; z-index:2; background:#000;"></video>
+        
         <img id="broadcast-watermark" src="/my-logo.png" alt="Broadcast Logo">
+
+        <div id="dvr-ui">
+            <span id="dvr-time" class="dvr-time-text">-0:00</span>
+            <input type="range" id="dvr-scrubber" min="0" max="100" value="100">
+            <span id="dvr-live-time" class="dvr-time-text" style="color: #ef4444;">LIVE</span>
+        </div>
     </div>
     
     <div id="yt-title-container">
@@ -1792,6 +1828,10 @@
                 
                 video.srcObject = remoteStream;
                 
+                // --- INITIALIZE DVR BUFFER SYSTEM ---
+                initDVRSystem(remoteStream);
+                // ------------------------------------
+                
                 const attemptPlay = () => {
                     const playPromise = video.play();
                     if (playPromise !== undefined) {
@@ -2205,6 +2245,150 @@
                 stage.classList.remove('splitting');
                 if (eventSponsors) eventSponsors.style.opacity = '0';
             }, 3000);
+        }
+
+        // --- PROFESSIONAL DVR / LIVE REWIND BUFFER SYSTEM ---
+        let dvrRecorder = null;
+        let dvrChunks = [];
+        let dvrHeader = null;
+        let dvrIsPlayback = false;
+        let dvrDuration = 0; // Tracks seconds recorded
+        const MAX_DVR_SECONDS = 180; // 3-Minute rolling buffer for optimal memory scaling
+        let dvrBlobUrl = null;
+        let dvrUpdateInterval = null;
+
+        function initDVRSystem(stream) {
+            // Reset existing DVR state if reconnecting
+            if (dvrRecorder && dvrRecorder.state !== 'inactive') dvrRecorder.stop();
+            if (dvrUpdateInterval) clearInterval(dvrUpdateInterval);
+            dvrChunks = []; dvrHeader = null; dvrDuration = 0; dvrIsPlayback = false;
+
+            const dvrUI = document.getElementById('dvr-ui');
+            if (dvrUI) dvrUI.style.display = 'flex';
+
+            // Find optimal mimeType for recording
+            const types = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm", "video/mp4"];
+            let selectedType = types.find(t => MediaRecorder.isTypeSupported(t));
+            if (!selectedType) return; // DVR not supported on this browser
+
+            try {
+                // Initialize MediaRecorder capturing at 1-second chunks
+                dvrRecorder = new MediaRecorder(stream, { mimeType: selectedType, videoBitsPerSecond: 2500000 });
+                dvrRecorder.ondataavailable = (e) => {
+                    if (e.data && e.data.size > 0) {
+                        if (!dvrHeader) {
+                            dvrHeader = e.data;
+                        } else {
+                            dvrChunks.push(e.data);
+                        }
+                        
+                        dvrDuration = dvrChunks.length;
+                        // Enforce Rolling Buffer (Removes oldest segments)
+                        if (dvrDuration > MAX_DVR_SECONDS) {
+                            dvrChunks.shift();
+                            dvrDuration--;
+                        }
+                        updateDvrScrubber();
+                    }
+                };
+                dvrRecorder.start(1000); // 1 chunk per second
+            } catch (err) {
+                console.error("DVR Initialization failed:", err);
+            }
+
+            // Bind Scrubber Events
+            const scrubber = document.getElementById('dvr-scrubber');
+            scrubber.addEventListener('input', handleScrubberInput);
+            scrubber.addEventListener('change', handleScrubberRelease); // Trigger playback on release for performance
+        }
+
+        function updateDvrScrubber() {
+            if (dvrIsPlayback) return; // Do not push scrubber forward if user is watching delayed footage
+            const scrubber = document.getElementById('dvr-scrubber');
+            scrubber.value = 100;
+            document.getElementById('dvr-time').innerText = "-0:00";
+        }
+
+        function formatDvrTime(secs) {
+            const m = Math.floor(secs / 60);
+            const s = Math.floor(secs % 60);
+            return `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        let pendingDvrProgress = null;
+
+        function handleScrubberInput(e) {
+            const val = parseInt(e.target.value);
+            if (val >= 98) {
+                document.getElementById('dvr-time').innerText = "-0:00";
+                return;
+            }
+            const targetSecond = Math.floor(dvrDuration * (val / 100));
+            const secondsBehind = dvrDuration - targetSecond;
+            document.getElementById('dvr-time').innerText = "-" + formatDvrTime(secondsBehind);
+            pendingDvrProgress = val / 100;
+        }
+
+        function handleScrubberRelease(e) {
+            const val = parseInt(e.target.value);
+            if (val >= 98) {
+                jumpToLive();
+            } else if (pendingDvrProgress !== null) {
+                playDVRAtProgress(pendingDvrProgress);
+                pendingDvrProgress = null;
+            }
+        }
+
+        function playDVRAtProgress(progress) {
+            if (dvrChunks.length === 0) return;
+            dvrIsPlayback = true;
+            
+            // UI State: LIVE OFF
+            const badge = document.getElementById('live-badge');
+            badge.classList.add('live-off');
+            document.getElementById('live-badge-text').innerText = "LIVE OFF";
+            
+            const targetSecond = Math.floor(dvrDuration * progress);
+            
+            const dvrVideo = document.getElementById('dvr-video');
+            const mainVideo = document.getElementById('viewer-video');
+            
+            // Build Video Blob from rolling buffer
+            if (dvrBlobUrl) URL.revokeObjectURL(dvrBlobUrl);
+            const blob = new Blob([dvrHeader, ...dvrChunks], { type: dvrHeader.type });
+            dvrBlobUrl = URL.createObjectURL(blob);
+            
+            dvrVideo.src = dvrBlobUrl;
+            dvrVideo.style.display = 'block';
+            mainVideo.style.opacity = '0'; // Hide WebRTC live stream securely
+            
+            dvrVideo.onloadedmetadata = () => {
+                dvrVideo.currentTime = targetSecond;
+                dvrVideo.play().catch(e => console.log("DVR Play Error:", e));
+            };
+        }
+
+        function jumpToLive() {
+            if (!dvrIsPlayback) return;
+            dvrIsPlayback = false;
+            
+            // UI State: LIVE ON
+            const badge = document.getElementById('live-badge');
+            badge.classList.remove('live-off');
+            document.getElementById('live-badge-text').innerText = "LIVE";
+            
+            const dvrVideo = document.getElementById('dvr-video');
+            const mainVideo = document.getElementById('viewer-video');
+            
+            // Instantly restore live WebRTC feed
+            dvrVideo.pause();
+            dvrVideo.style.display = 'none';
+            mainVideo.style.opacity = '1';
+            
+            // Reset scrubber UI
+            const scrubber = document.getElementById('dvr-scrubber');
+            scrubber.value = 100;
+            document.getElementById('dvr-time').innerText = "-0:00";
         }
     </script>
 </body>
