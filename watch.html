@@ -59,7 +59,7 @@
             /* SMART MOBILE WATCH VIEW (PORTRAIT) */
             #player-container {
                 position: fixed;
-                top: 70px !important; /* Ensure it stays below header even when typing */
+                top: 100px !important; /* Moved bit lower as requested */
                 left: 0;
                 width: 100vw;
                 height: 56.25vw; /* Strict 16:9 Broadcast Aspect Ratio */
@@ -88,7 +88,7 @@
                 top: 0; 
                 left: 0;
                 right: 0;
-                height: 70px;
+                height: 100px; /* Adjusted to fill the gap seamlessly */
                 background: #111;
                 z-index: 60;
                 padding: 0 15px;
@@ -106,11 +106,11 @@
             #fullscreen-btn {
                 display: flex;
                 position: fixed;
-                top: calc(70px + 56.25vw);
+                top: calc(100px + 56.25vw);
                 left: 66.66%; right: 0; width: 33.34%;
                 height: 40px;
                 background: #1a1a1a;
-                z-index: 45;
+                z-index: 60; /* Boosted z-index to ensure it is clickable */
                 align-items: center;
                 justify-content: center;
                 gap: 6px;
@@ -191,7 +191,7 @@
         /* PORTRAIT OVERRIDES FOR BADGE & QUALITY */
         @media (orientation: portrait) {
             #live-badge {
-                top: 80px; left: 10px; right: auto;
+                top: 110px; left: 10px; right: auto;
                 padding: 2px 6px; font-size: 9px;
                 background: rgba(239, 68, 68, 0.9);
                 border: none;
@@ -202,14 +202,14 @@
             
             #quality-badge {
                 position: fixed;
-                top: calc(70px + 56.25vw); left: 0; right: auto; bottom: auto;
+                top: calc(100px + 56.25vw); left: 0; right: auto; bottom: auto;
                 width: 33.33%; height: 40px;
                 padding: 0; font-size: 11px;
-                background: #1a1a1a; border: none; border-bottom: 1px solid #333; border-radius: 0; z-index: 45;
+                background: #1a1a1a; border: none; border-bottom: 1px solid #333; border-radius: 0; z-index: 60;
                 display: flex; align-items: center; justify-content: center; color: white;
             }
             #quality-menu {
-                top: calc(70px + 56.25vw - 120px) !important; left: 10px !important;
+                top: calc(100px + 56.25vw - 120px) !important; left: 10px !important;
                 bottom: auto; right: auto;
             }
         }
@@ -306,8 +306,8 @@
             z-index: 950; /* Super high z-index to stay completely above scoreboard/UI */
             pointer-events: none; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); transition: opacity 0.8s ease-in-out;
         }
-        /* Portrait: Positioned at Top Right inside 16:9 video */
-        @media (orientation: portrait) { #broadcast-watermark { top: 80px; left: auto; right: 10px; bottom: auto; z-index: 55; max-width: 35px; } }
+        /* Portrait: Positioned at Bottom Left inside 16:9 video above scoring */
+        @media (orientation: portrait) { #broadcast-watermark { top: calc(100px + 56.25vw - 90px); left: 10px; right: auto; bottom: auto; z-index: 55; max-width: 35px; } }
         /* Landscape: Positioned at Top Left next to quality controls */
         @media (orientation: landscape) { #broadcast-watermark { top: 25px; left: 110px; bottom: auto; } }
         .show-watermark { opacity: 0.95 !important; }
@@ -333,7 +333,7 @@
         /* PORTRAIT OVERRIDES FOR STATS & CHAT TOGGLE */
         @media (orientation: portrait) {
             #live-stats-bar {
-                top: 80px; right: auto; left: 60px; 
+                top: 110px; right: auto; left: 60px; 
                 padding: 2px 8px; font-size: 9px;
                 background: rgba(0,0,0,0.5); border: none;
                 gap: 4px; color: white; border-radius: 50px; z-index: 55;
@@ -342,10 +342,10 @@
             
             #chat-toggle-btn {
                 position: fixed;
-                top: calc(70px + 56.25vw); left: 33.33%; right: auto; bottom: auto;
+                top: calc(100px + 56.25vw); left: 33.33%; right: auto; bottom: auto;
                 width: 33.33%; height: 40px;
                 padding: 0; font-size: 11px;
-                background: #1a1a1a; border: none; border-bottom: 1px solid #333; border-left: 1px solid #333; border-radius: 0; z-index: 45;
+                background: #1a1a1a; border: none; border-bottom: 1px solid #333; border-left: 1px solid #333; border-radius: 0; z-index: 60;
                 display: flex; align-items: center; justify-content: center;
             }
             #chat-toggle-btn svg { width: 16px !important; height: 16px !important; }
@@ -1851,7 +1851,13 @@
         }
 
         function toggleFullScreen() {
+            const videoElement = document.getElementById('viewer-video');
             if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                // Fix for mobile Safari (iPhone) which requires native video fullscreen
+                if (videoElement && videoElement.webkitEnterFullscreen) {
+                    videoElement.webkitEnterFullscreen();
+                    return;
+                }
                 const docEl = document.documentElement;
                 if (docEl.requestFullscreen) {
                     docEl.requestFullscreen().then(() => {
