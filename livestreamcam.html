@@ -84,12 +84,12 @@
 
         /* GEAR BUTTON */
         #gear-button {
-            position: absolute; top: 25px; left: 25px;
-            width: 45px; height: 45px;
+            position: absolute; top: 20px; left: 20px; right: auto;
+            width: 36px; height: 36px;
             background: rgba(0, 0, 0, 0.5);
             border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
-            color: white; font-size: 24px;
+            color: white; font-size: 18px;
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; backdrop-filter: blur(8px);
             transition: transform 0.3s ease, background 0.3s;
@@ -99,16 +99,16 @@
 
         /* SETTINGS MENU */
         #settings-menu {
-            display: none; position: absolute; top: 80px; left: 25px;
+            display: none; position: absolute; top: 65px; left: 20px; right: auto;
             background: rgba(15, 23, 42, 0.95); border: 1px solid #333;
             border-radius: 12px; z-index: 102; flex-direction: column;
-            backdrop-filter: blur(10px); min-width: 220px;
+            backdrop-filter: blur(10px); min-width: 200px;
             padding: 5px 0;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
         .s-option {
-            padding: 15px 20px; color: #ccc; cursor: pointer;
-            font-family: 'Roboto'; font-size: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding: 12px 15px; color: #ccc; cursor: pointer;
+            font-family: 'Roboto'; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.1);
             font-weight: 500; display: flex; justify-content: space-between; align-items: center;
         }
         .s-option:last-child { border-bottom: none; }
@@ -116,7 +116,7 @@
 
         /* IPHONE TOGGLE */
         .toggle-switch {
-            position: relative; display: inline-block; width: 50px; height: 28px;
+            position: relative; display: inline-block; width: 40px; height: 22px;
         }
         .toggle-switch input { opacity: 0; width: 0; height: 0; }
         .slider {
@@ -124,63 +124,48 @@
             background-color: #4b5563; transition: .4s; border-radius: 34px;
         }
         .slider:before {
-            position: absolute; content: ""; height: 24px; width: 24px; left: 2px; bottom: 2px;
+            position: absolute; content: ""; height: 18px; width: 18px; left: 2px; bottom: 2px;
             background-color: white; transition: .4s; border-radius: 50%;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         input:checked + .slider { background-color: #22c55e; }
-        input:checked + .slider:before { transform: translateX(22px); }
+        input:checked + .slider:before { transform: translateX(18px); }
 
-        /* REFRESH BUTTON */
-        #refresh-button {
-            position: absolute; top: 25px; left: 85px; 
-            width: 45px; height: 45px;
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            color: white; font-size: 20px;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; backdrop-filter: blur(8px);
-            transition: transform 0.3s ease, background 0.3s;
-            z-index: 100;
-        }
-        #refresh-button:hover { background: rgba(0,0,0,0.8); }
+        /* REFRESH SPINNER ANIMATION */
         .spin-anim { animation: spin 1s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        /* QUALITY INDICATOR */
+        /* QUALITY INDICATOR (Now inside menu) */
         #quality-badge {
-            position: absolute; top: 25px; left: 145px;
-            color: #888;
-            font-weight: bold; font-family: 'Roboto Condensed'; font-size: 16px;
-            cursor: pointer; z-index: 100;
-            padding: 12px; background: rgba(0,0,0,0.4); border-radius: 8px;
-            backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.1);
-            transition: color 0.3s;
+            color: white;
+            font-weight: bold; font-family: 'Roboto Condensed'; font-size: 12px;
+            padding: 4px 8px; background: rgba(0,0,0,0.4); border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.1);
         }
-        #quality-badge:hover { color: white; }
 
         #quality-menu {
-            display: none; position: absolute; top: 80px; left: 145px;
+            display: none; position: absolute; top: 65px; left: 20px; right: auto;
             background: rgba(15, 23, 42, 0.95); border: 1px solid #333;
-            border-radius: 8px; z-index: 101; flex-direction: column;
+            border-radius: 8px; z-index: 105; flex-direction: column;
             backdrop-filter: blur(10px); min-width: 120px;
         }
+        .q-option { padding: 12px 15px; color: #ccc; cursor: pointer; font-family: 'Roboto'; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.1); }
         .q-option:last-child { border-bottom: none; }
         .q-option:hover { background: rgba(255,255,255,0.1); color: white; }
-/* GO LIVE BUTTON (Moved to Top Right) */
+
+/* GO LIVE BUTTON (Moved to Top Left) */
 #live-button {
-    position: absolute; top: 25px; right: 135px; /* Next to REC button */
+    position: absolute; top: 20px; left: 70px; right: auto;
     background: rgba(0, 0, 0, 0.4); 
     border: 1px solid rgba(255, 255, 255, 0.3);
-    padding: 8px 20px; 
+    padding: 6px 14px; 
     border-radius: 50px; 
     color: white;
-    font-family: 'Roboto', sans-serif; /* Matches REC button font */
-    font-size: 14px; 
+    font-family: 'Roboto', sans-serif;
+    font-size: 12px; 
     font-weight: 700; 
     letter-spacing: 1px;
-    display: flex; align-items: center; gap: 10px; cursor: pointer;
+    display: flex; align-items: center; gap: 8px; cursor: pointer;
     backdrop-filter: blur(8px); transition: all 0.2s;
     z-index: 100;
 }
@@ -190,25 +175,26 @@
 .is-live {
     background: #ef4444 !important; /* Red */
     border-color: #ef4444 !important;
-    box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
 }
-        /* REC BUTTON */
+        /* REC BUTTON (Moved to Top Left next to Go Live) */
         #rec-button {
-            position: absolute; top: 25px; right: 25px;
+            position: absolute; top: 20px; left: 180px; right: auto;
             background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 8px 20px; border-radius: 50px; color: white;
-            font-size: 14px; font-weight: 700; letter-spacing: 1px;
-            display: flex; align-items: center; gap: 10px; cursor: pointer;
+            padding: 6px 14px; border-radius: 50px; color: white;
+            font-size: 12px; font-weight: 700; letter-spacing: 1px;
+            display: flex; align-items: center; gap: 8px; cursor: pointer;
             backdrop-filter: blur(8px); transition: all 0.2s;
+            z-index: 100;
         }
         
-        #rec-indicator { width: 12px; height: 12px; background: #ef4444; border-radius: 50%; transition: all 0.3s; }
+        #rec-indicator { width: 10px; height: 10px; background: #ef4444; border-radius: 50%; transition: all 0.3s; }
         
         /* Recording Active State */
         .recording { 
             background: rgba(220, 38, 38, 0.9) !important; 
             border-color: #ef4444 !important; 
-            box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
         }
         .recording #rec-indicator { 
             background: white; 
@@ -505,7 +491,8 @@
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
-            filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.8)); /* Pure black shadow on the exact shape of your PNG */
+            border: 1px solid rgba(255, 255, 255, 0.4); /* Tiny frame line */
+            border-radius: 6px; /* Small corner rounding */
         }
 
         /* Live Overlay Sponsors */
@@ -529,8 +516,23 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
             width: 100%;
+        }
+        .proud-sponsors-text {
+            font-family: 'Roboto Condensed', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            color: #fbbf24;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.8);
+            opacity: 0;
+            animation: popInText 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 1.4s forwards;
+        }
+        @keyframes popInText {
+            from { opacity: 0; transform: translateY(10px) scale(0.9); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
         .intro-sponsors-row {
             display: flex;
@@ -538,8 +540,28 @@
             align-items: center;
             gap: 20px;
         }
-        .intro-sponsor-main { height: 75px; min-width: 140px; }
-        .intro-sponsor-sub { height: 55px; min-width: 100px; }
+        .intro-card {
+            background: #ffffff !important;
+            border: 2px solid #000000 !important;
+            border-radius: 12px !important;
+            padding: 8px 12px !important;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6) !important;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: sponsorFloatUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        .intro-sponsors-row:nth-child(2) .intro-card { animation-delay: 1.5s; }
+        .intro-sponsors-row:nth-child(3) .intro-card { animation-delay: 1.7s; }
+        @keyframes sponsorFloatUp {
+            0% { opacity: 0; transform: translateY(20px) scale(0.9); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .intro-card img {
+            object-fit: contain;
+            filter: none !important; /* Removes the dark drop-shadow from the PNG for a clean look */
+        }
+        .intro-sponsor-main { height: 65px; min-width: 120px; }
+        .intro-sponsor-sub { height: 65px; min-width: 120px; }
 
         /* Event Animation Sponsors */
         #event-sponsors-container {
@@ -580,10 +602,16 @@
             <div id="live-button" class="hud-item" onclick="toggleLiveStream()">
     <span>📡</span> <span id="live-text">GO LIVE</span>
 </div>
+            <div id="rec-button" class="hud-item" onclick="toggleRecording()">
+                <div id="rec-indicator"></div> 
+                <span id="rec-text">REC</span>
+            </div>
+
             <div id="gear-button" class="hud-item" onclick="toggleSettingsMenu()">⚙️</div>
-            <div id="refresh-button" class="hud-item" onclick="refreshCamera()">🔄</div>
 
             <div id="settings-menu" class="hud-item">
+                <div class="s-option" onclick="refreshCamera(); toggleSettingsMenu()"><span>Refresh Camera</span><span>🔄</span></div>
+                <div class="s-option" onclick="toggleQualityMenu()"><span>Video Quality</span><span id="quality-badge">1080p</span></div>
                 <div class="s-option" onclick="showObsModal(); toggleSettingsMenu()"><span>Wireless OBS Link</span></div>
                 <div class="s-option" onclick="changeMatchId()"><span>New Match</span></div>
                 <div class="s-option">
@@ -594,6 +622,13 @@
                     </label>
                 </div>
             </div>
+            
+            <div id="quality-menu" class="hud-item">
+                <div class="q-option" onclick="selectQuality(2160)">4K (UHD)</div>
+                <div class="q-option" onclick="selectQuality(1080)">1080p (FHD)</div>
+                <div class="q-option" onclick="selectQuality(720)">720p (HD)</div>
+            </div>
+
             <div id="ipl-stage-overlay">
     <div class="shutter top-s"></div>
     <div class="shutter bot-s"></div>
@@ -631,18 +666,6 @@
                 </div>
 
                 <div id="intro-sponsors-container"></div>
-            </div>
-
-            <div id="quality-badge" class="hud-item" onclick="toggleQualityMenu()">1080p</div>
-            <div id="quality-menu" class="hud-item">
-                <div class="q-option" onclick="selectQuality(2160)">4K (UHD)</div>
-                <div class="q-option" onclick="selectQuality(1080)">1080p (FHD)</div>
-                <div class="q-option" onclick="selectQuality(720)">720p (HD)</div>
-            </div>
-
-            <div id="rec-button" class="hud-item" onclick="toggleRecording()">
-                <div id="rec-indicator"></div> 
-                <span id="rec-text">REC</span>
             </div>
 
             <div id="zoom-container" class="hud-item">
@@ -1701,16 +1724,19 @@ function goLiveOnDB(matchId, peerId) {
                 let topRow = '';
                 let bottomRow = '';
                 
-                if (sponsors.main) topRow += createSponsorHTML(sponsors.main, 'intro-sponsor-main');
-                if (sponsors.sponsor2) topRow += createSponsorHTML(sponsors.sponsor2, 'intro-sponsor-sub');
+                if (sponsors.main) topRow += createSponsorHTML(sponsors.main, 'intro-sponsor-main intro-card');
+                if (sponsors.sponsor2) topRow += createSponsorHTML(sponsors.sponsor2, 'intro-sponsor-sub intro-card');
                 
-                if (sponsors.sponsor3) bottomRow += createSponsorHTML(sponsors.sponsor3, 'intro-sponsor-sub');
-                if (sponsors.sponsor4) bottomRow += createSponsorHTML(sponsors.sponsor4, 'intro-sponsor-sub');
+                if (sponsors.sponsor3) bottomRow += createSponsorHTML(sponsors.sponsor3, 'intro-sponsor-sub intro-card');
+                if (sponsors.sponsor4) bottomRow += createSponsorHTML(sponsors.sponsor4, 'intro-sponsor-sub intro-card');
                 
-                introSponsors.innerHTML = `
+                const hasSponsors = topRow || bottomRow;
+                
+                introSponsors.innerHTML = hasSponsors ? `
+                    <div class="proud-sponsors-text">PROUD SPONSORS</div>
                     ${topRow ? `<div class="intro-sponsors-row">${topRow}</div>` : ''}
                     ${bottomRow ? `<div class="intro-sponsors-row">${bottomRow}</div>` : ''}
-                `;
+                ` : '';
             }
 
             // Play swoosh/stinger sound
@@ -1978,11 +2004,12 @@ function goLiveOnDB(matchId, peerId) {
             if (sponsors.sponsor2) urls.push(sponsors.sponsor2);
             if (urls.length === 0) return;
 
-            // TV broadcast sizing — clearly visible on any screen
-            const logoH = Math.min(h * 0.14, 130);
-            const pad = 20;          // gap between logos
+            // TV broadcast sizing — scaled down for a cleaner, smaller look
+            const logoH = Math.min(h * 0.08, 75);    // Reduced height cap
+            const pad = 15;          // slightly smaller gap between logos
             const rightMargin = 20;  // distance from right edge
             const topMargin = 15;    // distance from top edge
+            const now = Date.now();  // Current time for animations
 
             let drawX = w - rightMargin; // Start from right, draw leftwards
 
@@ -1992,25 +2019,71 @@ function goLiveOnDB(matchId, peerId) {
 
                 // Keep aspect ratio, fit within logoH
                 const aspect = img.naturalWidth / img.naturalHeight;
-                const logoW = Math.min(logoH * aspect, w * 0.18); // Cap at 18% screen width
+                const logoW = Math.min(logoH * aspect, w * 0.12); // Reduced width cap to 12% screen width
 
                 drawX -= logoW;
 
                 c.save();
-                // Subtle dark backing pill for visibility on any background
-                const pillPad = 8;
-                c.fillStyle = "rgba(0, 0, 0, 0.35)";
+                
+                // 1. Professional Animated Drop Shadow (Pulsing Depth)
+                c.shadowColor = "rgba(0, 0, 0, 0.6)";
+                c.shadowBlur = 8 + Math.sin(now * 0.003) * 4; // Smooth breathing shadow
+                c.shadowOffsetY = 4;
+                c.shadowOffsetX = 0;
+
+                // 2. White Rounded Background (Clean canvas for the logo)
+                c.fillStyle = "#ffffff";
                 c.beginPath();
-                c.roundRect(drawX - pillPad, topMargin - pillPad, logoW + pillPad * 2, logoH + pillPad * 2, 10);
+                if(c.roundRect) c.roundRect(drawX, topMargin, logoW, logoH, 8);
+                else c.rect(drawX, topMargin, logoW, logoH);
                 c.fill();
 
-                // Drop shadow on the logo itself
-                c.shadowColor = "rgba(0,0,0,0.7)";
-                c.shadowBlur = 12;
-                c.shadowOffsetY = 4;
+                // Reset shadow so it doesn't affect internal drawings
+                c.shadowColor = "transparent";
+                c.shadowBlur = 0;
+                c.shadowOffsetY = 0;
 
+                // 3. Clip the drawing area so everything stays inside the rounded corners
+                c.save();
+                c.beginPath();
+                if(c.roundRect) c.roundRect(drawX, topMargin, logoW, logoH, 8);
+                else c.rect(drawX, topMargin, logoW, logoH);
+                c.clip();
+
+                // Draw the actual logo image
                 c.drawImage(img, drawX, topMargin, logoW, logoH);
-                c.restore();
+
+                // 4. Shading Animation: Slanted Glass Sweep (Premium TV Effect)
+                const sweepSpeed = 4000; // Sweep every 4 seconds
+                const sweepPos = (now % sweepSpeed) / sweepSpeed; 
+                const sheenX = drawX + (sweepPos * (logoW * 3)) - logoW; // Move across bounds
+                const sheenW = logoW * 0.4; // Width of the light beam
+                
+                const sheenGrad = c.createLinearGradient(sheenX, topMargin, sheenX + sheenW, topMargin);
+                sheenGrad.addColorStop(0, "rgba(255,255,255,0)");
+                sheenGrad.addColorStop(0.5, "rgba(255,255,255,0.6)"); // Bright center shine
+                sheenGrad.addColorStop(1, "rgba(255,255,255,0)");
+                
+                c.fillStyle = sheenGrad;
+                c.beginPath();
+                // Draw slanted polygon for the sweep reflection
+                c.moveTo(sheenX + 20, topMargin);
+                c.lineTo(sheenX + sheenW + 20, topMargin);
+                c.lineTo(sheenX + sheenW - 20, topMargin + logoH);
+                c.lineTo(sheenX - 20, topMargin + logoH);
+                c.fill();
+                
+                c.restore(); // Remove clipping
+
+                // 5. Slight Black Colour Border Line
+                c.beginPath();
+                if(c.roundRect) c.roundRect(drawX, topMargin, logoW, logoH, 8);
+                else c.rect(drawX, topMargin, logoW, logoH);
+                c.strokeStyle = "rgba(0, 0, 0, 0.35)"; // Subtle dark line
+                c.lineWidth = 1;
+                c.stroke();
+                
+                c.restore(); // Restore master save
 
                 drawX -= pad; // gap before next logo
             });
