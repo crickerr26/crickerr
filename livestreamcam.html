@@ -54,8 +54,42 @@
         }
         
         /* --- MAIN APP MODES --- */
-        #app-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        #app-container { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* SMART BROADCAST FRAME (16:9 LOCKED) */
+        #broadcast-frame {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            aspect-ratio: 16 / 9;
+            background: #050505;
+            overflow: hidden;
+            box-shadow: 0 0 50px rgba(0,0,0,0.9);
+        }
+
         #receiver-container { display:none; position: absolute; top:0; left:0; width:100%; height:100%; background:black; z-index: 999; }
+        
+        #player-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            aspect-ratio: 16 / 9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+        }
         
         /* HIDDEN VIDEO SOURCES */
         #video-source { 
@@ -71,7 +105,7 @@
         #broadcast-canvas { 
             position: absolute; top: 0; left: 0; 
             width: 100%; height: 100%; 
-            object-fit: cover; 
+            object-fit: contain; 
             z-index: 2; 
         }
 
@@ -239,7 +273,14 @@
         .url-box { background: #000; color: #4ade80; font-family: 'Roboto Mono', monospace; padding: 15px; border-radius: 8px; word-break: break-all; margin: 15px 0; border: 1px solid #333; font-size: 0.9rem; }
         
         /* RECEIVER VIDEO */
-        #remote-video { width: 100%; height: 100%; object-fit: contain; }
+        #remote-video { 
+            width: 100%; 
+            height: 100%; 
+            max-width: 100%;
+            max-height: 100%;
+            aspect-ratio: 16 / 9;
+            object-fit: contain; 
+        }
 
         /* --- NEW IPL 3D ANIMATION STYLES --- */
 #ipl-stage-overlay {
@@ -598,6 +639,7 @@
     </div>
 
     <div id="app-container" style="display: none;">
+        <div id="broadcast-frame">
         <div id="controls-layer">
             <div id="live-button" class="hud-item" onclick="toggleLiveStream()">
     <span>📡</span> <span id="live-text">GO LIVE</span>
@@ -680,10 +722,13 @@
         
         <video id="video-source" autoplay playsinline muted></video>
         <canvas id="broadcast-canvas"></canvas>
+        </div>
     </div>
 
     <div id="receiver-container">
-        <video id="remote-video" autoplay playsinline controls></video>
+        <div id="player-container">
+            <video id="remote-video" autoplay playsinline controls></video>
+        </div>
         <div style="position:absolute; top:20px; left:20px; color:white; font-family:sans-serif; background:rgba(0,0,0,0.5); padding:10px;">RECEIVER MODE</div>
     </div>
 
@@ -822,9 +867,19 @@
             document.getElementById('check-highlights').checked = areHighlightsEnabled;
             window.addEventListener('resize', resizeCanvas);
             resizeCanvas();
-            initParticles(window.innerWidth, window.innerHeight);
             requestWakeLock(); 
             setInterval(requestWakeLock, 60000);
+
+            // Add Enter Key Support for Mobile Keyboards
+            const matchInput = document.getElementById('match-id');
+            if (matchInput) {
+                matchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        connectToMatch();
+                    }
+                });
+            }
         };
 
         async function requestWakeLock() {
@@ -840,27 +895,28 @@
         });
 
         function resizeCanvas() {
-            // FIX: Use devicePixelRatio for SHARP rendering on mobile/retina screens
-            const dpr = window.devicePixelRatio || 1;
-            
-            // Set Internal Resolution (Physical Pixels) - MATCHES SCREEN EXACTLY
-            canvas.width = window.innerWidth * dpr;
-            canvas.height = window.innerHeight * dpr;
-            
-            // Scale Context to use Logical Coordinates (CSS Pixels)
-            ctx.scale(dpr, dpr);
-            
-            // CSS Display Size (Force Full Viewport width/height to kill black borders)
-            canvas.style.width = '100vw';
-            canvas.style.height = '100vh';
-            canvas.style.display = 'block';
-            
-            // High Quality Smoothing
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-            
-            initParticles(window.innerWidth, window.innerHeight);
-        }
+            // FIX: Use devicePixelRatio for SHARP rendering on mobile/retina screens
+            const dpr = window.devicePixelRatio || 1;
+            const frame = document.getElementById('broadcast-frame') || document.body;
+            
+            // Set Internal Resolution (Physical Pixels) - MATCHES 16:9 BROADCAST FRAME
+            canvas.width = frame.clientWidth * dpr;
+            canvas.height = frame.clientHeight * dpr;
+            
+            // Scale Context to use Logical Coordinates (CSS Pixels)
+            ctx.scale(dpr, dpr);
+            
+            // CSS Display Size (Fit perfectly inside the broadcast frame)
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+            canvas.style.display = 'block';
+            
+            // High Quality Smoothing
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            
+            initParticles(frame.clientWidth, frame.clientHeight);
+        }
 
        async function connectToMatch() {
             const id = document.getElementById('match-id').value;
@@ -885,7 +941,7 @@
             const success = await startCameraStream(1920, 1080);
             if (success) {
                 document.getElementById('setup-screen').style.display = 'none';
-                document.getElementById('app-container').style.display = 'block';
+                document.getElementById('app-container').style.display = 'flex'; /* FIXED: Now uses flex to center the 16:9 layout properly */
                 document.getElementById('app-container').classList.add('landscape-active');
                 resizeCanvas();
                 requestAnimationFrame(renderLoop);
@@ -1342,8 +1398,21 @@
         // --- WIRELESS OBS ---
         function showObsModal() { document.getElementById('obs-modal').style.display = 'flex'; }
         function closeObsModal() { document.getElementById('obs-modal').style.display = 'none'; }
+        
+        function showRecReminder() {
+            if (!isRecording) {
+                document.getElementById('rec-reminder-modal').style.display = 'flex';
+            }
+        }
+        function closeRecReminder() {
+            document.getElementById('rec-reminder-modal').style.display = 'none';
+        }
+        function confirmStartRecording() {
+            closeRecReminder();
+            toggleRecording();
+        }
         // --- UPDATE THIS FUNCTION IN 56.html ---
-// --- LIVE STREAMING LOGIC ---
+        // --- LIVE STREAMING LOGIC ---
 let isLive = false;
 let hasCallListener = false; // Track to prevent duplicate PeerJS instances
 
@@ -1523,8 +1592,8 @@ function goLiveOnDB(matchId, peerId) {
             }
             
             // FIX: Map team names correctly in case the database uses different key names (e.g., team1 instead of t1)
-            if (data.team1) match.t1 = data.team1;
-            if (data.team2) match.t2 = data.team2;
+            if (data.team1) match.t1 = typeof data.team1 === 'object' ? data.team1.name || "TEAM 1" : data.team1;
+            if (data.team2) match.t2 = typeof data.team2 === 'object' ? data.team2.name || "TEAM 2" : data.team2;
             if (data.team1Name) match.t1 = data.team1Name;
             if (data.team2Name) match.t2 = data.team2Name;
             if (data.t1Name) match.t1 = data.t1Name;
