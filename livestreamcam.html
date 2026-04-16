@@ -1024,8 +1024,8 @@
             await clearDB();
 
             try {
-                // FIX: Capture at 60fps for smoother sports motion
-                const freshCanvasStream = canvas.captureStream(60);
+                // FIX: Capture at 30fps to prevent mobile video from freezing/sticking
+                const freshCanvasStream = canvas.captureStream(30);
                 
                 // AUDIO FIX
                 let finalAudioTrack = null;
@@ -1048,11 +1048,11 @@
                 if (!selectedType) return alert("Recording not supported.");
                 localStorage.setItem("recMimeType", selectedType);
 
-                // PROFESSIONAL QUALITY: 25 Mbps video + 320kbps audio = broadcast-grade
+                // MOBILE OPTIMIZED QUALITY: 8 Mbps video prevents hardware encoder from choking
                 const options = { 
                     mimeType: selectedType, 
-                    videoBitsPerSecond: 25000000,
-                    audioBitsPerSecond: 320000
+                    videoBitsPerSecond: 8000000,
+                    audioBitsPerSecond: 128000
                 };
                 recorder = new MediaRecorder(combinedStream, options);
 
