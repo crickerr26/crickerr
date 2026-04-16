@@ -1770,7 +1770,14 @@
 
             // Standardize call connection
             activeCall = peer.call(targetPeerId, dummyStream, {
-                metadata: { bandwidth: currentBandwidth }
+                metadata: { bandwidth: currentBandwidth },
+                sdpTransform: function(sdp) {
+                    // Force maximum video receiving bandwidth in the SDP to prevent WebRTC automatic downscaling
+                    if (sdp.indexOf('b=AS:') === -1) {
+                        return sdp.replace(/a=mid:video\r\n/g, 'a=mid:video\r\nb=AS:' + currentBandwidth + '\r\n');
+                    }
+                    return sdp;
+                }
             }); 
             
             activeCall.on('stream', (remoteStream) => {
