@@ -442,7 +442,7 @@
             position: absolute;
             top: 80px;
             right: 25px;
-            display: flex;
+            display: none !important; /* Hidden as requested */
             flex-direction: row;
             gap: 10px;
             z-index: 950; /* Boosted to stay above everything */
@@ -460,6 +460,7 @@
                 z-index: 55; /* Higher than the portrait video's z-index: 50 */
                 gap: 6px;
                 flex-direction: column;
+                display: none !important; /* Hidden as requested */
             }
             .live-sponsor { 
                 height: 25px; 
