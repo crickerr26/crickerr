@@ -1490,8 +1490,7 @@
         }
 
         // Streams IndexedDB chunks one-by-one directly to a FileSystemWritableFileStream.
-        // Applies the MP4 duration patch on chunk[0] BEFORE writing so desktop saves
-        // are also fully seekable (same fix as PATH B). Zero RAM regardless of length.
+        // Writes pure, uncorrupted raw chunks directly from the encoder. Zero RAM regardless of length.
         async function streamChunksToFile(writable, mimeType, onProgress) {
             return new Promise((resolve, reject) => {
                 if (!videoDB) return resolve();
@@ -1502,23 +1501,13 @@
                     const total = countReq.result;
                     if (total === 0) return resolve();
                     let written = 0;
-                    let isFirstChunk = true;
                     const cursorReq = store.openCursor();
                     cursorReq.onsuccess = async (e) => {
                         const cursor = e.target.result;
                         if (cursor) {
                             try {
-                                let chunkData = cursor.value;
-                                // Patch the first chunk's MP4 moov box so desktop saves seek correctly
-                                if (isFirstChunk && mimeType && mimeType.includes('mp4') && recordingDurationSeconds > 0) {
-                                    isFirstChunk = false;
-                                    const buf = new Uint8Array(await chunkData.arrayBuffer());
-                                    mp4PatchDuration(buf, recordingDurationSeconds);
-                                    chunkData = new Blob([buf], { type: mimeType });
-                                } else {
-                                    isFirstChunk = false;
-                                }
-                                await writable.write(chunkData);
+                                // Write pure, untouched chunks directly to the file to prevent corruption
+                                await writable.write(cursor.value);
                                 written++;
                                 if (onProgress) onProgress(Math.round((written / total) * 100));
                                 cursor.continue();
@@ -1605,170 +1594,15 @@
             });
         }
 
-        // ── MP4 SEEKABILITY PATCHER ───────────────────────────────────────────────
-        // Chrome MediaRecorder writes duration=0 in the moov box because it doesn't
-        // know when recording will stop. iPhone/QuickTime reads duration=0, builds
-        // no seek table, and when you scrub forward the video decoder stalls while
-        // audio keeps going — "video stuck, only voice played."
-        //
-        // Fix: binary-patch mvhd + tkhd + mdhd duration fields in the FIRST chunk
-        // (moov is always in chunk 1). Only loads one chunk into RAM — memory safe
-        // for long recordings regardless of total file size.
+        // ── SAFE BLOB CREATION ───────────────────────────────────────────────────
+        // Directly assembles the video chunks without dangerous binary manipulation.
+        // Modern OS (iOS 16+, Android 12+) and web players handle Fragmented MP4s 
+        // natively. Preventing file corruption is the absolute highest priority.
         // ─────────────────────────────────────────────────────────────────────────
 
         async function createSeekableBlob(chunks, mimeType) {
-            // Only MP4 files need this patch; WebM uses a different container format
-            if (!mimeType.includes('mp4') || recordingDurationSeconds <= 0 || chunks.length === 0) {
-                return new Blob(chunks, { type: mimeType });
-            }
-            try {
-                // The moov box (with all duration fields) is ALWAYS in the first chunk.
-                // Patching only chunk[0] avoids loading the entire video into RAM.
-                const firstBuf = new Uint8Array(await chunks[0].arrayBuffer());
-                mp4PatchDuration(firstBuf, recordingDurationSeconds);
-                // Reassemble: patched first chunk + all remaining chunks untouched
-                return new Blob([firstBuf, ...chunks.slice(1)], { type: mimeType });
-            } catch (e) {
-                console.warn("MP4 seek patch failed — using raw blob:", e);
-                return new Blob(chunks, { type: mimeType });
-            }
-        }
-
-        // ── Binary helpers ────────────────────────────────────────────────────────
-
-        function mp4R32(b, o) {
-            return ((b[o] << 24) | (b[o+1] << 16) | (b[o+2] << 8) | b[o+3]) >>> 0;
-        }
-        function mp4W32(b, o, v) {
-            v = v >>> 0;
-            b[o] = (v >>> 24) & 0xFF; b[o+1] = (v >>> 16) & 0xFF;
-            b[o+2] = (v >>> 8) & 0xFF; b[o+3] = v & 0xFF;
-        }
-        function mp4T(b, o) {
-            return String.fromCharCode(b[o], b[o+1], b[o+2], b[o+3]);
-        }
-
-        // ── Top-level patcher: finds moov and patches all duration boxes ───────────
-
-        function mp4PatchDuration(buf, durSec) {
-            // Pass 1: read mvhd.timescale (needed to compute tkhd duration correctly)
-            const movieTs = mp4GetMovieTimescale(buf);
-            // Pass 2: write corrected duration into mvhd, tkhd, mdhd
-            let offset = 0;
-            while (offset + 8 <= buf.length) {
-                const sz = mp4R32(buf, offset);
-                if (sz < 8 || offset + sz > buf.length) break;
-                if (mp4T(buf, offset + 4) === 'moov') {
-                    mp4PatchMoov(buf, offset + 8, offset + sz, durSec, movieTs);
-                    break; // moov found and patched — done
-                }
-                offset += sz;
-            }
-        }
-
-        function mp4GetMovieTimescale(buf) {
-            let offset = 0;
-            while (offset + 8 <= buf.length) {
-                const sz = mp4R32(buf, offset);
-                if (sz < 8 || offset + sz > buf.length) break;
-                if (mp4T(buf, offset + 4) === 'moov') {
-                    let o = offset + 8;
-                    const moovEnd = offset + sz;
-                    while (o + 8 <= moovEnd) {
-                        const s = mp4R32(buf, o);
-                        if (s < 8 || o + s > moovEnd) break;
-                        if (mp4T(buf, o + 4) === 'mvhd') {
-                            const ver = buf[o + 8];
-                            // ver=0: timescale at byte 20; ver=1: timescale at byte 28
-                            return mp4R32(buf, o + (ver === 1 ? 28 : 20)) || 1000;
-                        }
-                        o += s;
-                    }
-                    break;
-                }
-                offset += sz;
-            }
-            return 1000; // Chrome default movie timescale
-        }
-
-        // ── moov scanner: patches mvhd and recurses into each trak ────────────────
-
-        function mp4PatchMoov(buf, start, end, durSec, movieTs) {
-            let o = start;
-            while (o + 8 <= end) {
-                const sz = mp4R32(buf, o);
-                if (sz < 8 || o + sz > end) break;
-                const type = mp4T(buf, o + 4);
-
-                if (type === 'mvhd') {
-                    // mvhd.duration uses the movie timescale
-                    // ver=0: duration at byte 24 (uint32)
-                    // ver=1: duration at byte 32 (uint64 — we write the low 32 bits; high=0)
-                    const ver = buf[o + 8];
-                    const durOff = o + (ver === 1 ? 32 : 24);
-                    const dur = Math.min(Math.round(durSec * movieTs), 0x7FFFFFFF);
-                    if (ver === 1) { mp4W32(buf, durOff, 0); mp4W32(buf, durOff + 4, dur); }
-                    else           { mp4W32(buf, durOff, dur); }
-
-                } else if (type === 'trak') {
-                    mp4PatchTrak(buf, o + 8, o + sz, durSec, movieTs);
-                }
-
-                o += sz;
-            }
-        }
-
-        // ── trak scanner: patches tkhd and recurses into mdia ────────────────────
-
-        function mp4PatchTrak(buf, start, end, durSec, movieTs) {
-            let o = start;
-            while (o + 8 <= end) {
-                const sz = mp4R32(buf, o);
-                if (sz < 8 || o + sz > end) break;
-                const type = mp4T(buf, o + 4);
-
-                if (type === 'tkhd') {
-                    // tkhd.duration uses the MOVIE timescale (same as mvhd)
-                    // ver=0: duration at byte 28 (uint32)
-                    // ver=1: duration at byte 36 (uint64 — write low 32 bits; high=0)
-                    const ver = buf[o + 8];
-                    const durOff = o + (ver === 1 ? 36 : 28);
-                    const dur = Math.min(Math.round(durSec * movieTs), 0x7FFFFFFF);
-                    if (ver === 1) { mp4W32(buf, durOff, 0); mp4W32(buf, durOff + 4, dur); }
-                    else           { mp4W32(buf, durOff, dur); }
-
-                } else if (type === 'mdia') {
-                    mp4PatchMdia(buf, o + 8, o + sz, durSec);
-                }
-
-                o += sz;
-            }
-        }
-
-        // ── mdia scanner: patches mdhd (track-level timescale, not movie timescale) ─
-
-        function mp4PatchMdia(buf, start, end, durSec) {
-            let o = start;
-            while (o + 8 <= end) {
-                const sz = mp4R32(buf, o);
-                if (sz < 8 || o + sz > end) break;
-                const type = mp4T(buf, o + 4);
-
-                if (type === 'mdhd') {
-                    // mdhd has its OWN timescale (audio: 44100/48000; video: 90000)
-                    // ver=0: timescale at byte 20, duration at byte 24 (uint32)
-                    // ver=1: timescale at byte 28, duration at byte 32 (uint64)
-                    const ver = buf[o + 8];
-                    const tsOff  = o + (ver === 1 ? 28 : 20);
-                    const durOff = o + (ver === 1 ? 32 : 24);
-                    const trackTs = mp4R32(buf, tsOff) || 44100;
-                    const dur = Math.min(Math.round(durSec * trackTs), 0x7FFFFFFF);
-                    if (ver === 1) { mp4W32(buf, durOff, 0); mp4W32(buf, durOff + 4, dur); }
-                    else           { mp4W32(buf, durOff, dur); }
-                }
-
-                o += sz;
-            }
+            // Return pure, uncorrupted video blob
+            return new Blob(chunks, { type: mimeType });
         }
         
         // DB is now initialized inside connectToMatch() and startSafeDatabaseRecording()
