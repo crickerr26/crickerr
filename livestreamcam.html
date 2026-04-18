@@ -1113,27 +1113,52 @@
         let isRecoverable = false;
         let currentRecMatchId = null; 
         let globalCaptureStream = null;
-        // Duration tracking — used to patch the moov box so iPhone can seek
         let recordingStartTime = 0;
         let recordingDurationSeconds = 0;
 
+        // ── FINALIZE STATE MACHINE ───────────────────────────────────────────────
+        // Prevents double-finalize, stuck FINALIZING, and infinite-wait states.
+        let _finalizeGuard = false;
+        let _finalizeTimeoutA = null;
+        let _finalizeTimeoutB = null;
+
         function initVideoDB(matchId) {
-            if (!window.indexedDB) return;
-            if (videoDB && currentRecMatchId === matchId) return;
+            // 🔒 TYPE GUARD: Reject Event objects, null, undefined, or non-strings.
+            // Root cause of "MATCH_[object Event]" filenames: an event listener was
+            // calling initVideoDB(event) instead of initVideoDB(matchIdString).
+            if (!matchId || typeof matchId !== 'string' || matchId.trim() === '') {
+                console.error("[REC] initVideoDB — invalid matchId rejected:", matchId, typeof matchId);
+                return;
+            }
+            if (!window.indexedDB) {
+                console.warn("[REC] IndexedDB not supported on this device");
+                return;
+            }
+            if (videoDB && currentRecMatchId === matchId) {
+                console.log("[REC] DB already open for match:", matchId);
+                return;
+            }
             currentRecMatchId = matchId;
+            console.log("[REC] Opening IndexedDB for match:", matchId);
             const request = indexedDB.open("CricketCamDB_" + matchId, 1);
             request.onupgradeneeded = (e) => {
                 const db = e.target.result;
                 if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME, { autoIncrement: true });
+                console.log("[REC] IndexedDB object store created");
             };
             request.onsuccess = (e) => {
                 videoDB = e.target.result;
+                console.log("[REC] IndexedDB ready ✅ match:", matchId);
                 checkRecovery(); 
+            };
+            request.onerror = (e) => {
+                console.error("[REC] IndexedDB open FAILED:", e.target.error);
             };
         }
 
         async function checkRecovery() {
             const count = await getChunkCount();
+            console.log("[REC] Recovery check — chunks in DB:", count);
             if (count > 0) {
                 isRecoverable = true;
                 const btn = document.getElementById('rec-button');
@@ -1144,7 +1169,11 @@
         }
 
         async function toggleRecording() {
-            if (isRecoverable) { await recoverVideo(); return; }
+            if (isRecoverable) { 
+                console.log("[REC] Entering crash-recovery mode");
+                await recoverVideo(); 
+                return; 
+            }
             if (!isRecording) {
                 if (video.paused) await video.play().catch(e => {}); 
                 startSafeDatabaseRecording();
@@ -1154,82 +1183,153 @@
         }
 
         async function startSafeDatabaseRecording() {
+            console.log("[REC] startSafeDatabaseRecording() called");
+
             if (!videoDB) {
-                const fallbackId = document.getElementById('match-id').value || "0000";
+                const rawId = document.getElementById('match-id').value || "0000";
+                const fallbackId = String(rawId).trim().toUpperCase();
+                console.log("[REC] DB not ready — initializing with matchId:", fallbackId);
                 initVideoDB(fallbackId);
-                await new Promise(resolve => setTimeout(resolve, 500));
+                await new Promise(resolve => setTimeout(resolve, 600));
             }
-            if (!videoDB) return alert("Storage Error: Please refresh the page.");
+            if (!videoDB) {
+                console.error("[REC] DB still unavailable after wait — aborting");
+                return alert("Storage Error: Please refresh the page.");
+            }
             await clearDB();
+            console.log("[REC] DB cleared — starting fresh recording session");
+
+            // Reset finalize guard for this new session
+            _finalizeGuard = false;
+            if (_finalizeTimeoutA) { clearTimeout(_finalizeTimeoutA); _finalizeTimeoutA = null; }
+            if (_finalizeTimeoutB) { clearTimeout(_finalizeTimeoutB); _finalizeTimeoutB = null; }
 
             try {
-                // Capture canvas at 30fps (stable on all mobile hardware)
+                // Capture canvas at 30fps — stable on all mobile hardware
                 const freshCanvasStream = canvas.captureStream(30);
-                
+                console.log("[REC] Canvas stream captured at 30fps");
+
                 // AUDIO: Use live mic track or generate silent fallback track
                 let finalAudioTrack = null;
                 if (currentStream && currentStream.getAudioTracks().length > 0) {
                     finalAudioTrack = currentStream.getAudioTracks()[0].clone();
+                    console.log("[REC] Using live microphone audio");
                 } else {
-                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                    const oscillator = ctx.createOscillator();
-                    const dest = ctx.createMediaStreamDestination();
+                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioCtx.createOscillator();
+                    const dest = audioCtx.createMediaStreamDestination();
                     oscillator.connect(dest);
                     oscillator.start();
                     finalAudioTrack = dest.stream.getAudioTracks()[0];
+                    console.warn("[REC] No mic detected — using silent audio fallback");
                 }
 
                 const combinedStream = new MediaStream([...freshCanvasStream.getVideoTracks(), finalAudioTrack]);
 
-                const types = ["video/mp4;codecs=avc1", "video/webm;codecs=vp9", "video/webm;codecs=h264", "video/webm;codecs=vp8", "video/webm"];
-                let selectedType = types.find(t => MediaRecorder.isTypeSupported(t)) || "";
-                
-                if (!selectedType) return alert("Recording not supported on this device.");
+                // ── CODEC SELECTION ───────────────────────────────────────────────
+                // CRITICAL FIX: Chrome/Android MediaRecorder outputs Fragmented MP4 (fMP4/ISMV)
+                // which has NO moov atom — VLC, QuickTime, and Windows Media Player CANNOT play it.
+                // WebM is what MediaRecorder natively produces as a valid, complete container.
+                //
+                // iOS/Safari EXCEPTION: Apple's implementation writes a proper moov-at-start MP4
+                // which is fully compatible with all players — so we use MP4 only on iOS/Safari.
+                // ─────────────────────────────────────────────────────────────────────────────────
+                const isIOS    = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+                const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+                let codecPriority;
+                if (isIOS || isSafari) {
+                    // iOS Safari writes correct, seekable MP4 — use it for gallery compatibility
+                    codecPriority = [
+                        "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
+                        "video/mp4;codecs=avc1",
+                        "video/mp4",
+                        "video/webm;codecs=vp9",
+                        "video/webm"
+                    ];
+                    console.log("[REC] iOS/Safari detected — MP4 codec priority selected");
+                } else {
+                    // Chrome/Android/Desktop: WebM is natively produced — fully playable in VLC etc.
+                    codecPriority = [
+                        "video/webm;codecs=vp9,opus",
+                        "video/webm;codecs=vp8,opus",
+                        "video/webm;codecs=h264",
+                        "video/webm;codecs=vp9",
+                        "video/webm;codecs=vp8",
+                        "video/webm"
+                    ];
+                    console.log("[REC] Chrome/Android detected — WebM codec priority selected");
+                }
+
+                const selectedType = codecPriority.find(t => MediaRecorder.isTypeSupported(t)) || "";
+                if (!selectedType) {
+                    console.error("[REC] No supported codec found on this device");
+                    return alert("Recording not supported on this device.");
+                }
+                console.log("[REC] Selected codec:", selectedType);
                 localStorage.setItem("recMimeType", selectedType);
 
-                // 3 Mbps: optimal for vertical video, dramatically reduces encoder stalls on mobile processors.
+                // 3 Mbps: optimal balance — high quality without overloading mobile encoders
                 const options = { 
                     mimeType: selectedType, 
                     videoBitsPerSecond: 3000000,
                     audioBitsPerSecond: 128000
                 };
                 recorder = new MediaRecorder(combinedStream, options);
+                console.log("[REC] MediaRecorder created — initial state:", recorder.state);
 
+                let chunkCount = 0;
                 recorder.ondataavailable = (e) => {
-                    if (e.data && e.data.size > 0) saveChunkToDB(e.data);
+                    if (e.data && e.data.size > 0) {
+                        saveChunkToDB(e.data);
+                        chunkCount++;
+                        console.log(`[REC] Chunk #${chunkCount} — size: ${(e.data.size/1024).toFixed(1)}KB | recorder: ${recorder.state}`);
+                    } else {
+                        console.warn("[REC] Empty chunk received — possible encoder stall");
+                    }
                 };
 
-                // onerror: If the encoder dies silently (common on long mobile recordings),
-                // log it and attempt an automatic restart to recover the session.
+                // onerror: encoder crash handler — auto-restart to recover session
                 recorder.onerror = (err) => {
-                    console.error("MediaRecorder error:", err);
+                    console.error("[REC] MediaRecorder ERROR:", err.error || err);
                     if (isRecording) {
-                        console.warn("Recorder crashed — attempting auto-restart...");
-                        try { recorder.stop(); } catch(e) {}
+                        console.warn("[REC] Encoder crashed — auto-restarting in 1.5s...");
+                        try { recorder.stop(); } catch(e) { console.warn("[REC] stop() on crashed recorder:", e); }
                         setTimeout(() => {
-                            if (isRecording) startSafeDatabaseRecording();
+                            if (isRecording) {
+                                console.log("[REC] Executing auto-restart...");
+                                startSafeDatabaseRecording();
+                            }
                         }, 1500);
                     }
                 };
 
-                // 3-second timeslice: Reduces frequent IndexedDB writes and keyframe generation 
-                // that overheat and freeze mobile processors, preventing the "stuck" save bug.
+                // onstop fires when recorder.stop() completes — log it for tracing
+                recorder.onstop = () => {
+                    console.log("[REC] recorder.onstop fired ✅ | state:", recorder.state, "| chunks saved:", chunkCount);
+                };
+
+                // 3-second timeslice: reduces IndexedDB write frequency and encoder pressure on mobile
                 recorder.start(3000);
-                recordingStartTime = Date.now(); // ← stamp exact start time for duration patch
+                recordingStartTime = Date.now();
                 isRecording = true;
+                console.log("[REC] ▶️ Recording STARTED —", new Date().toLocaleTimeString(), "| format:", selectedType);
+
                 document.getElementById('rec-button').classList.add('recording');
                 document.getElementById('rec-text').innerText = "SAFE REC";
 
-                // Keep the screen alive for the entire recording session
+                // Keep screen alive for the entire recording session
                 keepScreenAwake();
 
-                // Watchdog: checks every 8 seconds that the recorder is still running.
-                // If the OS silently killed it (memory pressure, background tab, etc.),
-                // we auto-restart so footage is never lost.
+                // ── WATCHDOG ──────────────────────────────────────────────────────
+                // Polls every 8s — if OS silently killed the recorder (memory pressure,
+                // background throttle), auto-restart so footage is never silently lost.
                 if (recorderWatchdog) clearInterval(recorderWatchdog);
                 recorderWatchdog = setInterval(() => {
+                    const state = recorder ? recorder.state : "null";
+                    console.log("[REC] Watchdog tick — recorder state:", state, "| isRecording:", isRecording);
                     if (isRecording && recorder && recorder.state === 'inactive') {
-                        console.warn("Watchdog: recorder stopped unexpectedly. Restarting...");
+                        console.warn("[REC] Watchdog: recorder died silently! Restarting...");
                         clearInterval(recorderWatchdog);
                         recorderWatchdog = null;
                         startSafeDatabaseRecording();
@@ -1237,75 +1337,136 @@
                 }, 8000);
 
             } catch (e) {
+                console.error("[REC] startSafeDatabaseRecording threw:", e);
                 alert("Recording Failed: " + e.message);
             }
         }
 
         function stopRecording() {
-            // Capture exact duration FIRST — before stopping — so the moov patcher knows the real length
+            console.log("[REC] stopRecording() called | recorder state:", recorder ? recorder.state : "null");
+
+            // Capture exact duration BEFORE stopping
             if (recordingStartTime > 0) {
                 recordingDurationSeconds = Math.max(1, (Date.now() - recordingStartTime) / 1000);
+                console.log("[REC] Session duration:", recordingDurationSeconds.toFixed(1), "seconds");
             }
 
-            // Stop watchdog first so it cannot interfere with the intentional stop
-            if (recorderWatchdog) { clearInterval(recorderWatchdog); recorderWatchdog = null; }
+            // Kill watchdog immediately so it cannot interfere with intentional stop
+            if (recorderWatchdog) { 
+                clearInterval(recorderWatchdog); 
+                recorderWatchdog = null; 
+                console.log("[REC] Watchdog cleared");
+            }
 
             isRecording = false;
             document.getElementById('rec-button').classList.remove('recording');
             document.getElementById('rec-text').innerText = "FINALIZING...";
-
             releaseScreenAwake();
 
-            if (recorder && recorder.state !== 'inactive') {
-                recorder.onstop = () => {
-                    // Give IndexedDB 1.5s to safely flush the final W3C stop() chunk before reading it back
-                    setTimeout(() => { recoverVideo(); }, 1500);
-                };
-                
-                // CRITICAL FIX: Removed recorder.requestData() and the 200ms timeout.
-                // Mobile hardware encoders deadlock if requestData and stop are called simultaneously.
-                // Simply calling stop() gracefully ends the stream, flushes data, and triggers onstop reliably.
-                try { 
-                    recorder.stop(); 
-                } catch(e) { 
-                    console.error("Stop failed, forcing recovery:", e);
-                    recoverVideo(); 
+            // Reset finalize guard for this stop cycle
+            _finalizeGuard = false;
+            if (_finalizeTimeoutA) { clearTimeout(_finalizeTimeoutA); _finalizeTimeoutA = null; }
+            if (_finalizeTimeoutB) { clearTimeout(_finalizeTimeoutB); _finalizeTimeoutB = null; }
+
+            const triggerFinalize = (reason) => {
+                if (_finalizeGuard) {
+                    console.log("[REC] triggerFinalize BLOCKED — already running (reason:", reason, ")");
+                    return;
                 }
+                _finalizeGuard = true;
+                console.log("[REC] ✅ triggerFinalize ACTIVATED — reason:", reason);
+                // Brief delay: gives IndexedDB time to flush the last in-flight chunk write
+                setTimeout(() => {
+                    console.log("[REC] Calling recoverVideo() now...");
+                    recoverVideo();
+                }, 900);
+            };
+
+            if (recorder && recorder.state !== 'inactive') {
+                console.log("[REC] Calling recorder.stop()...");
+
+                recorder.onstop = () => {
+                    console.log("[REC] onstop event fired ✅ — clearing failsafes, triggering finalize");
+                    // onstop fired cleanly — cancel both failsafe timers
+                    if (_finalizeTimeoutA) { clearTimeout(_finalizeTimeoutA); _finalizeTimeoutA = null; }
+                    if (_finalizeTimeoutB) { clearTimeout(_finalizeTimeoutB); _finalizeTimeoutB = null; }
+                    triggerFinalize("onstop");
+                };
+
+                try { 
+                    recorder.stop();
+                    console.log("[REC] recorder.stop() dispatched successfully");
+                } catch(e) { 
+                    console.error("[REC] recorder.stop() threw exception:", e, "— forcing finalize immediately");
+                    triggerFinalize("stop_exception");
+                    return;
+                }
+
+                // 🚨 FAILSAFE A — 4 seconds: catches most mobile encoder deadlocks.
+                // If onstop hasn't fired within 4s, the encoder is stalled — force finalize.
+                _finalizeTimeoutA = setTimeout(() => {
+                    _finalizeTimeoutA = null;
+                    if (!_finalizeGuard) {
+                        console.warn("[REC] FAILSAFE A: onstop not fired in 4s — encoder stalled, forcing finalize");
+                        triggerFinalize("failsafe_4s");
+                    }
+                }, 4000);
+
+                // 🚨 FAILSAFE B — 9 seconds: absolute last-resort for extreme OS throttling.
+                // Nothing should reach here — but if it does, recording WILL be saved.
+                _finalizeTimeoutB = setTimeout(() => {
+                    _finalizeTimeoutB = null;
+                    if (!_finalizeGuard) {
+                        console.error("[REC] FAILSAFE B: 9s absolute timeout — forcing finalize NOW");
+                        triggerFinalize("failsafe_9s");
+                    }
+                }, 9000);
+
             } else {
-                recoverVideo();
+                console.log("[REC] Recorder already inactive — running finalize directly");
+                triggerFinalize("already_inactive");
             }
         }
 
         async function recoverVideo() {
             const btnText = document.getElementById('rec-text');
+            console.log("[REC] recoverVideo() entered");
 
-            // --- Build file metadata up front (no chunks needed yet) ---
             const savedType = localStorage.getItem("recMimeType") || 'video/webm';
-            const blobType = savedType.includes('mp4') ? 'video/mp4' : savedType;
-            const ext = blobType.includes('mp4') ? 'mp4' : 'webm';
-            const now = new Date();
-            const fileName = `MATCH_${currentRecMatchId}_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}.${ext}`;
+            const isMP4Type  = savedType.includes('mp4');
+            const blobType   = isMP4Type ? 'video/mp4' : 'video/webm';
+            const ext        = isMP4Type ? 'mp4' : 'webm';
 
-            // --- Quick sanity check: any data at all? ---
+            // 🔒 FILENAME SANITIZATION: Prevent [object Event] and other garbage in filenames.
+            // Strip any non-alphanumeric characters that could corrupt the filename.
+            const rawId     = currentRecMatchId;
+            const safeMatchId = (typeof rawId === 'string' && rawId.trim().length > 0)
+                ? rawId.replace(/[^a-zA-Z0-9_\-]/g, '_').substring(0, 40)
+                : 'MATCH';
+
+            const now      = new Date();
+            const dateStr  = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+            const timeStr  = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+            const fileName = `MATCH_${safeMatchId}_${dateStr}_${timeStr}.${ext}`;
+            console.log("[REC] Output filename:", fileName, "| MIME:", blobType);
+
             const count = await getChunkCount();
+            console.log("[REC] Total chunks in IndexedDB:", count);
             if (count === 0) {
+                console.warn("[REC] No chunks found — recording may not have started");
                 alert("No recorded data found. The recording may not have started correctly.");
                 resetRecUI();
                 return;
             }
 
-            // ─────────────────────────────────────────────────────────────────
-            // PATH A — File System Access API (Desktop Chrome / Edge)
-            // Streams chunks one-by-one directly from IndexedDB to disk.
-            // Uses essentially ZERO RAM regardless of video length (30 min, 2 hr — no limit).
-            // Also applies the MP4 duration patch on chunk[0] before writing so desktop
-            // saves are seekable too.
-            // ─────────────────────────────────────────────────────────────────
+            // ── PATH A — File System Access API (Desktop Chrome / Edge) ──────────
+            // Streams chunks one-by-one from IndexedDB directly to disk. Zero RAM cost.
             const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-            
+
             if ('showSaveFilePicker' in window && !isMobileDevice) {
                 try {
                     btnText.innerText = "CHOOSE SAVE...";
+                    console.log("[REC] Using File System Access API (streaming path)");
                     const fileHandle = await window.showSaveFilePicker({
                         suggestedName: fileName,
                         types: [{ description: 'Video File', accept: { 'video/*': [`.${ext}`] } }]
@@ -1314,8 +1475,10 @@
                     btnText.innerText = "STREAMING 0%";
                     await streamChunksToFile(writable, blobType, (percent) => {
                         btnText.innerText = `STREAMING ${percent}%`;
+                        console.log(`[REC] Streaming to disk: ${percent}%`);
                     });
                     await writable.close();
+                    console.log("[REC] ✅ File saved via File System Access API");
                     showSavedMessage();
                     clearDB();
                     resetRecUI();
@@ -1323,61 +1486,64 @@
                     return;
                 } catch (err) {
                     if (err.name === 'AbortError') {
-                        // User dismissed the save dialog — let them try again later
+                        console.log("[REC] User cancelled save dialog");
                         resetRecUI();
                         if (video.paused) video.play().catch(e => {});
                         return;
                     }
-                    // Any other error: fall through to the legacy in-memory approach below
-                    console.warn("File System Access save failed, falling back to legacy:", err);
+                    console.warn("[REC] File System Access failed — falling back to in-memory:", err);
                 }
             }
 
-            // ─────────────────────────────────────────────────────────────────
-            // PATH B — Legacy in-memory approach (All Mobile Devices, Firefox)
-            // Loads all chunks into RAM, creates a Blob, then uses Web Share or download.
-            // Works for recordings up to ~500 MB depending on device RAM.
-            // ─────────────────────────────────────────────────────────────────
+            // ── PATH B — In-Memory Blob (Mobile / Firefox / Fallback) ────────────
+            // Loads all chunks into RAM then uses Web Share API or download link.
+            console.log("[REC] Using in-memory blob path (mobile/fallback)");
             btnText.innerText = "LOADING 0%";
             const allChunks = await getAllChunksWithProgress((percent) => {
                 btnText.innerText = `SAVING ${percent}%`;
+                if (percent % 20 === 0) console.log(`[REC] Loading chunks from DB: ${percent}%`);
             });
 
             if (allChunks.length === 0) {
+                console.error("[REC] getAllChunks returned empty — DB read failed");
                 alert("No data found.");
                 resetRecUI();
                 return;
             }
 
+            console.log("[REC] Chunks loaded:", allChunks.length);
             btnText.innerText = "READY!";
-            // Always force mp4 blob type for maximum gallery compatibility on mobile
-            const blob = await createSeekableBlob(allChunks, blobType);
+            const blob = new Blob(allChunks, { type: blobType });
+            console.log("[REC] Final blob size:", (blob.size / 1024 / 1024).toFixed(2), "MB | type:", blobType);
 
-            // Try Web Share API first — the ONLY method that reliably saves to gallery on iOS & Android
+            // Web Share API — only reliable gallery-save path on iOS & Android
             const shareFile = new File([blob], fileName, { type: blobType });
             if (navigator.canShare && navigator.canShare({ files: [shareFile] })) {
                 try {
+                    console.log("[REC] Trying Web Share API...");
                     await navigator.share({ files: [shareFile], title: fileName });
+                    console.log("[REC] ✅ Web Share completed");
                     showSavedMessage();
                     clearDB();
                     resetRecUI();
                     if (video.paused) video.play().catch(e => {});
                     return;
                 } catch (shareErr) {
-                    // User cancelled share sheet — fall through to modal below
                     if (shareErr.name === 'AbortError') {
+                        console.log("[REC] User cancelled share sheet");
                         resetRecUI();
                         if (video.paused) video.play().catch(e => {});
                         return;
                     }
+                    console.warn("[REC] Web Share failed:", shareErr, "— falling back to modal");
                 }
             }
 
-            // Fallback: Show full-screen save modal with video player + download button
+            // Final fallback: full-screen save modal with video preview + download button
+            console.log("[REC] Showing save modal (final fallback)");
             const url = URL.createObjectURL(blob);
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-            if (isMobile) {
+            if (isMobileDevice) {
                 const modal = document.createElement('div');
                 modal.id = 'save-video-modal';
                 modal.style.cssText = `
@@ -1398,43 +1564,12 @@
                 instruction.style.cssText = 'color: rgba(255,255,255,0.75); font-size: 13px; text-align: center; line-height: 1.7; max-width: 320px;';
 
                 const videoEl = document.createElement('video');
-                videoEl.preload = 'auto';
+                videoEl.preload = 'metadata';
                 videoEl.controls = true;
                 videoEl.playsInline = true;
                 videoEl.setAttribute('playsinline', '');
                 videoEl.style.cssText = 'width:100%; max-width:460px; border-radius:12px; border:2px solid #fbbf24; background:#000; max-height:45vh; object-fit:contain;';
                 videoEl.src = url;
-                let _seekTarget = null;
-                let _seekStallTimer = null;
-                videoEl.addEventListener('seeking', () => {
-                    _seekTarget = videoEl.currentTime;
-                    if (_seekStallTimer) clearTimeout(_seekStallTimer);
-                    _seekStallTimer = setTimeout(() => {
-                        if (videoEl.seeking && _seekTarget !== null) {
-                            const t = _seekTarget;
-                            videoEl.currentTime = Math.max(0, t - 0.5);
-                        }
-                    }, 2000);
-                });
-                videoEl.addEventListener('seeked', () => {
-                    if (_seekStallTimer) { clearTimeout(_seekStallTimer); _seekStallTimer = null; }
-                });
-                videoEl.addEventListener('stalled', () => {
-                    if (_seekTarget !== null) {
-                        const t = _seekTarget;
-                        _seekTarget = null;
-                        setTimeout(() => { videoEl.currentTime = Math.max(0, t - 0.5); }, 300);
-                    }
-                });
-                videoEl.addEventListener('waiting', () => {
-                    if (!videoEl.seeking && !videoEl.paused) {
-                        setTimeout(() => {
-                            if (!videoEl.paused && videoEl.readyState < 3) {
-                                videoEl.currentTime = videoEl.currentTime + 0.01;
-                            }
-                        }, 1500);
-                    }
-                });
 
                 const dlLink = document.createElement('a');
                 dlLink.href = url;
@@ -1490,7 +1625,7 @@
         }
 
         // Streams IndexedDB chunks one-by-one directly to a FileSystemWritableFileStream.
-        // Writes pure, uncorrupted raw chunks directly from the encoder. Zero RAM regardless of length.
+        // Zero RAM cost — works for recordings of any length (30 min, 2 hr+).
         async function streamChunksToFile(writable, mimeType, onProgress) {
             return new Promise((resolve, reject) => {
                 if (!videoDB) return resolve();
@@ -1506,15 +1641,17 @@
                         const cursor = e.target.result;
                         if (cursor) {
                             try {
-                                // Write pure, untouched chunks directly to the file to prevent corruption
+                                // Write raw, untouched chunks — never binary-patch to avoid corruption
                                 await writable.write(cursor.value);
                                 written++;
                                 if (onProgress) onProgress(Math.round((written / total) * 100));
                                 cursor.continue();
                             } catch (writeErr) {
+                                console.error("[REC] streamChunksToFile write error:", writeErr);
                                 reject(writeErr);
                             }
                         } else {
+                            console.log("[REC] streamChunksToFile complete —", written, "chunks written");
                             resolve();
                         }
                     };
@@ -1525,14 +1662,13 @@
         }
 
         // Wipes all chunks from IndexedDB after a successful save.
-        // Called after every save path (share, download, streaming) to free storage.
         function clearDB() {
             return new Promise((resolve) => {
                 if (!videoDB) return resolve();
                 const tx = videoDB.transaction(STORE_NAME, "readwrite");
                 tx.objectStore(STORE_NAME).clear();
-                tx.oncomplete = () => resolve();
-                tx.onerror = () => resolve();
+                tx.oncomplete = () => { console.log("[REC] IndexedDB cleared ✅"); resolve(); };
+                tx.onerror = () => { console.warn("[REC] clearDB onerror"); resolve(); };
             });
         }
 
@@ -1546,16 +1682,22 @@
 
         function resetRecUI() {
             isRecoverable = false;
+            _finalizeGuard = false;
             const btn = document.getElementById('rec-button');
             btn.style.background = ""; btn.style.borderColor = "";
             document.getElementById('rec-text').innerText = "REC";
             if(video.paused) video.play().catch(e => {});
+            console.log("[REC] UI reset to idle ✅");
         }
 
         function saveChunkToDB(chunk) {
-            if(!videoDB) return;
+            if(!videoDB) {
+                console.warn("[REC] saveChunkToDB: DB not ready — chunk DROPPED! Size:", chunk.size);
+                return;
+            }
             const tx = videoDB.transaction(STORE_NAME, "readwrite");
             tx.objectStore(STORE_NAME).add(chunk);
+            tx.onerror = (e) => console.error("[REC] saveChunkToDB write error:", e.target.error);
         }
 
         function getAllChunksWithProgress(onProgress) {
@@ -1577,10 +1719,14 @@
                             loaded++;
                             if(onProgress) onProgress(Math.round((loaded / total) * 100));
                             cursor.continue();
-                        } else { resolve(chunks); }
+                        } else { 
+                            console.log("[REC] getAllChunks complete —", loaded, "/", total, "chunks loaded");
+                            resolve(chunks); 
+                        }
                     };
-                    cursorReq.onerror = () => resolve([]);
+                    cursorReq.onerror = () => { console.error("[REC] getAllChunks cursor error"); resolve([]); };
                 };
+                countReq.onerror = () => { console.error("[REC] getAllChunks count error"); resolve([]); };
             });
         }
 
@@ -1594,21 +1740,18 @@
             });
         }
 
-        // ── SAFE BLOB CREATION ───────────────────────────────────────────────────
-        // Directly assembles the video chunks without dangerous binary manipulation.
-        // Modern OS (iOS 16+, Android 12+) and web players handle Fragmented MP4s 
-        // natively. Preventing file corruption is the absolute highest priority.
+        // ── BLOB ASSEMBLY ────────────────────────────────────────────────────────
+        // Returns a plain, uncorrupted blob. WebM from Chrome is natively valid.
+        // MP4 from iOS Safari is properly finalized and playable everywhere.
+        // Binary patching of the moov atom is intentionally avoided — it corrupts files.
         // ─────────────────────────────────────────────────────────────────────────
-
         async function createSeekableBlob(chunks, mimeType) {
-            // Return pure, uncorrupted video blob
             return new Blob(chunks, { type: mimeType });
         }
-        
-        // DB is now initialized inside connectToMatch() and startSafeDatabaseRecording()
-        // where the matchId is already known. Calling it on 'load' created a DB named
-        // "CricketCamDB_undefined" which caused crash-recovery to fail on reload.
-        // window.addEventListener('load', initVideoDB); // REMOVED — was causing undefined DB name
+
+        // initVideoDB is called inside startSafeDatabaseRecording() with a validated string.
+        // It must NEVER be attached directly to an event listener (e.g. addEventListener('load', initVideoDB))
+        // because that passes the Event object as matchId, causing "[object Event]" filenames.
 
         // --- MENUS ---
         function toggleQualityMenu() {
