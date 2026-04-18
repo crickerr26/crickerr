@@ -1205,9 +1205,9 @@
             if (_finalizeTimeoutB) { clearTimeout(_finalizeTimeoutB); _finalizeTimeoutB = null; }
 
             try {
-                // Capture canvas at 30fps — stable on all mobile hardware
-                const freshCanvasStream = canvas.captureStream(30);
-                console.log("[REC] Canvas stream captured at 30fps");
+                // Capture canvas at 60fps — Aligns perfectly with requestAnimationFrame to prevent visual stuttering
+                const freshCanvasStream = canvas.captureStream(60);
+                console.log("[REC] Canvas stream captured at 60fps");
 
                 // AUDIO: Use live mic track or generate silent fallback track
                 let finalAudioTrack = null;
@@ -1227,39 +1227,17 @@
                 const combinedStream = new MediaStream([...freshCanvasStream.getVideoTracks(), finalAudioTrack]);
 
                 // ── CODEC SELECTION ───────────────────────────────────────────────
-                // CRITICAL FIX: Chrome/Android MediaRecorder outputs Fragmented MP4 (fMP4/ISMV)
-                // which has NO moov atom — VLC, QuickTime, and Windows Media Player CANNOT play it.
-                // WebM is what MediaRecorder natively produces as a valid, complete container.
-                //
-                // iOS/Safari EXCEPTION: Apple's implementation writes a proper moov-at-start MP4
-                // which is fully compatible with all players — so we use MP4 only on iOS/Safari.
-                // ─────────────────────────────────────────────────────────────────────────────────
-                const isIOS    = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-                const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-
-                let codecPriority;
-                if (isIOS || isSafari) {
-                    // iOS Safari writes correct, seekable MP4 — use it for gallery compatibility
-                    codecPriority = [
-                        "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
-                        "video/mp4;codecs=avc1",
-                        "video/mp4",
-                        "video/webm;codecs=vp9",
-                        "video/webm"
-                    ];
-                    console.log("[REC] iOS/Safari detected — MP4 codec priority selected");
-                } else {
-                    // Chrome/Android/Desktop: WebM is natively produced — fully playable in VLC etc.
-                    codecPriority = [
-                        "video/webm;codecs=vp9,opus",
-                        "video/webm;codecs=vp8,opus",
-                        "video/webm;codecs=h264",
-                        "video/webm;codecs=vp9",
-                        "video/webm;codecs=vp8",
-                        "video/webm"
-                    ];
-                    console.log("[REC] Chrome/Android detected — WebM codec priority selected");
-                }
+                // Prioritize MP4 universally to meet format requirements. 
+                // Chrome/Android now actively supports video/mp4 format via MediaRecorder natively.
+                const codecPriority = [
+                    "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
+                    "video/mp4;codecs=avc1",
+                    "video/mp4",
+                    "video/webm;codecs=h264",
+                    "video/webm;codecs=vp9,opus",
+                    "video/webm;codecs=vp8,opus",
+                    "video/webm"
+                ];
 
                 const selectedType = codecPriority.find(t => MediaRecorder.isTypeSupported(t)) || "";
                 if (!selectedType) {
@@ -1269,10 +1247,10 @@
                 console.log("[REC] Selected codec:", selectedType);
                 localStorage.setItem("recMimeType", selectedType);
 
-                // 3 Mbps: optimal balance — high quality without overloading mobile encoders
+                // 5 Mbps: Crisp quality balance for full 60fps performance
                 const options = { 
                     mimeType: selectedType, 
-                    videoBitsPerSecond: 3000000,
+                    videoBitsPerSecond: 5000000,
                     audioBitsPerSecond: 128000
                 };
                 recorder = new MediaRecorder(combinedStream, options);
@@ -1309,8 +1287,8 @@
                     console.log("[REC] recorder.onstop fired ✅ | state:", recorder.state, "| chunks saved:", chunkCount);
                 };
 
-                // 3-second timeslice: reduces IndexedDB write frequency and encoder pressure on mobile
-                recorder.start(3000);
+                // 10-second timeslice: Reduces stuttering from chunk boundary drops, while still ensuring file safety in IndexedDB
+                recorder.start(10000);
                 recordingStartTime = Date.now();
                 isRecording = true;
                 console.log("[REC] ▶️ Recording STARTED —", new Date().toLocaleTimeString(), "| format:", selectedType);
@@ -1322,8 +1300,6 @@
                 keepScreenAwake();
 
                 // ── WATCHDOG ──────────────────────────────────────────────────────
-                // Polls every 8s — if OS silently killed the recorder (memory pressure,
-                // background throttle), auto-restart so footage is never silently lost.
                 if (recorderWatchdog) clearInterval(recorderWatchdog);
                 recorderWatchdog = setInterval(() => {
                     const state = recorder ? recorder.state : "null";
@@ -1334,7 +1310,7 @@
                         recorderWatchdog = null;
                         startSafeDatabaseRecording();
                     }
-                }, 8000);
+                }, 15000); // Increased polling width to account for the larger buffer slice
 
             } catch (e) {
                 console.error("[REC] startSafeDatabaseRecording threw:", e);
