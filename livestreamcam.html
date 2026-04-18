@@ -1252,19 +1252,25 @@
 
             isRecording = false;
             document.getElementById('rec-button').classList.remove('recording');
-            document.getElementById('rec-text').innerText = "SAVING...";
+            document.getElementById('rec-text').innerText = "FINALIZING...";
 
             releaseScreenAwake();
 
             if (recorder && recorder.state !== 'inactive') {
                 recorder.onstop = () => {
-                    document.getElementById('rec-text').innerText = "FINALIZING...";
-                    // Give IndexedDB 1.5s to flush the very last chunk before we read it back
+                    // Give IndexedDB 1.5s to safely flush the final W3C stop() chunk before reading it back
                     setTimeout(() => { recoverVideo(); }, 1500);
                 };
-                // requestData() flushes the current in-progress chunk so it is never lost
-                try { recorder.requestData(); } catch(e) {}
-                setTimeout(() => { try { recorder.stop(); } catch(e) { recoverVideo(); } }, 200);
+                
+                // CRITICAL FIX: Removed recorder.requestData() and the 200ms timeout.
+                // Mobile hardware encoders deadlock if requestData and stop are called simultaneously.
+                // Simply calling stop() gracefully ends the stream, flushes data, and triggers onstop reliably.
+                try { 
+                    recorder.stop(); 
+                } catch(e) { 
+                    console.error("Stop failed, forcing recovery:", e);
+                    recoverVideo(); 
+                }
             } else {
                 recoverVideo();
             }
@@ -1289,13 +1295,15 @@
             }
 
             // ─────────────────────────────────────────────────────────────────
-            // PATH A — File System Access API (Chrome / Edge / Android Chrome)
+            // PATH A — File System Access API (Desktop Chrome / Edge)
             // Streams chunks one-by-one directly from IndexedDB to disk.
             // Uses essentially ZERO RAM regardless of video length (30 min, 2 hr — no limit).
             // Also applies the MP4 duration patch on chunk[0] before writing so desktop
             // saves are seekable too.
             // ─────────────────────────────────────────────────────────────────
-            if ('showSaveFilePicker' in window) {
+            const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            
+            if ('showSaveFilePicker' in window && !isMobileDevice) {
                 try {
                     btnText.innerText = "CHOOSE SAVE...";
                     const fileHandle = await window.showSaveFilePicker({
@@ -1326,7 +1334,7 @@
             }
 
             // ─────────────────────────────────────────────────────────────────
-            // PATH B — Legacy in-memory approach (iOS Safari, Firefox, older Android)
+            // PATH B — Legacy in-memory approach (All Mobile Devices, Firefox)
             // Loads all chunks into RAM, creates a Blob, then uses Web Share or download.
             // Works for recordings up to ~500 MB depending on device RAM.
             // ─────────────────────────────────────────────────────────────────
