@@ -270,10 +270,13 @@
     .sortable-drag { cursor: grabbing; opacity: 1; background: white; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); transform: scale(1.02); }
     
     /* Ball Chips */
-    .ball-chip { display: inline-flex; justify-content: center; align-items: center; width: 1.2rem; height: 1.2rem; font-size: 0.6rem; font-weight: bold; border-radius: 9999px; margin-right: 0.1rem; background-color: #e5e7eb; color: #374151; flex-shrink: 0; }
+    .ball-chip { display: inline-flex; justify-content: center; align-items: center; width: 1.2rem; height: 1.2rem; font-size: 0.6rem; font-weight: bold; border-radius: 9999px; margin-right: 0.1rem; background-color: #e5e7eb; color: #374151; flex-shrink: 0; transition: all 0.2s ease; }
     
     /* NEW: Square Chip for Complex Events (NB+RunOut etc) */
     .ball-chip.ball-square { border-radius: 4px; width: auto; min-width: 1.2rem; padding: 0 2px; }
+
+    /* NEW: Compact Square Chip for Long Overs (>6 balls) to prevent overlap */
+    .ball-chip.ball-compact { border-radius: 4px; width: 0.95rem; height: 0.95rem; min-width: 0.95rem; padding: 0 1px; }
 
     .ball-4 { background-color: #3b82f6; color: white; }
     .ball-6 { background-color: #22c55e; color: white; }
@@ -887,8 +890,8 @@
             </div>
 
             <!-- SPONSOR MODAL WITH TV PREVIEW + LOGO EDITOR -->
-            <div id="sponsor-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300" style="margin:0;">
-                <div id="sponsor-modal-inner" class="bg-white rounded-2xl shadow-2xl w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto transform scale-95 transition-transform duration-300">
+            <div id="sponsor-modal" class="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300" style="margin:0;">
+                <div id="sponsor-modal-inner" class="bg-white rounded-t-3xl md:rounded-2xl shadow-2xl w-full md:w-[95vw] max-w-2xl max-h-[92vh] md:max-h-[90vh] overflow-y-auto custom-scroll transform scale-95 transition-transform duration-300 pb-8 md:pb-0">
                     
                     <!-- Modal Header -->
                     <div class="bg-gradient-to-r from-gray-800 to-gray-900 px-6 py-4 rounded-t-2xl flex justify-between items-center">
@@ -995,8 +998,8 @@
             </div>
 
             <!-- LOGO EDITOR MODAL -->
-            <div id="logo-editor-modal" class="fixed inset-0 z-[110] flex items-center justify-center bg-black/70 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300" style="margin:0;">
-                <div id="logo-editor-inner" class="bg-white rounded-2xl shadow-2xl w-[95vw] max-w-md max-h-[90vh] overflow-y-auto transform scale-95 transition-transform duration-300">
+            <div id="logo-editor-modal" class="fixed inset-0 z-[110] flex items-end md:items-center justify-center bg-black/70 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300" style="margin:0;">
+                <div id="logo-editor-inner" class="bg-white rounded-t-3xl md:rounded-2xl shadow-2xl w-full md:w-[95vw] max-w-md max-h-[92vh] md:max-h-[90vh] overflow-y-auto custom-scroll transform scale-95 transition-transform duration-300 pb-8 md:pb-0">
                     
                     <div class="bg-gradient-to-r from-indigo-700 to-purple-800 px-5 py-3 rounded-t-2xl flex justify-between items-center">
                         <span class="text-white font-bold uppercase tracking-widest text-xs flex items-center gap-2">
@@ -1081,6 +1084,10 @@
                         const modal = document.getElementById('sponsor-modal');
                         const inner = document.getElementById('sponsor-modal-inner');
                         modal.classList.remove('hidden');
+                        
+                        // FIX: Always show top of the page when opening
+                        if (inner) inner.scrollTop = 0;
+                        
                         setTimeout(() => {
                             modal.classList.remove('opacity-0');
                             inner.classList.remove('scale-95');
@@ -1338,6 +1345,28 @@
 
                         // Close editor
                         closeLogoEditor();
+
+                        // FIX: Automatically move down to the next slot or Done button
+                        setTimeout(() => {
+                            const modalInner = document.getElementById('sponsor-modal-inner');
+                            if (!modalInner) return;
+                            
+                            if (editorState.sponsorType === 'main') {
+                                const nextSlot = document.getElementById('sp-drop-sponsor2');
+                                if (nextSlot) {
+                                    modalInner.scrollTo({
+                                        top: nextSlot.offsetTop - 100, // Offset to keep it nicely in view
+                                        behavior: 'smooth'
+                                    });
+                                }
+                            } else {
+                                // If second sponsor is filled, scroll to the bottom/Done button
+                                modalInner.scrollTo({
+                                    top: modalInner.scrollHeight,
+                                    behavior: 'smooth'
+                                });
+                            }
+                        }, 350); // Wait for modal close transition
                     }
 
                     // ========== REMOVE SPONSOR (NEW) ==========
@@ -2918,7 +2947,7 @@ window.generateProfessionalSchedule = function(selectedFlow = null) {
                     <button onclick="openModal('wide-modal')" class="watery-btn btn-dark-grey font-bold text-sm">WD</button>
                     <button onclick="openModal('noball-modal')" class="watery-btn btn-dark-grey font-bold text-sm">NB</button>
                     <button onclick="openModal('mid-over-modal')" class="watery-btn btn-purple font-bold text-[10px] leading-tight flex flex-col items-center justify-center">
-                        <span>PENALTY</span>
+                        <span>PENALTY & EXTRAS</span>
                     </button>
                 </div>
 
@@ -3033,6 +3062,23 @@ window.generateProfessionalSchedule = function(selectedFlow = null) {
         <select id="fielder-select" class="w-full p-3 bg-gray-50 border rounded-xl mb-4 text-lg outline-none focus:ring-2 focus:ring-blue-500"></select>
         
         <button onclick="confirmFielder()" class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg active:scale-95 transition-transform">Confirm</button>
+    </div>
+</div>
+
+<div id="wicket-runs-modal" class="modal-overlay fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-[70] flex items-center justify-center">
+    <div class="modal-content bg-white rounded-2xl p-6 w-80 shadow-2xl text-center relative">
+        <button onclick="closeModal('wicket-runs-modal')" class="absolute top-3 right-4 text-gray-400 hover:text-gray-600 font-bold text-xl">✕</button>
+        <h3 class="text-xl font-bold text-blue-900 mb-2">Runs Completed?</h3>
+        <p class="text-xs text-gray-500 mb-4 uppercase tracking-wide">Runs scored on this delivery</p>
+        
+        <div class="grid grid-cols-5 gap-2 mb-4">
+            <button onclick="finalizeWicketWithRuns(0)" class="aspect-square bg-gray-100 hover:bg-blue-50 hover:border-blue-200 border-2 border-transparent text-gray-800 font-black text-xl rounded-xl transition-all">0</button>
+            <button onclick="finalizeWicketWithRuns(1)" class="aspect-square bg-gray-100 hover:bg-blue-50 hover:border-blue-200 border-2 border-transparent text-gray-800 font-black text-xl rounded-xl transition-all">1</button>
+            <button onclick="finalizeWicketWithRuns(2)" class="aspect-square bg-gray-100 hover:bg-blue-50 hover:border-blue-200 border-2 border-transparent text-gray-800 font-black text-xl rounded-xl transition-all">2</button>
+            <button onclick="finalizeWicketWithRuns(3)" class="aspect-square bg-gray-100 hover:bg-blue-50 hover:border-blue-200 border-2 border-transparent text-gray-800 font-black text-xl rounded-xl transition-all">3</button>
+            <button onclick="finalizeWicketWithRuns(4)" class="aspect-square bg-gray-100 hover:bg-blue-50 hover:border-blue-200 border-2 border-transparent text-gray-800 font-black text-xl rounded-xl transition-all">4</button>
+        </div>
+        <button onclick="closeModal('wicket-runs-modal')" class="text-xs font-bold text-gray-400 uppercase tracking-widest hover:text-gray-600">Cancel</button>
     </div>
 </div>
 
@@ -5032,17 +5078,17 @@ function generateBroadcastCode() {
             const nbVal = state.rules.noBallRuns;
 
             // Wide Buttons + Run Out Option
-            let wButtons = `<button onclick="handleAddExtra('wd', ${wVal})" class="col-span-3 p-4 bg-blue-100 text-blue-900 font-bold rounded-xl mb-1">Standard (+${wVal})</button>`;
-            [3, 4, 5, 6].forEach(r => {
-                if (r !== wVal) wButtons += `<button onclick="handleAddExtra('wd', ${r})" class="p-4 bg-gray-100 font-bold rounded-xl">+${r}</button>`;
+            let wButtons = `<button onclick="handleAddExtra('wd', ${wVal})" class="col-span-3 p-4 bg-blue-100 text-blue-900 font-bold rounded-xl mb-1">Standard Wide (${wVal})</button>`;
+            [1, 2, 3, 4, 5, 6].forEach(r => {
+                wButtons += `<button onclick="handleAddExtra('wd', ${wVal + r})" class="p-4 bg-gray-100 font-bold rounded-xl">WD+${r}</button>`;
             });
             wButtons += `<button onclick="setupExtraRunOut('wd')" class="col-span-3 mt-2 p-3 bg-red-50 text-red-900 font-bold rounded-xl border border-red-200">RUN OUT</button>`;
             document.getElementById('wide-options').innerHTML = wButtons;
 
             // No Ball Buttons + Run Out Option
-            let nbButtons = `<button onclick="handleAddExtra('nb', ${nbVal})" class="col-span-3 p-4 bg-blue-100 text-blue-900 font-bold rounded-xl mb-1">Standard (+${nbVal})</button>`;
-            [3, 4, 5, 6].forEach(r => {
-                if (r !== nbVal) nbButtons += `<button onclick="handleAddExtra('nb', ${r})" class="p-4 bg-gray-100 font-bold rounded-xl">+${r}</button>`;
+            let nbButtons = `<button onclick="handleAddExtra('nb', ${nbVal})" class="col-span-3 p-4 bg-blue-100 text-blue-900 font-bold rounded-xl mb-1">Standard (${nbVal})</button>`;
+            [1, 2, 3, 4, 5, 6].forEach(r => {
+                nbButtons += `<button onclick="handleAddExtra('nb', ${nbVal + r})" class="p-4 bg-gray-100 font-bold rounded-xl">NB+${r}</button>`;
             });
             nbButtons += `<button onclick="setupExtraRunOut('nb')" class="col-span-3 mt-2 p-3 bg-red-50 text-red-900 font-bold rounded-xl border border-red-200">RUN OUT</button>`;
             document.getElementById('noball-options').innerHTML = nbButtons;
@@ -5687,8 +5733,12 @@ function generateBroadcastCode() {
                 // EDIT MODE
                 closeModal('wide-modal'); closeModal('noball-modal'); closeModal('extras-modal');
                 let label = type.toUpperCase();
-                if (type === 'wd' || type === 'nb') {
-                    if (runs > 1) { label = `${type.toUpperCase()}+${runs - 1}`; }
+                if (type === 'wd') {
+                    const wVal = state.rules.wideRuns;
+                    if (runs > wVal) { label = `WD+${runs - wVal}`; }
+                } else if (type === 'nb') {
+                    const nbVal = state.rules.noBallRuns;
+                    if (runs > nbVal) { label = `NB+${runs - nbVal}`; }
                 } else if (type === 'pen' && runs < 0) {
                     label = `${runs}`;
                 } else if (type === 'ext' && runs > 0) {
@@ -5720,6 +5770,8 @@ function generateBroadcastCode() {
             openModal('fielder-modal');
         }
 
+        let pendingWicketData = null;
+
         function confirmFielder() {
             const fielderName = document.getElementById('fielder-select').value;
             if(!fielderName) return;
@@ -5730,8 +5782,18 @@ function generateBroadcastCode() {
                 applyBallCorrection(editingBallIndex, 0, 'W'); 
                 editingBallIndex = null;
             } else {
-                applyWicketPenalty('striker', tempWicketType, fielderName);
+                pendingWicketData = { type: tempWicketType, who: 'striker', fielder: fielderName };
+                openModal('wicket-runs-modal');
             }
+        }
+
+        function finalizeWicketWithRuns(runs) {
+            closeModal('wicket-runs-modal');
+            if (!pendingWicketData) return;
+
+            const { type, who, fielder } = pendingWicketData;
+            applyWicketPenalty(who, type, fielder, runs);
+            pendingWicketData = null;
         }
 
         function finalizeRunOut(who) {
@@ -5791,6 +5853,11 @@ function generateBroadcastCode() {
                 // 3. Process Ball (Pass true for isDismissal)
                 processBall(totalRunsToAdd - penalty, eventLabel, isLegal, true);
                 
+                // Swap strikers if odd runs completed before the wicket
+                if (runs % 2 !== 0) {
+                    swapStrikers();
+                }
+
                 // 4. Reset & UI
                 extraRunOutState = null;
                 showEventPopup("OUT", "text-red-600");
@@ -5818,11 +5885,12 @@ function generateBroadcastCode() {
             } 
             else {
                 // Standard Run Out
-                applyWicketPenalty(who, 'Run Out');
+                pendingWicketData = { type: 'Run Out', who: who, fielder: null };
+                openModal('wicket-runs-modal');
             }
         }
 
-        function applyWicketPenalty(who, type, fielder = null) {
+        function applyWicketPenalty(who, type, fielder = null, physicalRuns = 0) {
             addToHistory();
             const penalty = state.rules.wicketRuns;
             const bt = state[state.battingTeam];
@@ -5843,15 +5911,31 @@ function generateBroadcastCode() {
                 victim.runs -= penalty; 
             }
 
-            bt.score -= penalty;
+            // Add physical runs to the striker regardless of who got out
+            if (state.striker && physicalRuns > 0) {
+                state.striker.runs += physicalRuns;
+                if (physicalRuns === 4) state.striker.fours = (state.striker.fours || 0) + 1;
+            }
+
+            bt.score += (physicalRuns - penalty);
             if (state.striker) { state.striker.balls++; }
             bt.wickets = (bt.wickets || 0) + 1;
             
             if (bwl && type !== 'Run Out' && type !== 'Retired Out' && type !== 'Other') { bwl.wickets++; }
-            if (bwl) { bwl.ballsBowled++; }
+            if (bwl) { 
+                bwl.ballsBowled++; 
+                bwl.runsConceded += physicalRuns;
+            }
 
             // FIX: Process Ball FIRST to ensure state is consistent before syncing
-            processBall(0, 'W', true, true);
+            let ballEvent = 'W';
+            if (physicalRuns > 0) ballEvent = `${physicalRuns}W`;
+            processBall(physicalRuns - penalty, ballEvent, true, true);
+
+            // Swap strikers if odd runs completed before the wicket
+            if (physicalRuns % 2 !== 0) {
+                swapStrikers();
+            }
 
             // FIX: Show Popup (triggers Sync with 'W' and updated stats)
             showEventPopup("OUT", "text-red-600");
@@ -6156,8 +6240,12 @@ function generateBroadcastCode() {
             if(bwl) { bwl.runsConceded += runs; }
             
             let label = type.toUpperCase();
-            if (type === 'wd' || type === 'nb') {
-                if (runs > 1) { label = `${type.toUpperCase()}+${runs - 1}`; }
+            if (type === 'wd') {
+                const wVal = state.rules.wideRuns;
+                if (runs > wVal) { label = `WD+${runs - wVal}`; }
+            } else if (type === 'nb') {
+                const nbVal = state.rules.noBallRuns;
+                if (runs > nbVal) { label = `NB+${runs - nbVal}`; }
             } else if (type === 'pen' && runs < 0) {
                 label = `${runs}`;
             } else if (type === 'ext' && runs > 0) {
@@ -6908,6 +6996,8 @@ function processEndMatch(statusType) {
                 // Generate Balls Chips ONLY for Active Bowler
                 let ballsHTML = '';
                 if (isActive) {
+                    const isCrowded = state.currentOver.length > 6;
+
                     const chips = state.currentOver.map(b => {
                         let c = 'ball-0';
                         let fontSize = 'text-[9px]'; 
@@ -6928,6 +7018,12 @@ function processEndMatch(statusType) {
                         else if(b.event.includes('WD') || b.event.includes('NB')) {
                             c = 'ball-wd';
                             if (b.event.length > 2) fontSize = 'text-[6px] leading-tight';
+                        }
+                        
+                        // Dynamically shrink into compact squares if there are too many balls in the over
+                        if (isCrowded && !isComplexRunOut) {
+                            extraClass += ' ball-compact';
+                            if (fontSize === 'text-[9px]') fontSize = 'text-[7px]';
                         }
                         
                         return `<span class="ball-chip ${c} ${fontSize} ${extraClass}">${displayEvent}</span>`;
@@ -7196,8 +7292,12 @@ function processEndMatch(statusType) {
                 // EDIT MODE
                 closeModal('wide-modal'); closeModal('noball-modal'); closeModal('mid-over-modal'); // Updated ID
                 let label = type.toUpperCase();
-                if (type === 'wd' || type === 'nb') {
-                    if (runs > 1) { label = `${type.toUpperCase()}+${runs - 1}`; }
+                if (type === 'wd') {
+                    const wVal = state.rules.wideRuns;
+                    if (runs > wVal) { label = `WD+${runs - wVal}`; }
+                } else if (type === 'nb') {
+                    const nbVal = state.rules.noBallRuns;
+                    if (runs > nbVal) { label = `NB+${runs - nbVal}`; }
                 } else if (type === 'pen' && runs < 0) {
                     label = `${runs}`;
                 } else if (type === 'ext' && runs > 0) {
@@ -7222,8 +7322,12 @@ function processEndMatch(statusType) {
             if(bwl) { bwl.runsConceded += runs; }
             
             let label = type.toUpperCase();
-            if (type === 'wd' || type === 'nb') {
-                if (runs > 1) { label = `${type.toUpperCase()}+${runs - 1}`; }
+            if (type === 'wd') {
+                const wVal = state.rules.wideRuns;
+                if (runs > wVal) { label = `WD+${runs - wVal}`; }
+            } else if (type === 'nb') {
+                const nbVal = state.rules.noBallRuns;
+                if (runs > nbVal) { label = `NB+${runs - nbVal}`; }
             } else if (type === 'pen' && runs < 0) {
                 label = `${runs}`;
             } else if (type === 'ext' && runs > 0) {
