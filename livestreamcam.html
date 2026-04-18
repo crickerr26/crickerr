@@ -634,7 +634,7 @@
     <div id="setup-screen">
         <h1 style="font-family: 'Anton'; font-size: 3rem; color: white; margin-bottom: 0.5rem; letter-spacing: 2px;">BROADCAST UNIT</h1>
         <p style="color: #94a3b8; font-size: 0.9rem; font-weight: bold; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px; font-family: 'Roboto';">Enter Match Code</p>
-        <input type="text" id="match-id" class="input-field" placeholder="Crickerr_XXXXXX" oninput="if(this.value.length >= 15) connectToMatch()">
+        <input type="text" id="match-id" class="input-field" placeholder="Crickerr_XXXXXX">
         <button onclick="connectToMatch()" class="start-btn" id="btn-start">Start Camera</button>
     </div>
 
@@ -982,17 +982,17 @@
             btn.innerText = "Starting...";
             btn.disabled = true;
 
-            // Force Fullscreen and Lock Orientation (Overrides device rotation lock)
-            try {
-                if (document.documentElement.requestFullscreen) {
-                    await document.documentElement.requestFullscreen();
-                }
-                if (screen.orientation && screen.orientation.lock) {
-                    await screen.orientation.lock("landscape"); 
-                }
-            } catch (err) { 
-                console.warn("Orientation lock failed:", err); 
-            }
+            // Force Fullscreen and Lock Orientation WITHOUT AWAIT (Prevents freezing if browser blocks the promise)
+            try {
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen().catch(err => console.warn("Fullscreen ignored"));
+                }
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock("landscape").catch(err => console.warn("Orientation ignored")); 
+                }
+            } catch (err) { 
+                console.warn("Orientation lock failed:", err); 
+            }
 
             try { ['audio-four','audio-six','audio-wicket','audio-transition'].forEach(id => document.getElementById(id).load()); } catch(e){}
             const success = await startCameraStream(1920, 1080);
@@ -1187,11 +1187,10 @@
                 if (!selectedType) return alert("Recording not supported on this device.");
                 localStorage.setItem("recMimeType", selectedType);
 
-                // 5 Mbps: broadcast-quality for long matches without choking mobile encoders.
-                // 8 Mbps caused encoder stalls and silent stops on long recordings.
+                // 3 Mbps: optimal for vertical video, dramatically reduces encoder stalls on mobile processors.
                 const options = { 
                     mimeType: selectedType, 
-                    videoBitsPerSecond: 5000000,
+                    videoBitsPerSecond: 3000000,
                     audioBitsPerSecond: 128000
                 };
                 recorder = new MediaRecorder(combinedStream, options);
@@ -1213,10 +1212,9 @@
                     }
                 };
 
-                // 1-second timeslice: MediaRecorder guarantees a keyframe at EVERY chunk boundary.
-                // This means the maximum seek inaccuracy is ±1 second — smooth, usable scrubbing.
-                // 2000ms caused ±2 second gaps where the video appeared frozen/stuck when forwarding.
-                recorder.start(1000);
+                // 3-second timeslice: Reduces frequent IndexedDB writes and keyframe generation 
+                // that overheat and freeze mobile processors, preventing the "stuck" save bug.
+                recorder.start(3000);
                 recordingStartTime = Date.now(); // ← stamp exact start time for duration patch
                 isRecording = true;
                 document.getElementById('rec-button').classList.add('recording');
