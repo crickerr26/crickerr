@@ -852,8 +852,11 @@
         let peer = null;
         let myPeerId = null;
         
-        // --- WAKE LOCK ---
+        // --- WAKE LOCK (ALWAYS-ON DURING RECORDING & LIVE) ---
         let wakeLock = null;
+        let wakeLockActive = false;
+        let noSleepVideo = null;       // Universal fallback for iOS & unsupported browsers
+        let recorderWatchdog = null;   // Watchdog timer to detect silent recorder failures
 
         // --- INITIALIZATION ---
         window.onload = function() {
@@ -867,8 +870,8 @@
             document.getElementById('check-highlights').checked = areHighlightsEnabled;
             window.addEventListener('resize', resizeCanvas);
             resizeCanvas();
-            requestWakeLock(); 
-            setInterval(requestWakeLock, 60000);
+            requestWakeLock();
+            setupNoSleepFallback(); // Universal screen-awake fallback (works on iOS too)
 
             // Add Enter Key Support for Mobile Keyboards
             const matchInput = document.getElementById('match-id');
@@ -885,13 +888,67 @@
         async function requestWakeLock() {
             try {
                 if ('wakeLock' in navigator) {
+                    // Release old sentinel cleanly before requesting a fresh one
+                    if (wakeLock) { try { await wakeLock.release(); } catch(e) {} wakeLock = null; }
                     wakeLock = await navigator.wakeLock.request('screen');
+                    wakeLockActive = true;
+                    // Auto-reacquire the moment the OS releases it (e.g. tab switch or low battery)
+                    wakeLock.addEventListener('release', () => {
+                        wakeLockActive = false;
+                        // If we are still recording or live, immediately grab it back
+                        if (isRecording || isLive) {
+                            setTimeout(requestWakeLock, 300);
+                        }
+                    });
                 }
-            } catch (err) { console.log("Wake Lock Error", err); }
+            } catch (err) { console.warn("Wake Lock API error:", err); }
         }
-        
+
+        // Universal NoSleep fallback — a tiny silent looping video that forces
+        // the screen to stay on even on iOS Safari where Wake Lock API is unreliable
+        function setupNoSleepFallback() {
+            noSleepVideo = document.createElement('video');
+            noSleepVideo.setAttribute('loop', '');
+            noSleepVideo.setAttribute('playsinline', '');
+            noSleepVideo.setAttribute('muted', '');
+            noSleepVideo.muted = true;
+            // 1×1 transparent WebM — universally supported tiny video loop
+            noSleepVideo.src = 'data:video/webm;base64,GkXfo0AgQoaBAUL3gQFC8oEEQvOBCFGwobjg2E3CgXcBqgAAASAAEAAA//8AAAFzxYkAAAGDAYiBAABTBAABAAHT4gEAQ2VudHJlAAAABWWAUAAAAiAAAAAAAtxYhIvJABkBEb8wAFAAAAATRAwAAABjByAAAAD/AAAAAXsBAAAAA2qK';
+            noSleepVideo.style.cssText = 'position:fixed;top:-5px;left:-5px;width:1px;height:1px;opacity:0.01;pointer-events:none;z-index:-1;';
+            document.body.appendChild(noSleepVideo);
+            // Play it on the FIRST user gesture so iOS allows it
+            document.addEventListener('click', function startNoSleep() {
+                if (noSleepVideo && noSleepVideo.paused) {
+                    noSleepVideo.play().catch(() => {});
+                }
+            });
+        }
+
+        // Call this whenever recording or live starts to guarantee screen stays on
+        function keepScreenAwake() {
+            requestWakeLock();
+            if (noSleepVideo && noSleepVideo.paused) {
+                noSleepVideo.play().catch(() => {});
+            }
+        }
+
+        // Call this when both recording AND live are fully stopped
+        function releaseScreenAwake() {
+            if (!isRecording && !isLive) {
+                if (noSleepVideo) noSleepVideo.pause();
+                // We do NOT release the wake lock — it will expire naturally
+            }
+        }
+
         document.addEventListener('visibilitychange', async () => {
-            if (document.visibilityState === 'visible') { requestWakeLock(); }
+            if (document.visibilityState === 'visible') {
+                // Reacquire wake lock every time the tab becomes visible
+                requestWakeLock();
+                // Also restart the noSleep video if we are active
+                if ((isRecording || isLive) && noSleepVideo && noSleepVideo.paused) {
+                    noSleepVideo.play().catch(() => {});
+                }
+            }
         });
 
         function resizeCanvas() {
@@ -1056,6 +1113,9 @@
         let isRecoverable = false;
         let currentRecMatchId = null; 
         let globalCaptureStream = null;
+        // Duration tracking — used to patch the moov box so iPhone can seek
+        let recordingStartTime = 0;
+        let recordingDurationSeconds = 0;
 
         function initVideoDB(matchId) {
             if (!window.indexedDB) return;
@@ -1103,10 +1163,10 @@
             await clearDB();
 
             try {
-                // FIX: Capture at 30fps to prevent mobile video from freezing/sticking
+                // Capture canvas at 30fps (stable on all mobile hardware)
                 const freshCanvasStream = canvas.captureStream(30);
                 
-                // AUDIO FIX
+                // AUDIO: Use live mic track or generate silent fallback track
                 let finalAudioTrack = null;
                 if (currentStream && currentStream.getAudioTracks().length > 0) {
                     finalAudioTrack = currentStream.getAudioTracks()[0].clone();
@@ -1124,13 +1184,14 @@
                 const types = ["video/mp4;codecs=avc1", "video/webm;codecs=vp9", "video/webm;codecs=h264", "video/webm;codecs=vp8", "video/webm"];
                 let selectedType = types.find(t => MediaRecorder.isTypeSupported(t)) || "";
                 
-                if (!selectedType) return alert("Recording not supported.");
+                if (!selectedType) return alert("Recording not supported on this device.");
                 localStorage.setItem("recMimeType", selectedType);
 
-                // MOBILE OPTIMIZED QUALITY: 8 Mbps video prevents hardware encoder from choking
+                // 5 Mbps: broadcast-quality for long matches without choking mobile encoders.
+                // 8 Mbps caused encoder stalls and silent stops on long recordings.
                 const options = { 
                     mimeType: selectedType, 
-                    videoBitsPerSecond: 8000000,
+                    videoBitsPerSecond: 5000000,
                     audioBitsPerSecond: 128000
                 };
                 recorder = new MediaRecorder(combinedStream, options);
@@ -1139,30 +1200,139 @@
                     if (e.data && e.data.size > 0) saveChunkToDB(e.data);
                 };
 
-                recorder.start(1000); 
+                // onerror: If the encoder dies silently (common on long mobile recordings),
+                // log it and attempt an automatic restart to recover the session.
+                recorder.onerror = (err) => {
+                    console.error("MediaRecorder error:", err);
+                    if (isRecording) {
+                        console.warn("Recorder crashed — attempting auto-restart...");
+                        try { recorder.stop(); } catch(e) {}
+                        setTimeout(() => {
+                            if (isRecording) startSafeDatabaseRecording();
+                        }, 1500);
+                    }
+                };
+
+                // 1-second timeslice: MediaRecorder guarantees a keyframe at EVERY chunk boundary.
+                // This means the maximum seek inaccuracy is ±1 second — smooth, usable scrubbing.
+                // 2000ms caused ±2 second gaps where the video appeared frozen/stuck when forwarding.
+                recorder.start(1000);
+                recordingStartTime = Date.now(); // ← stamp exact start time for duration patch
                 isRecording = true;
                 document.getElementById('rec-button').classList.add('recording');
                 document.getElementById('rec-text').innerText = "SAFE REC";
+
+                // Keep the screen alive for the entire recording session
+                keepScreenAwake();
+
+                // Watchdog: checks every 8 seconds that the recorder is still running.
+                // If the OS silently killed it (memory pressure, background tab, etc.),
+                // we auto-restart so footage is never lost.
+                if (recorderWatchdog) clearInterval(recorderWatchdog);
+                recorderWatchdog = setInterval(() => {
+                    if (isRecording && recorder && recorder.state === 'inactive') {
+                        console.warn("Watchdog: recorder stopped unexpectedly. Restarting...");
+                        clearInterval(recorderWatchdog);
+                        recorderWatchdog = null;
+                        startSafeDatabaseRecording();
+                    }
+                }, 8000);
+
             } catch (e) {
                 alert("Recording Failed: " + e.message);
             }
         }
 
         function stopRecording() {
-            if (recorder && recorder.state !== 'inactive') {
-                recorder.onstop = () => {
-                    document.getElementById('rec-text').innerText = "FINALIZING...";
-                    setTimeout(() => { recoverVideo(); }, 1000);
-                };
-                recorder.stop();
-            } else { recoverVideo(); }
+            // Capture exact duration FIRST — before stopping — so the moov patcher knows the real length
+            if (recordingStartTime > 0) {
+                recordingDurationSeconds = Math.max(1, (Date.now() - recordingStartTime) / 1000);
+            }
+
+            // Stop watchdog first so it cannot interfere with the intentional stop
+            if (recorderWatchdog) { clearInterval(recorderWatchdog); recorderWatchdog = null; }
+
             isRecording = false;
             document.getElementById('rec-button').classList.remove('recording');
             document.getElementById('rec-text').innerText = "SAVING...";
+
+            releaseScreenAwake();
+
+            if (recorder && recorder.state !== 'inactive') {
+                recorder.onstop = () => {
+                    document.getElementById('rec-text').innerText = "FINALIZING...";
+                    // Give IndexedDB 1.5s to flush the very last chunk before we read it back
+                    setTimeout(() => { recoverVideo(); }, 1500);
+                };
+                // requestData() flushes the current in-progress chunk so it is never lost
+                try { recorder.requestData(); } catch(e) {}
+                setTimeout(() => { try { recorder.stop(); } catch(e) { recoverVideo(); } }, 200);
+            } else {
+                recoverVideo();
+            }
         }
 
         async function recoverVideo() {
             const btnText = document.getElementById('rec-text');
+
+            // --- Build file metadata up front (no chunks needed yet) ---
+            const savedType = localStorage.getItem("recMimeType") || 'video/webm';
+            const blobType = savedType.includes('mp4') ? 'video/mp4' : savedType;
+            const ext = blobType.includes('mp4') ? 'mp4' : 'webm';
+            const now = new Date();
+            const fileName = `MATCH_${currentRecMatchId}_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}.${ext}`;
+
+            // --- Quick sanity check: any data at all? ---
+            const count = await getChunkCount();
+            if (count === 0) {
+                alert("No recorded data found. The recording may not have started correctly.");
+                resetRecUI();
+                return;
+            }
+
+            // ─────────────────────────────────────────────────────────────────
+            // PATH A — File System Access API (Chrome / Edge / Android Chrome)
+            // Streams chunks one-by-one directly from IndexedDB to disk.
+            // Uses essentially ZERO RAM regardless of video length (30 min, 2 hr — no limit).
+            // Also applies the MP4 duration patch on chunk[0] before writing so desktop
+            // saves are seekable too.
+            // ─────────────────────────────────────────────────────────────────
+            if ('showSaveFilePicker' in window) {
+                try {
+                    btnText.innerText = "CHOOSE SAVE...";
+                    const fileHandle = await window.showSaveFilePicker({
+                        suggestedName: fileName,
+                        types: [{ description: 'Video File', accept: { 'video/*': [`.${ext}`] } }]
+                    });
+                    const writable = await fileHandle.createWritable();
+                    btnText.innerText = "STREAMING 0%";
+                    await streamChunksToFile(writable, blobType, (percent) => {
+                        btnText.innerText = `STREAMING ${percent}%`;
+                    });
+                    await writable.close();
+                    showSavedMessage();
+                    clearDB();
+                    resetRecUI();
+                    if (video.paused) video.play().catch(e => {});
+                    return;
+                } catch (err) {
+                    if (err.name === 'AbortError') {
+                        // User dismissed the save dialog — let them try again later
+                        resetRecUI();
+                        if (video.paused) video.play().catch(e => {});
+                        return;
+                    }
+                    // Any other error: fall through to the legacy in-memory approach below
+                    console.warn("File System Access save failed, falling back to legacy:", err);
+                }
+            }
+
+            // ─────────────────────────────────────────────────────────────────
+            // PATH B — Legacy in-memory approach (iOS Safari, Firefox, older Android)
+            // Loads all chunks into RAM, creates a Blob, then uses Web Share or download.
+            // Works for recordings up to ~500 MB depending on device RAM.
+            // ─────────────────────────────────────────────────────────────────
+            btnText.innerText = "LOADING 0%";
             const allChunks = await getAllChunksWithProgress((percent) => {
                 btnText.innerText = `SAVING ${percent}%`;
             });
@@ -1174,15 +1344,10 @@
             }
 
             btnText.innerText = "READY!";
-            const savedType = localStorage.getItem("recMimeType") || 'video/webm';
             // Always force mp4 blob type for maximum gallery compatibility on mobile
-            const blobType = savedType.includes('mp4') ? 'video/mp4' : savedType;
-            const blob = new Blob(allChunks, { type: blobType });
-            const now = new Date();
-            const ext = blobType.includes('mp4') ? 'mp4' : 'webm';
-            const fileName = `MATCH_${currentRecMatchId}_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}.${ext}`;
+            const blob = await createSeekableBlob(allChunks, blobType);
 
-            // Try Web Share API first — this is the ONLY method that reliably saves to gallery on iOS & Android
+            // Try Web Share API first — the ONLY method that reliably saves to gallery on iOS & Android
             const shareFile = new File([blob], fileName, { type: blobType });
             if (navigator.canShare && navigator.canShare({ files: [shareFile] })) {
                 try {
@@ -1227,11 +1392,43 @@
                 instruction.style.cssText = 'color: rgba(255,255,255,0.75); font-size: 13px; text-align: center; line-height: 1.7; max-width: 320px;';
 
                 const videoEl = document.createElement('video');
-                videoEl.src = url;
+                videoEl.preload = 'auto';
                 videoEl.controls = true;
                 videoEl.playsInline = true;
                 videoEl.setAttribute('playsinline', '');
                 videoEl.style.cssText = 'width:100%; max-width:460px; border-radius:12px; border:2px solid #fbbf24; background:#000; max-height:45vh; object-fit:contain;';
+                videoEl.src = url;
+                let _seekTarget = null;
+                let _seekStallTimer = null;
+                videoEl.addEventListener('seeking', () => {
+                    _seekTarget = videoEl.currentTime;
+                    if (_seekStallTimer) clearTimeout(_seekStallTimer);
+                    _seekStallTimer = setTimeout(() => {
+                        if (videoEl.seeking && _seekTarget !== null) {
+                            const t = _seekTarget;
+                            videoEl.currentTime = Math.max(0, t - 0.5);
+                        }
+                    }, 2000);
+                });
+                videoEl.addEventListener('seeked', () => {
+                    if (_seekStallTimer) { clearTimeout(_seekStallTimer); _seekStallTimer = null; }
+                });
+                videoEl.addEventListener('stalled', () => {
+                    if (_seekTarget !== null) {
+                        const t = _seekTarget;
+                        _seekTarget = null;
+                        setTimeout(() => { videoEl.currentTime = Math.max(0, t - 0.5); }, 300);
+                    }
+                });
+                videoEl.addEventListener('waiting', () => {
+                    if (!videoEl.seeking && !videoEl.paused) {
+                        setTimeout(() => {
+                            if (!videoEl.paused && videoEl.readyState < 3) {
+                                videoEl.currentTime = videoEl.currentTime + 0.01;
+                            }
+                        }, 1500);
+                    }
+                });
 
                 const dlLink = document.createElement('a');
                 dlLink.href = url;
@@ -1284,6 +1481,64 @@
                     if (video.paused) video.play().catch(e => {});
                 }, 1000);
             }
+        }
+
+        // Streams IndexedDB chunks one-by-one directly to a FileSystemWritableFileStream.
+        // Applies the MP4 duration patch on chunk[0] BEFORE writing so desktop saves
+        // are also fully seekable (same fix as PATH B). Zero RAM regardless of length.
+        async function streamChunksToFile(writable, mimeType, onProgress) {
+            return new Promise((resolve, reject) => {
+                if (!videoDB) return resolve();
+                const tx = videoDB.transaction(STORE_NAME, "readonly");
+                const store = tx.objectStore(STORE_NAME);
+                const countReq = store.count();
+                countReq.onsuccess = () => {
+                    const total = countReq.result;
+                    if (total === 0) return resolve();
+                    let written = 0;
+                    let isFirstChunk = true;
+                    const cursorReq = store.openCursor();
+                    cursorReq.onsuccess = async (e) => {
+                        const cursor = e.target.result;
+                        if (cursor) {
+                            try {
+                                let chunkData = cursor.value;
+                                // Patch the first chunk's MP4 moov box so desktop saves seek correctly
+                                if (isFirstChunk && mimeType && mimeType.includes('mp4') && recordingDurationSeconds > 0) {
+                                    isFirstChunk = false;
+                                    const buf = new Uint8Array(await chunkData.arrayBuffer());
+                                    mp4PatchDuration(buf, recordingDurationSeconds);
+                                    chunkData = new Blob([buf], { type: mimeType });
+                                } else {
+                                    isFirstChunk = false;
+                                }
+                                await writable.write(chunkData);
+                                written++;
+                                if (onProgress) onProgress(Math.round((written / total) * 100));
+                                cursor.continue();
+                            } catch (writeErr) {
+                                reject(writeErr);
+                            }
+                        } else {
+                            resolve();
+                        }
+                    };
+                    cursorReq.onerror = () => reject(new Error("Failed to read recording data from storage"));
+                };
+                countReq.onerror = () => reject(new Error("Failed to count recording chunks"));
+            });
+        }
+
+        // Wipes all chunks from IndexedDB after a successful save.
+        // Called after every save path (share, download, streaming) to free storage.
+        function clearDB() {
+            return new Promise((resolve) => {
+                if (!videoDB) return resolve();
+                const tx = videoDB.transaction(STORE_NAME, "readwrite");
+                tx.objectStore(STORE_NAME).clear();
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => resolve();
+            });
         }
 
         function showSavedMessage() {
@@ -1344,17 +1599,176 @@
             });
         }
 
-        function clearDB() {
-            return new Promise((resolve) => {
-                if(!videoDB) return resolve();
-                const tx = videoDB.transaction(STORE_NAME, "readwrite");
-                tx.objectStore(STORE_NAME).clear();
-                tx.oncomplete = () => resolve();
-                tx.onerror = () => resolve();
-            });
+        // ── MP4 SEEKABILITY PATCHER ───────────────────────────────────────────────
+        // Chrome MediaRecorder writes duration=0 in the moov box because it doesn't
+        // know when recording will stop. iPhone/QuickTime reads duration=0, builds
+        // no seek table, and when you scrub forward the video decoder stalls while
+        // audio keeps going — "video stuck, only voice played."
+        //
+        // Fix: binary-patch mvhd + tkhd + mdhd duration fields in the FIRST chunk
+        // (moov is always in chunk 1). Only loads one chunk into RAM — memory safe
+        // for long recordings regardless of total file size.
+        // ─────────────────────────────────────────────────────────────────────────
+
+        async function createSeekableBlob(chunks, mimeType) {
+            // Only MP4 files need this patch; WebM uses a different container format
+            if (!mimeType.includes('mp4') || recordingDurationSeconds <= 0 || chunks.length === 0) {
+                return new Blob(chunks, { type: mimeType });
+            }
+            try {
+                // The moov box (with all duration fields) is ALWAYS in the first chunk.
+                // Patching only chunk[0] avoids loading the entire video into RAM.
+                const firstBuf = new Uint8Array(await chunks[0].arrayBuffer());
+                mp4PatchDuration(firstBuf, recordingDurationSeconds);
+                // Reassemble: patched first chunk + all remaining chunks untouched
+                return new Blob([firstBuf, ...chunks.slice(1)], { type: mimeType });
+            } catch (e) {
+                console.warn("MP4 seek patch failed — using raw blob:", e);
+                return new Blob(chunks, { type: mimeType });
+            }
+        }
+
+        // ── Binary helpers ────────────────────────────────────────────────────────
+
+        function mp4R32(b, o) {
+            return ((b[o] << 24) | (b[o+1] << 16) | (b[o+2] << 8) | b[o+3]) >>> 0;
+        }
+        function mp4W32(b, o, v) {
+            v = v >>> 0;
+            b[o] = (v >>> 24) & 0xFF; b[o+1] = (v >>> 16) & 0xFF;
+            b[o+2] = (v >>> 8) & 0xFF; b[o+3] = v & 0xFF;
+        }
+        function mp4T(b, o) {
+            return String.fromCharCode(b[o], b[o+1], b[o+2], b[o+3]);
+        }
+
+        // ── Top-level patcher: finds moov and patches all duration boxes ───────────
+
+        function mp4PatchDuration(buf, durSec) {
+            // Pass 1: read mvhd.timescale (needed to compute tkhd duration correctly)
+            const movieTs = mp4GetMovieTimescale(buf);
+            // Pass 2: write corrected duration into mvhd, tkhd, mdhd
+            let offset = 0;
+            while (offset + 8 <= buf.length) {
+                const sz = mp4R32(buf, offset);
+                if (sz < 8 || offset + sz > buf.length) break;
+                if (mp4T(buf, offset + 4) === 'moov') {
+                    mp4PatchMoov(buf, offset + 8, offset + sz, durSec, movieTs);
+                    break; // moov found and patched — done
+                }
+                offset += sz;
+            }
+        }
+
+        function mp4GetMovieTimescale(buf) {
+            let offset = 0;
+            while (offset + 8 <= buf.length) {
+                const sz = mp4R32(buf, offset);
+                if (sz < 8 || offset + sz > buf.length) break;
+                if (mp4T(buf, offset + 4) === 'moov') {
+                    let o = offset + 8;
+                    const moovEnd = offset + sz;
+                    while (o + 8 <= moovEnd) {
+                        const s = mp4R32(buf, o);
+                        if (s < 8 || o + s > moovEnd) break;
+                        if (mp4T(buf, o + 4) === 'mvhd') {
+                            const ver = buf[o + 8];
+                            // ver=0: timescale at byte 20; ver=1: timescale at byte 28
+                            return mp4R32(buf, o + (ver === 1 ? 28 : 20)) || 1000;
+                        }
+                        o += s;
+                    }
+                    break;
+                }
+                offset += sz;
+            }
+            return 1000; // Chrome default movie timescale
+        }
+
+        // ── moov scanner: patches mvhd and recurses into each trak ────────────────
+
+        function mp4PatchMoov(buf, start, end, durSec, movieTs) {
+            let o = start;
+            while (o + 8 <= end) {
+                const sz = mp4R32(buf, o);
+                if (sz < 8 || o + sz > end) break;
+                const type = mp4T(buf, o + 4);
+
+                if (type === 'mvhd') {
+                    // mvhd.duration uses the movie timescale
+                    // ver=0: duration at byte 24 (uint32)
+                    // ver=1: duration at byte 32 (uint64 — we write the low 32 bits; high=0)
+                    const ver = buf[o + 8];
+                    const durOff = o + (ver === 1 ? 32 : 24);
+                    const dur = Math.min(Math.round(durSec * movieTs), 0x7FFFFFFF);
+                    if (ver === 1) { mp4W32(buf, durOff, 0); mp4W32(buf, durOff + 4, dur); }
+                    else           { mp4W32(buf, durOff, dur); }
+
+                } else if (type === 'trak') {
+                    mp4PatchTrak(buf, o + 8, o + sz, durSec, movieTs);
+                }
+
+                o += sz;
+            }
+        }
+
+        // ── trak scanner: patches tkhd and recurses into mdia ────────────────────
+
+        function mp4PatchTrak(buf, start, end, durSec, movieTs) {
+            let o = start;
+            while (o + 8 <= end) {
+                const sz = mp4R32(buf, o);
+                if (sz < 8 || o + sz > end) break;
+                const type = mp4T(buf, o + 4);
+
+                if (type === 'tkhd') {
+                    // tkhd.duration uses the MOVIE timescale (same as mvhd)
+                    // ver=0: duration at byte 28 (uint32)
+                    // ver=1: duration at byte 36 (uint64 — write low 32 bits; high=0)
+                    const ver = buf[o + 8];
+                    const durOff = o + (ver === 1 ? 36 : 28);
+                    const dur = Math.min(Math.round(durSec * movieTs), 0x7FFFFFFF);
+                    if (ver === 1) { mp4W32(buf, durOff, 0); mp4W32(buf, durOff + 4, dur); }
+                    else           { mp4W32(buf, durOff, dur); }
+
+                } else if (type === 'mdia') {
+                    mp4PatchMdia(buf, o + 8, o + sz, durSec);
+                }
+
+                o += sz;
+            }
+        }
+
+        // ── mdia scanner: patches mdhd (track-level timescale, not movie timescale) ─
+
+        function mp4PatchMdia(buf, start, end, durSec) {
+            let o = start;
+            while (o + 8 <= end) {
+                const sz = mp4R32(buf, o);
+                if (sz < 8 || o + sz > end) break;
+                const type = mp4T(buf, o + 4);
+
+                if (type === 'mdhd') {
+                    // mdhd has its OWN timescale (audio: 44100/48000; video: 90000)
+                    // ver=0: timescale at byte 20, duration at byte 24 (uint32)
+                    // ver=1: timescale at byte 28, duration at byte 32 (uint64)
+                    const ver = buf[o + 8];
+                    const tsOff  = o + (ver === 1 ? 28 : 20);
+                    const durOff = o + (ver === 1 ? 32 : 24);
+                    const trackTs = mp4R32(buf, tsOff) || 44100;
+                    const dur = Math.min(Math.round(durSec * trackTs), 0x7FFFFFFF);
+                    if (ver === 1) { mp4W32(buf, durOff, 0); mp4W32(buf, durOff + 4, dur); }
+                    else           { mp4W32(buf, durOff, dur); }
+                }
+
+                o += sz;
+            }
         }
         
-        window.addEventListener('load', initVideoDB); // Init DB on load
+        // DB is now initialized inside connectToMatch() and startSafeDatabaseRecording()
+        // where the matchId is already known. Calling it on 'load' created a DB named
+        // "CricketCamDB_undefined" which caused crash-recovery to fail on reload.
+        // window.addEventListener('load', initVideoDB); // REMOVED — was causing undefined DB name
 
         // --- MENUS ---
         function toggleQualityMenu() {
@@ -1523,6 +1937,35 @@ function goLiveOnDB(matchId, peerId) {
 }
         function copyObsUrl() {
             navigator.clipboard.writeText(document.getElementById('obs-url-display').innerText).then(() => alert("URL Copied!"));
+        }
+
+        // FIX: refreshCamera was called from Settings menu but never defined — caused crash
+        async function refreshCamera() {
+            const badge = document.getElementById('quality-badge');
+            const qualityText = badge ? badge.innerText : '1080p';
+            const height = qualityText.includes('4K') ? 2160 : qualityText.includes('1080') ? 1080 : 720;
+            const width = Math.round((height * 16) / 9);
+            const gearBtn = document.getElementById('gear-button');
+            if (gearBtn) { gearBtn.innerText = '🔄'; gearBtn.classList.add('spin-anim'); }
+            await startCameraStream(width, height);
+            setTimeout(() => {
+                if (gearBtn) { gearBtn.innerText = '⚙️'; gearBtn.classList.remove('spin-anim'); }
+            }, 1200);
+        }
+
+        // FIX: startWirelessStream was called from OBS modal button but never defined — caused crash
+        function startWirelessStream() {
+            const matchIdEl = document.getElementById('match-id');
+            const matchId = matchIdEl ? matchIdEl.value.trim().toUpperCase() : "";
+            if (!matchId) {
+                alert("Please enter a Match ID and connect first before generating an OBS link.");
+                return;
+            }
+            const obsUrl = `${window.location.origin}${window.location.pathname}?obs=${matchId}`;
+            const instrEl = document.getElementById('obs-instructions');
+            const displayEl = document.getElementById('obs-url-display');
+            if (instrEl) instrEl.style.display = 'block';
+            if (displayEl) displayEl.innerText = obsUrl;
         }
 
         function initReceiverMode(targetId) {
