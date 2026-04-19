@@ -15,6 +15,7 @@
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Anton&family=Montserrat:wght@400;600;800;900&family=Roboto:wght@400;500;700;900&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
@@ -130,6 +131,21 @@
             z-index: 100;
         }
         #gear-button:hover { background: rgba(0,0,0,0.8); transform: rotate(90deg); }
+
+        /* HOME BUTTON */
+        #home-button {
+            position: absolute; top: 20px; right: 20px;
+            width: 36px; height: 36px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            color: white; font-size: 16px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; backdrop-filter: blur(8px);
+            transition: transform 0.3s ease, background 0.3s;
+            z-index: 100;
+        }
+        #home-button:hover { background: rgba(0,0,0,0.8); transform: scale(1.1); }
 
         /* SETTINGS MENU */
         #settings-menu {
@@ -260,12 +276,71 @@
         }
         .zoom-btn:active { transform: scale(0.9); opacity: 1; }
 
-        /* SETUP SCREEN */
-        #setup-screen { position: absolute; inset: 0; z-index: 60; background: radial-gradient(circle at center, #0f172a 0%, #000000 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        /* SETUP SCREEN - BEAUTIFUL & POWERFUL */
+        #setup-screen {
+            position: absolute; inset: 0; z-index: 60;
+            background: linear-gradient(-45deg, #0f172a, #1e1b4b, #064e3b, #450a0a);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            overflow-y: auto; overflow-x: hidden;
+            padding: 20px;
+        }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .setup-logo-container {
+            animation: popIn 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            margin-bottom: 20px;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .setup-logo-img {
+            height: 120px;
+            filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.6));
+            margin-bottom: 10px;
+        }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.5) translateY(-50px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .features-grid {
+            display: flex; gap: 15px; margin-bottom: 30px;
+            animation: fadeIn 1.5s ease 0.5s forwards; opacity: 0;
+            flex-wrap: wrap; justify-content: center;
+            max-width: 800px;
+        }
+        .feature-badge {
+            background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 15px; border-radius: 50px; color: white;
+            font-family: 'Roboto Condensed', sans-serif; font-size: 14px; font-weight: 700;
+            backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: flex; align-items: center; gap: 8px;
+        }
+        @keyframes fadeIn { to { opacity: 1; } }
+
+        .auth-card {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            border-radius: 20px; padding: 30px; width: 100%; max-width: 500px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            backdrop-filter: blur(15px);
+            animation: slideUp 1s ease 0.3s forwards; opacity: 0;
+            transform: translateY(30px);
+            display: flex; flex-direction: column; align-items: center;
+        }
+        @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+
         /* Updated .input-field: Auto width, smaller font for long IDs, force uppercase */
-        .input-field { background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); color: #fbbf24; font-size: 2.5rem; text-align: center; font-weight: 700; letter-spacing: 0.2rem; width: 90%; max-width: 600px; padding: 1rem; border-radius: 1rem; outline: none; transition: all 0.3s; font-family: 'Anton', sans-serif; margin-bottom: 2rem; text-transform: uppercase; }
-        .start-btn { background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); color: #000; border: none; padding: 1rem 4rem; border-radius: 50px; font-size: 1.1rem; font-weight: 800; letter-spacing: 2px; cursor: pointer; box-shadow: 0 10px 30px rgba(251, 191, 36, 0.3); text-transform: uppercase; transition: transform 0.1s; }
+        .input-field { background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); color: #fbbf24; font-size: 1.5rem; text-align: center; font-weight: 700; letter-spacing: 0.1rem; width: 100%; padding: 1rem; border-radius: 1rem; outline: none; transition: all 0.3s; font-family: 'Roboto', sans-serif; margin-bottom: 1.5rem; }
+        .input-field:focus { border-color: #fbbf24; background: rgba(255,255,255,0.1); }
+        .start-btn { background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); color: #000; border: none; padding: 1rem 3rem; border-radius: 50px; font-size: 1.1rem; font-weight: 800; letter-spacing: 2px; cursor: pointer; box-shadow: 0 10px 30px rgba(251, 191, 36, 0.4); text-transform: uppercase; transition: transform 0.2s, box-shadow 0.2s; width: 100%; }
         .start-btn:active { transform: scale(0.95); }
+        .start-btn:hover { box-shadow: 0 10px 40px rgba(251, 191, 36, 0.6); }
         
         /* MODALS */
         .help-modal { position: absolute; inset: 0; z-index: 70; background: rgba(0,0,0,0.9); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; }
@@ -632,10 +707,65 @@
     <audio id="audio-transition" src="transitionmusic.mp3" preload="auto"></audio>
 
     <div id="setup-screen">
-        <h1 style="font-family: 'Anton'; font-size: 3rem; color: white; margin-bottom: 0.5rem; letter-spacing: 2px;">BROADCAST UNIT</h1>
-        <p style="color: #94a3b8; font-size: 0.9rem; font-weight: bold; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px; font-family: 'Roboto';">Enter Match Code</p>
-        <input type="text" id="match-id" class="input-field" placeholder="Crickerr_XXXXXX">
-        <button onclick="connectToMatch()" class="start-btn" id="btn-start">Start Camera</button>
+        <div class="setup-logo-container">
+            <img src="Crickerr Logo 2.png" alt="Crickerr Logo" class="setup-logo-img" onerror="this.src='crickerrlogo.png'">
+            <h1 style="font-family: 'Anton'; font-size: 3.5rem; color: white; margin-bottom: 0; letter-spacing: 3px; text-shadow: 0 5px 15px rgba(0,0,0,0.8);">LIVE BROADCAST</h1>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-badge">📺 4K / 1080p Streaming</div>
+            <div class="feature-badge">⚡ Auto-Replay Engine</div>
+            <div class="feature-badge">📊 Live TV Graphics</div>
+            <div class="feature-badge">💰 Monetization System</div>
+            <div class="feature-badge">🎥 Multi-Camera Ready</div>
+        </div>
+        
+        <div class="auth-card">
+            <div id="login-panel" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+                <p style="color: #94a3b8; font-size: 0.9rem; font-weight: bold; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px; font-family: 'Roboto';">Broadcaster Login</p>
+                <input type="email" id="main-auth-email" class="input-field" placeholder="Email Address" style="text-transform: none; margin-bottom: 1rem;">
+                <input type="password" id="main-auth-pass" class="input-field" placeholder="Password" style="text-transform: none; margin-bottom: 1.5rem;">
+                <button onclick="handleMainLogin()" class="start-btn" id="btn-login" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4); margin-bottom: 15px;">LOGIN</button>
+                <button onclick="handleMainRegister()" class="start-btn" id="btn-register" style="background: transparent; color: #fbbf24; border: 2px solid #fbbf24; box-shadow: none; padding: 0.8rem 3rem;">CREATE ACCOUNT</button>
+            </div>
+
+            <div id="wallet-panel" style="display: none; flex-direction: column; align-items: center; width: 100%;">
+                <h2 style="font-family: 'Anton'; font-size: 2.2rem; margin-bottom: 5px; color: #fbbf24; letter-spacing: 1px; text-transform: uppercase;">WALLET & PRICING</h2>
+                <p id="main-wallet-status" style="margin-bottom:15px; color:#ef4444; font-weight: bold; font-size: 16px; text-align: center;">Loading wallet...</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 10px; width: 100%; margin-bottom: 25px;">
+                    
+                    <button onclick="purchasePass(10, 2.00)" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: rgba(59,130,246,0.1); border: 1px solid #3b82f6; border-radius: 10px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(59,130,246,0.1);">
+                        <span style="color: white; font-weight: bold; font-family: 'Roboto'; font-size: 1.1rem;">Up to 10 Overs</span>
+                        <span style="background: #3b82f6; color: white; padding: 6px 14px; border-radius: 8px; font-weight: 900; font-size: 1rem; box-shadow: 0 2px 8px rgba(59,130,246,0.4);">BUY $2</span>
+                    </button>
+
+                    <button onclick="purchasePass(20, 5.00)" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: rgba(59,130,246,0.1); border: 1px solid #3b82f6; border-radius: 10px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(59,130,246,0.1);">
+                        <span style="color: white; font-weight: bold; font-family: 'Roboto'; font-size: 1.1rem;">11 - 20 Overs</span>
+                        <span style="background: #3b82f6; color: white; padding: 6px 14px; border-radius: 8px; font-weight: 900; font-size: 1rem; box-shadow: 0 2px 8px rgba(59,130,246,0.4);">BUY $5</span>
+                    </button>
+
+                    <button onclick="purchasePass(50, 20.00)" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: rgba(59,130,246,0.1); border: 1px solid #3b82f6; border-radius: 10px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(59,130,246,0.1);">
+                        <span style="color: white; font-weight: bold; font-family: 'Roboto'; font-size: 1.1rem;">21 - 50 Overs</span>
+                        <span style="background: #3b82f6; color: white; padding: 6px 14px; border-radius: 8px; font-weight: 900; font-size: 1rem; box-shadow: 0 2px 8px rgba(59,130,246,0.4);">BUY $20</span>
+                    </button>
+
+                    <button onclick="purchaseDailyPass()" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(217,119,6,0.2) 100%); border: 1px solid #f59e0b; border-radius: 10px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(245,158,11,0.2);">
+                        <span style="color: #fbbf24; font-weight: 900; font-family: 'Roboto'; font-size: 1.1rem;">UNLIMITED DAY PASS (24H)</span>
+                        <span style="background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); color: black; padding: 6px 14px; border-radius: 8px; font-weight: 900; font-size: 1rem; box-shadow: 0 2px 8px rgba(245,158,11,0.5);">BUY $80</span>
+                    </button>
+                </div>
+                
+                <button onclick="proceedToMatchSetup()" style="width:100%; padding:15px; border-radius:50px; border: 2px solid rgba(255,255,255,0.2); background:transparent; color:#fff; font-weight:800; letter-spacing: 2px; font-size: 1rem; cursor:pointer; font-family: 'Roboto', sans-serif; transition: all 0.2s;">PROCEED TO MATCH ➔</button>
+            </div>
+
+            <div id="match-panel" style="display: none; flex-direction: column; align-items: center; width: 100%;">
+                <p style="color: #94a3b8; font-size: 0.9rem; font-weight: bold; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px; font-family: 'Roboto';">Enter Match Code</p>
+                <input type="text" id="match-id" class="input-field" placeholder="Crickerr Code" style="font-family: 'Anton', sans-serif; font-size: 2.5rem; text-transform: uppercase;">
+                <button onclick="connectToMatch()" class="start-btn" id="btn-start" style="margin-bottom: 15px;">START CAMERA</button>
+                <button onclick="goBackToWallet()" style="width:100%; padding:15px; border-radius:50px; border: 2px solid rgba(255,255,255,0.2); background:transparent; color:#fff; font-weight:800; letter-spacing: 2px; font-size: 1rem; cursor:pointer; font-family: 'Roboto', sans-serif; transition: all 0.2s;">⬅ BACK</button>
+            </div>
+        </div>
     </div>
 
     <div id="app-container" style="display: none;">
@@ -649,7 +779,13 @@
                 <span id="rec-text">REC</span>
             </div>
 
+            <div id="wallet-button" class="hud-item" onclick="showWalletModal()" style="position: absolute; top: 20px; right: 70px; background: rgba(0,0,0,0.5); border: 1px solid #fbbf24; padding: 6px 14px; border-radius: 50px; color: #fbbf24; font-weight: bold; cursor: pointer; z-index: 100; font-family: 'Roboto', sans-serif; font-size: 13px; backdrop-filter: blur(8px);">
+                💳 <span id="wallet-balance">LOGIN</span>
+            </div>
+
             <div id="gear-button" class="hud-item" onclick="toggleSettingsMenu()">⚙️</div>
+            
+            <div id="home-button" class="hud-item" onclick="returnToHome()" title="Return to Home">🏠</div>
 
             <div id="settings-menu" class="hud-item">
                 <div class="s-option" onclick="refreshCamera(); toggleSettingsMenu()"><span>Refresh Camera</span><span>🔄</span></div>
@@ -756,6 +892,26 @@
         </div>
     </div>
 
+    <div id="no-pass-modal" class="help-modal" style="display: none; z-index: 9999;">
+        <div class="modal-card" style="border: 1px solid #f59e0b; background: rgba(15, 23, 42, 0.95); box-shadow: 0 20px 50px rgba(0,0,0,0.8);">
+            <div style="font-size: 55px; margin-bottom: 5px; text-shadow: 0 10px 20px rgba(0,0,0,0.5);">🎟️</div>
+            <h2 style="font-family: 'Anton'; font-size: 30px; margin-bottom: 10px; color: #fbbf24; letter-spacing: 2px; text-transform: uppercase;">PASS REQUIRED</h2>
+            <p style="color: #cbd5e1; margin-bottom: 25px; font-size: 16px; line-height: 1.6; font-family: 'Roboto';">You don't have enough passes or an active unlimited - day pass to proceed to the live broadcast setup.<br><br><b style="color: white;">Please purchase a pass from your inventory first.</b></p>
+            <button onclick="closeNoPassModal()" style="width:100%; padding:15px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color:black; border:none; border-radius:50px; font-weight:900; font-size: 16px; cursor:pointer; box-shadow: 0 10px 20px rgba(245, 158, 11, 0.3); transition: transform 0.2s;">OK, VIEW INVENTORY</button>
+        </div>
+    </div>
+
+    <div id="custom-alert-modal" class="help-modal" style="display: none; z-index: 10000;">
+        <div class="modal-card" style="border: 1px solid #3b82f6; background: rgba(15, 23, 42, 0.95); box-shadow: 0 20px 50px rgba(0,0,0,0.8); max-width: 400px;">
+            <h2 id="custom-alert-title" style="font-family: 'Anton'; font-size: 26px; margin-bottom: 15px; color: #60a5fa; letter-spacing: 1px; text-transform: uppercase;">NOTIFICATION</h2>
+            <p id="custom-alert-message" style="color: #cbd5e1; margin-bottom: 30px; font-size: 16px; line-height: 1.6; font-family: 'Roboto';">Message here.</p>
+            <div id="custom-alert-buttons" style="display: flex; gap: 15px; width: 100%;">
+                <button id="custom-alert-btn-cancel" style="flex: 1; padding: 15px; border-radius: 50px; border: 2px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #94a3b8; font-weight: 800; letter-spacing: 1px; cursor: pointer; transition: all 0.2s; display: none;">CANCEL</button>
+                <button id="custom-alert-btn-ok" style="flex: 1; padding: 15px; border-radius: 50px; border: none; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; font-weight: 800; letter-spacing: 1px; cursor: pointer; box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3); transition: transform 0.2s;">OK</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- FIREBASE CONFIG ---
         const firebaseConfig = { apiKey: "AIzaSyBqcD59IAPpKqk98oDZkgzgkoVZ8b8LGgY", authDomain: "livecricketscoring-92087.firebaseapp.com", databaseURL: "https://livecricketscoring-92087-default-rtdb.firebaseio.com", projectId: "livecricketscoring-92087", storageBucket: "livecricketscoring-92087.firebasestorage.app", messagingSenderId: "522927197627", appId: "1:522927197627:web:f1df5db736cae96893089e" };
@@ -764,6 +920,12 @@
 
         // --- GLOBAL STATE ---
         let match = { t1: "HOME", t2: "AWAY", score: 0, wickets: 0, overs: 0, balls: 0, striker: { name: "", runs: 0, balls: 0 }, nonStriker: { name: "", runs: 0, balls: 0 }, bowler: { name: "", wkts: 0, runs: 0, balls: 0 }, currentOver: [], target: 0, totalOvers: 20, matchStatus: "", winner: "", margin: "", pom: null, showDismissalCard: false, showSummaryOverlay: false, desiredOverlay: null, sponsors: {} };
+        
+        // --- MONETIZATION STATE ---
+        let currentUser = null;
+        let userWallet = { balance: 0, dailyPass: false, dailyExpiry: null };
+        const auth = firebase.auth();
+
         let introPlayed = false; // Flag to ensure banner shows once
         let isScoreboardHidden = false; // Flag to hide scoreboard during intro
         let team1Logo = null, team2Logo = null;
@@ -1053,58 +1215,48 @@
             return true;
         }
 
+        // --- PROFESSIONAL GPU FRAME-BUFFER REPLAY SYSTEM ---
+        let replayBuffer = [];
+        const REPLAY_FPS = 15; // Standard frame rate for slow-mo sports replay
+        const MAX_FRAMES = 15 * 6; // Stores 6 seconds of rolling history
+        let replayPlaybackFrames = [];
+        let replayFrameIndex = 0;
+
         function startRollingReplayBuffer(stream) {
-            const bitRate = 8000000; 
-            const types = ["video/mp4", "video/mp4;codecs=avc1", "video/webm;codecs=h264", "video/webm;codecs=vp9", "video/webm"];
-            let selectedType = types.find(t => MediaRecorder.isTypeSupported(t)) || "";
-            if (!selectedType) return;
-            try {
-                const options = { mimeType: selectedType, videoBitsPerSecond: bitRate };
-                replayRecorder = new MediaRecorder(stream, options);
-                replayChunks = []; replayHeader = null; 
-                replayRecorder.ondataavailable = (e) => {
-                    if (e.data && e.data.size > 0) {
-                        if (!replayHeader) { replayHeader = e.data; } else { replayChunks.push(e.data); }
-                        if(replayChunks.length > 40) { replayChunks.shift(); }
-                    }
-                };
-                replayRecorder.start(400); 
-            } catch (e) {}
+            if (window.replayInterval) clearInterval(window.replayInterval);
+            replayBuffer = [];
+            window.replayInterval = setInterval(async () => {
+                // Only capture frames if live and highlights are enabled (saves RAM/Battery)
+                if (video.readyState >= 2 && !video.paused && areHighlightsEnabled) {
+                    try {
+                        // Captures direct to GPU Memory for zero latency
+                        const bitmap = await createImageBitmap(video, { resizeWidth: 1280, resizeHeight: 720 });
+                        replayBuffer.push(bitmap);
+                        if (replayBuffer.length > MAX_FRAMES) {
+                            const old = replayBuffer.shift();
+                            if (old && old.close) old.close(); // Clean GPU memory
+                        }
+                    } catch(e) {}
+                }
+            }, 1000 / REPLAY_FPS);
         }
 
         function triggerReplay(type) {
-            if (!areHighlightsEnabled || !replayRecorder || !replayHeader) return;
+            if (!areHighlightsEnabled || replayBuffer.length < 15) return;
             replayType = type;
-            replayRecorder.requestData();
-            video.pause();
-            if (replayVideo) { if(replayBlobUrl) URL.revokeObjectURL(replayBlobUrl); replayVideo.remove(); replayVideo = null; }
-            const fullBlob = [replayHeader, ...replayChunks];
-            const blob = new Blob(fullBlob, { type: replayHeader.type });
-            replayBlobUrl = URL.createObjectURL(blob);
-            replayVideo = document.createElement('video');
-            replayVideo.id = "replay-source";
-            replayVideo.muted = true; replayVideo.playsInline = true;
-            replayVideo.setAttribute('playsinline', ''); replayVideo.setAttribute('webkit-playsinline', '');
-            replayVideo.style.cssText = "position:absolute; top:0; left:0; width:1px; height:1px; opacity:0.01; pointer-events:none;";
-            document.body.appendChild(replayVideo);
-            replayVideo.src = replayBlobUrl;
-            replayVideo.playbackRate = 0.7; 
-            replayVideo.play().then(() => {
-                replayState = "TRANSITION_IN";
-                transitionStartTime = Date.now();
-            }).catch(error => cleanupReplay());
-            replayVideo.onerror = () => cleanupReplay(); 
+            
+            // Snapshot the current buffer for playback
+            replayPlaybackFrames = [...replayBuffer]; 
+            replayFrameIndex = 0;
+            
+            // Note: We DO NOT pause the live video anymore. Live stream continues uninterrupted!
+            replayState = "TRANSITION_IN";
+            transitionStartTime = Date.now();
         }
 
         function cleanupReplay() {
-            if(replayVideo) { replayVideo.pause(); replayVideo.src = ""; replayVideo.remove(); replayVideo = null; }
-            if(replayBlobUrl) { URL.revokeObjectURL(replayBlobUrl); replayBlobUrl = null; }
-            video.play().catch(e => {});
+            replayPlaybackFrames = [];
             replayState = "LIVE";
-            if(replayRecorder && replayRecorder.state !== "inactive") {
-                replayRecorder.stop();
-                setTimeout(() => { replayChunks = []; replayHeader = null; replayRecorder.start(400); }, 100);
-            }
         }
 
         // --- 🛡️ ULTIMATE MOBILE SAFETY RECORDER (IndexedDB) ---
@@ -1584,6 +1736,20 @@ async function toggleLiveStream() {
         return;
     }
 
+    // --- MONETIZATION VALIDATION BARRIER ---
+    if (!currentUser) {
+        showLoginModal();
+        return;
+    }
+
+    if(txt) txt.innerText = "VALIDATING...";
+    const canStream = await validateAndChargeForMatch(matchId);
+    if (!canStream) {
+        if(txt) txt.innerText = "GO LIVE";
+        return; 
+    }
+    // ---------------------------------------
+
     if(txt) txt.innerText = "STARTING...";
 
     // Destroy existing peer if it exists to re-initialize with the correct ID
@@ -1670,6 +1836,484 @@ function goLiveOnDB(matchId, peerId) {
         if(txt) txt.innerText = "RETRY";
     });
 }
+
+// --- FULL MONETIZATION & AUTH ENGINE ---
+
+function showLoginModal() { 
+    const modal = document.getElementById('auth-modal'); 
+    if (modal) {
+        modal.style.display = 'flex'; 
+    } else {
+        alert("Please log in from the main setup screen.");
+    }
+}
+function closeLoginModal() { 
+    const modal = document.getElementById('auth-modal'); 
+    if (modal) modal.style.display = 'none'; 
+}
+function showWalletModal() { 
+    const modal = document.getElementById('wallet-modal'); 
+    if (modal) {
+        modal.style.display = 'flex'; 
+        const status = document.getElementById('wallet-status');
+        if (status) status.innerText = ""; 
+    } else {
+        alert("Wallet management is available on the main setup screen. Please refresh the page to access your inventory.");
+    }
+}
+function closeWalletModal() { 
+    const modal = document.getElementById('wallet-modal'); 
+    if (modal) modal.style.display = 'none'; 
+}
+
+// 1. Authenticate & Auto-Create User Wallet (Handles both Modal and Main Screen)
+async function handleModalLogin() {
+    const btn = document.getElementById('btn-modal-login');
+    btn.innerText = "WAIT...";
+    await processLogin('auth-email', 'auth-pass');
+    btn.innerText = "LOGIN";
+}
+
+async function handleModalRegister() {
+    const btn = document.getElementById('btn-modal-register');
+    btn.innerText = "WAIT...";
+    await processRegister('auth-email', 'auth-pass');
+    btn.innerText = "REGISTER";
+}
+
+async function handleMainLogin() {
+    const btn = document.getElementById('btn-login');
+    btn.innerText = "VERIFYING...";
+    await processLogin('main-auth-email', 'main-auth-pass');
+    btn.innerText = "LOGIN";
+}
+
+async function handleMainRegister() {
+    const btn = document.getElementById('btn-register');
+    btn.innerText = "CREATING...";
+    await processRegister('main-auth-email', 'main-auth-pass');
+    btn.innerText = "CREATE ACCOUNT";
+}
+
+async function processLogin(emailId, passId) {
+    const email = document.getElementById(emailId).value;
+    const password = document.getElementById(passId).value;
+    
+    if (!email || !password) {
+        alert("Please enter both email and password to log in.");
+        return;
+    }
+    
+    try {
+        await auth.signInWithEmailAndPassword(email, password);
+        // Note: onAuthStateChanged listener handles the UI swap automatically!
+    } catch (error) {
+        const errCode = error.code || "";
+        const errMsg = error.message || String(error);
+        
+        if (errCode === 'auth/user-not-found' || errCode === 'auth/invalid-credential') {
+            alert("Incorrect email or password. Please try again or create an account.");
+        } else if (errCode === 'auth/wrong-password' || errMsg.includes('INVALID_LOGIN_CREDENTIALS')) {
+            alert("Incorrect password. Please try again.");
+        } else if (errCode === 'auth/too-many-requests') {
+            alert("Too many failed login attempts. Please wait a moment and try again.");
+        } else {
+            alert("Login failed: " + errMsg);
+        }
+    }
+}
+
+async function processRegister(emailId, passId) {
+    const email = document.getElementById(emailId).value;
+    const password = document.getElementById(passId).value;
+    
+    if (!email || !password) {
+        alert("Please enter both email and password to register.");
+        return;
+    }
+    if (password.length < 6) {
+        alert("Password must be at least 6 characters long.");
+        return;
+    }
+    
+    try {
+        await auth.createUserWithEmailAndPassword(email, password);
+        // Generate the Pass Inventory schema for the new user
+        await db.collection("wallets").doc(email).set({ passes10: 0, passes20: 0, passes50: 0, dailyPass: false, dailyExpiry: null });
+        alert("Account created successfully! You are now logged in.");
+    } catch (error) {
+        const errCode = error.code || "";
+        const errMsg = error.message || String(error);
+        
+        if (errCode === 'auth/email-already-in-use') {
+            alert("An account with this email already exists. Please log in.");
+        } else {
+            alert("Registration failed: " + errMsg);
+        }
+    }
+}
+
+// 2. Real-time Wallet Sync Listener
+auth.onAuthStateChanged(async (user) => {
+    if (user) {
+        currentUser = user;
+        closeLoginModal();
+        
+        // Transition from Login Panel to Wallet Panel on First Screen (AUTO-SAVE LOGIN)
+        const loginPanel = document.getElementById('login-panel');
+        const walletPanel = document.getElementById('wallet-panel');
+        const matchPanel = document.getElementById('match-panel');
+        
+        if (loginPanel && walletPanel && matchPanel && document.getElementById('setup-screen').style.display !== 'none') {
+            loginPanel.style.display = 'none';
+            walletPanel.style.display = 'flex';
+            matchPanel.style.display = 'none';
+        }
+        
+        db.collection("wallets").doc(user.email).onSnapshot(doc => {
+            if (doc.exists) {
+                userWallet = doc.data();
+                
+                // Initialize missing pass categories safely
+                if(userWallet.passes10 === undefined) userWallet.passes10 = 0;
+                if(userWallet.passes20 === undefined) userWallet.passes20 = 0;
+                if(userWallet.passes50 === undefined) userWallet.passes50 = 0;
+
+                const totalPasses = userWallet.passes10 + userWallet.passes20 + userWallet.passes50;
+                document.getElementById('wallet-balance').innerText = `PASSES: ${totalPasses}`;
+                
+                // Update Main Screen Wallet Status with Inventory
+                const mainStatus = document.getElementById('main-wallet-status');
+                if (mainStatus) {
+                    if (userWallet.dailyPass && userWallet.dailyExpiry && userWallet.dailyExpiry.toDate() > new Date()) {
+                        mainStatus.innerText = "UNLIMITED - DAY PASS ACTIVE 🟢";
+                        mainStatus.style.color = "#4ade80"; // Green
+                    } else {
+                        mainStatus.innerText = `Inventory: ${userWallet.passes10}x (10-Ov) | ${userWallet.passes20}x (20-Ov) | ${userWallet.passes50}x (50-Ov)`;
+                        mainStatus.style.color = (totalPasses > 0) ? "#4ade80" : "#fbbf24"; 
+                    }
+                }
+            } else {
+                // Failsafe if wallet doc missing
+                db.collection("wallets").doc(user.email).set({ passes10: 0, passes20: 0, passes50: 0, dailyPass: false, dailyExpiry: null });
+            }
+        });
+    } else {
+        currentUser = null;
+        document.getElementById('wallet-balance').innerText = "LOGIN";
+        
+        // Show Login Panel if logged out
+        const loginPanel = document.getElementById('login-panel');
+        const walletPanel = document.getElementById('wallet-panel');
+        const matchPanel = document.getElementById('match-panel');
+        
+        if (loginPanel && walletPanel && matchPanel && document.getElementById('setup-screen').style.display !== 'none') {
+            loginPanel.style.display = 'flex';
+            walletPanel.style.display = 'none';
+            matchPanel.style.display = 'none';
+        }
+    }
+});
+
+// Move from Wallet Screen to Match Code Screen
+function proceedToMatchSetup() {
+    // --- STRICT INVENTORY GATEKEEPER ---
+    if (userWallet) {
+        const totalPasses = (userWallet.passes10 || 0) + (userWallet.passes20 || 0) + (userWallet.passes50 || 0);
+        
+        let isDailyPassActive = false;
+        if (userWallet.dailyPass && userWallet.dailyExpiry) {
+            // Check if it exists and hasn't expired
+            isDailyPassActive = userWallet.dailyExpiry.toDate() > new Date();
+        }
+        
+        if (totalPasses === 0 && !isDailyPassActive) {
+            showNoPassModal(); // Trigger the beautiful new popup instead of standard alert
+            return; // Blocks the user from moving to the next screen
+        }
+    }
+
+    const walletPanel = document.getElementById('wallet-panel');
+    const matchPanel = document.getElementById('match-panel');
+    if (walletPanel && matchPanel) {
+        walletPanel.style.display = 'none';
+        matchPanel.style.display = 'flex';
+    }
+}
+
+function showNoPassModal() {
+    const modal = document.getElementById('no-pass-modal');
+    if (modal) modal.style.display = 'flex';
+}
+
+function closeNoPassModal() {
+    const modal = document.getElementById('no-pass-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+function goBackToWallet() {
+    document.getElementById('match-panel').style.display = 'none';
+    document.getElementById('wallet-panel').style.display = 'flex';
+}
+
+function returnToHome() {
+    const confirmHome = confirm("Are you sure you want to exit the broadcast and return to the home screen?");
+    if (!confirmHome) return;
+
+    // 1. Stop Recording Safely
+    if (isRecording) stopRecording();
+    
+    // 2. Stop Live Stream Safely
+    if (isLive) toggleLiveStream();
+    
+    // 3. Halt Camera and Replay Buffer
+    if (currentStream) {
+        currentStream.getTracks().forEach(track => track.stop());
+        currentStream = null;
+    }
+    const videoObj = document.getElementById('video-source');
+    if (videoObj) videoObj.srcObject = null;
+    if (window.replayInterval) clearInterval(window.replayInterval);
+    
+    // 4. Switch Screens Back to Setup
+    document.getElementById('app-container').style.display = 'none';
+    document.getElementById('app-container').classList.remove('landscape-active');
+    document.getElementById('setup-screen').style.display = 'flex';
+    
+    // Reset Start Button
+    const btn = document.getElementById('btn-start');
+    if (btn) {
+        btn.innerText = "START CAMERA";
+        btn.disabled = false;
+    }
+    
+    // 5. Release Orientation Locks
+    try {
+        if (document.exitFullscreen && document.fullscreenElement) document.exitFullscreen().catch(e => {});
+        if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
+    } catch (e) {}
+}
+
+// --- CUSTOM PROMISE-BASED MODAL SYSTEM ---
+function showCustomModal(title, message, isConfirm = false) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('custom-alert-modal');
+        const titleEl = document.getElementById('custom-alert-title');
+        const btnCancel = document.getElementById('custom-alert-btn-cancel');
+        const btnOk = document.getElementById('custom-alert-btn-ok');
+
+        titleEl.innerText = title;
+        document.getElementById('custom-alert-message').innerHTML = message;
+
+        // Auto-Theme accent colors based on context (Error vs Success vs Standard)
+        if (title.includes("ERROR") || title.includes("INSUFFICIENT")) {
+            titleEl.style.color = "#ef4444";
+            modal.querySelector('.modal-card').style.borderColor = "#ef4444";
+            btnOk.style.background = "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)";
+            btnOk.style.boxShadow = "0 10px 20px rgba(239, 68, 68, 0.3)";
+        } else if (title.includes("SUCCESS")) {
+            titleEl.style.color = "#22c55e";
+            modal.querySelector('.modal-card').style.borderColor = "#22c55e";
+            btnOk.style.background = "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)";
+            btnOk.style.boxShadow = "0 10px 20px rgba(34, 197, 94, 0.3)";
+        } else {
+            titleEl.style.color = "#60a5fa";
+            modal.querySelector('.modal-card').style.borderColor = "#3b82f6";
+            btnOk.style.background = "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)";
+            btnOk.style.boxShadow = "0 10px 20px rgba(59, 130, 246, 0.3)";
+        }
+
+        if (isConfirm) {
+            btnCancel.style.display = 'block';
+        } else {
+            btnCancel.style.display = 'none';
+        }
+
+        modal.style.display = 'flex';
+
+        btnOk.onclick = () => {
+            modal.style.display = 'none';
+            resolve(true);
+        };
+
+        btnCancel.onclick = () => {
+            modal.style.display = 'none';
+            resolve(false);
+        };
+    });
+}
+
+// 3. Stripe Payment Engine (Purchasing Passes)
+async function purchasePass(tier, price) {
+    if (!currentUser) {
+        await showCustomModal("LOGIN REQUIRED", "Please log in first to purchase passes.", false);
+        return;
+    }
+    
+    // Direct to real Stripe link for the 10-Over Pass ($2)
+    if (tier === 10) {
+        window.location.href = `https://buy.stripe.com/aFa6oA3q6dhs4bBgtR0x205?prefilled_email=${encodeURIComponent(currentUser.email)}`;
+        return;
+    }
+
+    // Direct to real Stripe link for the 20-Over Pass ($5)
+    if (tier === 20) {
+        window.location.href = `https://buy.stripe.com/eVqeV6f8O1yKgYn0uT0x206?prefilled_email=${encodeURIComponent(currentUser.email)}`;
+        return;
+    }
+
+    // Direct to real Stripe link for the 50-Over Pass ($20)
+    if (tier === 50) {
+        window.location.href = `https://buy.stripe.com/eVqeV6f8O1yKgYn0uT0x206?prefilled_email=${encodeURIComponent(currentUser.email)}`;
+        return;
+    }
+    
+    // Fallback for any other test passes
+    const confirmBuy = await showCustomModal("CONFIRM PURCHASE", `[Stripe Test] Would you like to buy a ${tier}-Over Pass for CAD $${price.toFixed(2)}?`, true);
+    
+    if (confirmBuy) {
+        const passKey = `passes${tier}`;
+        await db.collection("wallets").doc(currentUser.email).set({
+            [passKey]: firebase.firestore.FieldValue.increment(1)
+        }, { merge: true });
+        
+        await showCustomModal("SUCCESS!", `✅ Payment Successful!<br><br>A ${tier}-Over Pass has been added to your inventory.`, false);
+    }
+}
+
+async function purchaseDailyPass() {
+    if (!currentUser) {
+        await showCustomModal("LOGIN REQUIRED", "Please log in first to purchase passes.", false);
+        return;
+    }
+    
+    const confirmBuy = await showCustomModal("CONFIRM PURCHASE", `[Stripe Test] Would you like to buy a 24H Day Pass for CAD $80.00?`, true);
+    
+    if (confirmBuy) {
+        const expiry = new Date();
+        expiry.setHours(expiry.getHours() + 24); // 24 hours from now
+        
+        await db.collection("wallets").doc(currentUser.email).set({
+            dailyPass: true,
+            dailyExpiry: expiry
+        }, { merge: true });
+        
+        await showCustomModal("SUCCESS!", `✅ Payment Successful!<br><br>Your Unlimited Day Pass is now active for 24 hours.`, false);
+    }
+}
+
+// 4. Charge Pass & Generate Token (WITH STRICT OVERS VALIDATION)
+async function validateAndChargeForMatch(matchId) {
+    try {
+        const overs = match.totalOvers || 20;
+
+        // A. Rematch Tracking Logic (Find matches for these specific teams today to REUSE link)
+        const todayStr = new Date().toISOString().split('T')[0];
+        const teams = [match.t1 || "T1", match.t2 || "T2"].sort().join("_vs_");
+        const historyRef = db.collection("match_history").doc(currentUser.email).collection(todayStr).doc(teams);
+        
+        let matchCount = 0;
+        try {
+            const doc = await historyRef.get();
+            if (doc.exists) { matchCount = doc.data().count; }
+        } catch (e) {}
+
+        const isRematch = (matchCount >= 1);
+
+        // B. Check for active Day Pass
+        if (userWallet.dailyPass && userWallet.dailyExpiry && userWallet.dailyExpiry.toDate() > new Date()) {
+            await authorizeStream(matchId, historyRef, isRematch);
+            return true;
+        }
+
+        // C. Strict Overs Pass Validation (No Free Promo, all rematches cost a pass)
+        let passUsed = null;
+        let passLabel = "";
+
+        // Check if the user has a pass equal to or greater than the match length
+        if (overs <= 10) {
+            if (userWallet.passes10 > 0) { passUsed = "passes10"; passLabel = "10-Over"; }
+            else if (userWallet.passes20 > 0) { passUsed = "passes20"; passLabel = "20-Over"; }
+            else if (userWallet.passes50 > 0) { passUsed = "passes50"; passLabel = "50-Over"; }
+        } else if (overs <= 20) {
+            if (userWallet.passes20 > 0) { passUsed = "passes20"; passLabel = "20-Over"; }
+            else if (userWallet.passes50 > 0) { passUsed = "passes50"; passLabel = "50-Over"; }
+        } else {
+            if (userWallet.passes50 > 0) { passUsed = "passes50"; passLabel = "50-Over"; }
+        }
+
+        if (!passUsed) {
+            await showCustomModal("INSUFFICIENT PASS", `❌ You are trying to stream a ${overs}-Over match, but you do not have a pass large enough to cover it.<br><br>Please purchase one in the Wallet.`, false);
+            
+            // Pop open the Wallet Modal over the match
+            showWalletModal();
+            return false;
+        }
+
+        // D. Deduct the strict pass
+        let chargePrompt = `This is a ${overs}-Over match. Deduct 1x [${passLabel} Pass] from your inventory?`;
+        if (isRematch) {
+            chargePrompt = `This is a rematch! It will use the exact same broadcast link as your previous match, but it still requires a pass.<br><br>Deduct 1x [${passLabel} Pass] from your inventory?`;
+        }
+
+        const confirmCharge = await showCustomModal("DEDUCT PASS", chargePrompt, true);
+        if (!confirmCharge) return false;
+
+        await db.collection("wallets").doc(currentUser.email).update({
+            [passUsed]: firebase.firestore.FieldValue.increment(-1)
+        });
+
+        // Generate the stream with the flag to reuse the same link if it's a rematch
+        await authorizeStream(matchId, historyRef, isRematch);
+        return true;
+
+    } catch (err) {
+        console.error("Validation error:", err);
+        await showCustomModal("ERROR", "Error validating payment. Please try again.", false);
+        return false;
+    }
+}
+
+async function authorizeStream(matchId, historyRef = null, isRematch = false) {
+    let token = null;
+
+    // Retrieve previous code/token if this is a rematch
+    if (isRematch && historyRef) {
+        try {
+            const doc = await historyRef.get();
+            if (doc.exists && doc.data().lastToken) {
+                token = doc.data().lastToken;
+            }
+        } catch (e) {
+            console.error("Failed to fetch previous token", e);
+        }
+    }
+
+    // Generate a NEW token ONLY if we couldn't find an old one or it's not a rematch
+    if (!token) {
+        token = "LIVE-" + Math.random().toString(36).substr(2, 8).toUpperCase();
+    }
+
+    // Increment Rematch Tracker and save the token so it can be re-used later
+    if (historyRef) {
+        await historyRef.set({
+            count: firebase.firestore.FieldValue.increment(1),
+            lastMatchId: matchId,
+            lastToken: token, // Store the exact code to be reused
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+    }
+
+    // Use merge: true so if the token already exists (rematch), we just update the matchId and timestamp
+    await db.collection("live_tokens").doc(token).set({
+        user: currentUser.email,
+        matchId: matchId,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    
+    console.log("💳 Stream Authorized! Linked Token:", token);
+}
+
         function copyObsUrl() {
             navigator.clipboard.writeText(document.getElementById('obs-url-display').innerText).then(() => alert("URL Copied!"));
         }
@@ -2089,11 +2733,25 @@ function goLiveOnDB(matchId, peerId) {
                 } else if (replayState === "TRANSITION_IN") {
                     drawVideoObject(video, w, h);
                     let finished = drawCoolStinger(w, h, "IN");
-                    if (finished) { replayState = "PLAYING"; if(replayVideo) replayVideo.play().catch(e => {}); replayStartTime = Date.now(); }
+                    if (finished) { replayState = "PLAYING"; replayStartTime = Date.now(); }
                 } else if (replayState === "PLAYING") {
-                    if(replayVideo) drawVideoObject(replayVideo, w, h);
+                    // --- CINEMATIC SLOW-MOTION REPLAY ENGINE ---
+                    let idx = Math.floor(replayFrameIndex);
+                    if (replayPlaybackFrames[idx]) {
+                        ctx.drawImage(replayPlaybackFrames[idx], 0, 0, w, h);
+                        // Advance frame slowly to create an ultra-smooth 40% slow-motion effect
+                        replayFrameIndex += 0.4; 
+                    } else if (replayPlaybackFrames.length > 0) {
+                        // Hold on the final frame if we reach the end
+                        ctx.drawImage(replayPlaybackFrames[replayPlaybackFrames.length - 1], 0, 0, w, h);
+                    }
+                    
                     drawReplayOverlay(w, h);
-                    if ((replayVideo && replayVideo.ended) || (Date.now() - replayStartTime > 15000)) { replayState = "TRANSITION_OUT"; transitionStartTime = Date.now(); }
+                    
+                    if (replayFrameIndex >= replayPlaybackFrames.length || (Date.now() - replayStartTime > 15000)) { 
+                        replayState = "TRANSITION_OUT"; 
+                        transitionStartTime = Date.now(); 
+                    }
                 } else if (replayState === "TRANSITION_OUT") {
                     drawVideoObject(video, w, h); 
                     let finished = drawCoolStinger(w, h, "OUT");
