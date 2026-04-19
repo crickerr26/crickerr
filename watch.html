@@ -614,67 +614,79 @@
             text-transform: uppercase; letter-spacing: 1px; padding-left: 4px;
         }
         .match-cards {
-            display: grid; grid-template-columns: 1fr; gap: 10px; /* Mobile first structure */
+            display: grid; grid-template-columns: 1fr; gap: 20px; /* Mobile first structure */
         }
         
         @media (min-width: 600px) {
-            .match-cards { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+            .match-cards { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
         }
 
         .match-card {
-            background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); 
-            border-radius: 12px; padding: 12px 15px; cursor: pointer; 
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
-            display: flex; flex-direction: column; gap: 4px; backdrop-filter: blur(10px);
+            background: transparent; border: none; 
+            border-radius: 0; padding: 0; cursor: pointer; 
+            transition: transform 0.2s ease; position: relative;
+            display: flex; flex-direction: column; gap: 12px;
         }
-        .match-card:active { transform: scale(0.98); background: rgba(255, 255, 255, 0.04); border-color: rgba(59, 130, 246, 0.3); }
-        .match-card.admin-selected {
-            border-color: #ef4444; background: rgba(239, 68, 68, 0.05);
+        .match-card:active { transform: scale(0.98); }
+        .match-card.admin-selected .yt-thumbnail-box {
+            border: 2px solid #ef4444; box-sizing: border-box;
         }
         
+        .yt-thumbnail-box {
+            width: 100%; aspect-ratio: 16 / 9;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-radius: 12px; overflow: hidden; position: relative;
+            display: flex; align-items: center; justify-content: space-evenly;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .yt-thumb-logo {
+            width: 70px; height: 70px; object-fit: contain;
+            filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
+        }
+        
+        .yt-thumb-vs {
+            font-family: 'Montserrat', sans-serif; font-size: 22px; font-weight: 900;
+            color: rgba(255,255,255,0.2); font-style: italic;
+        }
+
         .match-checkbox {
-            display: none; position: absolute; top: 12px; left: 12px; width: 16px; height: 16px; pointer-events: none; accent-color: #ef4444;
+            display: none; position: absolute; top: 10px; left: 10px; width: 18px; height: 18px; pointer-events: none; accent-color: #ef4444; z-index: 10;
         }
         .admin-mode .match-checkbox { display: block; }
-        .admin-mode .match-card-teams { padding-left: 24px; } /* Room for checkbox */
         
         .match-card-live {
-            position: absolute; top: 12px; right: 12px;
-            background: rgba(239, 68, 68, 0.15); border: none; color: #f87171;
-            padding: 3px 8px; border-radius: 50px; font-size: 9px; font-weight: 800;
-            display: flex; align-items: center; gap: 4px; letter-spacing: 0.5px;
-            z-index: 5;
+            position: absolute; bottom: 8px; right: 8px;
+            background: rgba(0, 0, 0, 0.85); color: white;
+            padding: 4px 8px; border-radius: 6px; font-family: 'Roboto', sans-serif;
+            font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+            display: flex; align-items: center; gap: 5px; z-index: 5;
+            backdrop-filter: blur(4px);
         }
         
-        .match-card-teams {
-            display: flex; align-items: center; justify-content: space-between; 
-            margin-top: 6px; padding-right: 65px; transition: padding 0.2s;
+        .yt-meta-row {
+            display: flex; gap: 12px; align-items: flex-start; padding: 0 4px;
         }
         
-        .match-team {
-            display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;
-        }
-        .match-team.right { flex-direction: row-reverse; text-align: right; }
-        
-        .match-team-logo {
-            width: 30px; height: 30px; border-radius: 50%; object-fit: contain; 
-            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); 
-            padding: 3px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        .yt-channel-avatar {
+            width: 36px; height: 36px; border-radius: 50%; object-fit: contain;
+            background: #1e293b; border: 1px solid rgba(255,255,255,0.1); flex-shrink: 0;
+            padding: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.4);
         }
         
-        .match-team-name {
-            font-family: 'Roboto', sans-serif; font-size: 12px; font-weight: 700; color: #f8fafc;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;
+        .yt-meta-info {
+            display: flex; flex-direction: column; gap: 4px; overflow: hidden;
         }
         
-        .match-vs {
-            font-size: 9px; font-weight: 800; color: #64748b; padding: 0 6px; font-style: italic;
+        .yt-match-title {
+            font-family: 'Roboto', sans-serif; font-size: 15px; font-weight: 600; color: #f8fafc;
+            line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+            overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 2px rgba(0,0,0,0.8);
         }
         
-        .match-card-sub {
-            font-size: 10px; color: #94a3b8; font-weight: 500; font-family: 'Roboto', sans-serif;
+        .yt-match-sub {
+            font-family: 'Roboto', sans-serif; font-size: 13px; color: #94a3b8;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px; margin-top: 8px; text-align: center;
         }
 
         /* STATUS SCREEN */
@@ -1414,7 +1426,8 @@
                             }
                             
                             const isEnded = m.matchStatus === "COMPLETE" || m.isStreaming === false;
-                            const hasReplay = isEnded && m.mp4Url;
+                            // Fix: Properly check for m.mp4Url so the card stays clickable for your VOD playback
+                            const hasRecording = isEnded && (m.mp4Url || m.recordedUrl);
                             
                             let dateStr = "";
                             const matchDate = m.matchDate || m.date;
@@ -1434,38 +1447,35 @@
                             let subText = subInfo.length > 0 ? subInfo.join(' • ') : 'Tap to Watch Live';
 
                             if (isEnded) {
-                                let resultText = m.result && m.result.trim() !== "" ? m.result : "Live match ended";
-                                if (hasReplay) resultText = "▶ Tap to watch Replay";
-                                subText = `<span style="color: ${hasReplay ? '#60a5fa' : '#fca5a5'}; font-weight: 700;">${resultText}</span>`;
+                                let resultText = m.result && m.result.trim() !== "" ? m.result : "Match Ended";
+                                if (hasRecording) resultText = "▶ Tap to View the Match";
+                                subText = `<span style="color: ${hasRecording ? '#60a5fa' : '#fca5a5'}; font-weight: 700;">${resultText}</span>`;
                             }
 
-                            const cardStyle = (isEnded && !hasReplay) ? 'opacity: 0.6; filter: grayscale(100%);' : '';
+                            const cardStyle = (isEnded && !hasRecording) ? 'opacity: 0.6; filter: grayscale(100%); pointer-events: none;' : '';
                             const liveBadgeHtml = isEnded 
-                                ? (hasReplay 
-                                    ? `<div class="match-card-live" style="background: rgba(59, 130, 246, 0.2); color: #93c5fd;">REPLAY</div>`
-                                    : `<div class="match-card-live" style="background: rgba(255, 255, 255, 0.15); color: #cbd5e1;">ENDED</div>`)
-                                : `<div class="match-card-live"><div class="live-dot" style="width:6px;height:6px;"></div> LIVE</div>`;
+                                ? (hasRecording 
+                                    ? `<div class="match-card-live" style="background: rgba(0, 0, 0, 0.85); color: white;">ENDED</div>`
+                                    : `<div class="match-card-live" style="background: rgba(0, 0, 0, 0.85); color: #cbd5e1;">ENDED</div>`)
+                                : `<div class="match-card-live" style="background: #cc0000; color: white;"><div class="live-dot" style="width:6px;height:6px;"></div> LIVE</div>`;
 
                             return `
                             <div class="match-card ${isSel ? 'admin-selected' : ''}" id="card-${m.id}" onclick="selectMatchFromList('${m.id}')" style="${cardStyle}">
-                                <input type="checkbox" class="match-checkbox" ${isSel ? 'checked' : ''}>
-                                ${liveBadgeHtml}
-                                
-                                <div class="match-card-teams">
-                                    <div class="match-team left">
-                                        <img src="${t1Img}" class="match-team-logo" alt="T1">
-                                        <span class="match-team-name">${t1Name}</span>
-                                    </div>
-                                    
-                                    <div class="match-vs">VS</div>
-                                    
-                                    <div class="match-team right">
-                                        <img src="${t2Img}" class="match-team-logo" alt="T2">
-                                        <span class="match-team-name">${t2Name}</span>
-                                    </div>
+                                <div class="yt-thumbnail-box">
+                                    <img src="${t1Img}" class="yt-thumb-logo" alt="T1">
+                                    <span class="yt-thumb-vs">VS</span>
+                                    <img src="${t2Img}" class="yt-thumb-logo" alt="T2">
+                                    ${liveBadgeHtml}
+                                    <input type="checkbox" class="match-checkbox" ${isSel ? 'checked' : ''}>
                                 </div>
                                 
-                                <div class="match-card-sub">${subText}</div>
+                                <div class="yt-meta-row">
+                                    <img src="/my-logo.png" class="yt-channel-avatar" alt="Channel">
+                                    <div class="yt-meta-info">
+                                        <div class="yt-match-title">${t1Name} vs ${t2Name}</div>
+                                        <div class="yt-match-sub">${subText}</div>
+                                    </div>
+                                </div>
                             </div>
                             `;
                         }).join('')}
@@ -1724,10 +1734,10 @@
                         }
 
                         const now = new Date().getTime();
-                        // Assume data.endTime is written when match ends, otherwise fallback to matchDate or current time
+                        // 10-day window: match stays accessible for 10 days after it ends (like YouTube)
                         const matchEndTime = data.endTime ? new Date(data.endTime).getTime() : (data.matchDate ? new Date(data.matchDate).getTime() : now);
-                        const fiveDaysMs = 5 * 24 * 60 * 60 * 1000;
-                        const isWithin5Days = (now - matchEndTime) <= fiveDaysMs;
+                        const tenDaysMs = 10 * 24 * 60 * 60 * 1000;
+                        const isWithin10Days = (now - matchEndTime) <= tenDaysMs;
 
                         if (data.isStreaming && data.streamId) {
                             if (!peer) {
@@ -1753,23 +1763,23 @@
                             window.currentVODUrl = null;
                             
                             initLiveFeatures(matchId);
-                        } else if (!data.isStreaming && data.mp4Url && isWithin5Days) {
-                            // PROFESSIONAL SCALABLE VOD SOLUTION
-                            // Plays the recorded server MP4 file instead of using local WebRTC
+                        } else if (!data.isStreaming && (data.mp4Url || data.recordedUrl) && isWithin10Days) {
+                            // PROFESSIONAL SCALABLE VOD SOLUTION (YouTube-style Replay)
+                            // Plays the recorded server file instead of using local WebRTC
+                            const playbackUrl = data.mp4Url || data.recordedUrl;
                             statusOverlay.style.display = 'none';
                             if (peer) { peer.destroy(); peer = null; }
                             
                             video.srcObject = null;
-                            video.src = data.mp4Url;
+                            video.src = playbackUrl;
                             video.controls = true; // Enable native HTML5 player controls for VOD playback
                             video.play().catch(e => {
                                 playOverlay.style.display = 'flex';
-                                document.getElementById('play-btn').innerText = "TAP TO WATCH REPLAY";
+                                document.getElementById('play-btn').innerText = "TAP TO WATCH MATCH";
                             });
                             
-                            document.getElementById('live-badge').style.display = 'flex';
-                            document.getElementById('live-badge').classList.add('live-off');
-                            document.getElementById('live-badge-text').innerText = "REPLAY";
+                            // Hide the LIVE badge completely for YouTube VOD styling
+                            document.getElementById('live-badge').style.display = 'none';
                             
                             // Hide live-specific UI for VODs
                             document.getElementById('live-stats-bar').style.display = 'none';
@@ -1781,10 +1791,39 @@
                             document.getElementById('share-btn').classList.add('match-active');
                             document.getElementById('close-btn').classList.add('match-active');
                             
-                            window.currentVODUrl = data.mp4Url; // Store for sharing/exporting
+                            window.currentVODUrl = playbackUrl; // Store for sharing/exporting
+                        } else if (!data.isStreaming && !(data.mp4Url || data.recordedUrl) && isWithin10Days) {
+                            // MATCH ENDED WITHOUT A RECORDING — show "Match Ended" screen for 10 days
+                            // like YouTube keeps ended livestreams visible even without a recording
+                            statusOverlay.style.display = 'none';
+                            if (peer) { peer.destroy(); peer = null; }
+                            video.srcObject = null;
+                            video.src = "";
+                            
+                            document.getElementById('live-badge').style.display = 'flex';
+                            document.getElementById('live-badge').classList.add('live-off');
+                            document.getElementById('live-badge-text').innerText = "ENDED";
+                            
+                            // Hide all live-only UI
+                            document.getElementById('live-stats-bar').style.display = 'none';
+                            document.getElementById('chat-container').style.display = 'none';
+                            document.getElementById('chat-toggle-btn').style.display = 'none';
+                            document.getElementById('heart-container').style.display = 'none';
+                            if (document.getElementById('dvr-ui')) document.getElementById('dvr-ui').style.display = 'none';
+                            
+                            document.getElementById('share-btn').classList.add('match-active');
+                            document.getElementById('close-btn').classList.add('match-active');
+                            
+                            // Show a clean "match ended" message on the video area
+                            playOverlay.style.display = 'flex';
+                            document.getElementById('play-btn').innerText = "MATCH HAS ENDED";
+                            document.getElementById('play-btn').style.pointerEvents = 'none';
+                            document.getElementById('play-btn').style.opacity = '0.7';
+                            
+                            window.currentVODUrl = null;
                         } else {
-                            const msg = (!data.isStreaming && data.mp4Url && !isWithin5Days) 
-                                ? "This match replay has expired (older than 5 days)." 
+                            const msg = (!data.isStreaming && !isWithin10Days) 
+                                ? "This match has expired (older than 10 days)." 
                                 : "The broadcaster is currently offline.";
                             showError(msg);
                             if (peer) { peer.destroy(); peer = null; }
