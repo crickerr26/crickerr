@@ -294,11 +294,11 @@
 
         .setup-logo-container {
             animation: popIn 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-            margin-bottom: 20px;
+            margin-bottom: clamp(10px, 3vw, 20px);
             display: flex; flex-direction: column; align-items: center;
         }
         .setup-logo-img {
-            height: 120px;
+            height: clamp(80px, 20vw, 120px);
             filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.6));
             margin-bottom: 10px;
         }
@@ -309,15 +309,15 @@
         }
 
         .features-grid {
-            display: flex; gap: 15px; margin-bottom: 30px;
+            display: flex; gap: clamp(8px, 2vw, 15px); margin-bottom: clamp(15px, 5vw, 30px);
             animation: fadeIn 1.5s ease 0.5s forwards; opacity: 0;
             flex-wrap: wrap; justify-content: center;
             max-width: 800px;
         }
         .feature-badge {
             background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 8px 15px; border-radius: 50px; color: white;
-            font-family: 'Roboto Condensed', sans-serif; font-size: 14px; font-weight: 700;
+            padding: clamp(6px, 2vw, 8px) clamp(10px, 3vw, 15px); border-radius: 50px; color: white;
+            font-family: 'Roboto Condensed', sans-serif; font-size: clamp(11px, 3vw, 14px); font-weight: 700;
             backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             display: flex; align-items: center; gap: 8px;
         }
@@ -326,7 +326,7 @@
         .auth-card {
             background: rgba(0, 0, 0, 0.6);
             border: 1px solid rgba(251, 191, 36, 0.3);
-            border-radius: 20px; padding: 30px; width: 100%; max-width: 500px;
+            border-radius: 20px; padding: clamp(15px, 5vw, 30px); width: 100%; max-width: 500px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
             backdrop-filter: blur(15px);
             animation: slideUp 1s ease 0.3s forwards; opacity: 0;
@@ -336,9 +336,9 @@
         @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
 
         /* Updated .input-field: Auto width, smaller font for long IDs, force uppercase */
-        .input-field { background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); color: #fbbf24; font-size: 1.5rem; text-align: center; font-weight: 700; letter-spacing: 0.1rem; width: 100%; padding: 1rem; border-radius: 1rem; outline: none; transition: all 0.3s; font-family: 'Roboto', sans-serif; margin-bottom: 1.5rem; }
+        .input-field { background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); color: #fbbf24; font-size: clamp(1.1rem, 4vw, 1.5rem); text-align: center; font-weight: 700; letter-spacing: 0.1rem; width: 100%; padding: clamp(0.7rem, 3vw, 1rem); border-radius: 1rem; outline: none; transition: all 0.3s; font-family: 'Roboto', sans-serif; margin-bottom: clamp(1rem, 3vw, 1.5rem); }
         .input-field:focus { border-color: #fbbf24; background: rgba(255,255,255,0.1); }
-        .start-btn { background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); color: #000; border: none; padding: 1rem 3rem; border-radius: 50px; font-size: 1.1rem; font-weight: 800; letter-spacing: 2px; cursor: pointer; box-shadow: 0 10px 30px rgba(251, 191, 36, 0.4); text-transform: uppercase; transition: transform 0.2s, box-shadow 0.2s; width: 100%; }
+        .start-btn { background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); color: #000; border: none; padding: clamp(0.8rem, 3vw, 1rem) clamp(1rem, 5vw, 3rem); border-radius: 50px; font-size: clamp(0.9rem, 3vw, 1.1rem); font-weight: 800; letter-spacing: 2px; cursor: pointer; box-shadow: 0 10px 30px rgba(251, 191, 36, 0.4); text-transform: uppercase; transition: transform 0.2s, box-shadow 0.2s; width: 100%; }
         .start-btn:active { transform: scale(0.95); }
         .start-btn:hover { box-shadow: 0 10px 40px rgba(251, 191, 36, 0.6); }
         
@@ -709,7 +709,7 @@
     <div id="setup-screen">
         <div class="setup-logo-container">
             <img src="Crickerr Logo 2.png" alt="Crickerr Logo" class="setup-logo-img" onerror="this.src='crickerrlogo.png'">
-            <h1 style="font-family: 'Anton'; font-size: 3.5rem; color: white; margin-bottom: 0; letter-spacing: 3px; text-shadow: 0 5px 15px rgba(0,0,0,0.8);">LIVE BROADCAST</h1>
+            <h1 style="font-family: 'Anton'; font-size: clamp(2.2rem, 8vw, 3.5rem); color: white; margin-bottom: 0; letter-spacing: 3px; text-shadow: 0 5px 15px rgba(0,0,0,0.8);">LIVE BROADCAST</h1>
         </div>
 
         <div class="features-grid">
@@ -723,47 +723,51 @@
         <div class="auth-card">
             <div id="login-panel" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
                 <p style="color: #94a3b8; font-size: 0.9rem; font-weight: bold; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px; font-family: 'Roboto';">Broadcaster Login</p>
-                <input type="email" id="main-auth-email" class="input-field" placeholder="Email Address" style="text-transform: none; margin-bottom: 1rem;">
-                <input type="password" id="main-auth-pass" class="input-field" placeholder="Password" style="text-transform: none; margin-bottom: 1.5rem;">
+                <input type="email" id="main-auth-email" class="input-field" placeholder="Email Address" style="text-transform: none; margin-bottom: clamp(0.5rem, 2vw, 1rem);">
+                <input type="password" id="main-auth-pass" class="input-field" placeholder="Password" style="text-transform: none; margin-bottom: clamp(1rem, 3vw, 1.5rem);">
                 <button onclick="handleMainLogin()" class="start-btn" id="btn-login" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4); margin-bottom: 15px;">LOGIN</button>
-                <button onclick="handleMainRegister()" class="start-btn" id="btn-register" style="background: transparent; color: #fbbf24; border: 2px solid #fbbf24; box-shadow: none; padding: 0.8rem 3rem;">CREATE ACCOUNT</button>
+                <button onclick="handleMainRegister()" class="start-btn" id="btn-register" style="background: transparent; color: #fbbf24; border: 2px solid #fbbf24; box-shadow: none; padding: clamp(0.6rem, 2vw, 0.8rem) clamp(1rem, 5vw, 3rem);">CREATE ACCOUNT</button>
             </div>
 
             <div id="wallet-panel" style="display: none; flex-direction: column; align-items: center; width: 100%;">
-                <h2 style="font-family: 'Anton'; font-size: 2.2rem; margin-bottom: 5px; color: #fbbf24; letter-spacing: 1px; text-transform: uppercase;">WALLET & PRICING</h2>
+                <h2 style="font-family: 'Anton'; font-size: clamp(1.6rem, 6vw, 2.2rem); margin-bottom: 5px; color: #fbbf24; letter-spacing: 1px; text-transform: uppercase;">WALLET & PRICING</h2>
                 <p id="main-wallet-status" style="margin-bottom:15px; color:#ef4444; font-weight: bold; font-size: 16px; text-align: center;">Loading wallet...</p>
                 
                 <div style="display: flex; flex-direction: column; gap: 10px; width: 100%; margin-bottom: 25px;">
                     
-                    <button onclick="purchasePass(10, 2.00)" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: rgba(59,130,246,0.1); border: 1px solid #3b82f6; border-radius: 10px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(59,130,246,0.1);">
-                        <span style="color: white; font-weight: bold; font-family: 'Roboto'; font-size: 1.1rem;">Up to 10 Overs</span>
-                        <span style="background: #3b82f6; color: white; padding: 6px 14px; border-radius: 8px; font-weight: 900; font-size: 1rem; box-shadow: 0 2px 8px rgba(59,130,246,0.4);">BUY $2</span>
+                    <button onclick="purchasePass(10, 2.00)" style="display: flex; justify-content: space-between; align-items: center; padding: clamp(8px, 2vw, 12px) clamp(10px, 3vw, 15px); background: rgba(59,130,246,0.1); border: 1px solid #3b82f6; border-radius: 10px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(59,130,246,0.1);">
+                        <span style="color: white; font-weight: bold; font-family: 'Roboto'; font-size: clamp(0.95rem, 4vw, 1.1rem);">Up to 10 Overs</span>
+                        <span style="background: #3b82f6; color: white; padding: clamp(4px, 1.5vw, 6px) clamp(8px, 3vw, 14px); border-radius: 8px; font-weight: 900; font-size: clamp(0.85rem, 3vw, 1rem); box-shadow: 0 2px 8px rgba(59,130,246,0.4);">BUY $2</span>
                     </button>
 
-                    <button onclick="purchasePass(20, 5.00)" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: rgba(59,130,246,0.1); border: 1px solid #3b82f6; border-radius: 10px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(59,130,246,0.1);">
-                        <span style="color: white; font-weight: bold; font-family: 'Roboto'; font-size: 1.1rem;">11 - 20 Overs</span>
-                        <span style="background: #3b82f6; color: white; padding: 6px 14px; border-radius: 8px; font-weight: 900; font-size: 1rem; box-shadow: 0 2px 8px rgba(59,130,246,0.4);">BUY $5</span>
+                    <button onclick="purchasePass(20, 5.00)" style="display: flex; justify-content: space-between; align-items: center; padding: clamp(8px, 2vw, 12px) clamp(10px, 3vw, 15px); background: rgba(59,130,246,0.1); border: 1px solid #3b82f6; border-radius: 10px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(59,130,246,0.1);">
+                        <span style="color: white; font-weight: bold; font-family: 'Roboto'; font-size: clamp(0.95rem, 4vw, 1.1rem);">11 - 20 Overs</span>
+                        <span style="background: #3b82f6; color: white; padding: clamp(4px, 1.5vw, 6px) clamp(8px, 3vw, 14px); border-radius: 8px; font-weight: 900; font-size: clamp(0.85rem, 3vw, 1rem); box-shadow: 0 2px 8px rgba(59,130,246,0.4);">BUY $5</span>
                     </button>
 
-                    <button onclick="purchasePass(50, 20.00)" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: rgba(59,130,246,0.1); border: 1px solid #3b82f6; border-radius: 10px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(59,130,246,0.1);">
-                        <span style="color: white; font-weight: bold; font-family: 'Roboto'; font-size: 1.1rem;">21 - 50 Overs</span>
-                        <span style="background: #3b82f6; color: white; padding: 6px 14px; border-radius: 8px; font-weight: 900; font-size: 1rem; box-shadow: 0 2px 8px rgba(59,130,246,0.4);">BUY $20</span>
+                    <button onclick="purchasePass(50, 20.00)" style="display: flex; justify-content: space-between; align-items: center; padding: clamp(8px, 2vw, 12px) clamp(10px, 3vw, 15px); background: rgba(59,130,246,0.1); border: 1px solid #3b82f6; border-radius: 10px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(59,130,246,0.1);">
+                        <span style="color: white; font-weight: bold; font-family: 'Roboto'; font-size: clamp(0.95rem, 4vw, 1.1rem);">21 - 50 Overs</span>
+                        <span style="background: #3b82f6; color: white; padding: clamp(4px, 1.5vw, 6px) clamp(8px, 3vw, 14px); border-radius: 8px; font-weight: 900; font-size: clamp(0.85rem, 3vw, 1rem); box-shadow: 0 2px 8px rgba(59,130,246,0.4);">BUY $20</span>
                     </button>
 
-                    <button onclick="purchaseDailyPass()" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(217,119,6,0.2) 100%); border: 1px solid #f59e0b; border-radius: 10px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(245,158,11,0.2);">
-                        <span style="color: #fbbf24; font-weight: 900; font-family: 'Roboto'; font-size: 1.1rem;">UNLIMITED DAY PASS (24H)</span>
-                        <span style="background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); color: black; padding: 6px 14px; border-radius: 8px; font-weight: 900; font-size: 1rem; box-shadow: 0 2px 8px rgba(245,158,11,0.5);">BUY $80</span>
+                    <button onclick="purchaseDailyPass()" style="display: flex; justify-content: space-between; align-items: center; padding: clamp(8px, 2vw, 12px) clamp(10px, 3vw, 15px); background: linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(217,119,6,0.2) 100%); border: 1px solid #f59e0b; border-radius: 10px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(245,158,11,0.2);">
+                        <span style="color: #fbbf24; font-weight: 900; font-family: 'Roboto'; font-size: clamp(0.95rem, 4vw, 1.1rem);">DAILY PASS (24H)</span>
+                        <span style="background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); color: black; padding: clamp(4px, 1.5vw, 6px) clamp(8px, 3vw, 14px); border-radius: 8px; font-weight: 900; font-size: clamp(0.85rem, 3vw, 1rem); box-shadow: 0 2px 8px rgba(245,158,11,0.5);">BUY $80</span>
                     </button>
                 </div>
+
+                <div style="background: rgba(34, 197, 94, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 20px; width: 100%; border: 1px solid rgba(34, 197, 94, 0.3); text-align: center;">
+                    <span style="color: #4ade80; font-size: 13px; font-family: 'Roboto';"><b>PROMO:</b> Same teams today? 2nd match FREE!</span>
+                </div>
                 
-                <button onclick="proceedToMatchSetup()" style="width:100%; padding:15px; border-radius:50px; border: 2px solid rgba(255,255,255,0.2); background:transparent; color:#fff; font-weight:800; letter-spacing: 2px; font-size: 1rem; cursor:pointer; font-family: 'Roboto', sans-serif; transition: all 0.2s;">PROCEED TO MATCH ➔</button>
+                <button onclick="proceedToMatchSetup()" style="width:100%; padding: clamp(10px, 3vw, 15px); border-radius:50px; border: 2px solid rgba(255,255,255,0.2); background:transparent; color:#fff; font-weight:800; letter-spacing: 2px; font-size: clamp(0.9rem, 3vw, 1rem); cursor:pointer; font-family: 'Roboto', sans-serif; transition: all 0.2s;">PROCEED TO MATCH ➔</button>
             </div>
 
             <div id="match-panel" style="display: none; flex-direction: column; align-items: center; width: 100%;">
                 <p style="color: #94a3b8; font-size: 0.9rem; font-weight: bold; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px; font-family: 'Roboto';">Enter Match Code</p>
-                <input type="text" id="match-id" class="input-field" placeholder="Crickerr Code" style="font-family: 'Anton', sans-serif; font-size: 2.5rem; text-transform: uppercase;">
+                <input type="text" id="match-id" class="input-field" placeholder="Crickerr Code" style="font-family: 'Anton', sans-serif; font-size: clamp(1.8rem, 6vw, 2.5rem); text-transform: uppercase;">
                 <button onclick="connectToMatch()" class="start-btn" id="btn-start" style="margin-bottom: 15px;">START CAMERA</button>
-                <button onclick="goBackToWallet()" style="width:100%; padding:15px; border-radius:50px; border: 2px solid rgba(255,255,255,0.2); background:transparent; color:#fff; font-weight:800; letter-spacing: 2px; font-size: 1rem; cursor:pointer; font-family: 'Roboto', sans-serif; transition: all 0.2s;">⬅ BACK</button>
+                <button onclick="goBackToWallet()" style="width:100%; padding: clamp(10px, 3vw, 15px); border-radius:50px; border: 2px solid rgba(255,255,255,0.2); background:transparent; color:#fff; font-weight:800; letter-spacing: 2px; font-size: clamp(0.9rem, 3vw, 1rem); cursor:pointer; font-family: 'Roboto', sans-serif; transition: all 0.2s;">⬅ BACK</button>
             </div>
         </div>
     </div>
