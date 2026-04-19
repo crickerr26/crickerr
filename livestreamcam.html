@@ -760,7 +760,9 @@
                     <span style="color: #4ade80; font-size: 13px; font-family: 'Roboto';"><b>PROMO:</b> Same teams today? 2nd match FREE!</span>
                 </div>
                 
-                <button onclick="proceedToMatchSetup()" style="width:100%; padding: clamp(10px, 3vw, 15px); border-radius:50px; border: 2px solid rgba(255,255,255,0.2); background:transparent; color:#fff; font-weight:800; letter-spacing: 2px; font-size: clamp(0.9rem, 3vw, 1rem); cursor:pointer; font-family: 'Roboto', sans-serif; transition: all 0.2s;">PROCEED TO MATCH ➔</button>
+                <button onclick="proceedToMatchSetup()" style="width:100%; padding: clamp(10px, 3vw, 15px); margin-bottom: 15px; border-radius:50px; border: 2px solid rgba(255,255,255,0.2); background:transparent; color:#fff; font-weight:800; letter-spacing: 2px; font-size: clamp(0.9rem, 3vw, 1rem); cursor:pointer; font-family: 'Roboto', sans-serif; transition: all 0.2s;">PROCEED TO MATCH ➔</button>
+                
+                <button onclick="handleLogout()" style="width:100%; padding: clamp(10px, 3vw, 15px); border-radius:50px; border: 2px solid #ef4444; background:transparent; color:#ef4444; font-weight:800; letter-spacing: 2px; font-size: clamp(0.9rem, 3vw, 1rem); cursor:pointer; font-family: 'Roboto', sans-serif; transition: all 0.2s;">LOG OUT</button>
             </div>
 
             <div id="match-panel" style="display: none; flex-direction: column; align-items: center; width: 100%;">
@@ -1957,6 +1959,23 @@ async function processRegister(emailId, passId) {
     }
 }
 
+async function handleLogout() {
+    try {
+        await auth.signOut();
+        
+        // Clear login form fields for security
+        const emailInput = document.getElementById('main-auth-email');
+        const passInput = document.getElementById('main-auth-pass');
+        if (emailInput) emailInput.value = '';
+        if (passInput) passInput.value = '';
+        
+        console.log("User logged out successfully.");
+    } catch (error) {
+        console.error("Logout error:", error);
+        alert("Failed to log out. Please try again.");
+    }
+}
+
 // 2. Real-time Wallet Sync Listener
 auth.onAuthStateChanged(async (user) => {
     if (user) {
@@ -1978,18 +1997,34 @@ auth.onAuthStateChanged(async (user) => {
             if (doc.exists) {
                 userWallet = doc.data();
                 
+                // --- ADMIN OVERRIDE FOR UNLIMITED ACCESS ---
+                if (user.email && user.email.toLowerCase() === 'gz.inzi84@gmail.com') {
+                    userWallet.dailyPass = true;
+                    userWallet.dailyExpiry = { toDate: () => new Date(Date.now() + 1000 * 60 * 60 * 24 * 365 * 10) };
+                }
+                
                 // Initialize missing pass categories safely
                 if(userWallet.passes10 === undefined) userWallet.passes10 = 0;
                 if(userWallet.passes20 === undefined) userWallet.passes20 = 0;
                 if(userWallet.passes50 === undefined) userWallet.passes50 = 0;
 
                 const totalPasses = userWallet.passes10 + userWallet.passes20 + userWallet.passes50;
-                document.getElementById('wallet-balance').innerText = `PASSES: ${totalPasses}`;
+                document.getElementById('wallet-balance').innerText = (user.email && user.email.toLowerCase() === 'gz.inzi84@gmail.com') ? `PASSES: ∞` : `PASSES: ${totalPasses}`;
                 
+                // Safe expiry check (Handles both Firestore Timestamps and raw Date Strings/Objects)
+                let isDailyActive = false;
+                if (userWallet.dailyPass && userWallet.dailyExpiry) {
+                    const expiryDate = typeof userWallet.dailyExpiry.toDate === 'function' ? userWallet.dailyExpiry.toDate() : new Date(userWallet.dailyExpiry);
+                    isDailyActive = expiryDate > new Date();
+                }
+
                 // Update Main Screen Wallet Status with Inventory
                 const mainStatus = document.getElementById('main-wallet-status');
                 if (mainStatus) {
-                    if (userWallet.dailyPass && userWallet.dailyExpiry && userWallet.dailyExpiry.toDate() > new Date()) {
+                    if (user.email && user.email.toLowerCase() === 'gz.inzi84@gmail.com') {
+                        mainStatus.innerText = "ADMIN ACCOUNT: UNLIMITED ACCESS 🟢";
+                        mainStatus.style.color = "#4ade80"; // Green
+                    } else if (isDailyActive) {
                         mainStatus.innerText = "UNLIMITED - DAY PASS ACTIVE 🟢";
                         mainStatus.style.color = "#4ade80"; // Green
                     } else {
@@ -2000,6 +2035,19 @@ auth.onAuthStateChanged(async (user) => {
             } else {
                 // Failsafe if wallet doc missing
                 db.collection("wallets").doc(user.email).set({ passes10: 0, passes20: 0, passes50: 0, dailyPass: false, dailyExpiry: null });
+                
+                const mainStatus = document.getElementById('main-wallet-status');
+                if (mainStatus) {
+                    mainStatus.innerText = `Inventory: 0x (10-Ov) | 0x (20-Ov) | 0x (50-Ov)`;
+                    mainStatus.style.color = "#fbbf24";
+                }
+            }
+        }, error => {
+            console.error("Wallet load error:", error);
+            const mainStatus = document.getElementById('main-wallet-status');
+            if (mainStatus) {
+                mainStatus.innerText = "CONNECTION ERROR: Check network or permissions";
+                mainStatus.style.color = "#ef4444";
             }
         });
     } else {
@@ -2027,8 +2075,9 @@ function proceedToMatchSetup() {
         
         let isDailyPassActive = false;
         if (userWallet.dailyPass && userWallet.dailyExpiry) {
-            // Check if it exists and hasn't expired
-            isDailyPassActive = userWallet.dailyExpiry.toDate() > new Date();
+            // Check if it exists and hasn't expired safely
+            const expiryDate = typeof userWallet.dailyExpiry.toDate === 'function' ? userWallet.dailyExpiry.toDate() : new Date(userWallet.dailyExpiry);
+            isDailyPassActive = expiryDate > new Date();
         }
         
         if (totalPasses === 0 && !isDailyPassActive) {
