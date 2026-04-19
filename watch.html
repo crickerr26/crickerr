@@ -1130,8 +1130,34 @@
             if (!matchId) return;
 
             const shareUrl = window.location.origin + window.location.pathname + '?matchId=' + matchId;
+            const mp4Url = window.currentVODUrl || null;
+
+            // If it's a VOD with an MP4, offer advanced Social Sync/Export options
+            if (mp4Url) {
+                const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+                
+                let promptMsg = `Export & Share Match Replay:\n\n`;
+                promptMsg += `1: Copy Viewer Link\n`;
+                promptMsg += `2: Share to Facebook\n`;
+                promptMsg += `3: Download MP4 (For YouTube/Native Upload)\n\n`;
+                promptMsg += `Enter your choice (1, 2, or 3):`;
+                
+                const choice = prompt(promptMsg, "1");
+                
+                if (choice === '2') {
+                    window.open(fbUrl, '_blank');
+                } else if (choice === '3') {
+                    // Open MP4 directly to trigger download or native player
+                    window.open(mp4Url, '_blank');
+                } else if (choice === '1') {
+                    copyToClipboard(shareUrl);
+                }
+                return;
+            }
+
+            // Standard Live Sharing
             const shareData = {
-                title: 'Live Cricket Match',
+                title: 'Crickerr Live Match',
                 text: 'Watch this cricket match live right now!',
                 url: shareUrl
             };
@@ -1139,15 +1165,18 @@
             if (navigator.share) {
                 navigator.share(shareData).catch((err) => console.log('Error sharing:', err));
             } else {
-                // Fallback: Copy to clipboard
-                const tempInput = document.createElement('input');
-                document.body.appendChild(tempInput);
-                tempInput.value = shareUrl;
-                tempInput.select();
-                document.execCommand('copy');
-                document.body.removeChild(tempInput);
-                alert('Match link copied to clipboard!');
+                copyToClipboard(shareUrl);
             }
+        }
+        
+        function copyToClipboard(text) {
+            const tempInput = document.createElement('input');
+            document.body.appendChild(tempInput);
+            tempInput.value = text;
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            alert('Match link copied to clipboard!');
         }
 
         function closeMatch() {
@@ -1172,6 +1201,9 @@
             }
             
             video.srcObject = null;
+            video.src = "";
+            video.controls = false;
+            window.currentVODUrl = null;
             
             document.getElementById('live-badge').style.display = 'none';
             document.getElementById('live-stats-bar').style.display = 'none';
@@ -1382,6 +1414,7 @@
                             }
                             
                             const isEnded = m.matchStatus === "COMPLETE" || m.isStreaming === false;
+                            const hasReplay = isEnded && m.mp4Url;
                             
                             let dateStr = "";
                             const matchDate = m.matchDate || m.date;
@@ -1402,12 +1435,15 @@
 
                             if (isEnded) {
                                 let resultText = m.result && m.result.trim() !== "" ? m.result : "Live match ended";
-                                subText = `<span style="color: #fca5a5; font-weight: 700;">${resultText}</span>`;
+                                if (hasReplay) resultText = "▶ Tap to watch Replay";
+                                subText = `<span style="color: ${hasReplay ? '#60a5fa' : '#fca5a5'}; font-weight: 700;">${resultText}</span>`;
                             }
 
-                            const cardStyle = isEnded ? 'opacity: 0.6; filter: grayscale(100%);' : '';
+                            const cardStyle = (isEnded && !hasReplay) ? 'opacity: 0.6; filter: grayscale(100%);' : '';
                             const liveBadgeHtml = isEnded 
-                                ? `<div class="match-card-live" style="background: rgba(255, 255, 255, 0.15); color: #cbd5e1;">ENDED</div>` 
+                                ? (hasReplay 
+                                    ? `<div class="match-card-live" style="background: rgba(59, 130, 246, 0.2); color: #93c5fd;">REPLAY</div>`
+                                    : `<div class="match-card-live" style="background: rgba(255, 255, 255, 0.15); color: #cbd5e1;">ENDED</div>`)
                                 : `<div class="match-card-live"><div class="live-dot" style="width:6px;height:6px;"></div> LIVE</div>`;
 
                             return `
@@ -1687,6 +1723,12 @@
                             document.getElementById('viewer-count-text').innerText = data.viewers;
                         }
 
+                        const now = new Date().getTime();
+                        // Assume data.endTime is written when match ends, otherwise fallback to matchDate or current time
+                        const matchEndTime = data.endTime ? new Date(data.endTime).getTime() : (data.matchDate ? new Date(data.matchDate).getTime() : now);
+                        const fiveDaysMs = 5 * 24 * 60 * 60 * 1000;
+                        const isWithin5Days = (now - matchEndTime) <= fiveDaysMs;
+
                         if (data.isStreaming && data.streamId) {
                             if (!peer) {
                                 connectToStream(data.streamId);
@@ -1697,6 +1739,8 @@
                                 peer = null;
                                 connectToStream(data.streamId);
                             }
+                            document.getElementById('live-badge-text').innerText = "LIVE";
+                            document.getElementById('live-badge').classList.remove('live-off');
                             document.getElementById('live-badge').style.display = 'flex';
                             document.getElementById('live-stats-bar').style.display = 'flex';
                             document.getElementById('chat-container').style.display = 'flex';
@@ -1705,11 +1749,47 @@
                             document.getElementById('share-btn').classList.add('match-active');
                             document.getElementById('close-btn').classList.add('match-active');
                             
+                            video.controls = false; // Disable native controls for live WebRTC
+                            window.currentVODUrl = null;
+                            
                             initLiveFeatures(matchId);
+                        } else if (!data.isStreaming && data.mp4Url && isWithin5Days) {
+                            // PROFESSIONAL SCALABLE VOD SOLUTION
+                            // Plays the recorded server MP4 file instead of using local WebRTC
+                            statusOverlay.style.display = 'none';
+                            if (peer) { peer.destroy(); peer = null; }
+                            
+                            video.srcObject = null;
+                            video.src = data.mp4Url;
+                            video.controls = true; // Enable native HTML5 player controls for VOD playback
+                            video.play().catch(e => {
+                                playOverlay.style.display = 'flex';
+                                document.getElementById('play-btn').innerText = "TAP TO WATCH REPLAY";
+                            });
+                            
+                            document.getElementById('live-badge').style.display = 'flex';
+                            document.getElementById('live-badge').classList.add('live-off');
+                            document.getElementById('live-badge-text').innerText = "REPLAY";
+                            
+                            // Hide live-specific UI for VODs
+                            document.getElementById('live-stats-bar').style.display = 'none';
+                            document.getElementById('chat-container').style.display = 'none';
+                            document.getElementById('chat-toggle-btn').style.display = 'none';
+                            document.getElementById('heart-container').style.display = 'none';
+                            if (document.getElementById('dvr-ui')) document.getElementById('dvr-ui').style.display = 'none';
+                            
+                            document.getElementById('share-btn').classList.add('match-active');
+                            document.getElementById('close-btn').classList.add('match-active');
+                            
+                            window.currentVODUrl = data.mp4Url; // Store for sharing/exporting
                         } else {
-                            showError("The broadcaster is currently offline.");
+                            const msg = (!data.isStreaming && data.mp4Url && !isWithin5Days) 
+                                ? "This match replay has expired (older than 5 days)." 
+                                : "The broadcaster is currently offline.";
+                            showError(msg);
                             if (peer) { peer.destroy(); peer = null; }
                             video.srcObject = null;
+                            video.src = "";
                             document.getElementById('live-badge').style.display = 'none';
                             document.getElementById('live-stats-bar').style.display = 'none';
                             document.getElementById('chat-container').style.display = 'none';
@@ -1717,6 +1797,7 @@
                             document.getElementById('heart-container').style.display = 'none';
                             document.getElementById('share-btn').classList.remove('match-active');
                             document.getElementById('close-btn').classList.remove('match-active');
+                            window.currentVODUrl = null;
                         }
                     } else {
                         showError("Match not found.\nMake sure the Broadcaster has clicked 'GO LIVE'.");
