@@ -1400,8 +1400,11 @@
                             const isSel = oldSelected.has(m.id);
                             
                             const defaultLogo = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23475569'><path d='M12 2L3 7v9.82c0 3.61 2.5 6.94 5.92 7.95L12 22l3.08-.23c3.42-1.01 5.92-4.34 5.92-7.95V7l-9-5zm0 2.18l7.5 4.17v8.47c0 2.82-1.95 5.43-4.63 6.22L12 19.88l-2.87.82C6.45 19.91 4.5 17.3 4.5 14.48V8.35L12 4.18z'/></svg>";
-                            const t1Img = m.t1Logo ? m.t1Logo : defaultLogo;
-                            const t2Img = m.t2Logo ? m.t2Logo : defaultLogo;
+                            
+                            const rawT1Logo = m.t1Logo || m.team1Logo || m.team1_logo || m.teamA_logo || m.t1_logo;
+                            const rawT2Logo = m.t2Logo || m.team2Logo || m.team2_logo || m.teamB_logo || m.t2_logo;
+                            const t1Img = rawT1Logo ? rawT1Logo : defaultLogo;
+                            const t2Img = rawT2Logo ? rawT2Logo : defaultLogo;
                             
                             function shrinkName(name) {
                                 if (!name) return '';
@@ -1413,8 +1416,10 @@
                                 return firstTwo + " " + rest;
                             }
 
-                            let t1Name = m.t1 ? shrinkName(m.t1) : '';
-                            let t2Name = m.t2 ? shrinkName(m.t2) : '';
+                            let rawT1 = m.t1 || m.team1 || m.team1_name || m.team1Name || m.teamA || m.t1_name;
+                            let rawT2 = m.t2 || m.team2 || m.team2_name || m.team2Name || m.teamB || m.t2_name;
+                            let t1Name = rawT1 ? shrinkName(rawT1) : '';
+                            let t2Name = rawT2 ? shrinkName(rawT2) : '';
                             
                             if (!t1Name && !t2Name) {
                                 t1Name = 'Match Code';
@@ -1425,9 +1430,8 @@
                                 t2Name = 'TBA';
                             }
                             
-                            const isEnded = m.matchStatus === "COMPLETE" || m.isStreaming === false;
-                            // Fix: Properly check for m.mp4Url so the card stays clickable for your VOD playback
-                            const hasRecording = isEnded && (m.mp4Url || m.recordedUrl);
+                            const isEnded = m.matchStatus === "COMPLETE" || m.matchStatus === "ENDED" || m.status === "ENDED" || m.isStreaming === false;
+                            const hasRecording = isEnded && (m.mp4Url || m.recordedUrl || m.videoUrl);
                             
                             let dateStr = "";
                             const matchDate = m.matchDate || m.date;
@@ -1578,13 +1582,16 @@
                         // --- POPULATE YOUTUBE TITLE (PORTRAIT) ---
                         const ytTitle = document.getElementById('yt-title-text');
                         if (ytTitle) {
-                            let teamsText = "";
+                            let rawT1 = data.t1 || data.team1 || data.team1_name || data.team1Name || data.teamA || data.t1_name;
+                            let rawT2 = data.t2 || data.team2 || data.team2_name || data.team2Name || data.teamB || data.t2_name;
+                            
+                            let teamsText = "Match Code " + matchId;
                             
                             // 1. Add Teams dynamically
-                            if (data.t1 && data.t2) {
-                                teamsText = `${data.t1} vs ${data.t2}`;
-                            } else if (data.t1 || data.t2) {
-                                teamsText = data.t1 || data.t2; 
+                            if (rawT1 && rawT2) {
+                                teamsText = `${rawT1} vs ${rawT2}`;
+                            } else if (rawT1 || rawT2) {
+                                teamsText = rawT1 || rawT2; 
                             }
                             
                             let subParts = [];
@@ -1739,7 +1746,10 @@
                         const tenDaysMs = 10 * 24 * 60 * 60 * 1000;
                         const isWithin10Days = (now - matchEndTime) <= tenDaysMs;
 
-                        if (data.isStreaming && data.streamId) {
+                        const hasRecordingUrl = data.mp4Url || data.recordedUrl || data.videoUrl;
+                        const isMatchEnded = data.matchStatus === "COMPLETE" || data.matchStatus === "ENDED" || data.status === "ENDED" || data.isStreaming === false;
+
+                        if (!isMatchEnded && data.isStreaming && data.streamId) {
                             if (!peer) {
                                 connectToStream(data.streamId);
                             } else if (activePeerId !== data.streamId) {
@@ -1763,15 +1773,15 @@
                             window.currentVODUrl = null;
                             
                             initLiveFeatures(matchId);
-                        } else if (!data.isStreaming && (data.mp4Url || data.recordedUrl) && isWithin10Days) {
+                        } else if (isMatchEnded && hasRecordingUrl && isWithin10Days) {
                             // PROFESSIONAL SCALABLE VOD SOLUTION (YouTube-style Replay)
                             // Plays the recorded server file instead of using local WebRTC
-                            const playbackUrl = data.mp4Url || data.recordedUrl;
                             statusOverlay.style.display = 'none';
                             if (peer) { peer.destroy(); peer = null; }
                             
                             video.srcObject = null;
-                            video.src = playbackUrl;
+                            video.src = hasRecordingUrl;
+                            video.load(); // CRITICAL FIX: Forces browser to drop WebRTC and properly load the VOD MP4
                             video.controls = true; // Enable native HTML5 player controls for VOD playback
                             video.play().catch(e => {
                                 playOverlay.style.display = 'flex';
@@ -1791,8 +1801,8 @@
                             document.getElementById('share-btn').classList.add('match-active');
                             document.getElementById('close-btn').classList.add('match-active');
                             
-                            window.currentVODUrl = playbackUrl; // Store for sharing/exporting
-                        } else if (!data.isStreaming && !(data.mp4Url || data.recordedUrl) && isWithin10Days) {
+                            window.currentVODUrl = hasRecordingUrl; // Store for sharing/exporting
+                        } else if (isMatchEnded && !hasRecordingUrl && isWithin10Days) {
                             // MATCH ENDED WITHOUT A RECORDING — show "Match Ended" screen for 10 days
                             // like YouTube keeps ended livestreams visible even without a recording
                             statusOverlay.style.display = 'none';
