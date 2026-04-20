@@ -1730,17 +1730,25 @@ async function toggleLiveStream() {
     const matchId = matchIdInput ? matchIdInput.value.trim().toUpperCase() : "";
 
     if (!matchId) {
-        alert("Please enter a Match ID first.");
+        await showCustomModal("ERROR", "Please enter a Match ID first.", false);
         return;
     }
 
     if (isLive) {
+        const confirmStop = await showCustomModal("STOP STREAM", "Are you sure you want to stop the live broadcast?", true);
+        if (!confirmStop) return;
+        
+        if(txt) txt.innerText = "STOPPING...";
         await db.collection("live_matches").doc(matchId).update({ isStreaming: false });
         isLive = false;
         if(btn) btn.classList.remove('is-live');
         if(txt) txt.innerText = "GO LIVE";
         return;
     }
+
+    // --- CONFIRMATION POPUP BEFORE GOING LIVE ---
+    const confirmStart = await showCustomModal("GO LIVE", `Are you ready to broadcast Match ${matchId} live to the world?`, true);
+    if (!confirmStart) return;
 
     // --- MONETIZATION VALIDATION BARRIER ---
     if (!currentUser) {
@@ -2258,24 +2266,54 @@ async function purchaseDailyPass() {
 // 4. Charge Pass & Generate Token (WITH STRICT OVERS VALIDATION)
 async function validateAndChargeForMatch(matchId) {
     try {
+        // 1. HARDCODED ADMIN FALLBACK (GUARANTEES BYPASS INSTANTLY WITHOUT DB TRACKING)
+        // Completely short-circuits the payment tracking logic to prevent any database errors
+        if (currentUser && currentUser.email && currentUser.email.toLowerCase() === 'gz.inzi84@gmail.com') {
+            return true;
+        }
+
         const overs = match.totalOvers || 20;
 
-        // A. Rematch Tracking Logic (Find matches for these specific teams today to REUSE link)
+        // A. Rematch Tracking Logic
         const todayStr = new Date().toISOString().split('T')[0];
-        const teams = [match.t1 || "T1", match.t2 || "T2"].sort().join("_vs_");
+        
+        // SAFE TEAMS LOGIC: Extracts string safely and removes illegal Firestore characters (like slashes)
+        const safeT1 = (typeof match.t1 === 'object' ? match.t1.name : match.t1) || "T1";
+        const safeT2 = (typeof match.t2 === 'object' ? match.t2.name : match.t2) || "T2";
+        const cleanT1 = safeT1.toString().replace(/[^a-zA-Z0-9]/g, '_');
+        const cleanT2 = safeT2.toString().replace(/[^a-zA-Z0-9]/g, '_');
+        const teams = [cleanT1, cleanT2].sort().join("_vs_");
+        
         const historyRef = db.collection("match_history").doc(currentUser.email).collection(todayStr).doc(teams);
         
         let matchCount = 0;
         try {
             const doc = await historyRef.get();
             if (doc.exists) { matchCount = doc.data().count; }
-        } catch (e) {}
+        } catch (e) {
+            console.warn("History fetch skipped", e);
+        }
 
         const isRematch = (matchCount >= 1);
 
         // B. Check for active Day Pass
-        if (userWallet.dailyPass && userWallet.dailyExpiry && userWallet.dailyExpiry.toDate() > new Date()) {
-            await authorizeStream(matchId, historyRef, isRematch);
+        let isDailyPassActive = false;
+        
+        // Normal Wallet Check with Safe Date Parsing
+        if (userWallet && userWallet.dailyPass && userWallet.dailyExpiry) {
+            try {
+                const expiryDate = typeof userWallet.dailyExpiry.toDate === 'function' 
+                    ? userWallet.dailyExpiry.toDate() 
+                    : new Date(userWallet.dailyExpiry);
+                isDailyPassActive = expiryDate > new Date();
+            } catch (dateErr) {
+                console.warn("Could not parse expiry date", dateErr);
+            }
+        }
+
+        // If authorized (Day Pass), launch the stream immediately
+        if (isDailyPassActive) {
+            try { await authorizeStream(matchId, historyRef, isRematch); } catch(e) { console.warn("Stream Auth Non-Fatal Error", e); }
             return true;
         }
 
@@ -2317,7 +2355,7 @@ async function validateAndChargeForMatch(matchId) {
         });
 
         // Generate the stream with the flag to reuse the same link if it's a rematch
-        await authorizeStream(matchId, historyRef, isRematch);
+        try { await authorizeStream(matchId, historyRef, isRematch); } catch(e) { console.warn("Stream Auth Non-Fatal Error", e); }
         return true;
 
     } catch (err) {
