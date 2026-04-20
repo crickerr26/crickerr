@@ -3322,12 +3322,12 @@ async function authorizeStream(matchId, historyRef = null, isRematch = false) {
             c.shadowBlur = 0;
             c.shadowOffsetY = 0;
             
-            // Layout Box Widths — middle box widened to prevent overflow
-            const w1 = barW * 0.27; // Batting Base
-            const w2 = barW * 0.17; // Batting Batters
-            const w3 = barW * 0.13; // Run Rate Middle (wider — prevents text overflow)
-            const w4 = barW * 0.22; // Bowling Bowler
-            const w5 = barW * 0.21; // Bowling Base
+            // Layout Box Widths — Rebalanced for Batsmen Space & Compact Bowling Team
+            const w1 = barW * 0.31; // Batting Base (Preserved for 3-digit score stability)
+            const w2 = barW * 0.18; // Batting Batters (Widened to give names and scores breathing room)
+            const w3 = barW * 0.09; // Run Rate Middle (Shrunk slightly as it's secondary)
+            const w4 = barW * 0.26; // Bowling Bowler (Widened to absorb space and prevent cramping balls)
+            const w5 = barW * 0.16; // Bowling Base (Shrunk to be compact, just enough for team name)
             
             // 1 & 2. BATTING SIDE (CONTINUOUS RED TO DARK RED GRADIENT)
             const x1 = startX;
@@ -3341,6 +3341,20 @@ async function authorizeStream(matchId, historyRef = null, isRematch = false) {
             if(c.roundRect) c.roundRect(x1, bottomY, wLeft, barH, {topLeft: 12, bottomLeft: 12, topRight: 0, bottomRight: 0});
             else c.rect(x1, bottomY, wLeft, barH);
             c.fill();
+
+            // PRE-CALCULATE SCORE WIDTHS (To prevent Team Name overlaps on 3-digits)
+            const displayScoreText = parseInt(match.score) || 0;
+            const scoreText = `${displayScoreText}/${match.wickets}`; 
+            const oversText = `${match.overs}.${match.balls} ov`;
+            const scoreX = x1 + w1 - 14;
+
+            c.font = `700 ${barH * 0.24}px 'Roboto'`;
+            const oversW = c.measureText(oversText).width;
+            const scoreDrawX = scoreX - oversW - 8;
+            
+            const scoreFontSize = barH * 0.72;
+            c.font = `900 ${scoreFontSize}px 'Anton'`;
+            const scoreW = c.measureText(scoreText).width;
             
             const logoS = barH * 0.70;
             const logoX = x1 + 15;
@@ -3348,37 +3362,25 @@ async function authorizeStream(matchId, historyRef = null, isRematch = false) {
             drawLogo(c, batTeamName, batTeamImg, logoX, logoY, logoS, true);
             
             const teamTextX = logoX + logoS + 15;
+            // Calculate max width so team name never overflows into the score
+            const maxTeamNameWidth = Math.max(10, scoreDrawX - scoreW - teamTextX - 15);
+
             c.textAlign = "left";
             c.textBaseline = "alphabetic";
             c.fillStyle = "white";
             c.font = `800 ${barH * 0.3}px 'Roboto'`;
-            c.fillText(batTeamName, teamTextX, bottomY + barH * 0.45);
+            c.fillText(batTeamName, teamTextX, bottomY + barH * 0.45, maxTeamNameWidth);
             c.fillStyle = "rgba(255, 255, 255, 0.8)";
             c.font = `500 ${barH * 0.20}px 'Roboto'`;
             c.fillText("BATTING", teamTextX, bottomY + barH * 0.75);
             
-            // Direct Score Logic (Instant Update)
-            const displayScoreText = parseInt(match.score) || 0;
-            // Standard cricket format: runs/wickets
-            const scoreText = `${displayScoreText}/${match.wickets}`; 
-            const oversText = `${match.overs}.${match.balls} ov`;
-            const scoreX = x1 + w1 - 14;
-
-            c.textBaseline = "alphabetic";
+            // DRAW SCORE
             c.textAlign = "right";
             if(c.letterSpacing !== undefined) c.letterSpacing = "0px";
 
-            // --- Measure overs text width first so we know where score ends ---
-            c.font = `700 ${barH * 0.24}px 'Roboto'`;
-            const oversW = c.measureText(oversText).width;
-            const scoreDrawX = scoreX - oversW - 8; // score sits left of overs
-
             // Shared baseline: vertically centers 4/0 in bar
-            // Anton caps ≈ 72% of font size. To center caps: baseline = barCenter + capHeight/2
-            const scoreFontSize = barH * 0.72;
             const sharedBaselineY = bottomY + barH * 0.5 + scoreFontSize * 0.36;
 
-            // Draw 4/0 — large, gold, centered vertically
             c.font = `900 ${scoreFontSize}px 'Anton'`;
             c.lineWidth = 2;
             c.strokeStyle = "rgba(0,0,0,0.85)";
@@ -3386,7 +3388,6 @@ async function authorizeStream(matchId, historyRef = null, isRematch = false) {
             c.fillStyle = brandGold;
             c.fillText(scoreText, scoreDrawX, sharedBaselineY);
 
-            // Draw "0.1 ov" — smaller, white, bottom edge aligned with 4/0
             c.font = `700 ${barH * 0.24}px 'Roboto'`;
             c.fillStyle = "rgba(255,255,255,0.90)";
             c.fillText(oversText, scoreX, sharedBaselineY);
@@ -3404,21 +3405,26 @@ async function authorizeStream(matchId, historyRef = null, isRematch = false) {
             const b1Name = b1.name ? formatPlayerName(b1.name) : "BATTER 1";
             const b2Name = b2.name ? formatPlayerName(b2.name) : "BATTER 2";
             
+            // Re-distributed Batsman Information Space
+            c.textAlign = "right";
+            const bBallsX = x2 + w2 - 15;
+            const bRunsX = bBallsX - 45; // Increased gap between runs and balls for readability
+            
+            // Max width for batter names so they never hit the runs column
+            const maxBatterNameW = bRunsX - (x2 + 18) - 15; 
+            
             c.textAlign = "left";
             c.fillStyle = "white";
             c.font = `800 ${barH * 0.3}px 'Roboto Condensed'`;
             
             // Draw asterisk separately to keep names perfectly aligned
             c.fillText("*", x2 + 6, bottomY + barH * 0.40);
-            c.fillText(b1Name, x2 + 18, bottomY + barH * 0.40);
+            c.fillText(b1Name, x2 + 18, bottomY + barH * 0.40, maxBatterNameW);
             
             c.fillStyle = textMuted;
-            c.fillText(b2Name, x2 + 18, bottomY + barH * 0.80);
+            c.fillText(b2Name, x2 + 18, bottomY + barH * 0.80, maxBatterNameW);
             
             c.textAlign = "right";
-            const bBallsX = x2 + w2 - 15;
-            const bRunsX = bBallsX - 35;
-            
             c.fillStyle = brandGold;
             c.font = `800 ${barH * 0.35}px 'Roboto'`;
             c.fillText(b1.runs || 0, bRunsX, bottomY + barH * 0.40);
@@ -3497,17 +3503,17 @@ async function authorizeStream(matchId, historyRef = null, isRematch = false) {
                     // Line 1 — "NEEDED" — top 4% to 22%
                     c.font = `700 ${barH * 0.18}px 'Roboto Condensed'`;
                     c.fillStyle = "white";
-                    c.fillText("NEEDED", cx, bottomY + barH * 0.04);
+                    c.fillText("NEEDED", cx, bottomY + barH * 0.04, w3 - 6);
 
                     // Line 2 — runs number — top 23% to 65% (font 42% of barH)
                     c.font = `900 ${barH * 0.42}px 'Anton'`;
                     c.fillStyle = "#fbbf24";
-                    c.fillText(`${runsNeeded}`, cx, bottomY + barH * 0.23);
+                    c.fillText(`${runsNeeded}`, cx, bottomY + barH * 0.23, w3 - 6);
 
                     // Line 3 — "FROM X BALLS" — top 70% to 86% — clear gap above
                     c.font = `700 ${barH * 0.16}px 'Roboto Condensed'`;
                     c.fillStyle = "white";
-                    c.fillText(`FROM ${ballsRem} BALLS`, cx, bottomY + barH * 0.70);
+                    c.fillText(`FROM ${ballsRem} BALLS`, cx, bottomY + barH * 0.70, w3 - 6);
 
                     c.textBaseline = "alphabetic";
                     c.restore();
@@ -3522,9 +3528,9 @@ async function authorizeStream(matchId, historyRef = null, isRematch = false) {
                     c.textAlign = "center";
                     c.fillStyle = "white";
                     c.font = `700 ${barH * 0.18}px 'Roboto'`;
-                    c.fillText("REQ - RATE", x3 + w3/2, bottomY + barH * 0.28 + yOffsetRRR);
+                    c.fillText("REQ - RATE", x3 + w3/2, bottomY + barH * 0.28 + yOffsetRRR, w3 - 6);
                     c.font = `900 ${barH * 0.50}px 'Anton'`;
-                    c.fillText(rrr, x3 + w3/2, bottomY + barH * 0.85 + yOffsetRRR);
+                    c.fillText(rrr, x3 + w3/2, bottomY + barH * 0.85 + yOffsetRRR, w3 - 6);
                     
                     c.restore();
                 }
@@ -3532,9 +3538,9 @@ async function authorizeStream(matchId, historyRef = null, isRematch = false) {
                 c.textAlign = "center";
                 c.fillStyle = "white";
                 c.font = `700 ${barH * 0.18}px 'Roboto'`;
-                c.fillText("RUN - RATE", x3 + w3/2, bottomY + barH * 0.25);
+                c.fillText("RUN - RATE", x3 + w3/2, bottomY + barH * 0.25, w3 - 6);
                 c.font = `900 ${barH * 0.50}px 'Anton'`; 
-                c.fillText(crr, x3 + w3/2, bottomY + barH * 0.85);
+                c.fillText(crr, x3 + w3/2, bottomY + barH * 0.85, w3 - 6);
             }
 
             // 4 & 5. BOWLING SIDE (CONTINUOUS BRIGHT BLUE TO DARK NAVY GRADIENT)
@@ -3555,22 +3561,40 @@ async function authorizeStream(matchId, historyRef = null, isRematch = false) {
             const bBallsRemaining = (match.bowler.balls || 0) % 6;
             const bowlerStats = `${match.bowler.wkts || 0}-${match.bowler.runs || 0} (${bOvers}.${bBallsRemaining})`;
 
+            // Shifted starting X position slightly right to perfectly balance the layout and eliminate the gap
+            const bowlInfoStartX = x4 + 20;
+
             c.textAlign = "left";
             c.fillStyle = "white";
             c.font = `800 ${barH * 0.32}px 'Roboto Condensed'`;
-            c.fillText(bowlerName, x4 + 15, bottomY + barH * 0.38);
+            
+            // Max text width to prevent bowler name from overflowing into the divider line
+            const maxTextSpace = w4 - 35;
+            c.fillText(bowlerName, bowlInfoStartX, bottomY + barH * 0.38, maxTextSpace * 0.6);
             
             // Draw stats right next to name
-            const bNameW = c.measureText(bowlerName).width;
+            const bNameW = Math.min(c.measureText(bowlerName).width, maxTextSpace * 0.6);
             c.fillStyle = textMuted;
             c.font = `600 ${barH * 0.25}px 'Roboto Condensed'`;
-            c.fillText(bowlerStats, x4 + 15 + bNameW + 10, bottomY + barH * 0.38);
+            c.fillText(bowlerStats, bowlInfoStartX + bNameW + 10, bottomY + barH * 0.38, maxTextSpace * 0.4);
             
             const balls = match.currentOver || []; 
-            const boxGap = 4; 
-            const boxSize = barH * 0.38; 
-            let ballX = x4 + 15; 
-            const ballY = bottomY + barH * 0.52;
+            let boxGap = 4; 
+            let boxSize = barH * 0.38; 
+            
+            // DYNAMIC BALL SHRINKING LOGIC
+            const maxBallsAreaWidth = w4 - 35; // Available width for balls (accounts for left/right padding)
+            let totalBallsWidth = (balls.length * boxSize) + ((balls.length > 0 ? balls.length - 1 : 0) * boxGap);
+            
+            if (totalBallsWidth > maxBallsAreaWidth && balls.length > 0) {
+                // Shrink the gap first, then dynamically reduce the box size to fit perfectly into the space
+                boxGap = 2;
+                boxSize = (maxBallsAreaWidth - ((balls.length - 1) * boxGap)) / balls.length;
+            }
+
+            let ballX = bowlInfoStartX; 
+            // Vertically center the dynamically sized balls
+            const ballY = bottomY + barH * 0.52 + ((barH * 0.38) - boxSize) / 2; 
             
             balls.forEach(b => { 
                 drawBallSquare(c, b, ballX, ballY, boxSize); 
@@ -3587,13 +3611,15 @@ async function authorizeStream(matchId, historyRef = null, isRematch = false) {
             drawLogo(c, bowlTeamName, bowlTeamImg, logo2X, logoY, logoS, false);
             
             const team2TextX = logo2X - 15;
+            const bowlTeamMaxW = w5 - logoS - 35; // Constrain width
+
             c.textAlign = "right";
             c.fillStyle = "white";
             c.font = `800 ${barH * 0.28}px 'Roboto'`;
-            c.fillText(bowlTeamName, team2TextX, bottomY + barH * 0.45);
+            c.fillText(bowlTeamName, team2TextX, bottomY + barH * 0.45, bowlTeamMaxW);
             c.fillStyle = "rgba(255, 255, 255, 0.7)";
             c.font = `500 ${barH * 0.20}px 'Roboto'`;
-            c.fillText("BOWLING", team2TextX, bottomY + barH * 0.75);
+            c.fillText("BOWLING", team2TextX, bottomY + barH * 0.75, bowlTeamMaxW);
 
             // --- GLOBAL ANIMATED GLASS SHEEN (THE "PRO" ANIMATION) ---
             c.save();
