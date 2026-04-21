@@ -174,51 +174,51 @@
             <div id="tournaments-list-container" class="pb-20 bg-white hidden">
                 </div>
             <div id="tournament-dashboard-container" class="pb-20 bg-[#F2F2F7] hidden flex-col min-h-full">
-                <!-- Apple-style dashboard header card -->
-                <div class="bg-white border-b border-gray-100 mb-3">
+                <!-- Responsive header: logo + name always visible on all screen sizes -->
+                <div class="bg-white border-b border-gray-100 mb-2">
                     <div class="px-4 pt-3 pb-1">
-                        <button onclick="closeTournamentDashboard()" class="text-[#007AFF] font-medium text-[15px] flex items-center gap-1 mb-3">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg> Tournaments
+                        <button onclick="closeTournamentDashboard()" class="text-[#007AFF] font-medium flex items-center gap-1 mb-3" style="font-size:clamp(13px,3.5vw,15px);">
+                            <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg> Tournaments
                         </button>
                     </div>
-                    <!-- Hero section: logo + info -->
-                    <div class="flex items-center gap-4 px-4 pb-4">
-                        <div id="dash-tourney-logo-wrap" class="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm border border-gray-100">
-                            <span id="dash-tourney-logo-initials" class="text-white font-bold text-xl"></span>
+                    <!-- Hero: logo + name + stats -->
+                    <div class="flex items-center gap-3 px-4 pb-3" style="min-width:0;">
+                        <div id="dash-tourney-logo-wrap" class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center overflow-hidden shadow-sm border border-gray-100">
+                            <span id="dash-tourney-logo-initials" class="text-white font-bold" style="font-size:clamp(14px,4vw,20px);"></span>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <h2 id="dash-tourney-name" class="text-[20px] font-bold text-black leading-tight truncate">Tournament Name</h2>
-                            <div class="flex items-center gap-2 mt-1">
-                                <span class="text-[13px] text-gray-500"><span id="dash-tourney-count" class="font-semibold text-black">0</span> / <span id="dash-tourney-max">0</span> Teams</span>
+                            <h2 id="dash-tourney-name" class="font-bold text-black leading-tight break-words" style="font-size:clamp(14px,4.5vw,20px);word-break:break-word;">Tournament Name</h2>
+                            <div class="flex items-center gap-2 mt-1 flex-wrap" style="font-size:clamp(11px,3vw,13px);">
+                                <span class="text-gray-500"><span id="dash-tourney-count" class="font-semibold text-black">0</span> / <span id="dash-tourney-max">0</span> Teams</span>
                                 <span class="text-gray-300">•</span>
-                                <span class="text-[13px] text-gray-500"><span id="dash-tourney-players" class="font-semibold text-black">11</span> Players/Team</span>
+                                <span class="text-gray-500"><span id="dash-tourney-players" class="font-semibold text-black">11</span> Players/Team</span>
                             </div>
                         </div>
                     </div>
                     <!-- Progress bar -->
-                    <div class="px-4 pb-4">
+                    <div class="px-4 pb-3">
                         <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                             <div id="dash-progress-bar" class="h-full bg-[#007AFF] rounded-full transition-all duration-500" style="width:0%"></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Action buttons -->
-                <div class="px-4 pb-2 space-y-2">
-                    <button onclick="openEditor(null, true)" id="dash-add-team-btn" class="w-full py-2.5 bg-[#007AFF] text-white font-semibold rounded-xl shadow-sm text-[14px] transform active:scale-[0.98] transition-transform">
+                <!-- Action buttons — responsive font + padding -->
+                <div class="px-3 pb-2 space-y-2">
+                    <button onclick="openEditor(null, true)" id="dash-add-team-btn" class="w-full bg-[#007AFF] text-white font-semibold rounded-xl shadow-sm transform active:scale-[0.98] transition-transform" style="padding:clamp(8px,2.5vw,11px) 0;font-size:clamp(13px,3.5vw,15px);">
                         Add Tournament Team
                     </button>
                     <div class="flex gap-2">
-                        <button onclick="generateTournamentPDF()" id="dash-pdf-btn" class="flex-1 py-2 bg-white text-[#007AFF] font-semibold rounded-xl shadow-sm text-[13px] border border-gray-200 transform active:scale-[0.98] transition-transform flex items-center justify-center gap-1.5">
-                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        <button onclick="generateTournamentPDF()" id="dash-pdf-btn" class="flex-1 bg-white text-[#007AFF] font-semibold rounded-xl shadow-sm border border-gray-200 transform active:scale-[0.98] transition-transform flex items-center justify-center gap-1" style="padding:clamp(7px,2vw,10px) 0;font-size:clamp(12px,3vw,14px);">
+                            <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                             Download PDF
                         </button>
-                        <button onclick="shareTournamentPDF()" id="dash-share-btn" class="flex-1 py-2 bg-white text-[#34C759] font-semibold rounded-xl shadow-sm text-[13px] border border-gray-200 transform active:scale-[0.98] transition-transform flex items-center justify-center gap-1.5">
-                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                        <button onclick="shareTournamentPDF()" id="dash-share-btn" class="flex-1 bg-white text-[#34C759] font-semibold rounded-xl shadow-sm border border-gray-200 transform active:scale-[0.98] transition-transform flex items-center justify-center gap-1" style="padding:clamp(7px,2vw,10px) 0;font-size:clamp(12px,3vw,14px);">
+                            <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
                             Share Squads
                         </button>
                     </div>
-                    <p class="text-[10px] text-gray-400 text-center">Captain links expire after 5 days</p>
+                    <p class="text-gray-400 text-center" style="font-size:clamp(10px,2.5vw,11px);">Captain links expire after 5 days</p>
                 </div>
 
                 <div id="tournament-teams-list" class="bg-white mt-1 flex-1 rounded-t-2xl overflow-hidden" style="overflow-y:auto;">
@@ -1125,19 +1125,23 @@
                 globalTournamentsList.forEach(t => {
                     const row = document.createElement('div');
                     row.className = 'team-row cursor-pointer';
-                    // Pass ID instead of serialized object to prevent JSON parse errors
+                    const initials = getInitials(t.name);
+                    const bgColor = getColorForInitials(t.name);
+                    const avatarHtml = t.logo
+                        ? `<img src="${t.logo}" class="team-avatar" style="object-fit:cover;">`
+                        : `<div class="team-avatar flex items-center justify-center text-white font-bold text-lg" style="background-color:${bgColor};">${initials}</div>`;
                     row.innerHTML = `
                         <div class="team-row-content" onclick="openTournamentDashboard('${t.id}')">
-                            <div class="team-avatar flex items-center justify-center text-white font-bold text-lg" style="background-color: ${getColorForInitials(t.name)};">${getInitials(t.name)}</div>
-                            <div class="flex flex-col">
-                                <span class="text-[15px] font-bold text-black leading-tight">${t.name}</span>
+                            ${avatarHtml}
+                            <div class="flex flex-col min-w-0">
+                                <span class="text-[15px] font-bold text-black leading-tight truncate">${t.name}</span>
                                 <div class="flex flex-wrap gap-x-2 mt-1 text-[11px] text-gray-500 font-medium">
                                     <span>Max ${t.maxTeams} Teams</span>
                                     <span>• ${t.playersPerTeam} Players/Team</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="flex gap-2 pr-2">
+                        <div class="flex gap-2 pr-2 flex-shrink-0">
                             <button onclick="initiateAction('${t.id}', 'edit_tourney')" class="ios-btn btn-edit">Edit</button>
                             <button onclick="initiateAction('${t.id}', 'delete_tourney')" class="ios-btn btn-delete">Delete</button>
                         </div>
@@ -2166,6 +2170,148 @@
             });
         }
 
+        function buildPDFContent(teams) {
+            var data = state.activeTournamentData;
+            var tourneyName = data.name || "Tournament";
+            var maxTeams = data.maxTeams || "—";
+            var playersPerTeam = data.playersPerTeam || "—";
+            var totalPlayers = teams.reduce(function(a, t) { return a + (t.players || []).length; }, 0);
+            var generatedDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            var generatedTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            var tourneyLogo = (data && data.logo) ? data.logo : '';
+
+            var teamsHTML = '';
+
+            teams.forEach(function(team, tIdx) {
+                var teamColor = getColorForInitials(team.name);
+                var initials = getInitials(team.name);
+                var initialSize = "28px";
+                if (initials.length === 3) initialSize = "22px";
+                if (initials.length === 4) initialSize = "18px";
+
+                var logoHTML = team.logo
+                    ? '<img src="' + team.logo + '" style="width:60px;height:60px;border-radius:14px;object-fit:cover;border:2px solid rgba(255,255,255,0.15);box-shadow:0 4px 16px rgba(0,0,0,0.4);">'
+                    : '<div style="width:60px;height:60px;border-radius:14px;background:' + teamColor + ';display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:' + initialSize + ';box-shadow:0 4px 16px rgba(0,0,0,0.3);">' + initials + '</div>';
+
+                var captain = team.captain || "Not Selected";
+                var players = team.players || [];
+
+                var playersRows = '';
+                players.forEach(function(p, pIdx) {
+                    var isCaptain = p.name && p.name === team.captain;
+                    var rolesHTML = '';
+                    if (p.roles) {
+                        if (p.roles.bat) rolesHTML += '<span style="background:#EFF6FF;color:#2563EB;font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;margin-right:3px;display:inline-block;">BAT</span>';
+                        if (p.roles.bowl) rolesHTML += '<span style="background:#F0FDF4;color:#16A34A;font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;margin-right:3px;display:inline-block;">BOWL</span>';
+                        if (p.roles.wk) rolesHTML += '<span style="background:#FFF7ED;color:#EA580C;font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;margin-right:3px;display:inline-block;">WK</span>';
+                    }
+                    if (!rolesHTML) rolesHTML = '<span style="color:#D1D5DB;font-size:11px;">—</span>';
+
+                    var rowBg = isCaptain ? '#FFFBEB' : (pIdx % 2 === 0 ? '#FAFAFA' : '#FFFFFF');
+                    var rowBorderLeft = isCaptain ? '3px solid #F59E0B' : '3px solid transparent';
+                    var pColor = getColorForInitials(p.name || '');
+                    var pInitial = p.name ? p.name.charAt(0).toUpperCase() : '?';
+                    var avatarHTML = p.avatar
+                        ? '<img src="' + p.avatar + '" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:1.5px solid #E5E7EB;flex-shrink:0;">'
+                        : '<div style="width:34px;height:34px;border-radius:50%;background:' + pColor + ';display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;flex-shrink:0;">' + pInitial + '</div>';
+                    var captainBadge = isCaptain
+                        ? '<span style="display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#F59E0B,#FCD34D);color:#fff;font-size:9px;font-weight:900;width:17px;height:17px;border-radius:50%;margin-left:6px;vertical-align:middle;box-shadow:0 1px 3px rgba(245,158,11,0.4);">C</span>'
+                        : '';
+
+                    playersRows += '<tr style="background:' + rowBg + ';border-left:' + rowBorderLeft + ';">'
+                        + '<td style="padding:9px 10px;font-size:12px;color:#9CA3AF;font-weight:600;width:28px;text-align:center;">' + (pIdx + 1) + '</td>'
+                        + '<td style="padding:9px 8px;width:46px;">' + avatarHTML + '</td>'
+                        + '<td style="padding:9px 12px;">'
+                        +   '<span style="font-size:14px;font-weight:' + (isCaptain ? '700' : '500') + ';color:#111827;">' + (p.name || 'Unnamed') + '</span>'
+                        +   captainBadge
+                        + '</td>'
+                        + '<td style="padding:9px 12px;text-align:right;">' + rolesHTML + '</td>'
+                        + '</tr>';
+                });
+
+                teamsHTML += '<div style="page-break-inside:avoid;margin-bottom:24px;background:#FFFFFF;border-radius:16px;overflow:hidden;border:1px solid #E5E7EB;box-shadow:0 2px 12px rgba(0,0,0,0.06);">'
+                    + '<div style="background:linear-gradient(135deg,#1C1C1E 0%,#2C2C2E 100%);padding:18px 20px;display:flex;align-items:center;gap:14px;">'
+                    +   '<div style="background:' + teamColor + ';width:4px;border-radius:2px;align-self:stretch;flex-shrink:0;"></div>'
+                    +   logoHTML
+                    +   '<div style="flex:1;min-width:0;">'
+                    +     '<div style="font-size:20px;font-weight:800;color:#FFFFFF;letter-spacing:0.3px;line-height:1.2;word-break:break-word;">' + team.name + '</div>'
+                    +     '<div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:4px;font-weight:500;">'
+                    +       '<span style="color:rgba(255,255,255,0.9);font-weight:700;">' + captain + '</span> · Captain &nbsp;'
+                    +       '<span style="color:rgba(255,255,255,0.9);font-weight:700;">' + players.length + '</span> Players'
+                    +     '</div>'
+                    +   '</div>'
+                    +   '<div style="background:' + teamColor + ';border-radius:10px;padding:6px 14px;text-align:center;flex-shrink:0;">'
+                    +     '<div style="font-size:20px;font-weight:900;color:#fff;line-height:1;">' + (tIdx + 1) + '</div>'
+                    +     '<div style="font-size:8px;color:rgba(255,255,255,0.7);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:1px;">TEAM</div>'
+                    +   '</div>'
+                    + '</div>'
+                    + '<table style="width:100%;border-collapse:collapse;">'
+                    +   '<thead><tr style="background:#F3F4F6;border-bottom:1px solid #E5E7EB;">'
+                    +     '<th style="padding:8px 10px;text-align:center;font-size:9px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:1px;width:28px;">#</th>'
+                    +     '<th style="padding:8px;width:46px;"></th>'
+                    +     '<th style="padding:8px 12px;text-align:left;font-size:9px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:1px;">Player</th>'
+                    +     '<th style="padding:8px 12px;text-align:right;font-size:9px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:1px;">Role</th>'
+                    +   '</tr></thead>'
+                    +   '<tbody>' + playersRows + '</tbody>'
+                    + '</table>'
+                    + '</div>';
+            });
+
+            var tourneyLogoHTML = tourneyLogo
+                ? '<img src="' + tourneyLogo + '" style="width:72px;height:72px;border-radius:18px;object-fit:cover;border:3px solid rgba(255,255,255,0.2);box-shadow:0 8px 24px rgba(0,0,0,0.3);margin-bottom:16px;display:block;margin-left:auto;margin-right:auto;">'
+                : '<div style="font-size:36px;margin-bottom:12px;">&#127955;</div>';
+
+            return '<!DOCTYPE html>'
+                + '<html><head>'
+                + '<meta charset="UTF-8">'
+                + '<meta name="viewport" content="width=device-width,initial-scale=1">'
+                + '<style>'
+                + '@page{size:A4;margin:16mm 14mm;}'
+                + '*{margin:0;padding:0;box-sizing:border-box;}'
+                + 'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#F2F2F7;color:#111827;}'
+                + '@media print{'
+                +   'body{background:white;-webkit-print-color-adjust:exact;print-color-adjust:exact;}'
+                +   '.no-print{display:none!important;}'
+                + '}'
+                + '</style>'
+                + '</head><body>'
+                + '<div style="max-width:760px;margin:0 auto;padding:24px 16px 100px;">'
+                + '<div style="background:linear-gradient(160deg,#0f172a 0%,#1e3a5f 60%,#0f3460 100%);border-radius:20px;padding:36px 28px 32px;margin-bottom:28px;text-align:center;position:relative;overflow:hidden;">'
+                +   '<div style="position:absolute;top:-50px;right:-50px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,0.03);pointer-events:none;"></div>'
+                +   '<div style="position:absolute;bottom:-70px;left:-40px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,0.02);pointer-events:none;"></div>'
+                +   tourneyLogoHTML
+                +   '<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:3px;margin-bottom:10px;">Official Tournament Document</div>'
+                +   '<div style="font-size:28px;font-weight:900;color:#FFFFFF;letter-spacing:0.5px;line-height:1.2;margin-bottom:6px;">' + tourneyName + '</div>'
+                +   '<div style="display:flex;justify-content:center;gap:8px;margin-top:22px;flex-wrap:wrap;">'
+                +     '<div style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:11px 18px;min-width:90px;">'
+                +       '<div style="font-size:20px;font-weight:900;color:#FFFFFF;">' + teams.length + '<span style="font-size:13px;font-weight:500;color:rgba(255,255,255,0.5);">/' + maxTeams + '</span></div>'
+                +       '<div style="font-size:9px;color:rgba(255,255,255,0.5);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:2px;">Teams</div>'
+                +     '</div>'
+                +     '<div style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:11px 18px;min-width:90px;">'
+                +       '<div style="font-size:20px;font-weight:900;color:#FFFFFF;">' + playersPerTeam + '</div>'
+                +       '<div style="font-size:9px;color:rgba(255,255,255,0.5);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:2px;">Per Team</div>'
+                +     '</div>'
+                +     '<div style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:11px 18px;min-width:90px;">'
+                +       '<div style="font-size:20px;font-weight:900;color:#FFFFFF;">' + totalPlayers + '</div>'
+                +       '<div style="font-size:9px;color:rgba(255,255,255,0.5);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:2px;">Players</div>'
+                +     '</div>'
+                +   '</div>'
+                +   '<div style="margin-top:16px;font-size:10px;color:rgba(255,255,255,0.35);font-weight:500;">' + generatedDate + ' · ' + generatedTime + '</div>'
+                + '</div>'
+                + teamsHTML
+                + '<div style="text-align:center;padding:24px 0 16px;border-top:1px solid #E5E7EB;margin-top:8px;">'
+                +   '<div style="font-size:10px;font-weight:700;color:#C7C7CC;text-transform:uppercase;letter-spacing:2px;">Generated by CRiCKERR</div>'
+                +   '<div style="font-size:9px;color:#D1D5DB;margin-top:3px;">Team Management System</div>'
+                + '</div>'
+                + '</div>'
+                + '<div class="no-print" style="position:fixed;bottom:0;left:0;right:0;padding:12px 16px;background:rgba(255,255,255,0.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid #E5E7EB;display:flex;gap:10px;z-index:100;">'
+                +   '<button onclick="window.print()" style="flex:1;padding:12px;background:#007AFF;color:white;font-weight:700;font-size:15px;border:none;border-radius:12px;cursor:pointer;">&#128229; Save as PDF</button>'
+                +   '<button onclick="window.close()" style="flex:1;padding:12px;background:#F2F2F7;color:#007AFF;font-weight:700;font-size:15px;border:1px solid #E5E7EB;border-radius:12px;cursor:pointer;">Close</button>'
+                + '</div>'
+                + '<div class="no-print" style="height:72px;"></div>'
+                + '</body></html>';
+        }
+
         // --- IMAGE COMPRESSION & UPLOAD (with face-crop for players) ---
         let _cropState = { type: null, idx: null, img: null, scale: 1, offsetX: 0, offsetY: 0, dragging: false, lastX: 0, lastY: 0 };
 
@@ -2390,27 +2536,57 @@
 
         function generateTournamentPDF() {
             const btn = document.getElementById('dash-pdf-btn');
-            btn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" style="opacity:0.25"></circle><path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" style="opacity:0.75"></path></svg> Generating...';
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = 'Generating…';
             btn.disabled = true;
 
             getTournamentTeamsData().then(teams => {
                 if (teams.length === 0) {
                     showiOSAlert("No Teams", "Add teams to the tournament before generating PDF.");
-                    btn.innerHTML = '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg> Download PDF';
+                    btn.innerHTML = originalHTML;
                     btn.disabled = false;
                     return;
                 }
 
                 const htmlContent = buildPDFContent(teams);
-                const pdfWindow = window.open('', '_blank');
-                if (pdfWindow) {
-                    pdfWindow.document.write(htmlContent);
-                    pdfWindow.document.close();
+
+                // Build a Blob URL — works in Safari PWA, iOS, all browsers, no popup needed
+                const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+                const blobUrl = URL.createObjectURL(blob);
+
+                // Try opening in a new tab first (desktop)
+                const newTab = window.open(blobUrl, '_blank');
+
+                if (!newTab || newTab.closed || typeof newTab.closed === 'undefined') {
+                    // Popup blocked (common on iOS PWA) — inject a full-screen iframe overlay instead
+                    const existing = document.getElementById('pdf-preview-overlay');
+                    if (existing) existing.remove();
+
+                    const overlay = document.createElement('div');
+                    overlay.id = 'pdf-preview-overlay';
+                    overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#000;display:flex;flex-direction:column;';
+                    overlay.innerHTML = `
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#1C1C1E;flex-shrink:0;">
+                            <span style="color:#fff;font-size:15px;font-weight:600;">PDF Preview</span>
+                            <button onclick="document.getElementById('pdf-preview-overlay').remove();URL.revokeObjectURL('${blobUrl}');"
+                                style="color:#FF453A;font-size:15px;font-weight:600;background:none;border:none;cursor:pointer;padding:4px 8px;">Close</button>
+                        </div>
+                        <iframe src="${blobUrl}" style="flex:1;border:none;width:100%;background:#fff;"></iframe>
+                        <div style="padding:12px 16px;background:#1C1C1E;flex-shrink:0;">
+                            <p style="color:rgba(255,255,255,0.5);font-size:12px;text-align:center;margin-bottom:8px;">Tap the share icon in your browser to save as PDF</p>
+                        </div>
+                    `;
+                    document.body.appendChild(overlay);
                 } else {
-                    showiOSAlert("Popup Blocked", "Please allow popups to generate the PDF view.");
+                    // Successfully opened — revoke blob URL after 60s
+                    setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
                 }
 
-                btn.innerHTML = '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg> Download PDF';
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }).catch(err => {
+                showiOSAlert("Error", "Could not generate PDF: " + err.message);
+                btn.innerHTML = originalHTML;
                 btn.disabled = false;
             });
         }
