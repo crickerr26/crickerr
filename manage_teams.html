@@ -72,18 +72,18 @@
         }
 
         .team-row {
-            display: flex; align-items: center;
-            padding: 10px 16px; background: white;
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+            padding: clamp(8px, 2.5vw, 10px) clamp(10px, 3vw, 16px); background: white;
             transition: background 0.2s;
         }
         .team-row:active { background-color: #E5E5EA; }
 
-        .team-row-content { flex: 1; display: flex; align-items: center; gap: 12px; padding-right: 10px; }
-        .team-row-divider { height: 1px; background-color: #E5E5EA; margin-left: 64px; }
-        .team-avatar { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1); }
+        .team-row-content { flex: 1; min-width: 0; display: flex; align-items: center; gap: clamp(8px, 2.5vw, 12px); padding-right: 6px; }
+        .team-row-divider { height: 1px; background-color: #E5E5EA; margin-left: clamp(52px, 15vw, 64px); }
+        .team-avatar { width: clamp(36px, 10vw, 42px); height: clamp(36px, 10vw, 42px); flex-shrink: 0; border-radius: 50%; object-fit: cover; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1); }
 
         /* --- BUTTONS --- */
-        .ios-btn { padding: 6px 14px; border-radius: 100px; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+        .ios-btn { padding: clamp(4px, 1.5vw, 6px) clamp(8px, 2.5vw, 14px); border-radius: 100px; font-size: clamp(11px, 3vw, 13px); font-weight: 600; transition: all 0.2s; white-space: nowrap; flex-shrink: 0; text-overflow: ellipsis; overflow: hidden; }
         .btn-edit { background: #E9F0FD; color: #007AFF; }
         .btn-delete { background: #FDE8E8; color: #FF3B30; }
         
@@ -1134,14 +1134,14 @@
                         <div class="team-row-content" onclick="openTournamentDashboard('${t.id}')">
                             ${avatarHtml}
                             <div class="flex flex-col min-w-0">
-                                <span class="text-[15px] font-bold text-black leading-tight truncate">${t.name}</span>
-                                <div class="flex flex-wrap gap-x-2 mt-1 text-[11px] text-gray-500 font-medium">
+                                <span class="font-bold text-black leading-tight truncate" style="font-size: clamp(14px, 4vw, 16px);">${t.name}</span>
+                                <div class="flex flex-wrap gap-x-2 mt-1 font-medium text-gray-500" style="font-size: clamp(10px, 2.8vw, 12px);">
                                     <span>Max ${t.maxTeams} Teams</span>
                                     <span>• ${t.playersPerTeam} Players/Team</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="flex gap-2 pr-2 flex-shrink-0">
+                        <div class="flex items-center gap-2 pr-2 flex-shrink-0">
                             <button onclick="initiateAction('${t.id}', 'edit_tourney')" class="ios-btn btn-edit">Edit</button>
                             <button onclick="initiateAction('${t.id}', 'delete_tourney')" class="ios-btn btn-delete">Delete</button>
                         </div>
@@ -1561,18 +1561,18 @@
             row.innerHTML = `
                 <div class="team-row-content">
                     ${logoHtml}
-                    <div class="flex flex-col">
-                        <span class="text-[15px] font-bold text-black leading-tight">${team.name}</span>
-                        <div class="flex flex-wrap gap-x-2 gap-y-1 mt-1 text-[11px] text-gray-500 font-medium">
-                            ${captainName ? `<span class="flex items-center gap-1 text-[#007AFF] font-semibold"><span class="bg-[#007AFF] text-white text-[9px] w-3.5 h-3.5 rounded-full flex items-center justify-center">C</span> ${captainName}</span>` : ''}
+                    <div class="flex flex-col min-w-0">
+                        <span class="font-bold text-black leading-tight truncate" style="font-size: clamp(14px, 4vw, 16px);">${team.name}</span>
+                        <div class="flex flex-wrap gap-x-2 gap-y-1 mt-1 font-medium text-gray-500" style="font-size: clamp(10px, 2.8vw, 12px);">
+                            ${captainName ? `<span class="flex items-center gap-1 text-[#007AFF] font-semibold"><span class="bg-[#007AFF] text-white text-[9px] w-3.5 h-3.5 rounded-full flex items-center justify-center flex-shrink-0">C</span> <span class="truncate">${captainName}</span></span>` : ''}
                         </div>
-                        <div class="flex flex-wrap gap-x-2 mt-0.5 text-[10px] text-gray-400">
-                            <span>${playerCount} Players</span>
-                            <span>• By ${creatorName}</span>
+                        <div class="flex flex-wrap gap-x-2 mt-0.5 text-gray-400" style="font-size: clamp(9px, 2.5vw, 11px);">
+                            <span class="whitespace-nowrap">${playerCount} Players</span>
+                            <span class="truncate">• By ${creatorName}</span>
                         </div>
                     </div>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex items-center gap-1.5 flex-shrink-0">
                     <button onclick="shareCaptainLink('${team.id}', '${team.name}')" class="ios-btn" style="background: #FFF7ED; color: #F97316;">Share</button>
                     <button onclick="initiateAction('${team.id}', 'edit')" class="ios-btn btn-edit">Edit</button>
                     <button onclick="initiateAction('${team.id}', 'delete')" class="ios-btn btn-delete">Delete</button>
