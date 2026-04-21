@@ -174,27 +174,54 @@
             <div id="tournaments-list-container" class="pb-20 bg-white hidden">
                 </div>
             <div id="tournament-dashboard-container" class="pb-20 bg-[#F2F2F7] hidden flex-col min-h-full">
-                <div class="bg-white p-4 border-b border-gray-200 mb-2">
-                    <button onclick="closeTournamentDashboard()" class="text-[#007AFF] font-medium text-sm mb-2 flex items-center gap-1">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg> Back to Tournaments
-                    </button>
-                    <h2 id="dash-tourney-name" class="text-xl font-bold text-black">Tournament Name</h2>
-                    <p class="text-xs text-gray-500 mt-1"><span id="dash-tourney-count">0</span> / <span id="dash-tourney-max">0</span> Teams Added • <span id="dash-tourney-players">11</span> Players/Team</p>
+                <!-- Apple-style dashboard header card -->
+                <div class="bg-white border-b border-gray-100 mb-3">
+                    <div class="px-4 pt-3 pb-1">
+                        <button onclick="closeTournamentDashboard()" class="text-[#007AFF] font-medium text-[15px] flex items-center gap-1 mb-3">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg> Tournaments
+                        </button>
+                    </div>
+                    <!-- Hero section: logo + info -->
+                    <div class="flex items-center gap-4 px-4 pb-4">
+                        <div id="dash-tourney-logo-wrap" class="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm border border-gray-100">
+                            <span id="dash-tourney-logo-initials" class="text-white font-bold text-xl"></span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h2 id="dash-tourney-name" class="text-[20px] font-bold text-black leading-tight truncate">Tournament Name</h2>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-[13px] text-gray-500"><span id="dash-tourney-count" class="font-semibold text-black">0</span> / <span id="dash-tourney-max">0</span> Teams</span>
+                                <span class="text-gray-300">•</span>
+                                <span class="text-[13px] text-gray-500"><span id="dash-tourney-players" class="font-semibold text-black">11</span> Players/Team</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Progress bar -->
+                    <div class="px-4 pb-4">
+                        <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                            <div id="dash-progress-bar" class="h-full bg-[#007AFF] rounded-full transition-all duration-500" style="width:0%"></div>
+                        </div>
+                    </div>
                 </div>
-                <div class="px-4 py-2">
-                    <button onclick="openEditor(null, true)" id="dash-add-team-btn" class="w-full py-3 bg-[#007AFF] text-white font-bold rounded-xl shadow-sm text-sm transform active:scale-95 transition-transform">Add Tournament Team</button>
-                </div>
-                <div class="px-4 pb-2 flex gap-2">
-                    <button onclick="generateTournamentPDF()" id="dash-pdf-btn" class="flex-1 py-3 bg-white text-[#007AFF] font-bold rounded-xl shadow-sm text-sm border border-[#007AFF] transform active:scale-95 transition-transform flex items-center justify-center gap-2">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                        Download PDF
+
+                <!-- Action buttons -->
+                <div class="px-4 pb-3 space-y-2">
+                    <button onclick="openEditor(null, true)" id="dash-add-team-btn" class="w-full py-3.5 bg-[#007AFF] text-white font-semibold rounded-2xl shadow-sm text-[15px] transform active:scale-[0.98] transition-transform">
+                        Add Tournament Team
                     </button>
-                    <button onclick="shareTournamentPDF()" id="dash-share-btn" class="flex-1 py-3 bg-white text-[#34C759] font-bold rounded-xl shadow-sm text-sm border border-[#34C759] transform active:scale-95 transition-transform flex items-center justify-center gap-2">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
-                        Share to Captains
-                    </button>
+                    <div class="flex gap-3">
+                        <button onclick="generateTournamentPDF()" id="dash-pdf-btn" class="flex-1 py-3 bg-white text-[#007AFF] font-semibold rounded-2xl shadow-sm text-[15px] border border-gray-200 transform active:scale-[0.98] transition-transform flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            Download PDF
+                        </button>
+                        <button onclick="shareTournamentPDF()" id="dash-share-btn" class="flex-1 py-3 bg-white text-[#34C759] font-semibold rounded-2xl shadow-sm text-[15px] border border-gray-200 transform active:scale-[0.98] transition-transform flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                            Share Squads
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-gray-400 text-center">Captain links expire after 5 days</p>
                 </div>
-                <div id="tournament-teams-list" class="bg-white mt-2 flex-1">
+
+                <div id="tournament-teams-list" class="bg-white mt-1 flex-1 rounded-t-2xl overflow-hidden" style="overflow-y:auto;">
                 </div>
             </div>
         </div>
@@ -304,25 +331,42 @@
             <button onclick="submitTournamentForm()" class="text-[#007AFF] font-bold text-base transition-opacity" id="tourney-save-btn">Done</button>
         </div>
         <div class="flex-1 overflow-y-auto p-4 pb-20">
-            <form id="tournament-setup-form" class="space-y-6">
-                <div class="bg-white rounded-xl overflow-hidden shadow-sm p-4">
-                    <label class="text-sm font-medium text-black mb-1 block">Tournament Name <span class="text-red-500">*</span></label>
-                    <input type="text" id="tourney-name-input" placeholder="e.g. Summer Cup 2026" class="watery-input w-full p-2.5 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#007AFF]">
+            <form id="tournament-setup-form" class="space-y-5">
+
+                <!-- Tournament Logo + Name -->
+                <div class="flex flex-col items-center gap-3 pt-2 pb-2">
+                    <div class="relative group cursor-pointer" onclick="document.getElementById('tourney-logo-upload').click()">
+                        <div class="h-24 w-24 rounded-2xl bg-gray-100 overflow-hidden shadow-sm border-2 border-white flex items-center justify-center" id="tourney-logo-container">
+                            <img id="tourney-logo-preview" class="h-full w-full object-cover hidden">
+                            <div id="tourney-logo-placeholder" class="flex flex-col items-center gap-1 text-gray-400">
+                                <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                <span class="text-[9px] font-bold uppercase tracking-wide">Logo</span>
+                            </div>
+                        </div>
+                        <div class="absolute -bottom-1 -right-1 bg-[#007AFF] text-white rounded-full p-1.5 border-2 border-white shadow-md">
+                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
+                        </div>
+                        <input type="file" id="tourney-logo-upload" accept="image/*" class="hidden" onchange="handleTourneyLogoUpload(event)">
+                    </div>
+                    <input type="text" id="tourney-name-input" placeholder="Tournament Name" class="text-center text-lg font-semibold bg-transparent border-b-2 border-gray-200 focus:border-[#007AFF] outline-none w-4/5 pb-1.5 transition-colors" style="caret-color:#007AFF;">
                 </div>
-                <div class="bg-white rounded-xl overflow-hidden shadow-sm p-4 grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-sm font-medium text-black mb-1 block">Max Teams <span class="text-red-500">*</span></label>
-                        <input type="number" id="tourney-max-teams" placeholder="e.g. 6" class="watery-input w-full p-2.5 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#007AFF]" oninput="updateTourneySetupState()">
+
+                <!-- Config Grid -->
+                <div class="bg-white rounded-2xl overflow-hidden shadow-sm divide-y divide-gray-100">
+                    <div class="flex items-center px-4 py-3">
+                        <label class="text-[15px] font-medium text-black flex-1">Max Teams <span class="text-red-400">*</span></label>
+                        <input type="number" id="tourney-max-teams" placeholder="6" class="w-20 text-right text-[15px] text-[#007AFF] font-semibold bg-transparent outline-none" oninput="updateTourneySetupState()">
                     </div>
-                    <div>
-                        <label class="text-sm font-medium text-black mb-1 block">Players / Team <span class="text-red-500">*</span></label>
-                        <input type="number" id="tourney-players-count" placeholder="e.g. 11" value="11" class="watery-input w-full p-2.5 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#007AFF]" oninput="updateTourneySetupState()">
+                    <div class="flex items-center px-4 py-3">
+                        <label class="text-[15px] font-medium text-black flex-1">Players / Team <span class="text-red-400">*</span></label>
+                        <input type="number" id="tourney-players-count" placeholder="11" value="11" class="w-20 text-right text-[15px] text-[#007AFF] font-semibold bg-transparent outline-none" oninput="updateTourneySetupState()">
                     </div>
-                    <div class="col-span-2 mt-2">
-                        <label class="text-sm font-medium text-black mb-1 block">Creator Code (PIN) <span class="text-red-500">*</span></label>
-                        <input type="tel" id="tourney-pin-input" maxlength="4" placeholder="4-digit PIN" class="watery-input w-full p-2.5 rounded-lg text-center tracking-[8px] font-mono text-lg outline-none focus:ring-2 focus:ring-[#007AFF]">
+                    <div class="flex items-center px-4 py-3">
+                        <label class="text-[15px] font-medium text-black flex-1">Creator PIN <span class="text-red-400">*</span></label>
+                        <input type="tel" id="tourney-pin-input" maxlength="4" placeholder="••••" class="w-20 text-right text-[17px] text-[#007AFF] font-bold tracking-[6px] font-mono bg-transparent outline-none" style="letter-spacing:6px;">
                     </div>
                 </div>
+                <p class="text-[11px] text-gray-400 text-center -mt-2">Captain share links are active for 5 days.</p>
 
                 <div id="tourney-teams-container" class="space-y-6"></div>
             </form>
@@ -499,7 +543,7 @@
                             const isExpired = t.captainLinkExpiry && now > t.captainLinkExpiry;
 
                             if(t.captainToken !== state.token || isExpired) {
-                                 document.getElementById('main-scroll-area').innerHTML = `<div class="flex flex-col items-center justify-center h-full text-center p-6"><h2 class="text-xl font-bold text-red-500">Link Expired</h2><p class="text-sm text-gray-400 mt-2">This link has expired (24h limit) or is invalid.</p></div>`;
+                                 document.getElementById('main-scroll-area').innerHTML = `<div class="flex flex-col items-center justify-center h-full text-center p-6"><h2 class="text-xl font-bold text-red-500">Link Expired</h2><p class="text-sm text-gray-400 mt-2">This link has expired (5-day limit) or is invalid. Ask the organiser to send a new link.</p></div>`;
                                  return;
                             }
 
@@ -718,11 +762,18 @@
                 tourneyContainer.classList.remove('hidden');
                 searchBar.style.display = 'none'; // Hide search for tournaments
                 loadTournaments();
+            } else if (t === 'all') {
+                tourneyContainer.classList.add('hidden');
+                dashboardContainer.classList.add('hidden');
+                teamsContainer.classList.remove('hidden');
+                searchBar.style.display = 'none'; // All Teams has its own inline search
+                state.activeTournamentId = null;
+                resetAndLoadTeams();
             } else {
                 tourneyContainer.classList.add('hidden');
                 dashboardContainer.classList.add('hidden');
                 teamsContainer.classList.remove('hidden');
-                searchBar.style.display = 'flex';
+                searchBar.style.display = 'flex'; // My Teams uses top search
                 state.activeTournamentId = null;
                 resetAndLoadTeams();
             }
@@ -736,9 +787,42 @@
             }
         }
 
+        function handleTourneyLogoUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const MAX_SIZE = 300;
+                    let w = img.width, h = img.height;
+                    if (w > h) { if (w > MAX_SIZE) { h *= MAX_SIZE / w; w = MAX_SIZE; } }
+                    else { if (h > MAX_SIZE) { w *= MAX_SIZE / h; h = MAX_SIZE; } }
+                    canvas.width = w; canvas.height = h;
+                    ctx.drawImage(img, 0, 0, w, h);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                    state.tourneyLogo = dataUrl;
+                    const preview = document.getElementById('tourney-logo-preview');
+                    preview.src = dataUrl;
+                    preview.classList.remove('hidden');
+                    document.getElementById('tourney-logo-placeholder').classList.add('hidden');
+                };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
         function openTournamentEditor(tourney = null) {
             document.getElementById('tournament-setup-form').reset();
             document.getElementById('tourney-teams-container').innerHTML = '';
+            state.tourneyLogo = '';
+            // Reset logo UI
+            const preview = document.getElementById('tourney-logo-preview');
+            if (preview) { preview.src = ''; preview.classList.add('hidden'); }
+            const placeholder = document.getElementById('tourney-logo-placeholder');
+            if (placeholder) placeholder.classList.remove('hidden');
             
             if (tourney) {
                 state.editMode = true;
@@ -748,6 +832,13 @@
                 document.getElementById('tourney-max-teams').value = tourney.maxTeams || "";
                 document.getElementById('tourney-players-count').value = tourney.playersPerTeam || "";
                 document.getElementById('tourney-pin-input').value = tourney.pin || "";
+                state.tourneyLogo = tourney.logo || '';
+                if (tourney.logo) {
+                    const preview = document.getElementById('tourney-logo-preview');
+                    if (preview) { preview.src = tourney.logo; preview.classList.remove('hidden'); }
+                    const placeholder = document.getElementById('tourney-logo-placeholder');
+                    if (placeholder) placeholder.classList.add('hidden');
+                }
                 
                 document.getElementById('tourney-teams-container').innerHTML = '<div class="text-center py-10 text-gray-400 text-sm">Loading Teams...</div>';
                 db.collection("tournaments_v2").doc(tourney.id).collection("teams").get().then(snapshot => {
@@ -950,6 +1041,7 @@
 
             const tourneyData = {
                 name, maxTeams, playersPerTeam, pin,
+                logo: state.tourneyLogo || "",
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
@@ -1075,6 +1167,19 @@
             document.getElementById('dash-tourney-name').textContent = data.name || "Tournament";
             document.getElementById('dash-tourney-max').textContent = data.maxTeams || "0";
             document.getElementById('dash-tourney-players').textContent = data.playersPerTeam || "0";
+
+            // Render tournament logo in hero
+            const logoWrap = document.getElementById('dash-tourney-logo-wrap');
+            const logoInitials = document.getElementById('dash-tourney-logo-initials');
+            if (data.logo) {
+                logoWrap.innerHTML = `<img src="${data.logo}" class="w-full h-full object-cover">`;
+            } else {
+                const initials = getInitials(data.name);
+                const bg = getColorForInitials(data.name);
+                logoWrap.style.backgroundColor = bg;
+                logoInitials.textContent = initials;
+                logoWrap.innerHTML = `<span class="text-white font-bold text-xl">${initials}</span>`;
+            }
             
             loadTournamentTeams(id);
         }
@@ -1089,64 +1194,207 @@
 
         function loadTournamentTeams(tourneyId) {
             const container = document.getElementById('tournament-teams-list');
-            if (container.innerHTML === '') container.innerHTML = '<div class="text-center py-10 text-gray-400 text-sm">Loading Teams...</div>';
-            
+            container.innerHTML = '<div class="flex items-center justify-center py-12"><div class="animate-spin rounded-full h-7 w-7 border-b-2 border-[#007AFF]"></div></div>';
+
             // Clean up previous listener to prevent memory leaks
             if (state.tourneyTeamsListener) state.tourneyTeamsListener();
 
             state.tourneyTeamsListener = db.collection("tournaments_v2").doc(tourneyId).collection("teams").orderBy("name").onSnapshot(snapshot => {
-                container.innerHTML = '';
                 document.getElementById('dash-tourney-count').textContent = snapshot.size;
-                
+
+                // --- Update add-team button & progress bar ---
                 const btn = document.getElementById('dash-add-team-btn');
-                if (snapshot.size >= state.activeTournamentData.maxTeams) {
+                const maxTeams = state.activeTournamentData.maxTeams || 1;
+                const pct = Math.min(100, Math.round((snapshot.size / maxTeams) * 100));
+                const progressBar = document.getElementById('dash-progress-bar');
+                if (progressBar) {
+                    progressBar.style.width = pct + '%';
+                    progressBar.style.backgroundColor = snapshot.size >= maxTeams ? '#34C759' : '#007AFF';
+                }
+                if (snapshot.size >= maxTeams) {
                     btn.disabled = true; btn.classList.add('opacity-50'); btn.textContent = "Tournament Full";
                 } else {
                     btn.disabled = false; btn.classList.remove('opacity-50'); btn.textContent = "Add Tournament Team";
                 }
 
                 if (snapshot.empty) {
-                    container.innerHTML = `<div class="text-center py-10 text-gray-400 text-sm">No teams added yet.</div>`;
+                    container.innerHTML = `
+                        <div class="flex flex-col items-center justify-center py-16 px-6 text-center">
+                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                                <svg class="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            </div>
+                            <p class="text-[15px] font-semibold text-gray-400">No teams yet</p>
+                            <p class="text-[13px] text-gray-300 mt-1">Tap "Add Tournament Team" to get started</p>
+                        </div>`;
                     return;
                 }
 
-                snapshot.forEach(doc => {
-                    const team = doc.data(); team.id = doc.id;
-                    const row = document.createElement('div');
-                    row.className = 'team-row';
-                    
+                // --- Build teams array ---
+                const teams = [];
+                snapshot.forEach(doc => { const t = doc.data(); t.id = doc.id; teams.push(t); });
+
+                // --- Render tabbed interface ---
+                container.innerHTML = '';
+
+                // Tab bar wrapper
+                const tabBarWrap = document.createElement('div');
+                tabBarWrap.style.cssText = 'position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid #F2F2F7;';
+
+                const tabBar = document.createElement('div');
+                tabBar.id = 'tt-tab-bar';
+                tabBar.style.cssText = 'display:flex;overflow-x:auto;gap:0;padding:0 12px;scrollbar-width:none;-ms-overflow-style:none;';
+                tabBar.innerHTML = '<style>#tt-tab-bar::-webkit-scrollbar{display:none}</style>';
+
+                teams.forEach((team, idx) => {
                     const initial = getInitials(team.name);
                     const bgColor = getColorForInitials(team.name);
-                    const logoHtml = team.logo 
-                        ? `<img src="${team.logo}" class="team-avatar">` 
-                        : `<div class="team-avatar flex items-center justify-center text-white font-bold text-lg" style="background-color: ${bgColor};">${initial}</div>`;
-                    
-                    const captainName = team.captain ? team.captain.split(' ')[0] : null;
-                    const playerCount = (team.players || []).length;
+                    const logoEl = team.logo
+                        ? `<img src="${team.logo}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
+                        : `<div style="width:22px;height:22px;border-radius:50%;background:${bgColor};display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span style="color:#fff;font-size:9px;font-weight:700;">${initial}</span></div>`;
 
-                    row.innerHTML = `
-                        <div class="team-row-content">
-                            ${logoHtml}
-                            <div class="flex flex-col">
-                                <span class="text-[15px] font-bold text-black leading-tight">${team.name}</span>
-                                <div class="flex flex-wrap gap-x-2 mt-1 text-[11px] text-gray-500 font-medium">
-                                    <span>${playerCount} Players</span>
-                                    ${captainName ? `<span>• C: ${captainName}</span>` : ''}
-                                </div>
+                    // Truncate name for tab label
+                    const shortName = team.name.length > 10 ? team.name.substring(0, 10) + '…' : team.name;
+
+                    const tab = document.createElement('button');
+                    tab.id = `tt-tab-${idx}`;
+                    tab.dataset.tabIdx = idx;
+                    tab.style.cssText = `
+                        display:flex;align-items:center;gap:6px;
+                        padding:10px 14px;
+                        border:none;background:transparent;cursor:pointer;
+                        font-size:13px;font-weight:600;
+                        color:#8E8E93;white-space:nowrap;
+                        border-bottom:2px solid transparent;
+                        transition:color 0.2s,border-color 0.2s;
+                        flex-shrink:0;
+                        -webkit-tap-highlight-color:transparent;
+                    `;
+                    tab.innerHTML = `${logoEl}<span>${shortName}</span>`;
+                    tab.onclick = () => switchTeamTab(idx, teams.length);
+                    tabBar.appendChild(tab);
+                });
+
+                tabBarWrap.appendChild(tabBar);
+                container.appendChild(tabBarWrap);
+
+                // --- Panel for each team ---
+                const panelsWrap = document.createElement('div');
+                panelsWrap.id = 'tt-panels-wrap';
+
+                teams.forEach((team, idx) => {
+                    const players = team.players || [];
+                    const captain = team.captain || null;
+                    const initial = getInitials(team.name);
+                    const bgColor = getColorForInitials(team.name);
+
+                    const logoHeader = team.logo
+                        ? `<img src="${team.logo}" style="width:56px;height:56px;border-radius:16px;object-fit:cover;box-shadow:0 2px 8px rgba(0,0,0,0.12);">`
+                        : `<div style="width:56px;height:56px;border-radius:16px;background:${bgColor};display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.10);"><span style="color:#fff;font-weight:700;font-size:18px;">${initial}</span></div>`;
+
+                    // Build player rows
+                    let playersHTML = '';
+                    if (players.length === 0) {
+                        playersHTML = `<div style="text-align:center;padding:20px 0;color:#C7C7CC;font-size:13px;">No players added</div>`;
+                    } else {
+                        players.forEach((p, pIdx) => {
+                            const isCap = p.name === captain;
+                            const pInitial = p.name ? p.name.charAt(0).toUpperCase() : '?';
+                            const pColor = getColorForInitials(p.name || '');
+                            const avatarEl = p.avatar
+                                ? `<img src="${p.avatar}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
+                                : `<div style="width:34px;height:34px;border-radius:50%;background:${pColor};display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span style="color:#fff;font-size:13px;font-weight:600;">${pInitial}</span></div>`;
+                            const roles = [];
+                            if (p.roles) {
+                                if (p.roles.bat) roles.push('<span style="background:#EFF6FF;color:#3B82F6;font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px;">BAT</span>');
+                                if (p.roles.bowl) roles.push('<span style="background:#F0FDF4;color:#22C55E;font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px;">BOWL</span>');
+                                if (p.roles.wk) roles.push('<span style="background:#FFF7ED;color:#F97316;font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px;">WK</span>');
+                            }
+                            playersHTML += `
+                                <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #F2F2F7;">
+                                    <div style="width:24px;text-align:center;font-size:11px;font-weight:600;color:#C7C7CC;flex-shrink:0;">${pIdx + 1}</div>
+                                    ${avatarEl}
+                                    <div style="flex:1;min-width:0;">
+                                        <div style="display:flex;align-items:center;gap:5px;">
+                                            <span style="font-size:14px;font-weight:${isCap ? '700' : '500'};color:#000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name || 'Unnamed'}</span>
+                                            ${isCap ? '<span style="background:linear-gradient(135deg,#FFD700,#FDB931);color:#fff;font-size:9px;font-weight:900;padding:1px 6px;border-radius:100px;flex-shrink:0;">C</span>' : ''}
+                                        </div>
+                                        ${roles.length > 0 ? `<div style="display:flex;gap:4px;margin-top:3px;">${roles.join('')}</div>` : ''}
+                                    </div>
+                                </div>`;
+                        });
+                    }
+
+                    const panel = document.createElement('div');
+                    panel.id = `tt-panel-${idx}`;
+                    panel.style.cssText = `display:${idx === 0 ? 'block' : 'none'};`;
+                    panel.innerHTML = `
+                        <!-- Team hero strip -->
+                        <div style="display:flex;align-items:center;gap:14px;padding:16px;background:#fff;border-bottom:1px solid #F2F2F7;">
+                            ${logoHeader}
+                            <div style="flex:1;min-width:0;">
+                                <div style="font-size:17px;font-weight:700;color:#000;line-height:1.2;word-break:break-word;">${team.name}</div>
+                                <div style="font-size:12px;color:#8E8E93;margin-top:3px;">${players.length} Player${players.length !== 1 ? 's' : ''}${captain ? ' · C: ' + captain.split(' ')[0] : ''}</div>
                             </div>
                         </div>
-                        <div class="flex gap-2">
-                            <button onclick="shareCaptainLink('${team.id}', '${team.name}', '${tourneyId}')" class="ios-btn" style="background: #FFF7ED; color: #F97316;">Share</button>
-                            <button onclick="openEditor(JSON.parse(unescape('${escape(JSON.stringify(team))}')))" class="ios-btn btn-edit">Edit</button>
-                            <button onclick="deleteTournamentTeam('${team.id}')" class="ios-btn btn-delete">Delete</button>
+
+                        <!-- Action buttons -->
+                        <div style="display:flex;gap:10px;padding:12px 16px;background:#F2F2F7;">
+                            <button onclick="shareCaptainLink('${team.id}', '${team.name}', '${tourneyId}')"
+                                style="flex:1;padding:10px 0;background:#FFF7ED;color:#F97316;font-size:13px;font-weight:700;border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;-webkit-tap-highlight-color:transparent;"
+                                onmousedown="this.style.opacity=0.7" onmouseup="this.style.opacity=1" ontouchstart="this.style.opacity=0.7" ontouchend="this.style.opacity=1">
+                                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                                Share Link
+                            </button>
+                            <button onclick="openEditor(JSON.parse(unescape('${escape(JSON.stringify(team))}')))"
+                                style="flex:1;padding:10px 0;background:#E9F0FD;color:#007AFF;font-size:13px;font-weight:700;border:none;border-radius:12px;cursor:pointer;-webkit-tap-highlight-color:transparent;"
+                                onmousedown="this.style.opacity=0.7" onmouseup="this.style.opacity=1" ontouchstart="this.style.opacity=0.7" ontouchend="this.style.opacity=1">
+                                Edit Team
+                            </button>
+                            <button onclick="deleteTournamentTeam('${team.id}')"
+                                style="padding:10px 14px;background:#FDE8E8;color:#FF3B30;font-size:13px;font-weight:700;border:none;border-radius:12px;cursor:pointer;-webkit-tap-highlight-color:transparent;"
+                                onmousedown="this.style.opacity=0.7" onmouseup="this.style.opacity=1" ontouchstart="this.style.opacity=0.7" ontouchend="this.style.opacity=1">
+                                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            </button>
+                        </div>
+
+                        <!-- Player list -->
+                        <div style="background:#fff;padding:0 16px;">
+                            <div style="padding:10px 0 4px;font-size:11px;font-weight:700;color:#8E8E93;text-transform:uppercase;letter-spacing:0.5px;">Squad</div>
+                            ${playersHTML}
+                            <div style="height:16px;"></div>
                         </div>
                     `;
-                    container.appendChild(row);
-                    container.appendChild(document.createElement('div')).className = 'team-row-divider';
+                    panelsWrap.appendChild(panel);
                 });
+
+                container.appendChild(panelsWrap);
+
+                // Activate first tab
+                switchTeamTab(0, teams.length);
+
             }, err => {
                 console.error("Tournament Teams Load Error:", err);
+                container.innerHTML = `<div class="text-center py-10 text-red-400 text-sm">Error loading teams.</div>`;
             });
+        }
+
+        function switchTeamTab(activeIdx, total) {
+            for (let i = 0; i < total; i++) {
+                const tab = document.getElementById(`tt-tab-${i}`);
+                const panel = document.getElementById(`tt-panel-${i}`);
+                if (!tab || !panel) continue;
+                if (i === activeIdx) {
+                    tab.style.color = '#007AFF';
+                    tab.style.borderBottomColor = '#007AFF';
+                    panel.style.display = 'block';
+                    // Scroll tab into view within the tab bar
+                    tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                } else {
+                    tab.style.color = '#8E8E93';
+                    tab.style.borderBottomColor = 'transparent';
+                    panel.style.display = 'none';
+                }
+            }
         }
 
         function deleteTournamentTeam(teamId) {
@@ -1158,87 +1406,257 @@
         }
 
         // ==========================================
-        // RENDER TEAMS (Detailed Row & Efficient)
+        // RENDER TEAMS — Letter tabs + Country groups
         // ==========================================
         function renderTeams() {
             const container = document.getElementById('saved-teams-container');
-            container.innerHTML = ''; // Re-render logic to ensure letters sort correctly
+            container.innerHTML = '';
 
-            if(globalTeamsList.length === 0) { renderEmptyState(); return; }
+            if (globalTeamsList.length === 0) { renderEmptyState(); return; }
 
-            let currentLetter = '';
-            
-            // Safe sort client-side for the current batch
-            globalTeamsList.sort((a,b) => a.name.localeCompare(b.name));
+            // Sort alphabetically
+            globalTeamsList.sort((a, b) => a.name.localeCompare(b.name));
 
+            // --- Group by first letter ---
+            const byLetter = {};
             globalTeamsList.forEach(team => {
-                const firstLetter = team.name.charAt(0).toUpperCase();
-                
-                // Sticky Header
-                if (firstLetter !== currentLetter) {
-                    currentLetter = firstLetter;
-                    const header = document.createElement('div');
-                    header.className = 'sticky-letter-header';
-                    header.textContent = currentLetter;
-                    container.appendChild(header);
-                }
-
-                const row = document.createElement('div');
-                row.className = 'team-row';
-                
-                const initial = getInitials(team.name);
-                const bgColor = getColorForInitials(team.name);
-                let avatarSize = "text-lg";
-                if (initial.length === 3) avatarSize = "text-sm";
-                if (initial.length === 4) avatarSize = "text-xs";
-
-                const logoHtml = team.logo 
-                    ? `<img src="${team.logo}" class="team-avatar">` 
-                    : `<div class="team-avatar flex items-center justify-center text-white font-bold ${avatarSize}" style="background-color: ${bgColor};">${initial}</div>`;
-                
-                const captainName = team.captain ? team.captain.split(' ')[0] : null;
-                const creatorName = team.creator || "Unknown";
-                const playerCount = (team.players || []).length;
-
-                row.innerHTML = `
-                    <div class="team-row-content">
-                        ${logoHtml}
-                        <div class="flex flex-col">
-                            <span class="text-[15px] font-bold text-black leading-tight">${team.name}</span>
-                            
-                            <div class="flex flex-wrap gap-x-2 gap-y-1 mt-1 text-[11px] text-gray-500 font-medium">
-                                <span class="flex items-center gap-1">${countryFlags[team.country] || '🏳️'} ${team.country || 'Other'}</span>
-                                ${captainName ? `<span class="flex items-center gap-1 text-[#007AFF] font-semibold"><span class="bg-[#007AFF] text-white text-[9px] w-3.5 h-3.5 rounded-full flex items-center justify-center">C</span> ${captainName}</span>` : ''}
-                            </div>
-
-                            <div class="flex flex-wrap gap-x-2 mt-0.5 text-[10px] text-gray-400">
-                                <span>${playerCount} Players</span>
-                                <span>• By ${creatorName}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="shareCaptainLink('${team.id}', '${team.name}')" class="ios-btn" style="background: #FFF7ED; color: #F97316;">Share</button>
-                        <button onclick="initiateAction('${team.id}', 'edit')" class="ios-btn btn-edit">Edit</button>
-                        <button onclick="initiateAction('${team.id}', 'delete')" class="ios-btn btn-delete">Delete</button>
-                    </div>
-                `;
-                container.appendChild(row);
-                container.appendChild(document.createElement('div')).className = 'team-row-divider';
+                const letter = team.name.charAt(0).toUpperCase();
+                if (!byLetter[letter]) byLetter[letter] = [];
+                byLetter[letter].push(team);
             });
-            
-            // Loading Indicator at bottom
-            if(hasMoreTeams) {
+            const letters = Object.keys(byLetter).sort();
+
+            // --- Inject tab bar styles once ---
+            if (!document.getElementById('at-tab-styles')) {
+                const style = document.createElement('style');
+                style.id = 'at-tab-styles';
+                style.textContent = `
+                    #at-letter-bar { display:flex;overflow-x:auto;gap:0;padding:8px 12px;scrollbar-width:none;-ms-overflow-style:none;background:#fff;border-bottom:1px solid #F2F2F7;position:sticky;top:0;z-index:20; }
+                    #at-letter-bar::-webkit-scrollbar { display:none; }
+                    .at-letter-tab { display:flex;align-items:center;justify-content:center;min-width:36px;height:36px;padding:0 10px;border:none;background:transparent;cursor:pointer;font-size:15px;font-weight:600;color:#8E8E93;border-radius:10px;transition:background 0.15s,color 0.15s;flex-shrink:0;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+                    .at-letter-tab.active { background:#007AFF;color:#fff; }
+                    .at-letter-panel { display:none; }
+                    .at-letter-panel.active { display:block; }
+                    .at-country-header { padding:6px 16px;font-size:12px;font-weight:700;color:#8E8E93;text-transform:uppercase;letter-spacing:0.4px;background:#F2F2F7;border-bottom:1px solid #E5E5EA; }
+                    .at-search-bar { display:flex;align-items:center;gap:8px;padding:8px 12px;background:#fff;border-bottom:1px solid #F2F2F7; }
+                    .at-search-input { flex:1;background:rgba(118,118,128,0.12);border:none;border-radius:10px;padding:7px 12px;font-size:15px;color:#000;outline:none;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+                    .at-search-input::placeholder { color:#8E8E93; }
+                    .at-search-cancel { color:#007AFF;font-size:15px;font-weight:500;border:none;background:transparent;cursor:pointer;white-space:nowrap;padding:0 4px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+                    .at-no-results { text-align:center;padding:48px 24px;color:#C7C7CC;font-size:15px; }
+                `;
+                document.head.appendChild(style);
+            }
+
+            // --- Search bar ---
+            const searchBarEl = document.createElement('div');
+            searchBarEl.className = 'at-search-bar';
+            searchBarEl.innerHTML = `
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#8E8E93" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <input id="at-search-input" class="at-search-input" placeholder="Search teams…" autocomplete="off" type="search">
+                <button class="at-search-cancel" id="at-search-cancel" style="display:none;">Cancel</button>
+            `;
+            container.appendChild(searchBarEl);
+
+            // --- Letter tab bar ---
+            const tabBar = document.createElement('div');
+            tabBar.id = 'at-letter-bar';
+            letters.forEach((letter, idx) => {
+                const tab = document.createElement('button');
+                tab.className = 'at-letter-tab' + (idx === 0 ? ' active' : '');
+                tab.id = `at-tab-${letter}`;
+                tab.textContent = letter;
+                tab.onclick = () => switchLetterTab(letter, letters);
+                tabBar.appendChild(tab);
+            });
+            container.appendChild(tabBar);
+
+            // --- Panels, one per letter ---
+            const panelsEl = document.createElement('div');
+            panelsEl.id = 'at-panels';
+
+            letters.forEach((letter, idx) => {
+                const teamsInLetter = byLetter[letter];
+
+                // Sub-group by country
+                const byCountry = {};
+                teamsInLetter.forEach(team => {
+                    const country = team.country || 'Other';
+                    if (!byCountry[country]) byCountry[country] = [];
+                    byCountry[country].push(team);
+                });
+                const countries = Object.keys(byCountry).sort();
+
+                const panel = document.createElement('div');
+                panel.className = 'at-letter-panel' + (idx === 0 ? ' active' : '');
+                panel.id = `at-panel-${letter}`;
+
+                countries.forEach(country => {
+                    // Country group header
+                    const countryHeader = document.createElement('div');
+                    countryHeader.className = 'at-country-header';
+                    countryHeader.textContent = `${countryFlags[country] || '🏳️'}  ${country}`;
+                    panel.appendChild(countryHeader);
+
+                    byCountry[country].forEach(team => {
+                        panel.appendChild(buildTeamRow(team));
+                        const divider = document.createElement('div');
+                        divider.className = 'team-row-divider';
+                        panel.appendChild(divider);
+                    });
+                });
+
+                panelsEl.appendChild(panel);
+            });
+
+            container.appendChild(panelsEl);
+
+            // Loading indicator
+            if (hasMoreTeams) {
                 const loader = document.createElement('div');
-                loader.className = "text-center py-4 text-xs text-gray-400";
-                loader.innerText = "Loading more...";
+                loader.style.cssText = 'text-align:center;padding:16px 0;font-size:12px;color:#C7C7CC;';
+                loader.textContent = 'Loading more…';
                 container.appendChild(loader);
             }
+
+            // --- Wire up inline search ---
+            const searchInput = document.getElementById('at-search-input');
+            const cancelBtn = document.getElementById('at-search-cancel');
+
+            searchInput.addEventListener('input', () => {
+                const term = searchInput.value.trim().toLowerCase();
+                cancelBtn.style.display = term ? 'block' : 'none';
+                filterTeamPanels(term, byLetter, letters);
+            });
+            cancelBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                cancelBtn.style.display = 'none';
+                filterTeamPanels('', byLetter, letters);
+                // Re-activate first tab
+                switchLetterTab(letters[0], letters);
+            });
+        }
+
+        function buildTeamRow(team) {
+            const row = document.createElement('div');
+            row.className = 'team-row';
+
+            const initial = getInitials(team.name);
+            const bgColor = getColorForInitials(team.name);
+            let avatarSize = "text-lg";
+            if (initial.length === 3) avatarSize = "text-sm";
+            if (initial.length === 4) avatarSize = "text-xs";
+
+            const logoHtml = team.logo
+                ? `<img src="${team.logo}" class="team-avatar">`
+                : `<div class="team-avatar flex items-center justify-center text-white font-bold ${avatarSize}" style="background-color: ${bgColor};">${initial}</div>`;
+
+            const captainName = team.captain ? team.captain.split(' ')[0] : null;
+            const creatorName = team.creator || "Unknown";
+            const playerCount = (team.players || []).length;
+
+            row.innerHTML = `
+                <div class="team-row-content">
+                    ${logoHtml}
+                    <div class="flex flex-col">
+                        <span class="text-[15px] font-bold text-black leading-tight">${team.name}</span>
+                        <div class="flex flex-wrap gap-x-2 gap-y-1 mt-1 text-[11px] text-gray-500 font-medium">
+                            ${captainName ? `<span class="flex items-center gap-1 text-[#007AFF] font-semibold"><span class="bg-[#007AFF] text-white text-[9px] w-3.5 h-3.5 rounded-full flex items-center justify-center">C</span> ${captainName}</span>` : ''}
+                        </div>
+                        <div class="flex flex-wrap gap-x-2 mt-0.5 text-[10px] text-gray-400">
+                            <span>${playerCount} Players</span>
+                            <span>• By ${creatorName}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="shareCaptainLink('${team.id}', '${team.name}')" class="ios-btn" style="background: #FFF7ED; color: #F97316;">Share</button>
+                    <button onclick="initiateAction('${team.id}', 'edit')" class="ios-btn btn-edit">Edit</button>
+                    <button onclick="initiateAction('${team.id}', 'delete')" class="ios-btn btn-delete">Delete</button>
+                </div>
+            `;
+            return row;
+        }
+
+        function switchLetterTab(activeLetter, letters) {
+            letters.forEach(letter => {
+                const tab = document.getElementById(`at-tab-${letter}`);
+                const panel = document.getElementById(`at-panel-${letter}`);
+                if (!tab || !panel) return;
+                if (letter === activeLetter) {
+                    tab.classList.add('active');
+                    panel.classList.add('active');
+                    tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                } else {
+                    tab.classList.remove('active');
+                    panel.classList.remove('active');
+                }
+            });
+        }
+
+        function filterTeamPanels(term, byLetter, letters) {
+            const tabBar = document.getElementById('at-letter-bar');
+            const panelsEl = document.getElementById('at-panels');
+            if (!tabBar || !panelsEl) return;
+
+            if (!term) {
+                // Restore tabs and panels
+                letters.forEach(letter => {
+                    const tab = document.getElementById(`at-tab-${letter}`);
+                    const panel = document.getElementById(`at-panel-${letter}`);
+                    if (tab) tab.style.display = '';
+                    if (panel) {
+                        // Rebuild panel from data
+                        panel.style.display = '';
+                        panel.querySelectorAll('.at-letter-panel').forEach(p => p.style.display = '');
+                    }
+                });
+                tabBar.style.display = 'flex';
+                // Remove any search results panel
+                const srPanel = document.getElementById('at-search-results');
+                if (srPanel) srPanel.remove();
+                switchLetterTab(letters[0], letters);
+                return;
+            }
+
+            // Hide tab bar and all panels, show a flat search results list
+            tabBar.style.display = 'none';
+            letters.forEach(letter => {
+                const panel = document.getElementById(`at-panel-${letter}`);
+                if (panel) panel.classList.remove('active');
+            });
+
+            // Remove previous search results
+            const existing = document.getElementById('at-search-results');
+            if (existing) existing.remove();
+
+            const results = globalTeamsList.filter(t =>
+                t.name.toLowerCase().includes(term) ||
+                (t.country || '').toLowerCase().includes(term) ||
+                (t.captain || '').toLowerCase().includes(term) ||
+                (t.creator || '').toLowerCase().includes(term)
+            );
+
+            const srPanel = document.createElement('div');
+            srPanel.id = 'at-search-results';
+
+            if (results.length === 0) {
+                srPanel.innerHTML = `<div class="at-no-results">No teams match "<strong>${term}</strong>"</div>`;
+            } else {
+                results.forEach(team => {
+                    srPanel.appendChild(buildTeamRow(team));
+                    const divider = document.createElement('div');
+                    divider.className = 'team-row-divider';
+                    srPanel.appendChild(divider);
+                });
+            }
+
+            // Insert after panels wrapper
+            panelsEl.after(srPanel);
         }
 
         function renderEmptyState() {
-            document.getElementById('saved-teams-container').innerHTML = 
-                `<div class="text-center py-10 text-gray-400 text-sm">No teams found. Try searching or create one!</div>`;
+            document.getElementById('saved-teams-container').innerHTML =
+                `<div class="text-center py-16 text-gray-400 text-[15px]">No teams found.<br><span class="text-[13px]">Tap + to create your first team.</span></div>`;
         }
 
         // ==========================================
@@ -1670,7 +2088,7 @@
                 return v.toString(16);
             });
 
-            const expiry = Date.now() + (24 * 60 * 60 * 1000); // 24 Hours from now
+            const expiry = Date.now() + (5 * 24 * 60 * 60 * 1000); // 5 Days from now
             let url = `${window.location.origin}${window.location.pathname}?mode=captain&teamId=${teamId}&token=${token}`;
             if (tourneyId) url += `&tourneyId=${tourneyId}`;
 
@@ -1687,9 +2105,9 @@
                     const msg = `
                         <div class="mt-2">
                             <p class="text-[15px] font-semibold text-black mb-2">${teamName} Link Ready</p>
-                            <p class="text-[13px] text-gray-600 mb-4">Link copied to clipboard. Share it with your players to update their info.</p>
+                            <p class="text-[13px] text-gray-600 mb-4">Link copied to clipboard. Share it with the captain to update their squad.</p>
                             <div class="bg-blue-50 text-[#007AFF] text-[11px] font-bold py-1 px-3 rounded-full inline-block">
-                                ⏳ Active for 24 Hours
+                                ⏳ Active for 5 Days
                             </div>
                         </div>
                     `;
