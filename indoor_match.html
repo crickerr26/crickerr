@@ -13,6 +13,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
 <style>
@@ -419,19 +420,43 @@
         HOME
     </button>
     
-    <div class="text-center mb-8 mt-4">
+    <div class="text-center mb-6 mt-4">
         <div class="inline-flex items-center justify-center gap-2 mb-2">
                 <div class="h-1 w-8 bg-purple-500 rounded-full"></div>
                 <span class="text-[10px] font-black tracking-[0.3em] text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500 uppercase">Single Match Configuration</span>
                 <div class="h-1 w-8 bg-purple-500 rounded-full"></div>
         </div>
-        <h1 class="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-purple-600 to-pink-600  tracking-tighter drop-shadow-sm leading-tight" id="setup-title">Crickerr Match</h1>
+        <h1 class="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-purple-600 to-pink-600 tracking-tighter drop-shadow-sm leading-tight" id="setup-title">Crickerr Match</h1>
+    </div>
+
+    <!-- TAB NAV -->
+    <div class="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm mb-0 -mx-2 px-2">
+        <div class="flex overflow-x-auto no-scrollbar gap-0">
+            <button onclick="switchSetupTab(1)" id="setup-tab-1" class="setup-tab-btn active-setup-tab flex-shrink-0 flex flex-col items-center gap-1 px-4 py-3 text-[10px] font-black uppercase tracking-wider transition-all border-b-2 border-blue-600 text-blue-600 bg-blue-50/50">
+                <span class="text-base leading-none">📍</span>
+                <span>Match Details</span>
+            </button>
+            <button onclick="switchSetupTab(2)" id="setup-tab-2" class="setup-tab-btn flex-shrink-0 flex flex-col items-center gap-1 px-4 py-3 text-[10px] font-black uppercase tracking-wider transition-all border-b-2 border-transparent text-gray-400 hover:text-gray-600">
+                <span class="text-base leading-none">⚙️</span>
+                <span>Conditions</span>
+            </button>
+            <button onclick="switchSetupTab(3)" id="setup-tab-3" class="setup-tab-btn flex-shrink-0 flex flex-col items-center gap-1 px-4 py-3 text-[10px] font-black uppercase tracking-wider transition-all border-b-2 border-transparent text-gray-400 hover:text-gray-600">
+                <span class="text-base leading-none">🏏</span>
+                <span>Match Fixture</span>
+            </button>
+            <button onclick="switchSetupTab(4)" id="setup-tab-4" class="setup-tab-btn flex-shrink-0 flex flex-col items-center gap-1 px-4 py-3 text-[10px] font-black uppercase tracking-wider transition-all border-b-2 border-transparent text-gray-400 hover:text-gray-600">
+                <span class="text-base leading-none">📺</span>
+                <span>Sponsors</span>
+            </button>
+        </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 content-start pb-10">
         
         <div class="lg:col-span-12 space-y-6">
-            
+
+    <!-- ==================== TAB 1: MATCH DETAILS ==================== -->
+    <div id="setup-tab-panel-1" class="setup-tab-panel pt-4">
             <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200 shadow-sm overflow-hidden">
                 <div class="p-5">
                     <div class="flex items-center gap-2 mb-5">
@@ -730,7 +755,10 @@
                     </div>
                 </div>
             </div>
+    </div><!-- end tab panel 1 -->
 
+    <!-- ==================== TAB 2: PLAYING CONDITIONS ==================== -->
+    <div id="setup-tab-panel-2" class="setup-tab-panel hidden pt-4">
             <div class="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl border border-orange-200 shadow-sm overflow-hidden">
                 <div class="p-5">
                     <div class="flex items-center gap-2 mb-5">
@@ -783,7 +811,10 @@
                     </div>
                 </div>
             </div>
+    </div><!-- end tab panel 2 -->
 
+    <!-- ==================== TAB 3: MATCH FIXTURE ==================== -->
+    <div id="setup-tab-panel-3" class="setup-tab-panel hidden pt-4">
             <style>
                 @keyframes glassShimmer {
                     0% { background-position: 0% 50%; }
@@ -881,13 +912,20 @@
                 </div>
             </div>
 
-            <!-- ADD SPONSORS BUTTON -->
-            <div class="flex justify-center mt-2 mb-2">
-                <button onclick="openSponsorModal()" class="px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-lg hover:scale-105 hover:shadow-xl transition-all duration-200 flex items-center gap-2 border border-yellow-400">
+            </div><!-- end tab panel 3 -->
+
+    <!-- ==================== TAB 4: SPONSORS ==================== -->
+    <div id="setup-tab-panel-4" class="setup-tab-panel hidden pt-4">
+            <div class="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl border border-yellow-200 shadow-sm p-6 text-center">
+                <div class="w-14 h-14 bg-yellow-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl shadow-inner border border-yellow-200">📺</div>
+                <h3 class="text-sm font-black text-gray-800 uppercase tracking-widest mb-1">Broadcast Sponsors</h3>
+                <p class="text-xs text-gray-500 font-medium mb-5">Add sponsor logos that appear on your live broadcast overlay.</p>
+                <button onclick="openSponsorModal()" class="px-8 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-lg hover:scale-105 hover:shadow-xl transition-all duration-200 flex items-center gap-2 border border-yellow-400 mx-auto">
                     <span>📺</span>
-                    <span>Add Sponsors</span>
+                    <span>Manage Sponsors</span>
                 </button>
             </div>
+    </div><!-- end tab panel 4 -->
 
             <!-- SPONSOR MODAL WITH TV PREVIEW + LOGO EDITOR -->
             <div id="sponsor-modal" class="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300" style="margin:0;">
@@ -1079,6 +1117,232 @@
 
             <script>
                 (function() {
+                    // ========== TAB SWITCHER FOR SETUP STEP 1 ==========
+
+                    // --- AUTO-DEFAULTS on first load ---
+                    (function initMatchDefaults() {
+                        // 1. Auto-set today's date
+                        const dateInput = document.getElementById('match-date-input');
+                        if (dateInput && !dateInput.value) {
+                            const today = new Date();
+                            const yyyy = today.getFullYear();
+                            const mm = String(today.getMonth() + 1).padStart(2, '0');
+                            const dd = String(today.getDate()).padStart(2, '0');
+                            dateInput.value = `${yyyy}-${mm}-${dd}`;
+                        }
+
+                        // 2. Auto-detect country via IP geolocation (free, no key required)
+                        const countrySelect = document.getElementById('match-country');
+                        if (countrySelect && !countrySelect.value) {
+                            fetch('https://ipapi.co/json/')
+                                .then(r => r.json())
+                                .then(data => {
+                                    if (data && data.country_name) {
+                                        // Try to match the country name in the select options
+                                        const opts = Array.from(countrySelect.options);
+                                        const match = opts.find(o => o.value.toLowerCase() === data.country_name.toLowerCase());
+                                        if (match) countrySelect.value = match.value;
+                                    }
+                                })
+                                .catch(() => {}); // Silently fail if offline
+                        }
+                    })();
+
+                    // --- VALIDATION HELPERS ---
+                    function _showFieldError(el, msg) {
+                        el.classList.add('border-red-500', 'bg-red-50');
+                        el.classList.remove('border-blue-200', 'border-orange-200');
+                        let err = el.parentElement.querySelector('.setup-field-err');
+                        if (!err) {
+                            err = document.createElement('p');
+                            err.className = 'setup-field-err text-[10px] font-bold text-red-500 mt-1';
+                            el.parentElement.appendChild(err);
+                        }
+                        err.textContent = msg;
+                    }
+                    function _clearFieldError(el) {
+                        el.classList.remove('border-red-500', 'bg-red-50');
+                        const err = el.parentElement.querySelector('.setup-field-err');
+                        if (err) err.remove();
+                    }
+                    function _shake(el) {
+                        el.style.animation = 'none';
+                        el.offsetHeight; // reflow
+                        el.style.animation = 'setupShake 0.4s ease';
+                    }
+
+                    // Inject shake keyframes once
+                    if (!document.getElementById('setup-shake-style')) {
+                        const s = document.createElement('style');
+                        s.id = 'setup-shake-style';
+                        s.textContent = `@keyframes setupShake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }`;
+                        document.head.appendChild(s);
+                    }
+
+                    function validateTab1() {
+                        let valid = true;
+                        const fields = [
+                            { id: 'match-country',    label: 'Country' },
+                            { id: 'venue',            label: 'Stadium / Venue' },
+                            { id: 'match-date-input', label: 'Date' },
+                            { id: 'total-overs',      label: 'Overs' },
+                            { id: 'players-per-side', label: 'Squad Size' }
+                        ];
+                        fields.forEach(f => {
+                            const el = document.getElementById(f.id);
+                            if (!el) return;
+                            if (!el.value || el.value.trim() === '') {
+                                _showFieldError(el, `${f.label} is required`);
+                                if (valid) { _shake(el); el.focus(); }
+                                valid = false;
+                            } else {
+                                _clearFieldError(el);
+                            }
+                        });
+                        return valid;
+                    }
+
+                    function validateTab2() {
+                        let valid = true;
+                        const fields = [
+                            { id: 'balls-per-over', label: 'Balls per Over' },
+                            { id: 'rule-wide',      label: 'Wide Ball' },
+                            { id: 'rule-noball',    label: 'No Ball' }
+                        ];
+                        fields.forEach(f => {
+                            const el = document.getElementById(f.id);
+                            if (!el) return;
+                            if (!el.value || el.value.trim() === '') {
+                                _showFieldError(el, `${f.label} is required`);
+                                if (valid) { _shake(el); }
+                                valid = false;
+                            } else {
+                                _clearFieldError(el);
+                            }
+                        });
+                        return valid;
+                    }
+
+                    function validateTab3() {
+                        // Match fixture: team names required
+                        let valid = true;
+                        const t1 = document.getElementById('team1-name-input');
+                        const t2 = document.getElementById('team2-name-input');
+                        if (t1 && (!t1.value || !t1.value.trim())) {
+                            _showFieldError(t1, 'Home team name is required');
+                            if (valid) { _shake(t1); t1.focus(); }
+                            valid = false;
+                        } else if (t1) { _clearFieldError(t1); }
+                        if (t2 && (!t2.value || !t2.value.trim())) {
+                            _showFieldError(t2, 'Away team name is required');
+                            if (valid) { _shake(t2); t2.focus(); }
+                            valid = false;
+                        } else if (t2) { _clearFieldError(t2); }
+                        return valid;
+                    }
+
+                    // Expose validators globally
+                    window._validateSetupTab1 = validateTab1;
+                    window._validateSetupTab2 = validateTab2;
+                    window._validateSetupTab3 = validateTab3;
+
+                    window.switchSetupTab = function(tabNum) {
+                        // Hide all panels
+                        document.querySelectorAll('.setup-tab-panel').forEach(el => el.classList.add('hidden'));
+                        // Reset all tab buttons
+                        document.querySelectorAll('.setup-tab-btn').forEach(btn => {
+                            btn.classList.remove('border-blue-600', 'text-blue-600', 'bg-blue-50/50');
+                            btn.classList.add('border-transparent', 'text-gray-400');
+                        });
+                        // Show selected panel
+                        const panel = document.getElementById('setup-tab-panel-' + tabNum);
+                        if (panel) panel.classList.remove('hidden');
+                        // Activate selected tab button
+                        const btn = document.getElementById('setup-tab-' + tabNum);
+                        if (btn) {
+                            btn.classList.add('border-blue-600', 'text-blue-600', 'bg-blue-50/50');
+                            btn.classList.remove('border-transparent', 'text-gray-400');
+                        }
+                        // Scroll tab into view on mobile
+                        if (btn) btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                        // Sync footer action buttons
+                        document.querySelectorAll('.setup-action-btn').forEach(el => el.classList.add('hidden'));
+                        const actionBtn = document.getElementById('setup-action-' + tabNum);
+                        if (actionBtn) actionBtn.classList.remove('hidden');
+                        // Show/hide resume field only on tab 1
+                        const resumeEl = document.getElementById('setup-footer-resume');
+                        if (resumeEl) {
+                            if (tabNum === 1) resumeEl.classList.remove('invisible');
+                            else resumeEl.classList.add('invisible');
+                        }
+                        // Scroll page back to top of content
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    };
+
+                    // Tab-aware Next button handlers with validation
+                    window.setupTabNext = function(fromTab) {
+                        let valid = false;
+                        if (fromTab === 1) valid = validateTab1();
+                        else if (fromTab === 2) valid = validateTab2();
+                        else if (fromTab === 3) valid = validateTab3();
+                        else valid = true;
+
+                        if (!valid) {
+                            // Toast-style error nudge
+                            const existing = document.getElementById('setup-val-toast');
+                            if (existing) existing.remove();
+                            const toast = document.createElement('div');
+                            toast.id = 'setup-val-toast';
+                            toast.className = 'fixed top-4 left-1/2 -translate-x-1/2 z-[9999] bg-red-600 text-white text-xs font-black px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-pop';
+                            toast.innerHTML = '<span>⚠️</span><span>Please fill all required fields</span>';
+                            document.body.appendChild(toast);
+                            setTimeout(() => toast.remove(), 2800);
+                            return;
+                        }
+                        switchSetupTab(fromTab + 1);
+                    };
+
+                    // Confirm Squads: validate tabs 1–3 before proceeding
+                    window.setupConfirmSquads = function() {
+                        if (!validateTab1()) {
+                            switchSetupTab(1);
+                            const existing = document.getElementById('setup-val-toast');
+                            if (existing) existing.remove();
+                            const toast = document.createElement('div');
+                            toast.id = 'setup-val-toast';
+                            toast.className = 'fixed top-4 left-1/2 -translate-x-1/2 z-[9999] bg-red-600 text-white text-xs font-black px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-pop';
+                            toast.innerHTML = '<span>⚠️</span><span>Match Details are incomplete</span>';
+                            document.body.appendChild(toast);
+                            setTimeout(() => toast.remove(), 2800);
+                            return;
+                        }
+                        if (!validateTab2()) {
+                            switchSetupTab(2);
+                            const existing = document.getElementById('setup-val-toast');
+                            if (existing) existing.remove();
+                            const toast = document.createElement('div');
+                            toast.id = 'setup-val-toast';
+                            toast.className = 'fixed top-4 left-1/2 -translate-x-1/2 z-[9999] bg-red-600 text-white text-xs font-black px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-pop';
+                            toast.innerHTML = '<span>⚠️</span><span>Playing Conditions are incomplete</span>';
+                            document.body.appendChild(toast);
+                            setTimeout(() => toast.remove(), 2800);
+                            return;
+                        }
+                        if (!validateTab3()) {
+                            switchSetupTab(3);
+                            const existing = document.getElementById('setup-val-toast');
+                            if (existing) existing.remove();
+                            const toast = document.createElement('div');
+                            toast.id = 'setup-val-toast';
+                            toast.className = 'fixed top-4 left-1/2 -translate-x-1/2 z-[9999] bg-red-600 text-white text-xs font-black px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-pop';
+                            toast.innerHTML = '<span>⚠️</span><span>Match Fixture teams are required</span>';
+                            document.body.appendChild(toast);
+                            setTimeout(() => toast.remove(), 2800);
+                            return;
+                        }
+                        goToStep(2);
+                    };
+
                     // ========== SPONSOR MODAL OPEN/CLOSE ==========
                     window.openSponsorModal = function() {
                         const modal = document.getElementById('sponsor-modal');
@@ -1426,19 +1690,50 @@
         </div>
     </div>
     
-    <div class="mt-4 border-t border-gray-100 pt-6 flex items-center justify-between pb-6">
-        <div class="flex items-center gap-3">
-            <div class="bg-gray-50 rounded-xl p-1.5 flex items-center border border-gray-200 shadow-inner">
-                <span class="text-[10px] font-bold text-gray-400 px-3">RESUME MATCH:</span>
-                <input type="text" id="resume-code" placeholder="CODE" class="bg-transparent border-none w-20 text-left font-mono font-bold text-gray-700 focus:ring-0 text-sm p-0 uppercase placeholder-gray-300">
+    <!-- STABLE MIN-HEIGHT so tabs don't jump in size -->
+    <style>
+        .setup-tab-panel { min-height: 420px; }
+        @media (max-width: 768px) { .setup-tab-panel { min-height: 360px; } }
+    </style>
+
+    <!-- STICKY BOTTOM ACTION BAR — tab-aware with validation -->
+    <div class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+
+            <!-- LEFT: Resume match (only visible on tab 1) -->
+            <div id="setup-footer-resume" class="flex items-center gap-2">
+                <div class="bg-gray-50 rounded-xl p-1.5 flex items-center border border-gray-200 shadow-inner">
+                    <span class="text-[10px] font-bold text-gray-400 px-2 hidden sm:inline">RESUME:</span>
+                    <input type="text" id="resume-code" placeholder="CODE" class="bg-transparent border-none w-20 text-left font-mono font-bold text-gray-700 focus:ring-0 text-sm p-0 uppercase placeholder-gray-300">
+                </div>
+                <button onclick="resumeMatch()" class="hidden md:block text-[10px] font-bold text-purple-600 bg-purple-50 px-3 py-2 rounded-xl border border-purple-100 hover:bg-purple-100 transition-colors shadow-sm">LOAD</button>
             </div>
-            <button onclick="resumeMatch()" class="hidden md:block text-[10px] font-bold text-purple-600 bg-purple-50 px-4 py-2 rounded-xl border border-purple-100 hover:bg-purple-100 transition-colors shadow-sm">LOAD DATA</button>
+
+            <!-- RIGHT: Tab-aware action buttons with validation -->
+            <!-- Tab 1 Next — validates Match Details -->
+            <button id="setup-action-1" onclick="setupTabNext(1)" class="setup-action-btn px-8 py-3.5 bg-gradient-to-r from-gray-800 to-gray-900 text-white font-black text-xs rounded-xl shadow-lg hover:scale-[1.02] transition-all active:scale-[0.98] flex items-center gap-2 uppercase tracking-wider">
+                <span>Next</span>
+                <span class="bg-white/20 px-2 py-0.5 rounded text-[10px]">→</span>
+            </button>
+            <!-- Tab 2 Next — validates Playing Conditions -->
+            <button id="setup-action-2" onclick="setupTabNext(2)" class="setup-action-btn hidden px-8 py-3.5 bg-gradient-to-r from-gray-800 to-gray-900 text-white font-black text-xs rounded-xl shadow-lg hover:scale-[1.02] transition-all active:scale-[0.98] flex items-center gap-2 uppercase tracking-wider">
+                <span>Next</span>
+                <span class="bg-white/20 px-2 py-0.5 rounded text-[10px]">→</span>
+            </button>
+            <!-- Tab 3 Next — validates Match Fixture teams -->
+            <button id="setup-action-3" onclick="setupTabNext(3)" class="setup-action-btn hidden px-8 py-3.5 bg-gradient-to-r from-gray-800 to-gray-900 text-white font-black text-xs rounded-xl shadow-lg hover:scale-[1.02] transition-all active:scale-[0.98] flex items-center gap-2 uppercase tracking-wider">
+                <span>Next</span>
+                <span class="bg-white/20 px-2 py-0.5 rounded text-[10px]">→</span>
+            </button>
+            <!-- Tab 4 Confirm Squads — validates all 3 tabs before proceeding -->
+            <button id="setup-action-4" onclick="setupConfirmSquads()" class="setup-action-btn hidden px-8 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-black text-sm rounded-xl shadow-xl shadow-blue-500/30 hover:scale-[1.02] hover:shadow-2xl transition-all active:scale-[0.98] flex items-center gap-3">
+                <span>CONFIRM SQUADS</span>
+                <span class="bg-white/20 px-2 py-0.5 rounded text-[10px]">➜</span>
+            </button>
         </div>
-        <button onclick="goToStep(2)" class="px-10 py-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-black text-sm rounded-xl shadow-xl shadow-blue-500/30 hover:scale-[1.02] hover:shadow-2xl transition-all transform active:scale-[0.98] flex items-center gap-3">
-            <span>CONFIRM SQUADS</span>
-            <span class="bg-white/20 px-2 py-0.5 rounded text-[10px]">➜</span>
-        </button>
     </div>
+    <!-- Bottom padding so content isn't hidden behind sticky bar -->
+    <div class="h-20"></div>
 </div>
 
 <div id="tournament-setup" class="setup-step hidden w-full md:max-w-5xl mx-auto bg-[#F8F9FA] min-h-screen font-sans">
@@ -8834,7 +9129,13 @@ function renderFixtures() {
 
             if(status === 'COMPLETED') {
                 statusBadge = `<span class="bg-gray-100 text-gray-500 text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider">Finished</span>`;
-                actionBtn = `<div class="mt-4 p-2 bg-green-50 rounded-lg border border-green-100 text-center"><span class="text-[10px] font-bold text-green-700 uppercase tracking-wide block">${f.result}</span></div>`;
+                actionBtn = `
+                    <div class="mt-4 flex flex-col gap-2">
+                        <div class="p-2 bg-green-50 rounded-lg border border-green-100 text-center"><span class="text-[10px] font-bold text-green-700 uppercase tracking-wide block">${f.result}</span></div>
+                        <button onclick="showMatchSummaryFromFixture('${f.id}')" class="w-full py-2.5 bg-gray-900 hover:bg-black text-white font-bold text-[10px] uppercase tracking-widest rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2">
+                            <span>📊</span><span>View Full Summary</span>
+                        </button>
+                    </div>`;
             } 
             else if (status === 'LIVE') {
                 statusBadge = `<span class="bg-red-100 text-red-600 text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider flex items-center gap-1"><span class="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse"></span> LIVE</span>`;
@@ -8867,6 +9168,8 @@ function renderFixtures() {
                 card.classList.add('border-yellow-200', 'shadow-yellow-100');
             }
 
+            const teamClickAttr = status === 'COMPLETED' ? `onclick="showMatchSummaryFromFixture('${f.id}')" style="cursor:pointer;"` : '';
+
             card.innerHTML = `
                 <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-50">
                     <div class="flex flex-col">
@@ -8885,9 +9188,9 @@ function renderFixtures() {
                 </div>
 
                 <div class="flex items-center justify-between mb-2">
-                    <div class="flex flex-col items-center gap-2 w-[40%] text-center group/team">
+                    <div class="flex flex-col items-center gap-2 w-[40%] text-center group/team" ${teamClickAttr}>
                         ${t1Logo}
-                        <span class="text-[10px] font-black uppercase leading-tight transition-colors ${getNameClass(f.t1)}">${f.t1}</span>
+                        <span class="text-[10px] font-black uppercase leading-tight transition-colors ${getNameClass(f.t1)} ${status === 'COMPLETED' ? 'hover:text-blue-600' : ''}">${f.t1}</span>
                     </div>
                     
                     <div class="flex flex-col items-center gap-1">
@@ -8895,9 +9198,9 @@ function renderFixtures() {
                         <span class="text-[9px] font-bold text-gray-400 bg-gray-50 px-1.5 rounded">${f.overs || 16} Ov</span>
                     </div>
 
-                    <div class="flex flex-col items-center gap-2 w-[40%] text-center group/team">
+                    <div class="flex flex-col items-center gap-2 w-[40%] text-center group/team" ${teamClickAttr}>
                         ${t2Logo}
-                        <span class="text-[10px] font-black uppercase leading-tight transition-colors ${getNameClass(f.t2)}">${f.t2}</span>
+                        <span class="text-[10px] font-black uppercase leading-tight transition-colors ${getNameClass(f.t2)} ${status === 'COMPLETED' ? 'hover:text-blue-600' : ''}">${f.t2}</span>
                     </div>
                 </div>
                 
@@ -8907,6 +9210,412 @@ function renderFixtures() {
         });
 
         board.appendChild(stageGroup);
+    });
+}
+
+// =====================================================================
+// MATCH SUMMARY MODAL (Tournament Match Center)
+// =====================================================================
+function showMatchSummaryFromFixture(fixtureId) {
+    const fixture = tournamentState.data.fixtures.find(f => f.id === fixtureId);
+    if (!fixture || fixture.status !== 'COMPLETED') return;
+
+    const log = (tournamentState.data.matchStatsLog || []).filter(p => p.matchId === fixtureId);
+    const stats = fixture.stats || {};
+    const t1Stats = stats.t1 || {};
+    const t2Stats = stats.t2 || {};
+
+    const getLogoHTML = (tName, size = 12) => {
+        let team = tournamentState.data.teams.find(t => t.name === tName);
+        if (team && team.logo) return `<img src="${team.logo}" class="w-${size} h-${size} rounded-full object-cover border-2 border-white shadow">`;
+        if (typeof savedTeamsData !== 'undefined') {
+            const saved = savedTeamsData.find(t => t.name === tName);
+            if (saved && saved.logo) return `<img src="${saved.logo}" class="w-${size} h-${size} rounded-full object-cover border-2 border-white shadow">`;
+        }
+        return `<div class="w-${size} h-${size} rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-bold text-white border-2 border-white shadow text-xs">${(tName||'?').substring(0,2)}</div>`;
+    };
+
+    const formatOvers = (decOvers) => {
+        if (!decOvers && decOvers !== 0) return '-';
+        const o = Math.floor(decOvers);
+        const b = Math.round((decOvers - o) * 6);
+        return `${o}.${b}`;
+    };
+
+    const t1Players = log.filter(p => p.team === (t1Stats.name || fixture.t1));
+    const t2Players = log.filter(p => p.team === (t2Stats.name || fixture.t2));
+
+    const renderBattingRows = (players) => players
+        .filter(p => p.balls > 0 || p.runs > 0)
+        .sort((a,b) => b.runs - a.runs)
+        .map(p => {
+            const sr = p.balls > 0 ? ((p.runs / p.balls) * 100).toFixed(0) : '0';
+            return `<tr class="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                <td class="py-2.5 px-3 font-bold text-gray-800 text-xs">${p.name}</td>
+                <td class="py-2.5 px-3 text-center font-black text-gray-900 text-sm">${p.runs}</td>
+                <td class="py-2.5 px-3 text-center text-gray-500 text-xs">${p.balls}</td>
+                <td class="py-2.5 px-3 text-center text-gray-500 text-xs">${sr}</td>
+            </tr>`;
+        }).join('') || `<tr><td colspan="4" class="py-4 text-center text-gray-400 text-xs italic">No batting data</td></tr>`;
+
+    const renderBowlingRows = (players) => players
+        .filter(p => p.ballsBowled > 0)
+        .sort((a,b) => b.wkts - a.wkts || a.runsConceded - b.runsConceded)
+        .map(p => {
+            const bpo = 6;
+            const ov = Math.floor(p.ballsBowled / bpo) + '.' + (p.ballsBowled % bpo);
+            const eco = p.ballsBowled > 0 ? ((p.runsConceded / p.ballsBowled) * bpo).toFixed(1) : '0.0';
+            return `<tr class="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                <td class="py-2.5 px-3 font-bold text-gray-800 text-xs">${p.name}</td>
+                <td class="py-2.5 px-3 text-center text-gray-500 text-xs">${ov}</td>
+                <td class="py-2.5 px-3 text-center font-black text-gray-900 text-sm">${p.wkts}</td>
+                <td class="py-2.5 px-3 text-center text-gray-500 text-xs">${p.runsConceded}</td>
+                <td class="py-2.5 px-3 text-center text-gray-500 text-xs">${eco}</td>
+            </tr>`;
+        }).join('') || `<tr><td colspan="5" class="py-4 text-center text-gray-400 text-xs italic">No bowling data</td></tr>`;
+
+    const t1Name = t1Stats.name || fixture.t1;
+    const t2Name = t2Stats.name || fixture.t2;
+    const t1ScoreDisp = t1Stats.score !== undefined ? `${t1Stats.score}` : '-';
+    const t2ScoreDisp = t2Stats.score !== undefined ? `${t2Stats.score}` : '-';
+    const t1OvDisp = formatOvers(t1Stats.overs);
+    const t2OvDisp = formatOvers(t2Stats.overs);
+
+    const html = `
+    <div id="fixture-summary-modal" class="fixed inset-0 z-[9999] flex items-end md:items-center justify-center" style="background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);">
+        <div class="bg-white w-full max-w-2xl max-h-[92vh] md:max-h-[88vh] rounded-t-3xl md:rounded-3xl flex flex-col overflow-hidden shadow-2xl">
+            
+            <!-- HEADER -->
+            <div class="bg-gradient-to-br from-gray-900 to-gray-800 p-5 relative shrink-0">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Match #${fixture.matchNo || ''} • ${fixture.stage || ''}</span>
+                        <div class="text-[10px] text-gray-500 mt-0.5">${fixture.ground || 'Main Ground'}</div>
+                    </div>
+                    <button onclick="document.getElementById('fixture-summary-modal').remove()" class="w-8 h-8 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 transition text-lg font-bold">×</button>
+                </div>
+                
+                <!-- SCORELINE -->
+                <div class="flex items-center justify-between gap-4">
+                    <div class="flex-1 flex flex-col items-center gap-2">
+                        ${getLogoHTML(t1Name, 14)}
+                        <span class="text-[10px] font-black text-white uppercase text-center leading-tight">${t1Name}</span>
+                        <span class="text-3xl font-black text-white">${t1ScoreDisp}</span>
+                        <span class="text-[9px] text-gray-400">${t1OvDisp} ov</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-1 shrink-0">
+                        <span class="text-xs font-black text-gray-500">VS</span>
+                    </div>
+                    <div class="flex-1 flex flex-col items-center gap-2">
+                        ${getLogoHTML(t2Name, 14)}
+                        <span class="text-[10px] font-black text-white uppercase text-center leading-tight">${t2Name}</span>
+                        <span class="text-3xl font-black text-white">${t2ScoreDisp}</span>
+                        <span class="text-[9px] text-gray-400">${t2OvDisp} ov</span>
+                    </div>
+                </div>
+                
+                <!-- RESULT -->
+                <div class="mt-4 bg-white/10 rounded-xl py-2.5 px-4 text-center">
+                    <span class="text-sm font-black text-yellow-300 uppercase tracking-wider">${fixture.result || 'Result Unavailable'}</span>
+                </div>
+            </div>
+            
+            <!-- SCROLLABLE BODY -->
+            <div class="overflow-y-auto flex-1 p-4 space-y-5 bg-gray-50">
+                
+                <!-- T1 BATTING -->
+                <div class="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+                    <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-50 bg-blue-50">
+                        ${getLogoHTML(t1Name, 6)}
+                        <span class="text-xs font-black text-gray-700 uppercase tracking-wider">${t1Name} — Batting</span>
+                    </div>
+                    <table class="w-full">
+                        <thead><tr class="bg-gray-50">
+                            <th class="py-2 px-3 text-left text-[9px] font-black text-gray-400 uppercase">Player</th>
+                            <th class="py-2 px-3 text-center text-[9px] font-black text-gray-400 uppercase">R</th>
+                            <th class="py-2 px-3 text-center text-[9px] font-black text-gray-400 uppercase">B</th>
+                            <th class="py-2 px-3 text-center text-[9px] font-black text-gray-400 uppercase">SR</th>
+                        </tr></thead>
+                        <tbody>${renderBattingRows(t1Players)}</tbody>
+                    </table>
+                </div>
+                
+                <!-- T2 BATTING -->
+                <div class="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+                    <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-50 bg-red-50">
+                        ${getLogoHTML(t2Name, 6)}
+                        <span class="text-xs font-black text-gray-700 uppercase tracking-wider">${t2Name} — Batting</span>
+                    </div>
+                    <table class="w-full">
+                        <thead><tr class="bg-gray-50">
+                            <th class="py-2 px-3 text-left text-[9px] font-black text-gray-400 uppercase">Player</th>
+                            <th class="py-2 px-3 text-center text-[9px] font-black text-gray-400 uppercase">R</th>
+                            <th class="py-2 px-3 text-center text-[9px] font-black text-gray-400 uppercase">B</th>
+                            <th class="py-2 px-3 text-center text-[9px] font-black text-gray-400 uppercase">SR</th>
+                        </tr></thead>
+                        <tbody>${renderBattingRows(t2Players)}</tbody>
+                    </table>
+                </div>
+                
+                <!-- T1 BOWLING (Team 1 bowling vs Team 2 batting) -->
+                <div class="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+                    <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-50 bg-blue-50">
+                        ${getLogoHTML(t1Name, 6)}
+                        <span class="text-xs font-black text-gray-700 uppercase tracking-wider">${t1Name} — Bowling</span>
+                    </div>
+                    <table class="w-full">
+                        <thead><tr class="bg-gray-50">
+                            <th class="py-2 px-3 text-left text-[9px] font-black text-gray-400 uppercase">Player</th>
+                            <th class="py-2 px-3 text-center text-[9px] font-black text-gray-400 uppercase">OV</th>
+                            <th class="py-2 px-3 text-center text-[9px] font-black text-gray-400 uppercase">W</th>
+                            <th class="py-2 px-3 text-center text-[9px] font-black text-gray-400 uppercase">R</th>
+                            <th class="py-2 px-3 text-center text-[9px] font-black text-gray-400 uppercase">ECO</th>
+                        </tr></thead>
+                        <tbody>${renderBowlingRows(t1Players)}</tbody>
+                    </table>
+                </div>
+                
+                <!-- T2 BOWLING -->
+                <div class="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+                    <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-50 bg-red-50">
+                        ${getLogoHTML(t2Name, 6)}
+                        <span class="text-xs font-black text-gray-700 uppercase tracking-wider">${t2Name} — Bowling</span>
+                    </div>
+                    <table class="w-full">
+                        <thead><tr class="bg-gray-50">
+                            <th class="py-2 px-3 text-left text-[9px] font-black text-gray-400 uppercase">Player</th>
+                            <th class="py-2 px-3 text-center text-[9px] font-black text-gray-400 uppercase">OV</th>
+                            <th class="py-2 px-3 text-center text-[9px] font-black text-gray-400 uppercase">W</th>
+                            <th class="py-2 px-3 text-center text-[9px] font-black text-gray-400 uppercase">R</th>
+                            <th class="py-2 px-3 text-center text-[9px] font-black text-gray-400 uppercase">ECO</th>
+                        </tr></thead>
+                        <tbody>${renderBowlingRows(t2Players)}</tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- DOWNLOAD FOOTER -->
+            <div class="p-4 border-t border-gray-100 bg-white flex gap-3 shrink-0">
+                <button onclick="downloadFixtureSummaryAsJPEG('${fixtureId}')" class="flex-1 py-3 bg-gray-900 hover:bg-black text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2">
+                    <span>🖼️</span><span>Download JPEG</span>
+                </button>
+                <button onclick="downloadFixtureSummaryAsPDF('${fixtureId}')" class="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2">
+                    <span>📄</span><span>Download PDF</span>
+                </button>
+            </div>
+        </div>
+    </div>`;
+
+    // Inject into body
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    document.body.appendChild(div.firstElementChild);
+}
+
+// --- JPEG & PDF Download for Fixture Summary ---
+function _buildFixtureSummaryCanvas(fixtureId, callback) {
+    const fixture = tournamentState.data.fixtures.find(f => f.id === fixtureId);
+    if (!fixture) return;
+    const log = (tournamentState.data.matchStatsLog || []).filter(p => p.matchId === fixtureId);
+    const stats = fixture.stats || {};
+    const t1Stats = stats.t1 || {};
+    const t2Stats = stats.t2 || {};
+    const t1Name = t1Stats.name || fixture.t1;
+    const t2Name = t2Stats.name || fixture.t2;
+
+    const formatOvers = (d) => {
+        if (!d && d !== 0) return '-';
+        const o = Math.floor(d);
+        const b = Math.round((d - o) * 6);
+        return `${o}.${b}`;
+    };
+
+    const t1Players = log.filter(p => p.team === t1Name);
+    const t2Players = log.filter(p => p.team === t2Name);
+
+    const W = 800, PADDING = 32;
+    // Estimate height
+    const batRows = [...t1Players, ...t2Players].filter(p => p.balls > 0 || p.runs > 0).length;
+    const bwlRows = [...t1Players, ...t2Players].filter(p => p.ballsBowled > 0).length;
+    const H = 320 + (batRows + bwlRows) * 34 + 300;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    // Background
+    ctx.fillStyle = '#f9fafb';
+    ctx.fillRect(0, 0, W, H);
+
+    // Header BG
+    ctx.fillStyle = '#111827';
+    ctx.roundRect(0, 0, W, 240, [0, 0, 0, 0]);
+    ctx.fill();
+
+    // Match info
+    ctx.fillStyle = '#9ca3af';
+    ctx.font = 'bold 11px Inter, sans-serif';
+    ctx.fillText(`MATCH #${fixture.matchNo || ''} • ${fixture.stage || ''}  |  ${fixture.ground || 'Main Ground'}`, PADDING, 30);
+
+    // Team names & scores
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 14px Inter, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(t1Name.toUpperCase(), PADDING, 70);
+    ctx.font = 'bold 42px Inter, sans-serif';
+    ctx.fillText(t1Stats.score !== undefined ? `${t1Stats.score}` : '-', PADDING, 120);
+    ctx.font = 'bold 12px Inter, sans-serif';
+    ctx.fillStyle = '#9ca3af';
+    ctx.fillText(`${formatOvers(t1Stats.overs)} ov`, PADDING, 145);
+
+    ctx.fillStyle = '#9ca3af';
+    ctx.font = 'bold 16px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('VS', W / 2, 110);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 14px Inter, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(t2Name.toUpperCase(), W - PADDING, 70);
+    ctx.font = 'bold 42px Inter, sans-serif';
+    ctx.fillText(t2Stats.score !== undefined ? `${t2Stats.score}` : '-', W - PADDING, 120);
+    ctx.font = 'bold 12px Inter, sans-serif';
+    ctx.fillStyle = '#9ca3af';
+    ctx.fillText(`${formatOvers(t2Stats.overs)} ov`, W - PADDING, 145);
+
+    // Result
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = 'bold 14px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText((fixture.result || '').toUpperCase(), W / 2, 190);
+
+    // Branding
+    ctx.fillStyle = '#374151';
+    ctx.font = 'bold 11px Inter, sans-serif';
+    ctx.fillText('Powered by CRICKERR', W / 2, 225);
+
+    let y = 260;
+    ctx.textAlign = 'left';
+
+    const drawTable = (title, players, columns, rowFn) => {
+        // Section title
+        ctx.fillStyle = '#1f2937';
+        ctx.font = 'bold 13px Inter, sans-serif';
+        ctx.fillText(title, PADDING, y);
+        y += 6;
+
+        // Header row
+        ctx.fillStyle = '#f3f4f6';
+        ctx.fillRect(PADDING, y, W - PADDING * 2, 26);
+        ctx.fillStyle = '#6b7280';
+        ctx.font = 'bold 10px Inter, sans-serif';
+        columns.forEach(col => ctx.fillText(col.label, col.x, y + 17));
+        y += 26;
+
+        // Data rows
+        players.forEach((p, i) => {
+            if (i % 2 === 0) { ctx.fillStyle = '#f9fafb'; ctx.fillRect(PADDING, y, W - PADDING * 2, 30); }
+            ctx.fillStyle = '#111827';
+            ctx.font = 'bold 11px Inter, sans-serif';
+            rowFn(ctx, p, y + 20);
+            y += 30;
+        });
+        y += 16;
+    };
+
+    const batCols = [
+        { label: 'PLAYER', x: PADDING + 4 },
+        { label: 'R', x: W - PADDING - 200 },
+        { label: 'B', x: W - PADDING - 120 },
+        { label: 'SR', x: W - PADDING - 60 }
+    ];
+    const bwlCols = [
+        { label: 'PLAYER', x: PADDING + 4 },
+        { label: 'OV', x: W - PADDING - 240 },
+        { label: 'W', x: W - PADDING - 180 },
+        { label: 'R', x: W - PADDING - 120 },
+        { label: 'ECO', x: W - PADDING - 60 }
+    ];
+
+    const batters1 = t1Players.filter(p => p.balls > 0 || p.runs > 0).sort((a,b) => b.runs - a.runs);
+    const batters2 = t2Players.filter(p => p.balls > 0 || p.runs > 0).sort((a,b) => b.runs - a.runs);
+    const bowlers1 = t1Players.filter(p => p.ballsBowled > 0).sort((a,b) => b.wkts - a.wkts);
+    const bowlers2 = t2Players.filter(p => p.ballsBowled > 0).sort((a,b) => b.wkts - a.wkts);
+
+    if (batters1.length) drawTable(`${t1Name} — Batting`, batters1, batCols, (ctx, p, ry) => {
+        const sr = p.balls > 0 ? ((p.runs / p.balls) * 100).toFixed(0) : '0';
+        ctx.fillText(p.name, PADDING + 4, ry);
+        ctx.fillText(p.runs, W - PADDING - 200, ry);
+        ctx.fillText(p.balls, W - PADDING - 120, ry);
+        ctx.fillText(sr, W - PADDING - 60, ry);
+    });
+
+    if (batters2.length) drawTable(`${t2Name} — Batting`, batters2, batCols, (ctx, p, ry) => {
+        const sr = p.balls > 0 ? ((p.runs / p.balls) * 100).toFixed(0) : '0';
+        ctx.fillText(p.name, PADDING + 4, ry);
+        ctx.fillText(p.runs, W - PADDING - 200, ry);
+        ctx.fillText(p.balls, W - PADDING - 120, ry);
+        ctx.fillText(sr, W - PADDING - 60, ry);
+    });
+
+    if (bowlers1.length) drawTable(`${t1Name} — Bowling`, bowlers1, bwlCols, (ctx, p, ry) => {
+        const bpo = 6;
+        const ov = Math.floor(p.ballsBowled / bpo) + '.' + (p.ballsBowled % bpo);
+        const eco = p.ballsBowled > 0 ? ((p.runsConceded / p.ballsBowled) * bpo).toFixed(1) : '0.0';
+        ctx.fillText(p.name, PADDING + 4, ry);
+        ctx.fillText(ov, W - PADDING - 240, ry);
+        ctx.fillText(p.wkts, W - PADDING - 180, ry);
+        ctx.fillText(p.runsConceded, W - PADDING - 120, ry);
+        ctx.fillText(eco, W - PADDING - 60, ry);
+    });
+
+    if (bowlers2.length) drawTable(`${t2Name} — Bowling`, bowlers2, bwlCols, (ctx, p, ry) => {
+        const bpo = 6;
+        const ov = Math.floor(p.ballsBowled / bpo) + '.' + (p.ballsBowled % bpo);
+        const eco = p.ballsBowled > 0 ? ((p.runsConceded / p.ballsBowled) * bpo).toFixed(1) : '0.0';
+        ctx.fillText(p.name, PADDING + 4, ry);
+        ctx.fillText(ov, W - PADDING - 240, ry);
+        ctx.fillText(p.wkts, W - PADDING - 180, ry);
+        ctx.fillText(p.runsConceded, W - PADDING - 120, ry);
+        ctx.fillText(eco, W - PADDING - 60, ry);
+    });
+
+    callback(canvas, fixture);
+}
+
+function downloadFixtureSummaryAsJPEG(fixtureId) {
+    _buildFixtureSummaryCanvas(fixtureId, (canvas, fixture) => {
+        const link = document.createElement('a');
+        link.download = `Match_${fixture.matchNo || fixtureId}_Summary.jpg`;
+        link.href = canvas.toDataURL('image/jpeg', 0.95);
+        link.click();
+    });
+}
+
+function downloadFixtureSummaryAsPDF(fixtureId) {
+    _buildFixtureSummaryCanvas(fixtureId, (canvas, fixture) => {
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        const W = canvas.width, H = canvas.height;
+
+        // Use jsPDF if available, else fallback to print window
+        if (typeof window.jspdf !== 'undefined' || typeof window.jsPDF !== 'undefined') {
+            const jsPDF = window.jsPDF || window.jspdf.jsPDF;
+            const isLandscape = W > H;
+            const pdf = new jsPDF({ orientation: isLandscape ? 'landscape' : 'portrait', unit: 'px', format: [W, H] });
+            pdf.addImage(imgData, 'JPEG', 0, 0, W, H);
+            pdf.save(`Match_${fixture.matchNo || fixtureId}_Summary.pdf`);
+        } else {
+            // Fallback: Open in new tab for print-to-PDF
+            const win = window.open('', '_blank');
+            win.document.write(`<!DOCTYPE html><html><head><title>Match ${fixture.matchNo || ''} Summary</title>
+            <style>body{margin:0;padding:0;background:#fff;}img{max-width:100%;display:block;}
+            @media print{@page{size:auto;margin:0;}}
+            </style></head><body>
+            <img src="${imgData}" style="width:100%;">
+            <script>window.onload=function(){window.print();}<\/script>
+            </body></html>`);
+            win.document.close();
+        }
     });
 }
 
