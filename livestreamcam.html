@@ -918,6 +918,15 @@
         </div>
     </div>
 
+    <div id="mobile-orientation-warning" class="help-modal" style="display: none; z-index: 10005;">
+        <div class="modal-card" style="border: 2px solid #fbbf24; background: rgba(15, 23, 42, 0.98); box-shadow: 0 20px 50px rgba(0,0,0,0.8); max-width: 350px;">
+            <div style="font-size: 50px; margin-bottom: 15px; animation: spin 2s infinite ease-in-out;">🔄</div>
+            <h2 style="font-family: 'Anton'; font-size: 24px; margin-bottom: 10px; color: #fbbf24; letter-spacing: 1px;">ROTATE DEVICE</h2>
+            <p style="color: #cbd5e1; margin-bottom: 20px; font-size: 15px; line-height: 1.5; font-family: 'Roboto';">Rotate your phone for better broadcast results.<br><br><b style="color:white;">Please enable auto-rotation on your device.</b></p>
+            <button onclick="document.getElementById('mobile-orientation-warning').style.display='none'" style="width: 100%; padding: 12px; border-radius: 50px; border: none; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: black; font-weight: 900; letter-spacing: 1px; cursor: pointer;">GOT IT</button>
+        </div>
+    </div>
+
     <script>
         // --- FIREBASE CONFIG ---
         const firebaseConfig = { apiKey: "AIzaSyBqcD59IAPpKqk98oDZkgzgkoVZ8b8LGgY", authDomain: "livecricketscoring-92087.firebaseapp.com", databaseURL: "https://livecricketscoring-92087-default-rtdb.firebaseio.com", projectId: "livecricketscoring-92087", storageBucket: "livecricketscoring-92087.firebasestorage.app", messagingSenderId: "522927197627", appId: "1:522927197627:web:f1df5db736cae96893089e" };
@@ -1051,7 +1060,33 @@
                     }
                 });
             }
+
+            // Mobile Display Warning
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            if (isMobile) {
+                const warningModal = document.getElementById('mobile-orientation-warning');
+                if (warningModal) {
+                    warningModal.style.display = 'flex';
+                    setTimeout(() => { warningModal.style.display = 'none'; }, 6000);
+                }
+            }
         };
+
+        // --- FULL LANDSCAPE & ORIENTATION FIX ---
+        window.addEventListener("orientationchange", () => {
+            setTimeout(() => {
+                resizeCanvas();
+                // Force camera reset to new aspect ratio layout to prevent stretching/cropping
+                if (currentStream && document.getElementById('app-container').style.display !== 'none') {
+                    const badge = document.getElementById('quality-badge');
+                    const qualityText = badge ? badge.innerText : '1080p';
+                    const height = qualityText.includes('4K') ? 2160 : qualityText.includes('1080') ? 1080 : 720;
+                    const width = Math.round((height * 16) / 9);
+                    console.log("[ORIENTATION] Device rotated. Restarting camera to adjust constraints...");
+                    startCameraStream(width, height);
+                }
+            }, 600); // Wait for device UI to settle
+        });
 
         async function requestWakeLock() {
             try {
@@ -1143,6 +1178,42 @@
             initParticles(frame.clientWidth, frame.clientHeight);
         }
 
+        // --- BROADCAST HEALTH MONITOR (CRITICAL STABILITY FIX) ---
+        let healthMonitorInterval = null;
+        let lastVideoTime = -1;
+        let stuckFrames = 0;
+
+        function startBroadcastHealthMonitor() {
+            if (healthMonitorInterval) clearInterval(healthMonitorInterval);
+            console.log("[HEALTH] Broadcast Monitor Started.");
+
+            healthMonitorInterval = setInterval(() => {
+                const vid = document.getElementById('video-source');
+                if (!vid) return;
+
+                // 1. Check if video paused unexpectedly (common iOS background bug)
+                if (vid.paused && (isLive || isRecording)) {
+                    console.warn("[HEALTH] Video paused unexpectedly. Forcing play.");
+                    vid.play().catch(e => console.error("[HEALTH] Auto-play recovery failed:", e));
+                }
+
+                // 2. Detect frozen video feed 
+                if (vid.readyState >= 2 && !vid.paused) {
+                    if (vid.currentTime === lastVideoTime) {
+                        stuckFrames++;
+                        if (stuckFrames > 3) {
+                            console.warn("[HEALTH] Frozen video detected. Attempting stream reset trick.");
+                            vid.currentTime += 0.001; // Force micro-seek to unfreeze iOS player
+                            stuckFrames = 0;
+                        }
+                    } else {
+                        stuckFrames = 0;
+                    }
+                    lastVideoTime = vid.currentTime;
+                }
+            }, 1000);
+        }
+
        async function connectToMatch() {
             const id = document.getElementById('match-id').value;
             if(!id) return alert("Please enter Match ID");
@@ -1171,6 +1242,7 @@
                 resizeCanvas();
                 requestAnimationFrame(renderLoop);
                 listenToDB(id);
+                startBroadcastHealthMonitor(); // START WATCHDOG
                 setTimeout(showRecReminder, 4000);
                 
                 // Wait a tiny fraction of a second for the canvas to draw its first frame
@@ -1188,7 +1260,13 @@
 
         async function startCameraStream(width, height) {
             if(currentStream) { currentStream.getTracks().forEach(track => track.stop()); }
-            const constraintsHQ = { video: { facingMode: "environment", width: { ideal: width }, height: { ideal: height }, frameRate: { ideal: 60, max: 60 } }, audio: true };
+            
+            // SMART ORIENTATION FIX: Request constraints based on actual physical device orientation
+            const isPortrait = window.innerHeight > window.innerWidth;
+            let reqWidth = isPortrait ? height : width;
+            let reqHeight = isPortrait ? width : height;
+
+            const constraintsHQ = { video: { facingMode: "environment", width: { ideal: reqWidth }, height: { ideal: reqHeight }, frameRate: { ideal: 60, max: 60 } }, audio: true };
             try {
                 const stream = await navigator.mediaDevices.getUserMedia(constraintsHQ);
                 return handleStreamSuccess(stream);
