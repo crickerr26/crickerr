@@ -1308,41 +1308,55 @@
             return true;
         }
 
-        // --- PROFESSIONAL GPU FRAME-BUFFER REPLAY SYSTEM ---
-        let replayBuffer = [];
-        const REPLAY_FPS = 15; // Standard frame rate for slow-mo sports replay
+        // --- PROFESSIONAL ZERO-ALLOCATION RING BUFFER REPLAY SYSTEM ---
+        const REPLAY_FPS = 15; 
         const MAX_FRAMES = 15 * 6; // Stores 6 seconds of rolling history
-        let replayPlaybackFrames = [];
+        let replayRing = []; 
+        let replayWriteIndex = 0; 
+        let replayPlaybackFrames = []; 
         let replayFrameIndex = 0;
 
         function startRollingReplayBuffer(stream) {
             if (window.replayInterval) clearInterval(window.replayInterval);
-            replayBuffer = [];
-            window.replayInterval = setInterval(async () => {
-                // Only capture frames if live and highlights are enabled (saves RAM/Battery)
+            
+            // Initialize the fixed canvas ring buffer ONLY ONCE. 
+            // This stops the massive GPU memory leak from createImageBitmap.
+            if (replayRing.length === 0) {
+                for (let i = 0; i < MAX_FRAMES; i++) {
+                    const c = document.createElement('canvas');
+                    c.width = 1280; c.height = 720;
+                    replayRing.push({ canvas: c, ctx: c.getContext('2d', { willReadFrequently: false }) });
+                }
+            }
+            
+            replayWriteIndex = 0;
+            
+            window.replayInterval = setInterval(() => {
                 if (video.readyState >= 2 && !video.paused && areHighlightsEnabled) {
                     try {
-                        // Captures direct to GPU Memory for zero latency
-                        const bitmap = await createImageBitmap(video, { resizeWidth: 1280, resizeHeight: 720 });
-                        replayBuffer.push(bitmap);
-                        if (replayBuffer.length > MAX_FRAMES) {
-                            const old = replayBuffer.shift();
-                            if (old && old.close) old.close(); // Clean GPU memory
-                        }
+                        // Draw directly to the pre-allocated canvas. ZERO new memory allocation!
+                        const frame = replayRing[replayWriteIndex];
+                        frame.ctx.drawImage(video, 0, 0, 1280, 720);
+                        
+                        replayWriteIndex++;
+                        if (replayWriteIndex >= MAX_FRAMES) replayWriteIndex = 0;
                     } catch(e) {}
                 }
             }, 1000 / REPLAY_FPS);
         }
 
         function triggerReplay(type) {
-            if (!areHighlightsEnabled || replayBuffer.length < 15) return;
+            if (!areHighlightsEnabled) return;
             replayType = type;
             
-            // Snapshot the current buffer for playback
-            replayPlaybackFrames = [...replayBuffer]; 
-            replayFrameIndex = 0;
+            // Reconstruct the chronological order from the ring buffer
+            replayPlaybackFrames = [];
+            for (let i = 0; i < MAX_FRAMES; i++) {
+                const index = (replayWriteIndex + i) % MAX_FRAMES;
+                replayPlaybackFrames.push(replayRing[index].canvas);
+            }
             
-            // Note: We DO NOT pause the live video anymore. Live stream continues uninterrupted!
+            replayFrameIndex = 0;
             replayState = "TRANSITION_IN";
             transitionStartTime = Date.now();
         }
@@ -1427,13 +1441,11 @@
             }
         }
 
-        // Continuous memory buffer for perfect MP4 compilation
-        let sessionChunks = []; 
-
         async function startSafeDatabaseRecording() {
             console.log("[REC] Professional Continuous Capture Started");
             
-            sessionChunks = []; // Initialize fresh memory buffer
+            const matchId = document.getElementById('match-id').value;
+            if (matchId) initVideoDB(matchId); // Crucial: Initialize Database
             
             _finalizeGuard = false;
             if (_finalizeTimeoutA) { clearTimeout(_finalizeTimeoutA); _finalizeTimeoutA = null; }
@@ -1484,7 +1496,7 @@
 
                 recorder.ondataavailable = (e) => {
                     if (e.data && e.data.size > 0) {
-                        sessionChunks.push(e.data); // Store continuously in memory
+                        saveChunkToDB(e.data); // Save directly to DB, keeping RAM totally clear
                     }
                 };
 
@@ -1496,9 +1508,8 @@
                     }
                 };
 
-                // START WITHOUT TIMESLICE - THIS FIXES THE MP4 CORRUPTION ISSUE!
-                // Forcing continuous mode makes the browser finalize the moov atom header perfectly when stopped.
-                recorder.start(); 
+                // Timeslice added! Flushes memory every 3 seconds to IndexedDB to prevent RAM crashes.
+                recorder.start(3000); 
                 recordingStartTime = Date.now();
                 isRecording = true;
 
@@ -1554,7 +1565,12 @@
             const timeStr = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
             const fileName = `MATCH_${safeMatchId}_${dateStr}_${timeStr}.${ext}`;
 
-            if (!sessionChunks || sessionChunks.length === 0) {
+            btnText.innerText = "GATHERING...";
+            const dbChunks = await getAllChunksWithProgress((prog) => {
+                 btnText.innerText = `LOAD ${prog}%`;
+            });
+
+            if (!dbChunks || dbChunks.length === 0) {
                 alert("No recorded data found. Recording may have failed to start.");
                 resetRecUI();
                 return;
@@ -1562,8 +1578,8 @@
 
             btnText.innerText = "READY!";
             
-            // Assemble the perfectly formed single blob
-            const blob = new Blob(sessionChunks, { type: blobType });
+            // Assemble the perfectly formed single blob from the Database
+            const blob = new Blob(dbChunks, { type: blobType });
             console.log("[REC] Final file size:", (blob.size / 1024 / 1024).toFixed(2), "MB");
 
             // File System Access API (Desktop Chrome / Edge)
@@ -1579,7 +1595,7 @@
                     await writable.write(blob);
                     await writable.close();
                     showSavedMessage();
-                    sessionChunks = [];
+                    await clearDB(); // Clean DB after success
                     resetRecUI();
                     if (video.paused) video.play().catch(e => {});
                     return;
@@ -1594,7 +1610,7 @@
                 try {
                     await navigator.share({ files: [shareFile], title: fileName });
                     showSavedMessage();
-                    sessionChunks = []; // Clear memory
+                    await clearDB(); // Clean DB after success
                     resetRecUI();
                     if (video.paused) video.play().catch(e => {});
                     return;
@@ -1611,11 +1627,11 @@
             a.download = fileName;
             document.body.appendChild(a);
             a.click();
-            setTimeout(() => {
+            setTimeout(async () => {
                 document.body.removeChild(a);
                 window.URL.revokeObjectURL(url);
                 showSavedMessage();
-                sessionChunks = []; // Clear memory
+                await clearDB(); // Clean DB after success
                 resetRecUI();
                 if (video.paused) video.play().catch(e => {});
             }, 1000);
