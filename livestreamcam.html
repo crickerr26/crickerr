@@ -919,11 +919,11 @@
     </div>
 
     <div id="mobile-orientation-warning" class="help-modal" style="display: none; z-index: 10005;">
-        <div class="modal-card" style="border: 2px solid #fbbf24; background: rgba(15, 23, 42, 0.98); box-shadow: 0 20px 50px rgba(0,0,0,0.8); max-width: 350px;">
-            <div style="font-size: 50px; margin-bottom: 15px; animation: spin 2s infinite ease-in-out;">🔄</div>
-            <h2 style="font-family: 'Anton'; font-size: 24px; margin-bottom: 10px; color: #fbbf24; letter-spacing: 1px;">ROTATE DEVICE</h2>
-            <p style="color: #cbd5e1; margin-bottom: 20px; font-size: 15px; line-height: 1.5; font-family: 'Roboto';">Rotate your phone for better broadcast results.<br><br><b style="color:white;">Please enable auto-rotation on your device.</b></p>
-            <button onclick="document.getElementById('mobile-orientation-warning').style.display='none'" style="width: 100%; padding: 12px; border-radius: 50px; border: none; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: black; font-weight: 900; letter-spacing: 1px; cursor: pointer;">GOT IT</button>
+        <div class="modal-card" style="border: 2px solid #ef4444; background: rgba(15, 23, 42, 0.98); box-shadow: 0 20px 50px rgba(0,0,0,0.8); max-width: 350px;">
+            <div style="font-size: 55px; margin-bottom: 15px;">🔓</div>
+            <h2 style="font-family: 'Anton'; font-size: 26px; margin-bottom: 10px; color: #ef4444; letter-spacing: 1px;">UNLOCK ROTATION</h2>
+            <p style="color: #cbd5e1; margin-bottom: 20px; font-size: 16px; line-height: 1.5; font-family: 'Roboto';">Your device orientation is locked in Portrait mode.<br><br><b style="color:white;">Please unlock auto-rotation in your device settings and turn your phone sideways.</b></p>
+            <button onclick="document.getElementById('mobile-orientation-warning').style.display='none'" style="width: 100%; padding: 15px; border-radius: 50px; border: none; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; font-weight: 900; letter-spacing: 1px; cursor: pointer; box-shadow: 0 10px 20px rgba(239, 68, 68, 0.4);">I HAVE UNLOCKED IT</button>
         </div>
     </div>
 
@@ -1061,15 +1061,24 @@
                 });
             }
 
-            // Mobile Display Warning
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-            if (isMobile) {
-                const warningModal = document.getElementById('mobile-orientation-warning');
-                if (warningModal) {
-                    warningModal.style.display = 'flex';
-                    setTimeout(() => { warningModal.style.display = 'none'; }, 6000);
+            // Mobile Display Warning - Improved Portrait Detection
+            function checkOrientationAndWarn() {
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                if (isMobile && window.innerHeight > window.innerWidth) {
+                    const warningModal = document.getElementById('mobile-orientation-warning');
+                    if (warningModal) {
+                        warningModal.style.display = 'flex';
+                    }
+                } else {
+                    const warningModal = document.getElementById('mobile-orientation-warning');
+                    if (warningModal) {
+                        warningModal.style.display = 'none';
+                    }
                 }
             }
+            checkOrientationAndWarn();
+            window.addEventListener('resize', checkOrientationAndWarn);
+            window.addEventListener('orientationchange', checkOrientationAndWarn);
         };
 
         // --- FULL LANDSCAPE & ORIENTATION FIX ---
