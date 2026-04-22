@@ -1164,27 +1164,27 @@
         });
 
         function resizeCanvas() {
-            // FIX: Use devicePixelRatio for SHARP rendering on mobile/retina screens
-            const dpr = window.devicePixelRatio || 1;
-            const frame = document.getElementById('broadcast-frame') || document.body;
+            // --- PROFESSIONAL 16:9 BROADCAST STANDARD FIX ---
+            // Instead of capturing the physical phone screen shape (which stretches video and places logos wrong),
+            // we lock the internal engine to a perfect 1920x1080 (1080p) standard broadcast resolution.
+            // CSS 'object-fit: contain' handles fitting it beautifully on any device screen.
             
-            // Set Internal Resolution (Physical Pixels) - MATCHES 16:9 BROADCAST FRAME
-            canvas.width = frame.clientWidth * dpr;
-            canvas.height = frame.clientHeight * dpr;
+            const w = 1920;
+            const h = 1080;
+
+            canvas.width = w;
+            canvas.height = h;
             
-            // Scale Context to use Logical Coordinates (CSS Pixels)
-            ctx.scale(dpr, dpr);
-            
-            // CSS Display Size (Fit perfectly inside the broadcast frame)
+            // CSS Display Size (Fit perfectly inside the broadcast frame without stretching)
             canvas.style.width = '100%';
             canvas.style.height = '100%';
             canvas.style.display = 'block';
             
-            // High Quality Smoothing
+            // High Quality Smoothing for pristine graphics
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
             
-            initParticles(frame.clientWidth, frame.clientHeight);
+            initParticles(w, h);
         }
 
         // --- BROADCAST HEALTH MONITOR (CRITICAL STABILITY FIX) ---
@@ -2912,12 +2912,12 @@ async function authorizeStream(matchId, historyRef = null, isRematch = false) {
 
         // --- BACKGROUND-SAFE RENDER LOOP ---
         function renderLoop() {
-            // FIX: Get Dynamic Logical Resolution (Screen Size)
-            const dpr = window.devicePixelRatio || 1;
-            const w = canvas.width / dpr;
-            const h = canvas.height / dpr;
+            // PROFESSIONAL STANDARD: We are locked to 1920x1080 internal resolution.
+            // No device pixel ratio math needed, resulting in perfect 16:9 videos and zero stretching.
+            const w = canvas.width;
+            const h = canvas.height;
             
-            // Clear using logical coordinates
+            // Clear the 1080p canvas
             ctx.clearRect(0, 0, w, h);
 
             try {
