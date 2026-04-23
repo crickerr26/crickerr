@@ -330,6 +330,12 @@
                 <div id="mode-selection-screen" class="setup-step active w-full max-w-4xl mx-auto text-center h-full flex flex-col">
     <div class="flex-grow overflow-y-auto py-10 pb-32 no-scrollbar">
         <div class="mb-10">
+            <div class="flex justify-start mb-4">
+                <button onclick="location.reload()" class="flex items-center gap-1.5 text-xs font-bold text-gray-400 hover:text-gray-600 uppercase tracking-wider transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+                    HOME
+                </button>
+            </div>
             <h1 class="text-2xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 mb-4">CRICKERR MATCH SETUP</h1>
             <p class="text-gray-500 font-bold uppercase tracking-[0.2em] text-xs">Select the game Mode</p>
         </div>
@@ -377,8 +383,8 @@
     <div class="space-y-4">
         <button onclick="processNewTournament()" class="w-full bg-white p-6 rounded-2xl border border-gray-200 shadow-sm hover:border-blue-300 hover:shadow-md transition-all text-left flex items-center justify-between group">
             <div>
-                <h3 class="text-lg font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">Start New</h3>
-                <p class="text-xs text-gray-500">Create a brand new tournament and generate a unique code.</p>
+                <h3 class="text-lg font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">Create New</h3>
+                <p class="text-xs text-gray-500">Create a new tournament and generate a unique code.</p>
             </div>
             <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xl group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
                 +
@@ -392,6 +398,10 @@
                 <input type="text" id="tournament-entry-code" placeholder="Enter Code" class="bg-gray-50 flex-grow px-4 py-3 rounded-xl border border-gray-200 text-sm font-bold uppercase outline-none focus:border-purple-500 focus:bg-white transition-colors text-gray-800 placeholder-gray-400">
                 <button onclick="processLoadTournament(this)" class="bg-purple-600 text-white px-6 py-3 rounded-xl text-sm font-bold shadow-md shadow-purple-200 hover:bg-purple-700 hover:shadow-lg transition-all">Load</button>
             </div>
+            <button onclick="showRunningTournaments()" class="mt-3 w-full flex items-center justify-center gap-2 bg-gray-50 border border-gray-200 hover:border-purple-300 hover:bg-purple-50 text-gray-600 hover:text-purple-700 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                Browse All Tournaments
+            </button>
         </div>
     </div>
 </div>
@@ -405,13 +415,26 @@
         <button onclick="toggleTournamentAdmin()" class="text-[10px] font-bold text-gray-300 hover:text-gray-500 uppercase tracking-widest transition-colors">Admin</button>
     </div>
     
-    <div class="text-center mb-8 mt-4">
+    <div class="text-center mb-5 mt-4">
         <h1 class="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-purple-600 to-pink-600 tracking-tighter drop-shadow-sm leading-tight">Running Tournaments</h1>
         <p class="text-gray-500 font-bold text-xs uppercase tracking-[0.2em] mt-1">Select a tournament to continue</p>
     </div>
-    
-    <div id="running-tournaments-list" class="grid grid-cols-1 gap-4 overflow-y-auto custom-scroll pb-20 max-h-[70vh]">
+
+    <!-- Search Bar -->
+    <div class="relative mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 105 11a6 6 0 0012 0z"/></svg>
+        <input type="text" id="rt-search-input" placeholder="Search by tournament name, code or team..." oninput="filterRunningTournaments()" class="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-800 outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition-all placeholder-gray-400">
+    </div>
+
+    <!-- Country Tabs -->
+    <div class="mb-4">
+        <div id="rt-country-tabs" class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+            <button onclick="setRtCountryTab('ALL')" id="rt-tab-ALL" class="rt-country-tab rt-tab-active flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border border-purple-600 bg-purple-600 text-white">All</button>
         </div>
+    </div>
+
+    <div id="running-tournaments-list" class="grid grid-cols-1 gap-4 overflow-y-auto custom-scroll pb-20 max-h-[60vh]">
+    </div>
 </div>
 
 <div id="setup-step-1" class="setup-step hidden w-full max-w-5xl mx-auto px-2">
@@ -2000,7 +2023,7 @@
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Matches / Team</label>
+                            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Matches Per Team</label>
                             <div class="relative">
                                 <select id="tourney-rounds-count" class="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm font-bold text-gray-900 focus:ring-2 focus:ring-blue-600 outline-none appearance-none cursor-pointer">
                                     <option value="1" selected>1 Match</option><option value="2">2 Matches</option>
@@ -8686,6 +8709,9 @@ function toggleTournamentAdmin() {
     }
 }
 
+let _rtAllTournaments = []; // cache for filter/search
+let _rtActiveCountryTab = 'ALL';
+
 function showRunningTournaments() {
     document.querySelectorAll('.setup-step').forEach(el => {
         el.classList.add('hidden');
@@ -8695,74 +8721,199 @@ function showRunningTournaments() {
     const rtScreen = document.getElementById('running-tournaments-screen');
     rtScreen.classList.remove('hidden');
     setTimeout(() => rtScreen.classList.add('active'), 10);
+
+    // Reset search & tab state
+    const searchInput = document.getElementById('rt-search-input');
+    if (searchInput) searchInput.value = '';
+    _rtActiveCountryTab = 'ALL';
     
     const listEl = document.getElementById('running-tournaments-list');
     listEl.innerHTML = '<div class="text-center text-gray-400 font-bold mt-10">Loading Tournaments...</div>';
     
     db.collection("tournaments").orderBy("meta.createdAt", "desc").get().then(snap => {
-        listEl.innerHTML = '';
+        _rtAllTournaments = [];
+
         if (snap.empty) {
             listEl.innerHTML = '<div class="text-center text-gray-400 font-bold mt-10">No running tournaments found.</div>';
+            renderRtCountryTabs();
             return;
         }
         
         const now = Date.now();
         const days35 = 35 * 24 * 60 * 60 * 1000;
-        let activeCount = 0;
 
         snap.forEach(doc => {
             const data = doc.data();
             const meta = data.meta || {};
             
-            // --- AUTO-CLEANUP LOGIC ---
             const lastActivity = meta.lastActivityTimestamp || meta.createdAt || 0;
             if (now - lastActivity > days35) {
-                // Silently delete and skip rendering
                 db.collection("tournaments").doc(doc.id).delete();
                 return;
             }
 
-            activeCount++;
-            const code = meta.code || 'No Code';
-            const name = meta.name || 'Unnamed Tournament';
-            const status = data.status || 'UNKNOWN';
-            
-            let statusClass = "bg-blue-100 text-blue-700";
-            if (status === 'COMPLETED') statusClass = "bg-green-100 text-green-700";
-            else if (status === 'ACTIVE' || status === 'LIVE') statusClass = "bg-red-100 text-red-700 animate-pulse";
-            
-            const card = document.createElement('div');
-            card.className = "bg-white border border-gray-200 p-5 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 cursor-pointer hover:shadow-md hover:border-purple-300 transition-all group";
-            card.onclick = () => confirmContinueTournament(doc.id, data);
-            
-            // --- ADMIN DELETE BUTTON ---
-            let deleteBtnHTML = '';
-            if (isTournamentAdminMode) {
-                deleteBtnHTML = `
-                    <button onclick="event.stopPropagation(); executeAdminDelete('${doc.id}', '${name.replace(/'/g, "\\'")}')" class="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors border border-red-200 shadow-sm flex items-center justify-center ml-2" title="Permanently Delete">
-                        🗑️
-                    </button>
-                `;
-            }
-
-            card.innerHTML = `
-                <div>
-                    <h3 class="font-black text-gray-900 text-lg uppercase group-hover:text-purple-700 transition-colors">${name}</h3>
-                    <p class="text-xs font-bold text-gray-500 tracking-widest mt-1">CODE: <span class="text-blue-600 select-all">${code}</span></p>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider ${statusClass}">${status}</span>
-                    ${deleteBtnHTML}
-                    <span class="text-gray-300 group-hover:text-purple-600 font-bold ml-1">➜</span>
-                </div>
-            `;
-            
-            listEl.appendChild(card);
+            _rtAllTournaments.push({ id: doc.id, data });
         });
 
-        if (activeCount === 0) {
-            listEl.innerHTML = '<div class="text-center text-gray-400 font-bold mt-10">No running tournaments found.</div>';
+        renderRtCountryTabs();
+        renderRunningTournamentCards();
+    });
+}
+
+function renderRtCountryTabs() {
+    const tabsEl = document.getElementById('rt-country-tabs');
+    if (!tabsEl) return;
+
+    // Gather unique countries from cached data
+    const countrySet = new Set();
+    _rtAllTournaments.forEach(({ data }) => {
+        const country = (data.meta && data.meta.country) ? data.meta.country : null;
+        if (country) countrySet.add(country);
+    });
+
+    const countries = Array.from(countrySet).sort();
+
+    tabsEl.innerHTML = '';
+
+    // ALL tab
+    const allTab = document.createElement('button');
+    allTab.id = 'rt-tab-ALL';
+    allTab.className = 'rt-country-tab flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ' +
+        (_rtActiveCountryTab === 'ALL' ? 'border-purple-600 bg-purple-600 text-white' : 'border-gray-200 bg-white text-gray-500 hover:border-purple-300');
+    allTab.textContent = 'All';
+    allTab.onclick = () => setRtCountryTab('ALL');
+    tabsEl.appendChild(allTab);
+
+    countries.forEach(country => {
+        const flag = getRtCountryFlag(country);
+        const btn = document.createElement('button');
+        btn.id = 'rt-tab-' + country.replace(/\s+/g, '_');
+        btn.className = 'rt-country-tab flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ' +
+            (_rtActiveCountryTab === country ? 'border-purple-600 bg-purple-600 text-white' : 'border-gray-200 bg-white text-gray-500 hover:border-purple-300');
+        btn.innerHTML = flag ? `${flag} ${country}` : country;
+        btn.onclick = () => setRtCountryTab(country);
+        tabsEl.appendChild(btn);
+    });
+}
+
+function getRtCountryFlag(country) {
+    const flags = {
+        'Afghanistan':'🇦🇫','Albania':'🇦🇱','Algeria':'🇩🇿','Andorra':'🇦🇩','Angola':'🇦🇴','Antigua and Barbuda':'🇦🇬','Argentina':'🇦🇷','Armenia':'🇦🇲','Australia':'🇦🇺','Austria':'🇦🇹','Azerbaijan':'🇦🇿',
+        'Bahamas':'🇧🇸','Bahrain':'🇧🇭','Bangladesh':'🇧🇩','Barbados':'🇧🇧','Belarus':'🇧🇾','Belgium':'🇧🇪','Belize':'🇧🇿','Benin':'🇧🇯','Bhutan':'🇧🇹','Bolivia':'🇧🇴','Bosnia & Herzegovina':'🇧🇦','Botswana':'🇧🇼','Brazil':'🇧🇷','Brunei':'🇧🇳','Bulgaria':'🇧🇬','Burkina Faso':'🇧🇫','Burundi':'🇧🇮',
+        'Cabo Verde':'🇨🇻','Cambodia':'🇰🇭','Cameroon':'🇨🇲','Canada':'🇨🇦','Central African Republic':'🇨🇫','Chad':'🇹🇩','Chile':'🇨🇱','China':'🇨🇳','Colombia':'🇨🇴','Comoros':'🇰🇲','Congo':'🇨🇬','Costa Rica':'🇨🇷','Croatia':'🇭🇷','Cuba':'🇨🇺','Cyprus':'🇨🇾','Czechia':'🇨🇿',
+        'Denmark':'🇩🇰','Djibouti':'🇩🇯','Dominica':'🇩🇲','Dominican Republic':'🇩🇴',
+        'Ecuador':'🇪🇨','Egypt':'🇪🇬','El Salvador':'🇸🇻','Equatorial Guinea':'🇬🇶','Eritrea':'🇪🇷','Estonia':'🇪🇪','Eswatini':'🇸🇿','Ethiopia':'🇪🇹',
+        'Fiji':'🇫🇯','Finland':'🇫🇮','France':'🇫🇷',
+        'Gabon':'🇬🇦','Gambia':'🇬🇲','Georgia':'🇬🇪','Germany':'🇩🇪','Ghana':'🇬🇭','Greece':'🇬🇷','Grenada':'🇬🇩','Guatemala':'🇬🇹','Guinea':'🇬🇳','Guinea-Bissau':'🇬🇼','Guyana':'🇬🇾',
+        'Haiti':'🇭🇹','Honduras':'🇭🇳','Hungary':'🇭🇺',
+        'Iceland':'🇮🇸','India':'🇮🇳','Indonesia':'🇮🇩','Iran':'🇮🇷','Iraq':'🇮🇶','Ireland':'🇮🇪','Israel':'🇮🇱','Italy':'🇮🇹',
+        'Jamaica':'🇯🇲','Japan':'🇯🇵','Jordan':'🇯🇴',
+        'Kazakhstan':'🇰🇿','Kenya':'🇰🇪','Kiribati':'🇰🇮','Kuwait':'🇰🇼','Kyrgyzstan':'🇰🇬',
+        'Laos':'🇱🇦','Latvia':'🇱🇻','Lebanon':'🇱🇧','Lesotho':'🇱🇸','Liberia':'🇱🇷','Libya':'🇱🇾','Liechtenstein':'🇱🇮','Lithuania':'🇱🇹','Luxembourg':'🇱🇺',
+        'Madagascar':'🇲🇬','Malawi':'🇲🇼','Malaysia':'🇲🇾','Maldives':'🇲🇻','Mali':'🇲🇱','Malta':'🇲🇹','Marshall Islands':'🇲🇭','Mauritania':'🇲🇷','Mauritius':'🇲🇺','Mexico':'🇲🇽','Micronesia':'🇫🇲','Moldova':'🇲🇩','Monaco':'🇲🇨','Mongolia':'🇲🇳','Montenegro':'🇲🇪','Morocco':'🇲🇦','Mozambique':'🇲🇿','Myanmar':'🇲🇲',
+        'Namibia':'🇳🇦','Nauru':'🇳🇷','Nepal':'🇳🇵','Netherlands':'🇳🇱','New Zealand':'🇳🇿','Nicaragua':'🇳🇮','Niger':'🇳🇪','Nigeria':'🇳🇬','North Korea':'🇰🇵','North Macedonia':'🇲🇰','Norway':'🇳🇴',
+        'Oman':'🇴🇲',
+        'Pakistan':'🇵🇰','Palau':'🇵🇼','Palestine':'🇵🇸','Panama':'🇵🇦','Papua New Guinea':'🇵🇬','Paraguay':'🇵🇾','Peru':'🇵🇪','Philippines':'🇵🇭','Poland':'🇵🇱','Portugal':'🇵🇹',
+        'Qatar':'🇶🇦',
+        'Romania':'🇷🇴','Russia':'🇷🇺','Rwanda':'🇷🇼',
+        'Saint Kitts and Nevis':'🇰🇳','Saint Lucia':'🇱🇨','Saint Vincent and the Grenadines':'🇻🇨','Samoa':'🇼🇸','San Marino':'🇸🇲','Sao Tome and Principe':'🇸🇹','Saudi Arabia':'🇸🇦','Senegal':'🇸🇳','Serbia':'🇷🇸','Seychelles':'🇸🇨','Sierra Leone':'🇸🇱','Singapore':'🇸🇬','Slovakia':'🇸🇰','Slovenia':'🇸🇮','Solomon Islands':'🇸🇧','Somalia':'🇸🇴','South Africa':'🇿🇦','South Korea':'🇰🇷','South Sudan':'🇸🇸','Spain':'🇪🇸','Sri Lanka':'🇱🇰','Sudan':'🇸🇩','Suriname':'🇸🇷','Sweden':'🇸🇪','Switzerland':'🇨🇭','Syria':'🇸🇾',
+        'Taiwan':'🇹🇼','Tajikistan':'🇹🇯','Tanzania':'🇹🇿','Thailand':'🇹🇭','Timor-Leste':'🇹🇱','Togo':'🇹🇬','Tonga':'🇹🇴','Trinidad and Tobago':'🇹🇹','Tunisia':'🇹🇳','Turkey':'🇹🇷','Turkmenistan':'🇹🇲','Tuvalu':'🇹🇻',
+        'Uganda':'🇺🇬','Ukraine':'🇺🇦','United Arab Emirates':'🇦🇪','United Kingdom':'🇬🇧','United States':'🇺🇸','Uruguay':'🇺🇾','Uzbekistan':'🇺🇿',
+        'Vanuatu':'🇻🇺','Vatican City':'🇻🇦','Venezuela':'🇻🇪','Vietnam':'🇻🇳',
+        'Yemen':'🇾🇪',
+        'Zambia':'🇿🇲','Zimbabwe':'🇿🇼'
+    };
+    return flags[country] || '';
+}
+
+function setRtCountryTab(country) {
+    _rtActiveCountryTab = country;
+    // Update tab styles
+    document.querySelectorAll('.rt-country-tab').forEach(btn => {
+        const isActive = (btn.id === 'rt-tab-' + (country === 'ALL' ? 'ALL' : country.replace(/\s+/g, '_')));
+        btn.className = 'rt-country-tab flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ' +
+            (isActive ? 'border-purple-600 bg-purple-600 text-white' : 'border-gray-200 bg-white text-gray-500 hover:border-purple-300');
+    });
+    renderRunningTournamentCards();
+}
+
+function filterRunningTournaments() {
+    renderRunningTournamentCards();
+}
+
+function renderRunningTournamentCards() {
+    const listEl = document.getElementById('running-tournaments-list');
+    if (!listEl) return;
+
+    const searchRaw = (document.getElementById('rt-search-input') || {}).value || '';
+    const search = searchRaw.trim().toLowerCase();
+
+    const filtered = _rtAllTournaments.filter(({ data }) => {
+        const meta = data.meta || {};
+        const country = meta.country || '';
+
+        // Country tab filter
+        if (_rtActiveCountryTab !== 'ALL' && country !== _rtActiveCountryTab) return false;
+
+        // Search filter: match name, code, or teams
+        if (search) {
+            const name = (meta.name || '').toLowerCase();
+            const code = (meta.code || '').toLowerCase();
+            const teams = (data.teams || []).map(t => ((t.name || '') + ' ' + (t.code || '')).toLowerCase()).join(' ');
+            if (!name.includes(search) && !code.includes(search) && !teams.includes(search)) return false;
         }
+
+        return true;
+    });
+
+    listEl.innerHTML = '';
+
+    if (filtered.length === 0) {
+        listEl.innerHTML = '<div class="text-center text-gray-400 font-bold mt-10">No tournaments found.</div>';
+        return;
+    }
+
+    filtered.forEach(({ id, data }) => {
+        const meta = data.meta || {};
+        const code = meta.code || 'No Code';
+        const name = meta.name || 'Unnamed Tournament';
+        const country = meta.country || '';
+        const flag = country ? getRtCountryFlag(country) : '';
+        const status = data.status || 'UNKNOWN';
+
+        let statusClass = "bg-blue-100 text-blue-700";
+        if (status === 'COMPLETED') statusClass = "bg-green-100 text-green-700";
+        else if (status === 'ACTIVE' || status === 'LIVE') statusClass = "bg-red-100 text-red-700 animate-pulse";
+
+        const card = document.createElement('div');
+        card.className = "bg-white border border-gray-200 p-5 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 cursor-pointer hover:shadow-md hover:border-purple-300 transition-all group";
+        card.onclick = () => confirmContinueTournament(id, data);
+
+        let deleteBtnHTML = '';
+        if (isTournamentAdminMode) {
+            deleteBtnHTML = `
+                <button onclick="event.stopPropagation(); executeAdminDelete('${id}', '${name.replace(/'/g, "\\'")}')" class="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors border border-red-200 shadow-sm flex items-center justify-center ml-2" title="Permanently Delete">
+                    🗑️
+                </button>
+            `;
+        }
+
+        card.innerHTML = `
+            <div>
+                <h3 class="font-black text-gray-900 text-lg uppercase group-hover:text-purple-700 transition-colors">${name}</h3>
+                <div class="flex items-center gap-2 mt-1 flex-wrap">
+                    <p class="text-xs font-bold text-gray-500 tracking-widest">CODE: <span class="text-blue-600 select-all">${code}</span></p>
+                    ${country ? `<span class="text-xs font-bold text-gray-400">${flag} ${country}</span>` : ''}
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider ${statusClass}">${status}</span>
+                ${deleteBtnHTML}
+                <span class="text-gray-300 group-hover:text-purple-600 font-bold ml-1">➜</span>
+            </div>
+        `;
+
+        listEl.appendChild(card);
     });
 }
 
