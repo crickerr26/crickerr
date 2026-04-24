@@ -768,6 +768,39 @@
             <div id="match-panel" style="display: none; flex-direction: column; align-items: center; width: 100%;">
                 <p style="color: #94a3b8; font-size: 0.9rem; font-weight: bold; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px; font-family: 'Roboto';">Enter Match Code</p>
                 <input type="text" id="match-id" class="input-field" placeholder="Crickerr Code" style="font-family: 'Anton', sans-serif; font-size: clamp(1.8rem, 6vw, 2.5rem); text-transform: uppercase;">
+                
+                <!-- FACEBOOK LIVE SETUP PANEL — WHIP PUSH -->
+                <div style="width:100%; margin-bottom: 1rem; background: rgba(24,119,242,0.08); border: 1px solid rgba(24,119,242,0.35); border-radius: 14px; padding: 14px 16px;">
+                    <!-- Header Row -->
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 12px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <svg style="width:20px;height:20px;fill:#1877F2;flex-shrink:0;" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                            <span style="color:white; font-family:'Roboto',sans-serif; font-size:13px; font-weight:700; letter-spacing:0.5px;">FACEBOOK LIVE</span>
+                            <span id="fb-whip-status" style="color:#64748b; font-family:'Roboto',sans-serif; font-size:11px; font-weight:600; margin-left:4px;">● OFF</span>
+                        </div>
+                        <button onclick="openFBLiveSetup()" style="background:#1877F2; border:none; border-radius:20px; color:white; font-family:'Roboto',sans-serif; font-size:11px; font-weight:700; padding:5px 12px; cursor:pointer; letter-spacing:0.5px; white-space:nowrap;">GET KEYS ↗</button>
+                    </div>
+
+                    <!-- Stream Key — this is all FB WHIP needs -->
+                    <p style="color:#94a3b8; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:1px; font-family:'Roboto',sans-serif; margin-bottom:4px;">Stream Key <span style="color:#475569; font-weight:400; text-transform:none;">(from Facebook → Stream Setup)</span></p>
+                    <div style="display:flex; gap:8px; margin-bottom:10px;">
+                        <input type="password" id="fb-stream-key" class="input-field" placeholder="FB-XXXXXXXXXXXX..." style="font-family:'Roboto Condensed',sans-serif; font-size:clamp(0.65rem,2vw,0.8rem); text-transform:none; letter-spacing:0; color:#93c5fd; margin-bottom:0; padding:clamp(0.4rem,1.5vw,0.6rem); flex:1;">
+                        <button onclick="toggleFBKeyVisibility()" id="fb-key-toggle" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-family:'Roboto',sans-serif; font-size:11px; font-weight:700; padding:0 12px; cursor:pointer; white-space:nowrap; flex-shrink:0;">SHOW</button>
+                    </div>
+
+                    <!-- FB Watch URL -->
+                    <p style="color:#94a3b8; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:1px; font-family:'Roboto',sans-serif; margin-bottom:4px;">Facebook Watch URL <span style="color:#475569; font-weight:400; text-transform:none;">(so Crickerr viewers can find you on FB)</span></p>
+                    <input type="url" id="fb-live-url" class="input-field" placeholder="https://www.facebook.com/yourpage/videos/..." style="font-family:'Roboto',sans-serif; font-size:clamp(0.65rem,2vw,0.8rem); text-transform:none; letter-spacing:0; color:#93c5fd; margin-bottom:10px; padding:clamp(0.4rem,1.5vw,0.6rem);">
+
+                    <!-- Push to FB button -->
+                    <button id="fb-push-btn" onclick="toggleFBLivePush()" style="width:100%; background:linear-gradient(135deg,#1877F2,#0a5fd8); border:none; border-radius:10px; color:white; font-family:'Roboto',sans-serif; font-size:13px; font-weight:800; padding:11px; cursor:pointer; letter-spacing:1px; text-transform:uppercase; transition:all 0.2s; margin-bottom:8px;">
+                        📡 START FACEBOOK LIVE
+                    </button>
+
+                    <!-- Info note -->
+                    <p style="color:#475569; font-size:10px; font-family:'Roboto',sans-serif; line-height:1.5;">ℹ️ Tap <b style="color:#93c5fd;">GET KEYS ↗</b> → Facebook opens → copy your <b style="color:white;">Stream Key</b> → paste above → tap <b style="color:white;">START FACEBOOK LIVE</b>. Your Crickerr overlay streams live to Facebook directly from this app.</p>
+                </div>
+                
                 <button onclick="connectToMatch()" class="start-btn" id="btn-start" style="margin-bottom: 15px;">START CAMERA</button>
                 <button onclick="goBackToWallet()" style="width:100%; padding: clamp(10px, 3vw, 15px); border-radius:50px; border: 2px solid rgba(255,255,255,0.2); background:transparent; color:#fff; font-weight:800; letter-spacing: 2px; font-size: clamp(0.9rem, 3vw, 1rem); cursor:pointer; font-family: 'Roboto', sans-serif; transition: all 0.2s;">⬅ BACK</button>
             </div>
@@ -1924,10 +1957,15 @@ function goLiveOnDB(matchId, peerId) {
         hasCallListener = true;
     }
 
+    // Read Facebook Live URL from the input field (optional)
+    const fbLiveUrlInput = document.getElementById('fb-live-url');
+    const fbLiveUrl = fbLiveUrlInput ? fbLiveUrlInput.value.trim() : "";
+
     db.collection("live_matches").doc(matchId).set({
         streamId: peerId,
         isStreaming: true,
-        startedAt: firebase.firestore.FieldValue.serverTimestamp()
+        startedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        fbLiveUrl: fbLiveUrl || ""
     }, { merge: true }).then(() => {
         isLive = true;
         if(btn) btn.classList.add('is-live');
@@ -1940,7 +1978,7 @@ function goLiveOnDB(matchId, peerId) {
         // Attempt to copy, otherwise show alert
         if (navigator.clipboard && window.isSecureContext) {
             navigator.clipboard.writeText(watchLink).then(() => {
-                alert(`🔴 LIVE NOW!\n\nViewer link copied to clipboard:\n${watchLink}`);
+                alert(`🔴 LIVE NOW!\n\nViewer link copied to clipboard:\n${watchLink}${fbLiveUrl ? `\n\nFacebook Live: ${fbLiveUrl}` : ''}`);
             }).catch(() => {
                 alert(`🔴 LIVE NOW!\n\nShare this link to watch:\n${watchLink}`);
             });
@@ -1954,7 +1992,223 @@ function goLiveOnDB(matchId, peerId) {
     });
 }
 
-// --- FULL MONETIZATION & AUTH ENGINE ---
+// --- FACEBOOK LIVE — RELAY SERVER ENGINE (v2 — BINARY PIPELINE) ---
+        let fbRelayWs     = null;   // WebSocket to relay server
+        let fbRelayActive = false;  // Is FB relay currently live
+        let fbMediaRecorder = null; // Captures canvas → WebM fragments → binary relay
+
+        // Crickerr Relay Server — Railway deployment
+        const FB_RELAY_URL = 'wss://crickerr-relay-production.up.railway.app';
+
+        // Backpressure ceiling — if WS buffered bytes exceed this, drop a chunk
+        // (prevents runaway memory growth if uplink can't keep up with 2.5 Mbps)
+        const FB_WS_BACKPRESSURE_LIMIT = 4 * 1024 * 1024; // 4 MB
+
+        function openFBLiveSetup() {
+            window.open('https://www.facebook.com/live/create', '_blank');
+        }
+
+        function toggleFBKeyVisibility() {
+            const input = document.getElementById('fb-stream-key');
+            const btn = document.getElementById('fb-key-toggle');
+            if (!input) return;
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.innerText = 'HIDE';
+            } else {
+                input.type = 'password';
+                btn.innerText = 'SHOW';
+            }
+        }
+
+        function setFBStatus(text, color) {
+            const el = document.getElementById('fb-whip-status');
+            if (el) { el.innerText = text; el.style.color = color; }
+        }
+
+        async function toggleFBLivePush() {
+            if (fbRelayActive) {
+                stopFBLivePush();
+            } else {
+                await startFBLivePush();
+            }
+        }
+
+        async function startFBLivePush() {
+            const keyInput    = document.getElementById('fb-stream-key');
+            const streamKey   = keyInput ? keyInput.value.trim() : '';
+            const matchIdEl   = document.getElementById('match-id');
+            const matchId     = matchIdEl ? matchIdEl.value.trim().toUpperCase() : 'MATCH';
+
+            if (!streamKey) {
+                alert("Please paste your Facebook Stream Key first.\n\nTap GET KEYS ↗ to get it from Facebook.");
+                return;
+            }
+            if (FB_RELAY_URL.includes('YOUR-RAILWAY-APP')) {
+                alert("Relay server not configured yet.\n\nPlease follow the deployment steps to get your Railway URL, then update FB_RELAY_URL in the code.");
+                return;
+            }
+            if (!canvas) {
+                alert("Camera not started yet. Please start camera first.");
+                return;
+            }
+
+            const btn = document.getElementById('fb-push-btn');
+            btn.innerText = '⏳ CONNECTING TO RELAY...';
+            btn.style.background = 'rgba(255,255,255,0.1)';
+            setFBStatus('● CONNECTING', '#fbbf24');
+
+            try {
+                // 1. Open WebSocket — binary mode for video frames
+                fbRelayWs = new WebSocket(FB_RELAY_URL);
+                fbRelayWs.binaryType = 'arraybuffer';
+
+                fbRelayWs.onopen = () => {
+                    console.log('[FB Relay] WebSocket connected (binary pipeline)');
+
+                    // 2. Send START control message (JSON) with FB credentials
+                    fbRelayWs.send(JSON.stringify({
+                        type:        'start',
+                        matchId:     matchId,
+                        fbStreamKey: streamKey,
+                        fbServerUrl: 'rtmps://live-api-s.facebook.com:443/rtmp'
+                    }));
+                };
+
+                fbRelayWs.onmessage = (event) => {
+                    // Server only sends JSON control messages. Ignore any binary.
+                    if (typeof event.data !== 'string') return;
+                    let msg;
+                    try { msg = JSON.parse(event.data); } catch { return; }
+
+                    if (msg.type === 'ready') {
+                        console.log('[FB Relay] Server ready — starting canvas capture');
+                        startCanvasCapture(matchId);
+                        fbRelayActive = true;
+                        btn.innerText = '🔴 STOP FACEBOOK LIVE';
+                        btn.style.background = 'linear-gradient(135deg,#ef4444,#dc2626)';
+                        setFBStatus('● LIVE ON FB', '#22c55e');
+                    }
+
+                    if (msg.type === 'stopped') {
+                        const codeNote = (msg.code !== undefined) ? ` (code ${msg.code})` : '';
+                        console.log('[FB Relay] Stream stopped by server' + codeNote);
+                        cleanupFBRelay();
+                    }
+
+                    if (msg.type === 'error') {
+                        console.error('[FB Relay] Server error:', msg.message);
+                        alert('Facebook Live relay error:\n\n' + msg.message +
+                              '\n\nCheck that your Stream Key is correct and hasn\'t expired.');
+                        cleanupFBRelay();
+                    }
+                };
+
+                fbRelayWs.onerror = (err) => {
+                    console.error('[FB Relay] WS error:', err);
+                    alert('Could not connect to relay server.\n\nMake sure your Railway server is running.');
+                    cleanupFBRelay();
+                };
+
+                fbRelayWs.onclose = () => {
+                    console.log('[FB Relay] WebSocket closed');
+                    if (fbRelayActive) cleanupFBRelay();
+                };
+
+            } catch (err) {
+                console.error('[FB Relay] Start error:', err);
+                alert('Facebook Live failed to start:\n' + err.message);
+                cleanupFBRelay();
+            }
+        }
+
+        function startCanvasCapture(matchId) {
+            // Capture canvas at 30fps → WebM fragments → binary WebSocket
+            const fbStream = canvas.captureStream(30);
+
+            // Add audio if available
+            if (currentStream && currentStream.getAudioTracks().length > 0) {
+                fbStream.addTrack(currentStream.getAudioTracks()[0]);
+            }
+
+            // Prefer VP8 in WebM. H264-in-WebM is technically valid per Chromium
+            // but FFmpeg occasionally mis-detects profile/level from live fragments,
+            // which stalls the RTMPS handshake with Facebook. VP8 is 100% reliable
+            // for the browser → FFmpeg transcode → Facebook path.
+            const mimeTypes = [
+                'video/webm;codecs=vp8,opus',
+                'video/webm;codecs=vp9,opus',
+                'video/webm;codecs=h264,opus',
+                'video/webm'
+            ];
+            const mimeType = mimeTypes.find(t => MediaRecorder.isTypeSupported(t)) || 'video/webm';
+            console.log('[FB Relay] Using mimeType:', mimeType);
+
+            fbMediaRecorder = new MediaRecorder(fbStream, {
+                mimeType,
+                videoBitsPerSecond: 2500000,  // 2.5 Mbps — FB-recommended for 720p
+                audioBitsPerSecond: 128000
+            });
+
+            fbMediaRecorder.ondataavailable = async (e) => {
+                if (!e.data || e.data.size === 0) return;
+                if (!fbRelayWs || fbRelayWs.readyState !== WebSocket.OPEN) return;
+
+                // Drop chunk if uplink is saturated (protects browser memory)
+                if (fbRelayWs.bufferedAmount > FB_WS_BACKPRESSURE_LIMIT) {
+                    console.warn('[FB Relay] Backpressure — dropping chunk. bufferedAmount =', fbRelayWs.bufferedAmount);
+                    return;
+                }
+
+                // Send raw binary WebM fragment. No base64, no JSON wrapping.
+                try {
+                    const buf = await e.data.arrayBuffer();
+                    fbRelayWs.send(buf);
+                } catch (err) {
+                    console.error('[FB Relay] Send error:', err);
+                }
+            };
+
+            fbMediaRecorder.onerror = (err) => {
+                console.error('[FB Relay] MediaRecorder error:', err);
+            };
+
+            // 500ms timeslice. Shorter than this and WebM Cluster fragments can
+            // be truncated mid-block, which causes FFmpeg to drop frames until
+            // the next full Cluster boundary arrives.
+            fbMediaRecorder.start(500);
+        }
+
+        function stopFBLivePush() {
+            if (fbRelayWs && fbRelayWs.readyState === WebSocket.OPEN) {
+                const matchIdEl = document.getElementById('match-id');
+                const matchId   = matchIdEl ? matchIdEl.value.trim().toUpperCase() : 'MATCH';
+                fbRelayWs.send(JSON.stringify({ type: 'stop', matchId }));
+            }
+            cleanupFBRelay();
+        }
+
+        function cleanupFBRelay() {
+            if (fbMediaRecorder && fbMediaRecorder.state !== 'inactive') {
+                try { fbMediaRecorder.stop(); } catch {}
+            }
+            fbMediaRecorder = null;
+
+            if (fbRelayWs) {
+                try { fbRelayWs.close(); } catch {}
+            }
+            fbRelayWs     = null;
+            fbRelayActive = false;
+
+            const btn = document.getElementById('fb-push-btn');
+            if (btn) {
+                btn.innerText = '📡 START FACEBOOK LIVE';
+                btn.style.background = 'linear-gradient(135deg,#1877F2,#0a5fd8)';
+            }
+            setFBStatus('● OFF', '#64748b');
+        }
+
+        // --- FULL MONETIZATION & AUTH ENGINE ---
 
 function showLoginModal() { 
     const modal = document.getElementById('auth-modal'); 
