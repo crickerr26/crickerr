@@ -2126,10 +2126,25 @@ function goLiveOnDB(matchId, peerId) {
             // Capture canvas at 30fps → WebM fragments → binary WebSocket
             const fbStream = canvas.captureStream(30);
 
-            // Add audio if available
+            // CRITICAL FIX: Facebook Live strictly requires an unbroken audio stream.
+            // If the user's camera doesn't provide audio (or permissions were denied),
+            // FFmpeg will fail to transcode to AAC and drop the RTMPS connection.
+            let fbAudioTrack = null;
             if (currentStream && currentStream.getAudioTracks().length > 0) {
-                fbStream.addTrack(currentStream.getAudioTracks()[0]);
+                fbAudioTrack = currentStream.getAudioTracks()[0].clone();
+            } else {
+                // Generate a guaranteed silent fallback audio track
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const dest = audioCtx.createMediaStreamDestination();
+                const gainNode = audioCtx.createGain();
+                gainNode.gain.value = 0; // Mute the oscillator completely
+                oscillator.connect(gainNode);
+                gainNode.connect(dest);
+                oscillator.start();
+                fbAudioTrack = dest.stream.getAudioTracks()[0];
             }
+            fbStream.addTrack(fbAudioTrack);
 
             // Prefer VP8 in WebM. H264-in-WebM is technically valid per Chromium
             // but FFmpeg occasionally mis-detects profile/level from live fragments,
@@ -2173,10 +2188,9 @@ function goLiveOnDB(matchId, peerId) {
                 console.error('[FB Relay] MediaRecorder error:', err);
             };
 
-            // 500ms timeslice. Shorter than this and WebM Cluster fragments can
-            // be truncated mid-block, which causes FFmpeg to drop frames until
-            // the next full Cluster boundary arrives.
-            fbMediaRecorder.start(500);
+            // CRITICAL FIX: Increased timeslice to 2000ms. 500ms causes WebM Cluster fragmentation
+            // that breaks FFmpeg's continuous stream parser, leading to Facebook dropping the RTMP connection.
+            fbMediaRecorder.start(2000);
         }
 
         function stopFBLivePush() {
