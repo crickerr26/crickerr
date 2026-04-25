@@ -1380,6 +1380,11 @@
                     window.openSponsorModal = function() {
                         const modal = document.getElementById('sponsor-modal');
                         const inner = document.getElementById('sponsor-modal-inner');
+                        
+                        // FIX: Move modals to the body level to escape hidden parent containers like 'setup-step-1'
+                        document.body.appendChild(modal);
+                        document.body.appendChild(document.getElementById('logo-editor-modal'));
+                        
                         modal.classList.remove('hidden');
                         
                         // FIX: Always show top of the page when opening
@@ -2883,6 +2888,7 @@ window.generateProfessionalSchedule = function(selectedFlow = null) {
             <button onclick="switchDashTab('fixtures')" id="tab-fixtures" class="w-full text-left p-3 rounded-xl font-bold text-xs uppercase bg-purple-50 text-purple-700">📅 Matches</button>
             <button onclick="switchDashTab('standings')" id="tab-standings" class="w-full text-left p-3 rounded-xl font-bold text-xs uppercase text-gray-500 hover:bg-gray-50">🏆 Standings</button>
             <button onclick="switchDashTab('stats')" id="tab-stats" class="w-full text-left p-3 rounded-xl font-bold text-xs uppercase text-gray-500 hover:bg-gray-50">📊 Player Stats</button>
+            <button onclick="switchDashTab('sponsors')" id="tab-sponsors" class="w-full text-left p-3 rounded-xl font-bold text-xs uppercase text-gray-500 hover:bg-gray-50">📺 Sponsors</button>
         </nav>
         <div class="p-4 border-t border-gray-100">
             <button onclick="exitTournament()" class="w-full p-3 border border-red-200 text-red-600 rounded-xl font-bold text-xs uppercase hover:bg-red-50">Exit Dashboard</button>
@@ -2932,6 +2938,52 @@ window.generateProfessionalSchedule = function(selectedFlow = null) {
             <div id="stats-main-wrapper" class="w-full flex-grow flex flex-col gap-4">
                  <div id="stats-runs" class="hidden"></div>
                  <div id="stats-wickets" class="hidden"></div>
+            </div>
+        </div>
+
+        <!-- ==================== TOURNAMENT SPONSORS VIEW ==================== -->
+        <div id="view-sponsors" class="dash-view hidden w-full h-full flex flex-col">
+            <div class="mb-6">
+                <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 animate-slide-up">
+                    <div class="flex items-center gap-4 w-full md:w-auto">
+                        <div class="w-12 h-12 rounded-full bg-yellow-50 text-yellow-600 flex items-center justify-center text-xl shadow-sm border border-yellow-100 shrink-0">📺</div>
+                        <div>
+                            <h2 class="text-lg md:text-xl font-black text-gray-900 uppercase leading-none mb-1">Tournament Sponsors</h2>
+                            <div class="flex flex-wrap items-center gap-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                <span>Applied to every match in this tournament</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl border border-yellow-200 shadow-sm p-6 text-center">
+                <div class="w-14 h-14 bg-yellow-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl shadow-inner border border-yellow-200">📺</div>
+                <h3 class="text-sm font-black text-gray-800 uppercase tracking-widest mb-1">Broadcast Sponsors</h3>
+                <p class="text-xs text-gray-500 font-medium mb-2">Add sponsor logos that appear on the live broadcast overlay.</p>
+                <p class="text-[10px] text-purple-600 font-bold uppercase tracking-widest mb-5">🏆 Saved For The Entire Tournament</p>
+
+                <!-- Live preview thumbnails of currently-saved tournament sponsors -->
+                <div id="tourney-sponsor-previews" class="flex items-center justify-center gap-3 mb-5 min-h-[60px]">
+                    <div id="tourney-sp-main-thumb" class="hidden flex-col items-center gap-1">
+                        <div class="w-20 h-12 bg-white rounded-lg border-2 border-yellow-300 shadow-sm overflow-hidden flex items-center justify-center">
+                            <img id="tourney-sp-main-img" class="w-full h-full object-contain p-1" alt="Main Sponsor">
+                        </div>
+                        <span class="text-[9px] font-black text-yellow-700 uppercase tracking-wider">⭐ Main</span>
+                    </div>
+                    <div id="tourney-sp-s2-thumb" class="hidden flex-col items-center gap-1">
+                        <div class="w-20 h-12 bg-white rounded-lg border-2 border-blue-300 shadow-sm overflow-hidden flex items-center justify-center">
+                            <img id="tourney-sp-s2-img" class="w-full h-full object-contain p-1" alt="Sponsor 2">
+                        </div>
+                        <span class="text-[9px] font-black text-blue-700 uppercase tracking-wider">🏏 Sponsor 2</span>
+                    </div>
+                    <div id="tourney-sp-empty" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">No sponsors uploaded yet</div>
+                </div>
+
+                <button onclick="openTournamentSponsorModal()" class="px-8 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-lg hover:scale-105 hover:shadow-xl transition-all duration-200 flex items-center gap-2 border border-yellow-400 mx-auto">
+                    <span>📺</span>
+                    <span>Manage Sponsors</span>
+                </button>
             </div>
         </div>
     </div>
@@ -8636,6 +8688,7 @@ function createProfessionalTournament() {
                 teams: [], // Empty initially
                 fixtures: [], // Empty initially
                 standings: [],
+                sponsors: { main: "", sponsor2: "", sponsor3: "", sponsor4: "" }, // Tournament-wide sponsors (applied to every match)
                 status: "SETUP" // Mark as incomplete
             };
 
@@ -8750,6 +8803,7 @@ function createProfessionalTournament() {
                 name: t.name, p: 0, w: 0, l: 0, t: 0, pts: 0, nrr: 0, runsFor: 0, oversFor: 0, runsAgainst: 0, oversAgainst: 0
             })),
             matchStatsLog: [],
+            sponsors: { main: "", sponsor2: "", sponsor3: "", sponsor4: "" }, // Tournament-wide sponsors (applied to every match)
             status: "ACTIVE"
         };
         
@@ -10618,6 +10672,7 @@ function switchDashTab(tab) {
     document.getElementById(`tab-${tab}`).classList.add('bg-purple-50', 'text-purple-700');
     
     if(tab === 'stats') renderStats(); // Refresh stats on tab switch
+    if(tab === 'sponsors' && typeof renderTournamentSponsorPreviews === 'function') renderTournamentSponsorPreviews();
 }
 
 function exitTournament() {
@@ -10697,6 +10752,13 @@ function startTournamentMatch(fixtureId) {
     // Set UI Inputs so helper functions read correct values
     if(ui.totalOversInput) ui.totalOversInput.value = state.totalOvers;
     if(ui.playersPerSideInput) ui.playersPerSideInput.value = state.playersPerSide;
+
+    // 4b. Load Tournament-Wide Sponsors into Match State
+    // (Backfill: if a tournament was created before sponsors existed, ensure the field is present)
+    if (!tournamentState.data.sponsors) {
+        tournamentState.data.sponsors = { main: "", sponsor2: "", sponsor3: "", sponsor4: "" };
+    }
+    state.sponsors = JSON.parse(JSON.stringify(tournamentState.data.sponsors));
 
     // 5. Load Teams into Global State
     state.team1 = t1Ready;
@@ -11377,6 +11439,134 @@ function saveTournamentData() {
         db.collection("tournaments").doc(tournamentState.id).set(tournamentState.data, { merge: true });
     }
 }
+
+// ==================== TOURNAMENT SPONSORS ====================
+// Tournament-wide sponsors are stored in tournamentState.data.sponsors and
+// applied to every match. The existing single-match modal/editor UI is reused
+// by routing all writes through a "tournament context" flag.
+
+window.tourneySponsorContext = false; // true = sponsor edits go to tournament; false = single match
+
+window.renderTournamentSponsorPreviews = function() {
+    if (!tournamentState.active || !tournamentState.data) return;
+    if (!tournamentState.data.sponsors) {
+        tournamentState.data.sponsors = { main: "", sponsor2: "", sponsor3: "", sponsor4: "" };
+    }
+    const sponsors = tournamentState.data.sponsors;
+
+    const mainThumb = document.getElementById('tourney-sp-main-thumb');
+    const mainImg = document.getElementById('tourney-sp-main-img');
+    const s2Thumb = document.getElementById('tourney-sp-s2-thumb');
+    const s2Img = document.getElementById('tourney-sp-s2-img');
+    const emptyMsg = document.getElementById('tourney-sp-empty');
+
+    let anyShown = false;
+
+    if (mainThumb && mainImg) {
+        if (sponsors.main) {
+            mainImg.src = sponsors.main;
+            mainThumb.classList.remove('hidden');
+            mainThumb.classList.add('flex');
+            anyShown = true;
+        } else {
+            mainThumb.classList.add('hidden');
+            mainThumb.classList.remove('flex');
+        }
+    }
+    if (s2Thumb && s2Img) {
+        if (sponsors.sponsor2) {
+            s2Img.src = sponsors.sponsor2;
+            s2Thumb.classList.remove('hidden');
+            s2Thumb.classList.add('flex');
+            anyShown = true;
+        } else {
+            s2Thumb.classList.add('hidden');
+            s2Thumb.classList.remove('flex');
+        }
+    }
+    if (emptyMsg) {
+        emptyMsg.style.display = anyShown ? 'none' : 'block';
+    }
+};
+
+window.openTournamentSponsorModal = function() {
+    if (!tournamentState.active || !tournamentState.data) {
+        showCustomAlert("Error", "Tournament not loaded.", "red");
+        return;
+    }
+    // Backfill if missing
+    if (!tournamentState.data.sponsors) {
+        tournamentState.data.sponsors = { main: "", sponsor2: "", sponsor3: "", sponsor4: "" };
+    }
+
+    // Activate tournament context — all writes from the shared modal will route here
+    window.tourneySponsorContext = true;
+
+    // Snapshot original single-match sponsors so we can restore after the modal closes
+    window._origMatchSponsors = state.sponsors
+        ? JSON.parse(JSON.stringify(state.sponsors))
+        : { main: "", sponsor2: "", sponsor3: "", sponsor4: "" };
+
+    // Temporarily point state.sponsors at the tournament sponsors so the existing
+    // modal UI (previews, TV preview, logo editor) reads/writes the right object.
+    state.sponsors = tournamentState.data.sponsors;
+
+    // Reuse the existing openSponsorModal which already wires previews from state.sponsors
+    if (typeof openSponsorModal === 'function') {
+        openSponsorModal();
+    }
+
+    // Hook the close button so we can restore context cleanly. The shared modal
+    // close fires opacity transition then hides — we listen for the hidden class.
+    setTimeout(() => {
+        const modal = document.getElementById('sponsor-modal');
+        if (!modal) return;
+        const observer = new MutationObserver((muts) => {
+            muts.forEach(m => {
+                if (m.attributeName === 'class' && modal.classList.contains('hidden')) {
+                    closeTournamentSponsorContext();
+                    observer.disconnect();
+                }
+            });
+        });
+        observer.observe(modal, { attributes: true });
+    }, 50);
+};
+
+window.closeTournamentSponsorContext = function() {
+    if (!window.tourneySponsorContext) return;
+
+    // Persist to Firestore (sponsor edits already wrote into tournamentState.data.sponsors
+    // because state.sponsors was aliased to it)
+    saveTournamentData();
+
+    // Restore single-match sponsors
+    state.sponsors = window._origMatchSponsors || { main: "", sponsor2: "", sponsor3: "", sponsor4: "" };
+    window._origMatchSponsors = null;
+    window.tourneySponsorContext = false;
+
+    // Refresh the dashboard preview thumbnails
+    if (typeof renderTournamentSponsorPreviews === 'function') {
+        renderTournamentSponsorPreviews();
+    }
+};
+
+// Patch syncToLiveDB so that sponsor edits made WHILE in tournament context
+// don't accidentally push tournament-only sponsors to a single-match live doc.
+// (When a tournament fixture is actually live, state.sponsors is already a copy
+// of the tournament sponsors via startTournamentMatch, so sync is correct.)
+(function patchSyncForTourneySponsorContext() {
+    if (typeof window.syncToLiveDB !== 'function') return;
+    const _origSync = window.syncToLiveDB;
+    window.syncToLiveDB = function() {
+        if (window.tourneySponsorContext) {
+            // We're editing tournament sponsors from the dashboard — there is no
+            // active live match document to push to. Skip the live-sync write.
+            return;
+        }
+        return _origSync.apply(this, arguments);
+    };
+})();
 // --- AUTO-SYNC REMOVED: Rely on Event-Driven Sync to prevent freezing ---
 // setInterval has been removed to stop write conflicts.
     </script>
