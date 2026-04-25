@@ -4514,7 +4514,7 @@ async function authorizeStream(matchId, historyRef = null, isRematch = false) {
         }
 
         function drawSquadBoard(c, w, h) { 
-            if (!match.squad1 || !match.squad2) return; 
+            if (!match.squad1 && !match.squad2) return; // Allow drawing if at least one squad is present
             const now = Date.now(); 
             const animDuration = 800; 
             let progress = (now - transitionStartTime) / animDuration; 
@@ -4646,7 +4646,26 @@ async function authorizeStream(matchId, historyRef = null, isRematch = false) {
         }
 
         function drawLogoWithBorder(c, img, x, y, s) { c.save(); c.shadowColor = "black"; c.shadowBlur = 10; c.shadowOffsetY = 5; c.beginPath(); c.arc(x + s/2, y + s/2, s/2, 0, Math.PI*2); c.fillStyle = "white"; c.fill(); c.shadowColor = "transparent"; c.beginPath(); c.arc(x + s/2, y + s/2, (s/2)-4, 0, Math.PI*2); c.clip(); if(img && img.complete) c.drawImage(img, x, y, s, s); else { c.fillStyle = "#334155"; c.fillRect(x,y,s,s); } c.restore(); }
-        function drawSimpleList(c, squad, xPos, startY, rowH, align, progress) { c.textAlign = align; squad.forEach((name, i) => { const itemStart = 0.3 + (i * 0.05); let p = (progress - itemStart) / 0.15; p = Math.min(1, Math.max(0, p)); if (p > 0) { c.globalAlpha = p; const y = startY + (i * rowH) + (rowH/2); const xOff = (1 - p) * (align === 'left' ? -20 : 20); c.font = `700 ${rowH * 0.55}px 'Montserrat'`; c.fillStyle = "white"; c.fillText(name.toUpperCase(), xPos + xOff, y); } }); c.globalAlpha = 1; }
+        
+        function drawSimpleList(c, squad, xPos, startY, rowH, align, progress) { 
+            c.textAlign = align; 
+            if (!squad || !Array.isArray(squad)) return; // Safety check to prevent .forEach crash
+            squad.forEach((player, i) => { 
+                const name = safeStr(player); // Safely handle objects or strings
+                const itemStart = 0.3 + (i * 0.05); 
+                let p = (progress - itemStart) / 0.15; 
+                p = Math.min(1, Math.max(0, p)); 
+                if (p > 0) { 
+                    c.globalAlpha = p; 
+                    const y = startY + (i * rowH) + (rowH/2); 
+                    const xOff = (1 - p) * (align === 'left' ? -20 : 20); 
+                    c.font = `700 ${rowH * 0.55}px 'Montserrat'`; 
+                    c.fillStyle = "white"; 
+                    c.fillText(name.toUpperCase(), xPos + xOff, y); 
+                } 
+            }); 
+            c.globalAlpha = 1; 
+        }
         
         function drawInningsBreakSummary(c, w, h) {
             const cardW = w * 0.88;
