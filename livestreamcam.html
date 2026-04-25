@@ -697,6 +697,27 @@
         }
         .event-sponsor-main { height: 85px; min-width: 150px; }
         .event-sponsor-sub { height: 60px; min-width: 110px; }
+
+        /* AUDIO METER (HUD ONLY - NOT RECORDED OR STREAMED) */
+        #audio-meter-container {
+            position: absolute; right: 20px; bottom: 20px;
+            width: 12px; height: 150px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            overflow: hidden;
+            z-index: 100;
+            display: none; /* Hidden until stream starts */
+            flex-direction: column;
+            justify-content: flex-end;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        #audio-meter-fill {
+            width: 100%; height: 0%;
+            background: linear-gradient(to top, #22c55e, #fbbf24, #ef4444);
+            transition: height 0.05s ease-out;
+        }
     </style>
 </head>
 <body>
@@ -904,6 +925,10 @@
             
             <div id="live-sponsors-container"></div>
             <img id="broadcast-watermark" src="my-logo.png" alt="Broadcast Logo">
+            
+            <div id="audio-meter-container" class="hud-item" title="Mic Level (Broadcaster Only)">
+                <div id="audio-meter-fill"></div>
+            </div>
         </div>
         
         <video id="video-source" autoplay playsinline muted></video>
@@ -1335,6 +1360,72 @@
             }
         }
 
+        // --- HUD AUDIO METER ENGINE ---
+        let audioMeterContext = null;
+        let audioMeterAnalyser = null;
+        let audioMeterSource = null;
+        let audioMeterAnimFrame = null;
+
+        function startAudioMeter(stream) {
+            const audioTracks = stream.getAudioTracks();
+            if (audioTracks.length === 0) return;
+
+            const container = document.getElementById('audio-meter-container');
+            const fill = document.getElementById('audio-meter-fill');
+            if (container) container.style.display = 'flex';
+
+            try {
+                if (!audioMeterContext) {
+                    audioMeterContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioMeterContext.state === 'suspended') {
+                    audioMeterContext.resume();
+                }
+
+                audioMeterAnalyser = audioMeterContext.createAnalyser();
+                audioMeterAnalyser.fftSize = 256;
+                audioMeterSource = audioMeterContext.createMediaStreamSource(stream);
+                audioMeterSource.connect(audioMeterAnalyser);
+                // We DO NOT connect it to the destination so we avoid audio feedback echoing
+
+                const dataArray = new Uint8Array(audioMeterAnalyser.frequencyBinCount);
+
+                function updateMeter() {
+                    if (!audioMeterAnalyser) return;
+                    audioMeterAnalyser.getByteFrequencyData(dataArray);
+                    
+                    // Calculate volume amplitude
+                    let sum = 0;
+                    for(let i = 0; i < dataArray.length; i++) {
+                        sum += dataArray[i];
+                    }
+                    let average = sum / dataArray.length;
+                    
+                    // Boost the average slightly (128 instead of 255) so normal talking hits the middle yellow/green
+                    let percentage = Math.min(100, Math.max(0, (average / 128) * 100));
+                    
+                    if (fill) fill.style.height = percentage + '%';
+                    
+                    audioMeterAnimFrame = requestAnimationFrame(updateMeter);
+                }
+                
+                if (audioMeterAnimFrame) cancelAnimationFrame(audioMeterAnimFrame);
+                updateMeter();
+
+            } catch (e) {
+                console.error("[AUDIO METER] Failed to start:", e);
+            }
+        }
+
+        function stopAudioMeter() {
+            if (audioMeterAnimFrame) cancelAnimationFrame(audioMeterAnimFrame);
+            if (audioMeterSource) {
+                try { audioMeterSource.disconnect(); } catch(e){}
+            }
+            const container = document.getElementById('audio-meter-container');
+            if (container) container.style.display = 'none';
+        }
+
         function handleStreamSuccess(stream) {
             currentStream = stream;
             video.srcObject = stream;
@@ -1349,6 +1440,7 @@
                 videoTrack = track;
                 setupZoom();
             }
+            startAudioMeter(stream); // Launch the visualizer HUD
             return true;
         }
 
@@ -2532,42 +2624,43 @@ function goBackToWallet() {
 }
 
 function returnToHome() {
-    const confirmHome = confirm("Are you sure you want to exit the broadcast and return to the home screen?");
-    if (!confirmHome) return;
+            const confirmHome = confirm("Are you sure you want to exit the broadcast and return to the home screen?");
+            if (!confirmHome) return;
 
-    // 1. Stop Recording Safely
-    if (isRecording) stopRecording();
-    
-    // 2. Stop Live Stream Safely
-    if (isLive) toggleLiveStream();
-    
-    // 3. Halt Camera and Replay Buffer
-    if (currentStream) {
-        currentStream.getTracks().forEach(track => track.stop());
-        currentStream = null;
-    }
-    const videoObj = document.getElementById('video-source');
-    if (videoObj) videoObj.srcObject = null;
-    if (window.replayInterval) clearInterval(window.replayInterval);
-    
-    // 4. Switch Screens Back to Setup
-    document.getElementById('app-container').style.display = 'none';
-    document.getElementById('app-container').classList.remove('landscape-active');
-    document.getElementById('setup-screen').style.display = 'flex';
-    
-    // Reset Start Button
-    const btn = document.getElementById('btn-start');
-    if (btn) {
-        btn.innerText = "START CAMERA";
-        btn.disabled = false;
-    }
-    
-    // 5. Release Orientation Locks
-    try {
-        if (document.exitFullscreen && document.fullscreenElement) document.exitFullscreen().catch(e => {});
-        if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
-    } catch (e) {}
-}
+            // 1. Stop Recording Safely
+            if (isRecording) stopRecording();
+            
+            // 2. Stop Live Stream Safely
+            if (isLive) toggleLiveStream();
+            
+            // 3. Halt Camera and Replay Buffer
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+                currentStream = null;
+            }
+            const videoObj = document.getElementById('video-source');
+            if (videoObj) videoObj.srcObject = null;
+            if (window.replayInterval) clearInterval(window.replayInterval);
+            stopAudioMeter(); // Clean up Audio Meter visually and memory-wise
+            
+            // 4. Switch Screens Back to Setup
+            document.getElementById('app-container').style.display = 'none';
+            document.getElementById('app-container').classList.remove('landscape-active');
+            document.getElementById('setup-screen').style.display = 'flex';
+            
+            // Reset Start Button
+            const btn = document.getElementById('btn-start');
+            if (btn) {
+                btn.innerText = "START CAMERA";
+                btn.disabled = false;
+            }
+            
+            // 5. Release Orientation Locks
+            try {
+                if (document.exitFullscreen && document.fullscreenElement) document.exitFullscreen().catch(e => {});
+                if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
+            } catch (e) {}
+        }
 
 // --- CUSTOM PROMISE-BASED MODAL SYSTEM ---
 function showCustomModal(title, message, isConfirm = false) {
