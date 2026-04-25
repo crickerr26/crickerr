@@ -2138,36 +2138,40 @@ function goLiveOnDB(matchId, peerId) {
         let canvasKeepAliveInterval = null;
 
         function startCanvasCapture(matchId) {
-            // Capture canvas at 30fps → WebM fragments → binary WebSocket
+            // Use 30fps for stable broadcast bandwidth
             const fbStream = canvas.captureStream(30);
 
             // ENGINEERING FIX 1: Canvas Frame Starvation Pump
-            // HTML5 captureStream() pauses when the canvas isn't visually changing.
-            // Facebook Live sees a drop to 0 FPS, assumes the stream is broken, 
-            // and REFUSES to auto-start. We force a 30fps heartbeat by drawing 
-            // a practically invisible pixel continuously.
+            // HTML5 captureStream() can pause if the canvas isn't visually changing.
             if (canvasKeepAliveInterval) clearInterval(canvasKeepAliveInterval);
             const ctx = canvas.getContext('2d');
             canvasKeepAliveInterval = setInterval(() => {
-                ctx.fillStyle = 'rgba(0,0,0,0.01)'; // 1% opacity black
-                ctx.fillRect(0, 0, 1, 1);
-            }, 33); // Force frame ~every 33ms (30fps)
+                // Altering a single pixel slightly to force frame output
+                const imgData = ctx.getImageData(0, 0, 1, 1);
+                imgData.data[3] = imgData.data[3] === 255 ? 254 : 255; 
+                ctx.putImageData(imgData, 0, 0);
+            }, 33);
 
-            // ENGINEERING FIX 2: Suspended Audio Context
-            // Mobile browsers block background audio creation. If suspended, FB 
-            // gets a video-only feed and blocks auto-start. We force resume it.
+            // ENGINEERING FIX 2: Bulletproof Audio Context
+            // Facebook strictly rejects RTMP feeds without a continuous audio track.
             let fbAudioTrack = null;
             if (currentStream && currentStream.getAudioTracks().length > 0) {
                 fbAudioTrack = currentStream.getAudioTracks()[0].clone();
+                fbAudioTrack.enabled = true; // Force enable
             } else {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 if (audioCtx.state === 'suspended') {
-                    audioCtx.resume().catch(err => console.warn("[FB Relay] Audio resume blocked", err));
+                    audioCtx.resume().catch(() => {});
                 }
                 const oscillator = audioCtx.createOscillator();
                 const dest = audioCtx.createMediaStreamDestination();
                 const gainNode = audioCtx.createGain();
-                gainNode.gain.value = 0; // Mute perfectly
+                
+                // Real frequencies so the browser doesn't prune the "empty" audio node
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(0, audioCtx.currentTime); // Keep it silent for viewers
+                
                 oscillator.connect(gainNode);
                 gainNode.connect(dest);
                 oscillator.start();
@@ -2175,11 +2179,11 @@ function goLiveOnDB(matchId, peerId) {
             }
             fbStream.addTrack(fbAudioTrack);
 
-            // Prefer VP8 in WebM.
+            // ENGINEERING FIX 3: H264 Priority & Stream Corruption Prevention
+            // H264 natively passes into RTMP much cleaner than VP8.
             const mimeTypes = [
-                'video/webm;codecs=vp8,opus',
-                'video/webm;codecs=vp9,opus',
                 'video/webm;codecs=h264,opus',
+                'video/webm;codecs=vp8,opus',
                 'video/webm'
             ];
             const mimeType = mimeTypes.find(t => MediaRecorder.isTypeSupported(t)) || 'video/webm';
@@ -2187,28 +2191,38 @@ function goLiveOnDB(matchId, peerId) {
 
             fbMediaRecorder = new MediaRecorder(fbStream, {
                 mimeType,
-                videoBitsPerSecond: 2500000,  // 2.5 Mbps
+                videoBitsPerSecond: 3000000,  // 3.0 Mbps for crisp 1080p
                 audioBitsPerSecond: 128000
             });
 
-            fbMediaRecorder.ondataavailable = async (e) => {
-                if (!e.data || e.data.size === 0) return;
-                if (!fbRelayWs || fbRelayWs.readyState !== WebSocket.OPEN) return;
+            // Stream Buffer Queue (Prevents dropping chunks! Dropping WebM chunks permanently crashes FFmpeg)
+            const chunkQueue = [];
+            let isSending = false;
 
-                if (fbRelayWs.bufferedAmount > FB_WS_BACKPRESSURE_LIMIT) {
-                    console.warn('[FB Relay] Backpressure — dropping chunk.');
-                    return;
-                }
-
+            async function processQueue() {
+                if (isSending || chunkQueue.length === 0 || !fbRelayWs || fbRelayWs.readyState !== WebSocket.OPEN) return;
+                isSending = true;
                 try {
-                    const buf = await e.data.arrayBuffer();
+                    const blob = chunkQueue.shift();
+                    const buf = await blob.arrayBuffer();
                     fbRelayWs.send(buf);
                 } catch (err) {
                     console.error('[FB Relay] Send error:', err);
+                } finally {
+                    isSending = false;
+                    if (chunkQueue.length > 0) {
+                        setTimeout(processQueue, 10);
+                    }
+                }
+            }
+
+            fbMediaRecorder.ondataavailable = (e) => {
+                if (e.data && e.data.size > 0) {
+                    chunkQueue.push(e.data);
+                    processQueue(); // Fire off the queue processor
                 }
             };
 
-            // Stop the frame pump cleanly when the recorder stops
             fbMediaRecorder.onstop = () => {
                 if (canvasKeepAliveInterval) clearInterval(canvasKeepAliveInterval);
             };
@@ -2217,7 +2231,9 @@ function goLiveOnDB(matchId, peerId) {
                 console.error('[FB Relay] MediaRecorder error:', err);
             };
 
-            fbMediaRecorder.start(2000);
+            // 500ms timeslices create a smooth flow. 2000ms creates bursty bottlenecks.
+            fbMediaRecorder.start(500); 
+            console.log('[FB Relay] Canvas capture active.');
         }
 
         function stopFBLivePush() {
