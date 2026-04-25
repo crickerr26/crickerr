@@ -336,6 +336,21 @@
                 height: 40px;
                 z-index: 60;
             }
+
+            #fb-live-btn {
+                bottom: 20px !important;
+                font-size: 12px !important;
+                padding: 9px 18px !important;
+            }
+        }
+
+        @media (orientation: landscape) {
+            #fb-live-btn {
+                bottom: 15px !important;
+                left: auto !important;
+                transform: none !important;
+                right: 15px;
+            }
         }
 
         /* --- BROADCAST WATERMARK LOGO --- */
@@ -938,6 +953,12 @@
         <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
     </div>
 
+    <!-- FACEBOOK LIVE WATCH BUTTON (shown when broadcaster links FB Live) -->
+    <div id="fb-live-btn" onclick="openFBLive()" title="Watch on Facebook Live" style="display:none; position:fixed; bottom:60px; left:50%; transform:translateX(-50%); background:#1877F2; color:white; border:none; border-radius:50px; padding:10px 22px; font-family:'Roboto',sans-serif; font-size:13px; font-weight:700; cursor:pointer; z-index:900; align-items:center; gap:10px; box-shadow:0 4px 20px rgba(24,119,242,0.5); letter-spacing:0.5px; text-transform:uppercase; white-space:nowrap; backdrop-filter:blur(4px);">
+        <svg style="width:20px;height:20px;fill:white;flex-shrink:0;" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        <span>Watch Live on Facebook</span>
+    </div>
+
     <div id="close-btn" onclick="closeMatch()" title="Close Match">
         <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
     </div>
@@ -1064,7 +1085,13 @@
     <div id="input-overlay" class="overlay">
         <div class="search-container page-intro-anim">
             <img src="/my-logo.png" alt="Crickerr Logo" id="main-brand-logo">
-            <p class="hero-tagline">Watch Live Crickerr Matches</p>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 15px; width: 100%; max-width: 450px; background: rgba(255,255,255,0.05); padding: 4px; border-radius: 50px;">
+                <button id="tab-single" onclick="setWatchMode('single')" style="flex: 1; padding: 8px 15px; border-radius: 50px; border: none; background: #3b82f6; color: white; font-weight: bold; font-size: 12px; cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 0.5px;">Single Match</button>
+                <button id="tab-tourney" onclick="setWatchMode('tournament')" style="flex: 1; padding: 8px 15px; border-radius: 50px; border: none; background: transparent; color: #cbd5e1; font-weight: bold; font-size: 12px; cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 0.5px;">Tournament</button>
+            </div>
+
+            <p class="hero-tagline" id="hero-tagline-text">Watch Live Crickerr Matches</p>
             <div class="search-box">
                 <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
                 <input type="text" id="match-input" placeholder="Enter Match Code" autocomplete="off">
@@ -1074,7 +1101,7 @@
 
         <div class="live-matches-container page-intro-anim" style="animation-delay: 0.15s;">
             <div class="live-matches-header">
-                <h2>Live Matches</h2>
+                <h2 id="list-header-text">Live Matches</h2>
                 <button id="admin-toggle-btn" onclick="toggleAdminMode()">Admin</button>
             </div>
             <div id="admin-actions">
@@ -1160,6 +1187,13 @@
             }
         }
 
+        // Opens the broadcaster's linked Facebook Live page directly
+        function openFBLive() {
+            if (window.currentFBLiveUrl) {
+                window.open(window.currentFBLiveUrl, '_blank');
+            }
+        }
+
         function shareMatch() {
             const matchId = document.getElementById('match-input').value.trim() || new URLSearchParams(window.location.search).get('matchId');
             if (!matchId) return;
@@ -1187,6 +1221,22 @@
                     copyToClipboard(mp4Url);
                     alert("Direct video link copied! You can now upload this directly to YouTube or paste it into a Facebook post for inline viewing.");
                 } else if (choice === '1') {
+                    copyToClipboard(shareUrl);
+                }
+                return;
+            }
+
+            // If broadcaster has linked FB Live, offer it as a share option
+            if (window.currentFBLiveUrl) {
+                const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.currentFBLiveUrl)}`;
+                let promptMsg = `Share This Live Match:\n\n`;
+                promptMsg += `1: Copy Crickerr Watch Link\n`;
+                promptMsg += `2: Share to Facebook\n\n`;
+                promptMsg += `Enter your choice (1 or 2):`;
+                const choice = prompt(promptMsg, "1");
+                if (choice === '2') {
+                    window.open(fbShareUrl, '_blank');
+                } else {
                     copyToClipboard(shareUrl);
                 }
                 return;
@@ -1249,6 +1299,8 @@
             document.getElementById('heart-container').style.display = 'none';
             document.getElementById('share-btn').classList.remove('match-active');
             document.getElementById('close-btn').classList.remove('match-active');
+            document.getElementById('fb-live-btn').style.display = 'none';
+            window.currentFBLiveUrl = null;
             
             const introOverlay = document.getElementById('match-intro-overlay');
             if (introOverlay) introOverlay.style.display = 'none';
@@ -1270,7 +1322,7 @@
             playOverlay.style.display = 'none';
             inputOverlay.style.display = 'flex';
             
-            fetchLiveMatches();
+            setWatchMode(currentWatchMode); // Intelligently restore correct tab
         }
 
         function selectQuality(bw, label) {
@@ -1297,7 +1349,7 @@
             if (!matchId) {
                 inputOverlay.style.display = 'flex';
                 statusOverlay.style.display = 'none';
-                fetchLiveMatches();
+                setWatchMode('single'); // Set default setup
             } else {
                 inputOverlay.style.display = 'none';
                 checkLiveStatus(matchId);
@@ -1530,8 +1582,114 @@
             renderMatchesPage();
         };
 
+        let currentWatchMode = 'single';
+        let globalTournaments = [];
+        let runningTournamentsUnsubscribe = null;
+
+        function setWatchMode(mode) {
+            currentWatchMode = mode;
+            const tabSingle = document.getElementById('tab-single');
+            const tabTourney = document.getElementById('tab-tourney');
+            const inputEl = document.getElementById('match-input');
+            const listHeader = document.getElementById('list-header-text');
+            const tagline = document.getElementById('hero-tagline-text');
+            const adminToggle = document.getElementById('admin-toggle-btn');
+            
+            if (mode === 'single') {
+                tabSingle.style.background = '#3b82f6';
+                tabSingle.style.color = 'white';
+                tabTourney.style.background = 'transparent';
+                tabTourney.style.color = '#cbd5e1';
+                inputEl.placeholder = "Enter Match Code";
+                listHeader.innerText = "Live Matches";
+                tagline.innerText = "Watch Live Crickerr Matches";
+                adminToggle.style.display = 'block';
+                fetchLiveMatches();
+            } else {
+                tabTourney.style.background = '#3b82f6';
+                tabTourney.style.color = 'white';
+                tabSingle.style.background = 'transparent';
+                tabSingle.style.color = '#cbd5e1';
+                inputEl.placeholder = "Enter Tournament Code";
+                listHeader.innerText = "Running Tournaments";
+                tagline.innerText = "Watch Live Tournaments";
+                adminToggle.style.display = 'none'; // Hide admin actions in tournament tab view
+                fetchRunningTournaments();
+            }
+        }
+
+        function fetchRunningTournaments() {
+            const listContainer = document.getElementById('live-matches-list');
+            listContainer.innerHTML = '<div class="spinner" style="margin: 0 auto;"></div>';
+            
+            if (runningTournamentsUnsubscribe) {
+                runningTournamentsUnsubscribe();
+            }
+            
+            firebase.auth().signInAnonymously().then(() => {
+                runningTournamentsUnsubscribe = db.collection("tournaments")
+                  .where("status", "in", ["ACTIVE", "LIVE"])
+                  .onSnapshot((snapshot) => {
+                    globalTournaments = [];
+                    if (!snapshot.empty) {
+                        snapshot.forEach(doc => {
+                            globalTournaments.push({ id: doc.id, ...doc.data() });
+                        });
+                    }
+                    renderTournamentsPage();
+                }, (error) => {
+                    console.error("Error fetching tournaments:", error);
+                    listContainer.innerHTML = '<div style="text-align: center; color: #ef4444;">Error loading tournaments.</div>';
+                });
+            }).catch((error) => {
+                console.error("Auth error:", error);
+                listContainer.innerHTML = '<div style="text-align: center; color: #ef4444;">Authentication failed. Cannot load tournaments.</div>';
+            });
+        }
+
+        function renderTournamentsPage() {
+            const listContainer = document.getElementById('live-matches-list');
+            if (globalTournaments.length === 0) {
+                listContainer.innerHTML = '<div style="text-align: center; color: rgba(255,255,255,0.8); font-size: 16px;">No running tournaments at the moment.</div>';
+                return;
+            }
+
+            let html = '<div class="match-cards">';
+            globalTournaments.forEach(t => {
+                const meta = t.meta || {};
+                const name = meta.name || 'Unnamed Tournament';
+                const code = meta.code || t.id;
+                const flag = getFlagEmoji(meta.country);
+                
+                html += `
+                <div class="match-card" onclick="selectMatchFromList('${code}')" style="background: transparent; border: none; padding: 0; cursor: pointer;">
+                    <div class="yt-thumbnail-box" style="background: linear-gradient(135deg, #4c1d95 0%, #2e1065 100%); flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; overflow: hidden; position: relative;">
+                        <span style="font-size: 40px; margin-bottom: 10px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));">🏆</span>
+                        <div class="match-card-live" style="position: absolute; bottom: 8px; right: 8px; background: #cc0000; color: white; padding: 4px 8px; border-radius: 6px; font-family: 'Roboto', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; display: flex; align-items: center; gap: 5px; z-index: 5; backdrop-filter: blur(4px);">
+                            <div class="live-dot" style="width:6px;height:6px;background:white;border-radius:50%;"></div> LIVE
+                        </div>
+                    </div>
+                    <div class="yt-meta-row" style="margin-top: 12px;">
+                        <div class="yt-channel-avatar" style="background: #4c1d95; color: white; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; border: 1px solid rgba(255,255,255,0.2);">T</div>
+                        <div class="yt-meta-info" style="text-align: left;">
+                            <div class="yt-match-title" style="color: #f8fafc; font-size: 15px;">${name}</div>
+                            <div class="yt-match-sub" style="color: #a855f7; font-weight: bold; margin-top: 2px;">${flag} CODE: ${code}</div>
+                        </div>
+                    </div>
+                </div>
+                `;
+            });
+            html += '</div>';
+            listContainer.innerHTML = html;
+        }
+
         function fetchLiveMatches() {
             const listContainer = document.getElementById('live-matches-list');
+            
+            if (runningTournamentsUnsubscribe) {
+                runningTournamentsUnsubscribe();
+                runningTournamentsUnsubscribe = null;
+            }
             
             // Sign in anonymously first to satisfy Firebase security rules
             firebase.auth().signInAnonymously().then(() => {
@@ -1543,7 +1701,9 @@
                             globalLiveMatches.push({ id: doc.id, ...doc.data() });
                         });
                     }
-                    renderMatchesPage();
+                    if (currentWatchMode === 'single') {
+                        renderMatchesPage();
+                    }
                 }, (error) => {
                     console.error("Error fetching live matches:", error);
                     listContainer.innerHTML = '<div style="text-align: center; color: #ef4444;">Error loading matches.</div>';
@@ -1555,7 +1715,7 @@
         }
 
         function selectMatchFromList(matchId) {
-            if (isAdminMode) {
+            if (isAdminMode && currentWatchMode === 'single') {
                 const card = document.getElementById(`card-${matchId}`);
                 const cb = card.querySelector('.match-checkbox');
                 if (selectedAdminMatches.has(matchId)) {
@@ -1799,6 +1959,16 @@
                             document.getElementById('heart-container').style.display = 'flex';
                             document.getElementById('share-btn').classList.add('match-active');
                             document.getElementById('close-btn').classList.add('match-active');
+                            
+                            // FACEBOOK LIVE: Show button if broadcaster has linked an FB Live URL
+                            const fbBtn = document.getElementById('fb-live-btn');
+                            if (data.fbLiveUrl && data.fbLiveUrl.trim() !== '') {
+                                window.currentFBLiveUrl = data.fbLiveUrl.trim();
+                                fbBtn.style.display = 'flex';
+                            } else {
+                                window.currentFBLiveUrl = null;
+                                fbBtn.style.display = 'none';
+                            }
                             
                             video.controls = false; // Disable native controls for live WebRTC
                             window.currentVODUrl = null;
