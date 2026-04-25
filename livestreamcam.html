@@ -790,7 +790,7 @@
                 <p style="color: #94a3b8; font-size: 0.9rem; font-weight: bold; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px; font-family: 'Roboto';">Enter Match Code</p>
                 <input type="text" id="match-id" class="input-field" placeholder="Crickerr Code" style="font-family: 'Anton', sans-serif; font-size: clamp(1.8rem, 6vw, 2.5rem); text-transform: uppercase;">
                 
-                <!-- FACEBOOK LIVE SETUP PANEL — WHIP PUSH -->
+                <!-- FACEBOOK LIVE SETUP PANEL — RTMP RELAY (cloud-synced credentials) -->
                 <div style="width:100%; margin-bottom: 1rem; background: rgba(24,119,242,0.08); border: 1px solid rgba(24,119,242,0.35); border-radius: 14px; padding: 14px 16px;">
                     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 12px;">
                         <div style="display:flex; align-items:center; gap:8px;">
@@ -803,22 +803,12 @@
 
                     <p style="color:#94a3b8; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:1px; font-family:'Roboto',sans-serif; margin-bottom:4px;">Persistent Stream Key</p>
                     <div style="display:flex; gap:8px; margin-bottom:10px;">
-                        <input type="password" id="fb-stream-key" class="input-field" placeholder="FB-XXXXXXXXXXXX..." onchange="localStorage.setItem('crickerr_fb_key', this.value)" style="font-family:'Roboto Condensed',sans-serif; font-size:clamp(0.65rem,2vw,0.8rem); text-transform:none; letter-spacing:0; color:#93c5fd; margin-bottom:0; padding:clamp(0.4rem,1.5vw,0.6rem); flex:1;">
+                        <input type="password" id="fb-stream-key" class="input-field" placeholder="FB-XXXXXXXXXXXX..." onchange="saveStreamConfig('fbStreamKey', 'crickerr_fb_key', this.value)" style="font-family:'Roboto Condensed',sans-serif; font-size:clamp(0.65rem,2vw,0.8rem); text-transform:none; letter-spacing:0; color:#93c5fd; margin-bottom:0; padding:clamp(0.4rem,1.5vw,0.6rem); flex:1;">
                         <button onclick="toggleFBKeyVisibility()" id="fb-key-toggle" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-family:'Roboto',sans-serif; font-size:11px; font-weight:700; padding:0 12px; cursor:pointer; white-space:nowrap; flex-shrink:0;">SHOW</button>
                     </div>
 
                     <p style="color:#94a3b8; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:1px; font-family:'Roboto',sans-serif; margin-bottom:4px;">Facebook Watch URL <span style="color:#475569; font-weight:400; text-transform:none;">(Optional)</span></p>
-                    <input type="url" id="fb-live-url" class="input-field" placeholder="https://www.facebook.com/yourpage/videos/..." onchange="localStorage.setItem('crickerr_fb_url', this.value)" style="font-family:'Roboto',sans-serif; font-size:clamp(0.65rem,2vw,0.8rem); text-transform:none; letter-spacing:0; color:#93c5fd; margin-bottom:12px; padding:clamp(0.4rem,1.5vw,0.6rem);">
-
-                    <script>
-                        // Auto-load saved Facebook credentials on mobile so you never have to type them again
-                        document.addEventListener('DOMContentLoaded', () => {
-                            const savedFbKey = localStorage.getItem('crickerr_fb_key');
-                            const savedFbUrl = localStorage.getItem('crickerr_fb_url');
-                            if (savedFbKey) document.getElementById('fb-stream-key').value = savedFbKey;
-                            if (savedFbUrl) document.getElementById('fb-live-url').value = savedFbUrl;
-                        });
-                    </script>
+                    <input type="url" id="fb-live-url" class="input-field" placeholder="https://www.facebook.com/yourpage/videos/..." onchange="saveStreamConfig('fbLiveUrl', 'crickerr_fb_url', this.value)" style="font-family:'Roboto',sans-serif; font-size:clamp(0.65rem,2vw,0.8rem); text-transform:none; letter-spacing:0; color:#93c5fd; margin-bottom:12px; padding:clamp(0.4rem,1.5vw,0.6rem);">
 
                     <div style="background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.3); border-radius:8px; padding:10px; margin-bottom:12px; display:flex; gap:8px; align-items:flex-start;">
                         <span style="font-size:16px;">⚡</span>
@@ -832,6 +822,58 @@
                         📡 START FACEBOOK LIVE
                     </button>
                 </div>
+
+                <!-- YOUTUBE LIVE SETUP PANEL — parallel relay path, independent start/stop -->
+                <div style="width:100%; margin-bottom: 1rem; background: rgba(255,0,0,0.08); border: 1px solid rgba(255,0,0,0.35); border-radius: 14px; padding: 14px 16px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 12px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <svg style="width:22px;height:22px;flex-shrink:0;" viewBox="0 0 24 24"><path fill="#FF0000" d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z"/><path fill="#fff" d="M9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                            <span style="color:white; font-family:'Roboto',sans-serif; font-size:13px; font-weight:700; letter-spacing:0.5px;">YOUTUBE LIVE</span>
+                            <span id="yt-whip-status" style="color:#64748b; font-family:'Roboto',sans-serif; font-size:11px; font-weight:600; margin-left:4px;">● OFF</span>
+                        </div>
+                        <button onclick="openYTLiveSetup()" style="background:#FF0000; border:none; border-radius:20px; color:white; font-family:'Roboto',sans-serif; font-size:11px; font-weight:700; padding:5px 12px; cursor:pointer; letter-spacing:0.5px; white-space:nowrap;">YT STUDIO ↗</button>
+                    </div>
+
+                    <p style="color:#94a3b8; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:1px; font-family:'Roboto',sans-serif; margin-bottom:4px;">Persistent Stream Key</p>
+                    <div style="display:flex; gap:8px; margin-bottom:10px;">
+                        <input type="password" id="yt-stream-key" class="input-field" placeholder="xxxx-xxxx-xxxx-xxxx-xxxx" onchange="saveStreamConfig('ytStreamKey', 'crickerr_yt_key', this.value)" style="font-family:'Roboto Condensed',sans-serif; font-size:clamp(0.65rem,2vw,0.8rem); text-transform:none; letter-spacing:0; color:#fca5a5; margin-bottom:0; padding:clamp(0.4rem,1.5vw,0.6rem); flex:1;">
+                        <button onclick="toggleYTKeyVisibility()" id="yt-key-toggle" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-family:'Roboto',sans-serif; font-size:11px; font-weight:700; padding:0 12px; cursor:pointer; white-space:nowrap; flex-shrink:0;">SHOW</button>
+                    </div>
+
+                    <p style="color:#94a3b8; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:1px; font-family:'Roboto',sans-serif; margin-bottom:4px;">YouTube Watch URL <span style="color:#475569; font-weight:400; text-transform:none;">(Optional)</span></p>
+                    <input type="url" id="yt-live-url" class="input-field" placeholder="https://www.youtube.com/watch?v=..." onchange="saveStreamConfig('ytLiveUrl', 'crickerr_yt_url', this.value)" style="font-family:'Roboto',sans-serif; font-size:clamp(0.65rem,2vw,0.8rem); text-transform:none; letter-spacing:0; color:#fca5a5; margin-bottom:12px; padding:clamp(0.4rem,1.5vw,0.6rem);">
+
+                    <div style="background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.3); border-radius:8px; padding:10px; margin-bottom:12px; display:flex; gap:8px; align-items:flex-start;">
+                        <span style="font-size:16px;">⚡</span>
+                        <p style="color:#e2e8f0; font-size:11px; font-family:'Roboto',sans-serif; line-height:1.5; margin:0;">
+                            <b>Go live instantly without opening YouTube Studio:</b><br>
+                            In YouTube Studio, create a stream with <span style="color:#4ade80; font-weight:bold;">"Auto-start" enabled</span> and copy the persistent stream key. Once saved here, tapping below pushes your broadcast straight into that scheduled live event.
+                        </p>
+                    </div>
+
+                    <button id="yt-push-btn" onclick="toggleYTLivePush()" style="width:100%; background:linear-gradient(135deg,#FF0000,#cc0000); border:none; border-radius:10px; color:white; font-family:'Roboto',sans-serif; font-size:13px; font-weight:800; padding:11px; cursor:pointer; letter-spacing:1px; text-transform:uppercase; transition:all 0.2s; margin-bottom:8px;">
+                        📡 START YOUTUBE LIVE
+                    </button>
+                </div>
+
+                <script>
+                    // Instant-load saved credentials from localStorage so the inputs are populated
+                    // before Firebase even wakes up. Cross-device cloud sync (Firestore onSnapshot)
+                    // is wired up in the relay engine block below, once `auth` and `db` are ready.
+                    document.addEventListener('DOMContentLoaded', () => {
+                        const map = [
+                            ['crickerr_fb_key', 'fb-stream-key'],
+                            ['crickerr_fb_url', 'fb-live-url'],
+                            ['crickerr_yt_key', 'yt-stream-key'],
+                            ['crickerr_yt_url', 'yt-live-url']
+                        ];
+                        for (const [storeKey, elId] of map) {
+                            const v  = localStorage.getItem(storeKey);
+                            const el = document.getElementById(elId);
+                            if (v && el) el.value = v;
+                        }
+                    });
+                </script>
                 
                 <button onclick="connectToMatch()" class="start-btn" id="btn-start" style="margin-bottom: 15px;">START CAMERA</button>
                 <button onclick="goBackToWallet()" style="width:100%; padding: clamp(10px, 3vw, 15px); border-radius:50px; border: 2px solid rgba(255,255,255,0.2); background:transparent; color:#fff; font-weight:800; letter-spacing: 2px; font-size: clamp(0.9rem, 3vw, 1rem); cursor:pointer; font-family: 'Roboto', sans-serif; transition: all 0.2s;">⬅ BACK</button>
@@ -2095,61 +2137,138 @@ function goLiveOnDB(matchId, peerId) {
     });
 }
 
-// --- FACEBOOK LIVE — RELAY SERVER ENGINE (v2 — BINARY PIPELINE) ---
-        let fbRelayWs     = null;   // WebSocket to relay server
-        let fbRelayActive = false;  // Is FB relay currently live
-        let fbMediaRecorder = null; // Captures canvas → WebM fragments → binary relay
+// --- LIVE BROADCAST RELAY ENGINE (v3 — DUAL DESTINATION + CLOUD CREDENTIAL SYNC) ---
+//
+// One canvas → per-platform MediaRecorder → independent WebSocket to the Railway
+// relay → RTMP to Facebook AND/OR YouTube. Each platform owns its own encoder so
+// either can be started or stopped at any moment — joining mid-stream still gets
+// a clean WebM init segment (FFmpeg on the relay would otherwise fail to demux).
+// A shared 33 ms canvas keep-alive ticker is reference-counted and runs only
+// while at least one platform is live, so idle-state CPU goes back to zero.
+//
+// Stream credentials (FB key, FB watch URL, YT key, YT watch URL) are mirrored
+// to Firestore at `streaming_config/{user.email}` and replayed via onSnapshot,
+// so a key entered on one device shows up on every other signed-in device in
+// real time. localStorage stays as the offline cache for instant first paint.
 
-        // Crickerr Relay Server — Railway deployment
-        const FB_RELAY_URL = 'wss://crickerr-relay-production.up.railway.app';
+        const RELAY_WS_URL = 'wss://crickerr-relay-production.up.railway.app';
+        const FB_RTMP_URL  = 'rtmps://live-api-s.facebook.com:443/rtmp';
+        const YT_RTMP_URL  = 'rtmp://a.rtmp.youtube.com/live2';
 
-        // Backpressure ceiling — if WS buffered bytes exceed this, drop a chunk
-        // (prevents runaway memory growth if uplink can't keep up with 2.5 Mbps)
-        const FB_WS_BACKPRESSURE_LIMIT = 4 * 1024 * 1024; // 4 MB
+        const relayPlatforms = {
+            fb: {
+                name: 'Facebook',
+                rtmpUrl: FB_RTMP_URL,
+                sessionSuffix: '',
+                ws: null, active: false, chunkQueue: [], sending: false,
+                mediaRecorder: null, captureStream: null,
+                btnId: 'fb-push-btn', statusId: 'fb-whip-status',
+                keyInputId: 'fb-stream-key', keyToggleId: 'fb-key-toggle',
+                startLabel: '📡 START FACEBOOK LIVE',
+                stopLabel:  '🔴 STOP FACEBOOK LIVE',
+                startBg: 'linear-gradient(135deg,#1877F2,#0a5fd8)',
+                stopBg:  'linear-gradient(135deg,#ef4444,#dc2626)',
+                producerUrl: 'https://www.facebook.com/live/producer',
+                getKeyHint: 'FB SETTINGS'
+            },
+            yt: {
+                name: 'YouTube',
+                rtmpUrl: YT_RTMP_URL,
+                sessionSuffix: '__yt',
+                ws: null, active: false, chunkQueue: [], sending: false,
+                mediaRecorder: null, captureStream: null,
+                btnId: 'yt-push-btn', statusId: 'yt-whip-status',
+                keyInputId: 'yt-stream-key', keyToggleId: 'yt-key-toggle',
+                startLabel: '📡 START YOUTUBE LIVE',
+                stopLabel:  '🔴 STOP YOUTUBE LIVE',
+                startBg: 'linear-gradient(135deg,#FF0000,#cc0000)',
+                stopBg:  'linear-gradient(135deg,#ef4444,#dc2626)',
+                producerUrl: 'https://studio.youtube.com/channel/UC/livestreaming',
+                getKeyHint: 'YT STUDIO'
+            }
+        };
 
-        function openFBLiveSetup() {
-            alert("AUTO-START INSTRUCTIONS:\n\n1. Facebook will open. Look for 'Settings' (gear icon).\n2. Turn ON 'Go live automatically when a stream is started'.\n3. Turn ON 'Persistent Stream Key'.\n4. Copy the Stream Key and paste it in the app.\n\nResult: You never have to click 'Go Live' on Facebook again. This app will trigger it instantly!");
-            window.open('https://www.facebook.com/live/producer', '_blank');
+        // ----- Shared canvas keep-alive (reference-counted across platforms) -----
+        let relayCanvasKeepAlive = null;
+        function ensureCanvasKeepAlive() {
+            if (relayCanvasKeepAlive || !canvas) return;
+            const ctx = canvas.getContext('2d');
+            relayCanvasKeepAlive = setInterval(() => {
+                try {
+                    const imgData = ctx.getImageData(0, 0, 1, 1);
+                    imgData.data[3] = imgData.data[3] === 255 ? 254 : 255;
+                    ctx.putImageData(imgData, 0, 0);
+                } catch {}
+            }, 33);
         }
-
-        function toggleFBKeyVisibility() {
-            const input = document.getElementById('fb-stream-key');
-            const btn = document.getElementById('fb-key-toggle');
-            if (!input) return;
-            if (input.type === 'password') {
-                input.type = 'text';
-                btn.innerText = 'HIDE';
-            } else {
-                input.type = 'password';
-                btn.innerText = 'SHOW';
+        function teardownCanvasKeepAliveIfIdle() {
+            const anyActive = Object.values(relayPlatforms).some(p => p.active);
+            if (anyActive) return;
+            if (relayCanvasKeepAlive) {
+                clearInterval(relayCanvasKeepAlive);
+                relayCanvasKeepAlive = null;
             }
         }
 
-        function setFBStatus(text, color) {
-            const el = document.getElementById('fb-whip-status');
+        // ----- UI helpers -----
+        function setRelayStatus(platform, text, color) {
+            const p = relayPlatforms[platform]; if (!p) return;
+            const el = document.getElementById(p.statusId);
             if (el) { el.innerText = text; el.style.color = color; }
         }
-
-        async function toggleFBLivePush() {
-            if (fbRelayActive) {
-                stopFBLivePush();
-            } else {
-                await startFBLivePush();
-            }
+        function setRelayButton(platform, label, bg) {
+            const p = relayPlatforms[platform]; if (!p) return;
+            const btn = document.getElementById(p.btnId);
+            if (btn) { btn.innerText = label; if (bg) btn.style.background = bg; }
+        }
+        function _toggleKeyVis(inputId, btnId) {
+            const input = document.getElementById(inputId);
+            const btn   = document.getElementById(btnId);
+            if (!input) return;
+            if (input.type === 'password') { input.type = 'text';     if (btn) btn.innerText = 'HIDE'; }
+            else                           { input.type = 'password'; if (btn) btn.innerText = 'SHOW'; }
         }
 
-        async function startFBLivePush() {
-            const keyInput    = document.getElementById('fb-stream-key');
-            const streamKey   = keyInput ? keyInput.value.trim() : '';
-            const matchIdEl   = document.getElementById('match-id');
-            const matchId     = matchIdEl ? matchIdEl.value.trim().toUpperCase() : 'MATCH';
+        // ----- Public function names preserved for the existing HTML onclicks -----
+        function openFBLiveSetup() {
+            alert("AUTO-START INSTRUCTIONS:\n\n1. Facebook will open. Look for 'Settings' (gear icon).\n2. Turn ON 'Go live automatically when a stream is started'.\n3. Turn ON 'Persistent Stream Key'.\n4. Copy the Stream Key and paste it in the app.\n\nResult: You never have to click 'Go Live' on Facebook again. This app will trigger it instantly!");
+            window.open(relayPlatforms.fb.producerUrl, '_blank');
+        }
+        function openYTLiveSetup() {
+            alert("AUTO-START INSTRUCTIONS:\n\n1. YouTube Studio will open. Tap 'Create' → 'Go Live' → 'Stream'.\n2. Create a new stream and toggle ON 'Auto-start' (and 'Auto-stop' if you want).\n3. Copy the Stream Key and paste it into the app.\n\nResult: Tapping START YOUTUBE LIVE in this app pushes your broadcast straight to YouTube — no need to press anything in YT Studio.");
+            window.open(relayPlatforms.yt.producerUrl, '_blank');
+        }
+        function toggleFBKeyVisibility() { _toggleKeyVis('fb-stream-key', 'fb-key-toggle'); }
+        function toggleYTKeyVisibility() { _toggleKeyVis('yt-stream-key', 'yt-key-toggle'); }
+        function setFBStatus(text, color) { setRelayStatus('fb', text, color); }
+        function setYTStatus(text, color) { setRelayStatus('yt', text, color); }
+        async function toggleFBLivePush() { await toggleRelayPush('fb'); }
+        async function toggleYTLivePush() { await toggleRelayPush('yt'); }
+        function stopFBLivePush() { stopRelayPush('fb'); }
+        function stopYTLivePush() { stopRelayPush('yt'); }
+
+        // ----- Generic start/stop -----
+        async function toggleRelayPush(platform) {
+            const p = relayPlatforms[platform]; if (!p) return;
+            if (p.active) stopRelayPush(platform);
+            else          await startRelayPush(platform);
+        }
+
+        async function startRelayPush(platform) {
+            const p = relayPlatforms[platform]; if (!p) return;
+
+            const keyInput  = document.getElementById(p.keyInputId);
+            const streamKey = keyInput ? keyInput.value.trim() : '';
+            const matchIdEl = document.getElementById('match-id');
+            const baseId    = matchIdEl ? matchIdEl.value.trim().toUpperCase() : 'MATCH';
+            const sessionId = baseId + p.sessionSuffix;
 
             if (!streamKey) {
-                alert("Please paste your Facebook Stream Key first.\n\nTap GET KEYS ↗ to get it from Facebook.");
+                alert(`Please paste your ${p.name} Stream Key first.\n\nTap ${p.getKeyHint} ↗ to get it.`);
                 return;
             }
-            if (FB_RELAY_URL.includes('YOUR-RAILWAY-APP')) {
-                alert("Relay server not configured yet.\n\nPlease follow the deployment steps to get your Railway URL, then update FB_RELAY_URL in the code.");
+            if (!RELAY_WS_URL || RELAY_WS_URL.includes('YOUR-RAILWAY-APP')) {
+                alert("Relay server not configured yet.\n\nPlease follow the deployment steps to get your Railway URL, then update RELAY_WS_URL in the code.");
                 return;
             }
             if (!canvas) {
@@ -2157,205 +2276,260 @@ function goLiveOnDB(matchId, peerId) {
                 return;
             }
 
-            const btn = document.getElementById('fb-push-btn');
-            btn.innerText = '⏳ CONNECTING TO RELAY...';
-            btn.style.background = 'rgba(255,255,255,0.1)';
-            setFBStatus('● CONNECTING', '#fbbf24');
+            setRelayButton(platform, '⏳ CONNECTING TO RELAY...', 'rgba(255,255,255,0.1)');
+            setRelayStatus(platform, '● CONNECTING', '#fbbf24');
 
             try {
-                // 1. Open WebSocket — binary mode for video frames
-                fbRelayWs = new WebSocket(FB_RELAY_URL);
-                fbRelayWs.binaryType = 'arraybuffer';
+                p.ws = new WebSocket(RELAY_WS_URL);
+                p.ws.binaryType = 'arraybuffer';
 
-                fbRelayWs.onopen = () => {
-                    console.log('[FB Relay] WebSocket connected (binary pipeline)');
-
-                    // 2. Send START control message (JSON) with FB credentials
-                    fbRelayWs.send(JSON.stringify({
+                p.ws.onopen = () => {
+                    console.log(`[${p.name} Relay] WebSocket connected (binary pipeline)`);
+                    // Field names match the existing FB protocol — the relay is a generic
+                    // RTMP forwarder, only the destination URL changes per platform.
+                    p.ws.send(JSON.stringify({
                         type:        'start',
-                        matchId:     matchId,
+                        matchId:     sessionId,
                         fbStreamKey: streamKey,
-                        fbServerUrl: 'rtmps://live-api-s.facebook.com:443/rtmp'
+                        fbServerUrl: p.rtmpUrl
                     }));
                 };
 
-                fbRelayWs.onmessage = (event) => {
-                    // Server only sends JSON control messages. Ignore any binary.
+                p.ws.onmessage = (event) => {
                     if (typeof event.data !== 'string') return;
                     let msg;
                     try { msg = JSON.parse(event.data); } catch { return; }
 
                     if (msg.type === 'ready') {
-                        console.log('[FB Relay] Server ready — starting canvas capture');
-                        startCanvasCapture(matchId);
-                        fbRelayActive = true;
-                        btn.innerText = '🔴 STOP FACEBOOK LIVE';
-                        btn.style.background = 'linear-gradient(135deg,#ef4444,#dc2626)';
-                        setFBStatus('● LIVE ON FB', '#22c55e');
+                        console.log(`[${p.name} Relay] Server ready — starting capture`);
+                        startPlatformCapture(platform);
+                        p.active = true;
+                        setRelayButton(platform, p.stopLabel, p.stopBg);
+                        setRelayStatus(platform, `● LIVE ON ${p.name.toUpperCase()}`, '#22c55e');
                     }
-
                     if (msg.type === 'stopped') {
                         const codeNote = (msg.code !== undefined) ? ` (code ${msg.code})` : '';
-                        console.log('[FB Relay] Stream stopped by server' + codeNote);
-                        cleanupFBRelay();
+                        console.log(`[${p.name} Relay] Stream stopped by server${codeNote}`);
+                        cleanupRelay(platform);
                     }
-
                     if (msg.type === 'error') {
-                        console.error('[FB Relay] Server error:', msg.message);
-                        alert('Facebook Live relay error:\n\n' + msg.message +
-                              '\n\nCheck that your Stream Key is correct and hasn\'t expired.');
-                        cleanupFBRelay();
+                        console.error(`[${p.name} Relay] Server error:`, msg.message);
+                        alert(`${p.name} Live relay error:\n\n${msg.message}\n\nCheck that your Stream Key is correct and hasn't expired.`);
+                        cleanupRelay(platform);
                     }
                 };
 
-                fbRelayWs.onerror = (err) => {
-                    console.error('[FB Relay] WS error:', err);
-                    alert('Could not connect to relay server.\n\nMake sure your Railway server is running.');
-                    cleanupFBRelay();
+                p.ws.onerror = (err) => {
+                    console.error(`[${p.name} Relay] WS error:`, err);
+                    alert(`Could not connect to relay server for ${p.name}.\n\nMake sure your Railway server is running.`);
+                    cleanupRelay(platform);
                 };
 
-                fbRelayWs.onclose = () => {
-                    console.log('[FB Relay] WebSocket closed');
-                    if (fbRelayActive) cleanupFBRelay();
+                p.ws.onclose = () => {
+                    console.log(`[${p.name} Relay] WebSocket closed`);
+                    if (p.active) cleanupRelay(platform);
                 };
 
             } catch (err) {
-                console.error('[FB Relay] Start error:', err);
-                alert('Facebook Live failed to start:\n' + err.message);
-                cleanupFBRelay();
+                console.error(`[${p.name} Relay] Start error:`, err);
+                alert(`${p.name} Live failed to start:\n${err.message}`);
+                cleanupRelay(platform);
             }
         }
 
-        // Global reference to stop the frame pump when streaming ends
-        let canvasKeepAliveInterval = null;
+        // ----- Per-platform canvas capture pipeline -----
+        function startPlatformCapture(platform) {
+            const p = relayPlatforms[platform];
+            if (!p || !canvas) return;
 
-        function startCanvasCapture(matchId) {
-            // Use 30fps for stable broadcast bandwidth
-            const fbStream = canvas.captureStream(30);
+            ensureCanvasKeepAlive();
 
-            // ENGINEERING FIX 1: Canvas Frame Starvation Pump
-            // HTML5 captureStream() can pause if the canvas isn't visually changing.
-            if (canvasKeepAliveInterval) clearInterval(canvasKeepAliveInterval);
-            const ctx = canvas.getContext('2d');
-            canvasKeepAliveInterval = setInterval(() => {
-                // Altering a single pixel slightly to force frame output
-                const imgData = ctx.getImageData(0, 0, 1, 1);
-                imgData.data[3] = imgData.data[3] === 255 ? 254 : 255; 
-                ctx.putImageData(imgData, 0, 0);
-            }, 33);
+            // 30 fps gives a stable RTMP rate under typical mobile uplinks.
+            p.captureStream = canvas.captureStream(30);
 
-            // ENGINEERING FIX 2: Bulletproof Audio Context
-            // Facebook strictly rejects RTMP feeds without a continuous audio track.
-            let fbAudioTrack = null;
+            // Continuous audio is mandatory — RTMP rejects feeds that ever drop
+            // their audio track. Clone the live mic when present, else synthesize
+            // a silent oscillator destination so the encoder never starves.
+            let audioTrack = null;
             if (currentStream && currentStream.getAudioTracks().length > 0) {
-                fbAudioTrack = currentStream.getAudioTracks()[0].clone();
-                fbAudioTrack.enabled = true; // Force enable
+                audioTrack = currentStream.getAudioTracks()[0].clone();
+                audioTrack.enabled = true;
             } else {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume().catch(() => {});
-                }
+                if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
                 const oscillator = audioCtx.createOscillator();
-                const dest = audioCtx.createMediaStreamDestination();
-                const gainNode = audioCtx.createGain();
-                
-                // Real frequencies so the browser doesn't prune the "empty" audio node
+                const dest       = audioCtx.createMediaStreamDestination();
+                const gainNode   = audioCtx.createGain();
                 oscillator.type = 'sine';
                 oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
-                gainNode.gain.setValueAtTime(0, audioCtx.currentTime); // Keep it silent for viewers
-                
+                gainNode.gain.setValueAtTime(0, audioCtx.currentTime); // silent for viewers
                 oscillator.connect(gainNode);
                 gainNode.connect(dest);
                 oscillator.start();
-                fbAudioTrack = dest.stream.getAudioTracks()[0];
+                audioTrack = dest.stream.getAudioTracks()[0];
             }
-            fbStream.addTrack(fbAudioTrack);
+            p.captureStream.addTrack(audioTrack);
 
-            // ENGINEERING FIX 3: H264 Priority & Stream Corruption Prevention
-            // H264 natively passes into RTMP much cleaner than VP8.
+            // H264 → RTMP avoids any transcode step on the relay. Both FB and YT
+            // accept H264-in-WebM straight from MediaRecorder.
             const mimeTypes = [
                 'video/webm;codecs=h264,opus',
                 'video/webm;codecs=vp8,opus',
                 'video/webm'
             ];
             const mimeType = mimeTypes.find(t => MediaRecorder.isTypeSupported(t)) || 'video/webm';
-            console.log('[FB Relay] Using mimeType:', mimeType);
+            console.log(`[${p.name} Relay] Using mimeType:`, mimeType);
 
-            fbMediaRecorder = new MediaRecorder(fbStream, {
+            p.mediaRecorder = new MediaRecorder(p.captureStream, {
                 mimeType,
                 videoBitsPerSecond: 3000000,  // 3.0 Mbps for crisp 1080p
                 audioBitsPerSecond: 128000
             });
 
-            // Stream Buffer Queue (Prevents dropping chunks! Dropping WebM chunks permanently crashes FFmpeg)
-            const chunkQueue = [];
-            let isSending = false;
-
-            async function processQueue() {
-                if (isSending || chunkQueue.length === 0 || !fbRelayWs || fbRelayWs.readyState !== WebSocket.OPEN) return;
-                isSending = true;
-                try {
-                    const blob = chunkQueue.shift();
-                    const buf = await blob.arrayBuffer();
-                    fbRelayWs.send(buf);
-                } catch (err) {
-                    console.error('[FB Relay] Send error:', err);
-                } finally {
-                    isSending = false;
-                    if (chunkQueue.length > 0) {
-                        setTimeout(processQueue, 10);
-                    }
-                }
-            }
-
-            fbMediaRecorder.ondataavailable = (e) => {
-                if (e.data && e.data.size > 0) {
-                    chunkQueue.push(e.data);
-                    processQueue(); // Fire off the queue processor
-                }
+            // Per-platform queue: a slow uplink on one destination cannot stall
+            // the other. NEVER drop chunks — losing a WebM segment crashes FFmpeg.
+            p.mediaRecorder.ondataavailable = (e) => {
+                if (!e.data || e.data.size === 0) return;
+                p.chunkQueue.push(e.data);
+                processPlatformQueue(platform);
             };
+            p.mediaRecorder.onerror = (err) => console.error(`[${p.name} Relay] MediaRecorder error:`, err);
 
-            fbMediaRecorder.onstop = () => {
-                if (canvasKeepAliveInterval) clearInterval(canvasKeepAliveInterval);
-            };
-
-            fbMediaRecorder.onerror = (err) => {
-                console.error('[FB Relay] MediaRecorder error:', err);
-            };
-
-            // 500ms timeslices create a smooth flow. 2000ms creates bursty bottlenecks.
-            fbMediaRecorder.start(500); 
-            console.log('[FB Relay] Canvas capture active.');
+            // 500 ms timeslices keep the wire smooth without bursting.
+            p.mediaRecorder.start(500);
+            console.log(`[${p.name} Relay] Capture active.`);
         }
 
-        function stopFBLivePush() {
-            if (fbRelayWs && fbRelayWs.readyState === WebSocket.OPEN) {
+        async function processPlatformQueue(platform) {
+            const p = relayPlatforms[platform]; if (!p) return;
+            if (p.sending || p.chunkQueue.length === 0) return;
+            if (!p.ws || p.ws.readyState !== WebSocket.OPEN) return;
+            p.sending = true;
+            try {
+                const blob = p.chunkQueue.shift();
+                const buf  = await blob.arrayBuffer();
+                if (p.ws && p.ws.readyState === WebSocket.OPEN) p.ws.send(buf);
+            } catch (err) {
+                console.error(`[${p.name} Relay] Send error:`, err);
+            } finally {
+                p.sending = false;
+                if (p.chunkQueue.length > 0) setTimeout(() => processPlatformQueue(platform), 10);
+            }
+        }
+
+        function stopRelayPush(platform) {
+            const p = relayPlatforms[platform]; if (!p) return;
+            if (p.ws && p.ws.readyState === WebSocket.OPEN) {
                 const matchIdEl = document.getElementById('match-id');
-                const matchId   = matchIdEl ? matchIdEl.value.trim().toUpperCase() : 'MATCH';
-                fbRelayWs.send(JSON.stringify({ type: 'stop', matchId }));
+                const baseId    = matchIdEl ? matchIdEl.value.trim().toUpperCase() : 'MATCH';
+                try { p.ws.send(JSON.stringify({ type: 'stop', matchId: baseId + p.sessionSuffix })); } catch {}
             }
-            cleanupFBRelay();
+            cleanupRelay(platform);
         }
 
-        function cleanupFBRelay() {
-            if (fbMediaRecorder && fbMediaRecorder.state !== 'inactive') {
-                try { fbMediaRecorder.stop(); } catch {}
-            }
-            fbMediaRecorder = null;
+        function cleanupRelay(platform) {
+            const p = relayPlatforms[platform]; if (!p) return;
 
-            if (fbRelayWs) {
-                try { fbRelayWs.close(); } catch {}
+            if (p.mediaRecorder && p.mediaRecorder.state !== 'inactive') {
+                try { p.mediaRecorder.stop(); } catch {}
             }
-            fbRelayWs     = null;
-            fbRelayActive = false;
+            p.mediaRecorder = null;
 
-            const btn = document.getElementById('fb-push-btn');
-            if (btn) {
-                btn.innerText = '📡 START FACEBOOK LIVE';
-                btn.style.background = 'linear-gradient(135deg,#1877F2,#0a5fd8)';
+            if (p.captureStream) {
+                try { p.captureStream.getTracks().forEach(t => t.stop()); } catch {}
             }
-            setFBStatus('● OFF', '#64748b');
+            p.captureStream = null;
+
+            if (p.ws) {
+                try { p.ws.close(); } catch {}
+            }
+            p.ws = null;
+
+            p.active = false;
+            p.chunkQueue.length = 0;
+            p.sending = false;
+
+            setRelayButton(platform, p.startLabel, p.startBg);
+            setRelayStatus(platform, '● OFF', '#64748b');
+
+            teardownCanvasKeepAliveIfIdle();
         }
+
+        // --- CROSS-DEVICE CREDENTIAL SYNC (Firestore mirrors localStorage) ---
+        // Why: phone and PC each had their own localStorage stream key, so a
+        // broadcast started on phone never landed on the FB Live Producer page
+        // open on PC. Now every signed-in device shares one cloud document and
+        // updates each other live via onSnapshot.
+
+        const STREAM_CONFIG_FIELDS = {
+            fbStreamKey: { localKey: 'crickerr_fb_key', inputId: 'fb-stream-key' },
+            fbLiveUrl:   { localKey: 'crickerr_fb_url', inputId: 'fb-live-url'   },
+            ytStreamKey: { localKey: 'crickerr_yt_key', inputId: 'yt-stream-key' },
+            ytLiveUrl:   { localKey: 'crickerr_yt_url', inputId: 'yt-live-url'   }
+        };
+
+        // Wired into every credential <input>'s onchange handler.
+        function saveStreamConfig(field, localKey, value) {
+            // Cache locally first — works even when offline / signed out.
+            try { if (localKey) localStorage.setItem(localKey, value || ''); } catch {}
+
+            // Mirror to Firestore so the same credential follows the user across devices.
+            if (typeof db === 'undefined' || !db) return;
+            if (typeof currentUser === 'undefined' || !currentUser || !currentUser.email) return;
+            if (!field) return;
+            db.collection('streaming_config').doc(currentUser.email).set({
+                [field]: value || '',
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true }).catch(err => console.warn('[StreamConfig] Save error:', err));
+        }
+
+        let _streamConfigUnsub = null;
+        function attachStreamConfigSync() {
+            if (typeof auth === 'undefined' || !auth) return;
+            auth.onAuthStateChanged((user) => {
+                // Tear down previous subscription before swapping accounts.
+                if (_streamConfigUnsub) {
+                    try { _streamConfigUnsub(); } catch {}
+                    _streamConfigUnsub = null;
+                }
+                if (!user || !user.email) return;
+
+                // Live snapshot — any change on any device updates this device.
+                _streamConfigUnsub = db.collection('streaming_config').doc(user.email)
+                    .onSnapshot((doc) => {
+                        if (!doc.exists) return;
+                        const data = doc.data() || {};
+                        for (const field of Object.keys(STREAM_CONFIG_FIELDS)) {
+                            const meta = STREAM_CONFIG_FIELDS[field];
+                            const cloudValue = data[field];
+                            if (cloudValue === undefined || cloudValue === null) continue;
+                            const el = document.getElementById(meta.inputId);
+                            // Don't overwrite a field the user is actively editing.
+                            if (el && document.activeElement !== el && el.value !== cloudValue) {
+                                el.value = cloudValue;
+                            }
+                            try { localStorage.setItem(meta.localKey, cloudValue); } catch {}
+                        }
+                    }, (err) => console.warn('[StreamConfig] Sync error:', err));
+            });
+        }
+
+        // Defer attachment until Firebase globals are ready (they're created
+        // further down in this script's execution order).
+        (function bootStreamConfigSync() {
+            const tryAttach = () => {
+                if (typeof auth !== 'undefined' && auth && typeof db !== 'undefined' && db) {
+                    attachStreamConfigSync();
+                } else {
+                    setTimeout(tryAttach, 200);
+                }
+            };
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', tryAttach);
+            } else {
+                tryAttach();
+            }
+        })();
 
         // --- FULL MONETIZATION & AUTH ENGINE ---
 
