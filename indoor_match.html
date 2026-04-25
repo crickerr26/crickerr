@@ -3783,6 +3783,16 @@ window.generateProfessionalSchedule = function(selectedFlow = null) {
         tpSelectedTournament = null;
         document.getElementById('team-picker-modal').classList.remove('hidden');
         document.getElementById('tp-search').value = '';
+
+        // Always trigger a fresh load when the picker opens. This ensures:
+        //   (a) teams added in another tab (Manage_Team) appear immediately,
+        //   (b) if the initial onload fetch failed silently, we retry,
+        //   (c) loadSavedTeams() is a no-op if a load is already in flight.
+        // The picker re-renders automatically as data arrives via _refreshTeamPickerIfOpen.
+        if (typeof loadSavedTeams === 'function') {
+            try { loadSavedTeams(); } catch(e) { console.warn("openTeamPicker: load failed", e); }
+        }
+
         renderTeamPicker();
     }
 
@@ -3829,7 +3839,8 @@ window.generateProfessionalSchedule = function(selectedFlow = null) {
             title.textContent = "Single Match Teams";
             backBtn.onclick = () => { tpCurrentView = 'modes'; renderTeamPicker(); };
             
-            const teams = (savedTeamsData || []).filter(t => t.teamCategory !== "Tournament" && t.name.toLowerCase().includes(searchTerm));
+            // FIX: Added safe fallback (t.name || "") to prevent script crashes on missing names
+            const teams = (savedTeamsData || []).filter(t => t.teamCategory !== "Tournament" && (t.name || "").toLowerCase().includes(searchTerm));
             renderTeamList(teams, selectedValues, content);
             
         } else if (tpCurrentView === 'tournaments') {
@@ -3841,7 +3852,16 @@ window.generateProfessionalSchedule = function(selectedFlow = null) {
             const tourneys = [...new Set((savedTeamsData || []).filter(t => t.teamCategory === "Tournament").map(t => t.tournamentName))].filter(n => n);
             
             if(tourneys.length === 0) {
-                content.innerHTML = `<div class="p-8 text-center text-gray-400 font-bold text-sm">No tournament teams available.</div>`;
+                const isLoading = window._teamsLoading && window._teamsLoading.active;
+                if (isLoading) {
+                    content.innerHTML = `
+                        <div class="p-8 text-center">
+                            <div class="inline-block w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                            <div class="mt-3 text-gray-400 font-bold text-sm uppercase tracking-widest">Loading tournaments...</div>
+                        </div>`;
+                } else {
+                    content.innerHTML = `<div class="p-8 text-center text-gray-400 font-bold text-sm">No tournament teams available.</div>`;
+                }
                 return;
             }
             
@@ -3865,14 +3885,24 @@ window.generateProfessionalSchedule = function(selectedFlow = null) {
             title.textContent = tpSelectedTournament;
             backBtn.onclick = () => { tpCurrentView = 'tournaments'; renderTeamPicker(); };
             
-            const teams = (savedTeamsData || []).filter(t => t.teamCategory === "Tournament" && t.tournamentName === tpSelectedTournament && t.name.toLowerCase().includes(searchTerm));
+            // FIX: Added safe fallback (t.name || "") to prevent script crashes on missing names
+            const teams = (savedTeamsData || []).filter(t => t.teamCategory === "Tournament" && t.tournamentName === tpSelectedTournament && (t.name || "").toLowerCase().includes(searchTerm));
             renderTeamList(teams, selectedValues, content);
         }
     }
 
     function renderTeamList(teams, selectedValues, container) {
         if(teams.length === 0) {
-            container.innerHTML = `<div class="p-8 text-center text-gray-400 font-bold text-sm">No teams found.</div>`;
+            const isLoading = window._teamsLoading && window._teamsLoading.active;
+            if (isLoading) {
+                container.innerHTML = `
+                    <div class="p-8 text-center">
+                        <div class="inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        <div class="mt-3 text-gray-400 font-bold text-sm uppercase tracking-widest">Loading teams...</div>
+                    </div>`;
+            } else {
+                container.innerHTML = `<div class="p-8 text-center text-gray-400 font-bold text-sm">No teams found.</div>`;
+            }
             return;
         }
         
@@ -4268,6 +4298,9 @@ function broadcastMatchResult() {
             tourneySetup.classList.remove('hidden');
             setTimeout(() => tourneySetup.classList.add('active'), 10);
 
+            // --- NEW: FORCE RENDER VENUE INPUTS ON LOAD ---
+            renderGroundInputs();
+
             // --- BUG FIX: RESTORE LAST KNOWN TOURNAMENT PAGE ---
             const pages = ['tourney-page-1', 'tourney-page-2', 'tourney-page-3', 'tourney-page-4'];
             const isAnyVisible = pages.some(id => {
@@ -4419,63 +4452,134 @@ function broadcastMatchResult() {
 
 
         // --- DATA LOADING & SETUP LOGIC ---
+        // Normalizes a player record from Manage_Team.html into the shape this app expects.
+        // Manage_Team saves: { name, avatar, roles:{bat,bowl,wk} }
+        // Legacy/string entries are also supported for backwards compatibility.
+        function _normalizeSavedPlayer(p) {
+            if (p == null) return { name: '', image: '', roles: { bat:false, bowl:false, wk:false }, id: null };
+            if (typeof p === 'string') {
+                return { name: p, image: '', roles: { bat:false, bowl:false, wk:false }, id: null };
+            }
+            const roles = (p.roles && typeof p.roles === 'object')
+                ? { bat: !!p.roles.bat, bowl: !!p.roles.bowl, wk: !!p.roles.wk }
+                : { bat:false, bowl:false, wk:false };
+            return {
+                name: p.name || '',
+                image: p.avatar || p.image || '',
+                roles: roles,
+                id: p.id || null
+            };
+        }
+
+        // Builds the in-app team object from a Firestore team document.
+        function _buildTeamRecord(docId, data, category, tournamentName) {
+            const players = (data.players || []).map(_normalizeSavedPlayer);
+            return {
+                id: docId,
+                name: data.name || '',
+                logo: data.logo || '',
+                color: data.color || '',
+                captain: data.captain || '',
+                mobile: data.mobile || '',
+                creator: data.creator || '',
+                players: players,
+                country: data.country || (category === "Tournament" ? "Tournament" : "Canada"),
+                teamCategory: category,
+                tournamentName: tournamentName || null,
+                updatedAt: data.updatedAt || null
+            };
+        }
+
+        // Re-renders the team picker if currently open. Used so the picker auto-updates
+        // as teams trickle in from progressive Firestore fetches — fixes the bug where
+        // the picker would render empty before data arrived and never refresh.
+        function _refreshTeamPickerIfOpen() {
+            const modal = document.getElementById('team-picker-modal');
+            if (modal && !modal.classList.contains('hidden') && typeof renderTeamPicker === 'function') {
+                try { renderTeamPicker(); } catch(e) { /* ignore */ }
+            }
+        }
+
+        // Tracks whether a load is in progress so the picker can show a loading
+        // spinner instead of misleading "No teams found" when data hasn't arrived yet.
+        window._teamsLoading = { active: false, rootDone: false, tourneysDone: false };
+
         function loadSavedTeams() {
+            // If a load is already in flight, just return the existing promise.
+            // This prevents redundant fetches when openTeamPicker calls us repeatedly.
+            if (window._teamsLoading && window._teamsLoading.active && window.savedTeamsReady) {
+                return window.savedTeamsReady;
+            }
+
+            // Reset both the cache AND the loading flags atomically so the picker
+            // immediately reflects "loading" state on its next render.
             savedTeamsData = [];
-            
-            // 1. Fetch Single Match Teams
-            db.collection("teams").orderBy("updatedAt", "desc").get().then((querySnapshot) => {
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    const players = (data.players || []).map(p => {
-                        if (typeof p === 'string') return { name: p, image: '' };
-                        return { 
-                            name: p.name, 
-                            image: p.avatar || p.image || '', 
-                            id: p.id || null 
-                        };
-                    });
-                    savedTeamsData.push({ 
-                        id: doc.id, 
-                        name: data.name, 
-                        logo: data.logo, 
-                        players: players,
-                        country: data.country || "Canada",
-                        teamCategory: "Single Match"
-                    });
-                });
+            window._teamsLoading = { active: true, rootDone: false, tourneysDone: false };
+            _refreshTeamPickerIfOpen();
+
+            // 1) Root single-match teams. No orderBy on updatedAt — older docs may
+            // lack that field and Firestore would silently drop them from results.
+            const rootP = db.collection("teams").get().then(snap => {
+                snap.forEach(doc => savedTeamsData.push(_buildTeamRecord(doc.id, doc.data(), "Single Match", null)));
+                window._teamsLoading.rootDone = true;
                 populateTeamDropdowns();
-                
-                // 2. Fetch Tournament Teams (Only from active tournaments_v2)
-                db.collection("tournaments_v2").get().then((tSnap) => {
-                    tSnap.forEach(tDoc => {
-                        const tData = tDoc.data();
-                        const tName = tData.name || "Unnamed Tournament";
-                        
-                        db.collection("tournaments_v2").doc(tDoc.id).collection("teams").get().then(teamsSnap => {
-                            teamsSnap.forEach(doc => {
-                                const data = doc.data();
-                                // Prevent duplicates
-                                if (!savedTeamsData.find(t => t.name === data.name && t.teamCategory === "Tournament")) {
-                                    const players = (data.players || []).map(p => {
-                                        if (typeof p === 'string') return { name: p, image: '' };
-                                        return { name: p.name, image: p.avatar || p.image || '', id: p.id || null };
-                                    });
-                                    savedTeamsData.push({ 
-                                        id: doc.id, 
-                                        name: data.name, 
-                                        logo: data.logo, 
-                                        players: players,
-                                        country: data.country || "Tournament", 
-                                        teamCategory: "Tournament",
-                                        tournamentName: tName
-                                    });
+                _refreshTeamPickerIfOpen();
+            }).catch(err => {
+                console.warn("loadSavedTeams: root teams fetch failed", err);
+                window._teamsLoading.rootDone = true;
+                _refreshTeamPickerIfOpen();
+            });
+
+            // 2) Tournament teams — fetched progressively. Each tournament's teams
+            // are pushed into savedTeamsData and the picker re-renders as soon as
+            // that subcollection finishes, so the user never stares at an empty
+            // picker while later tournaments are still loading.
+            const tourneyP = db.collection("tournaments_v2").get().then(tSnap => {
+                const subFetches = [];
+                tSnap.forEach(tDoc => {
+                    const tName = (tDoc.data() && tDoc.data().name) || "Unnamed Tournament";
+                    const sub = db.collection("tournaments_v2").doc(tDoc.id).collection("teams").get()
+                        .then(teamsSnap => {
+                            teamsSnap.forEach(d => {
+                                const t = _buildTeamRecord(d.id, d.data(), "Tournament", tName);
+                                // Dedupe by id within Tournament category.
+                                if (!savedTeamsData.some(x => x.id === t.id && x.teamCategory === "Tournament")) {
+                                    savedTeamsData.push(t);
                                 }
                             });
-                            populateTeamDropdowns(); 
-                        }).catch(err => { /* Subcollection might not exist, silently ignore */ });
-                    });
-                }).catch(err => console.warn("Could not fetch tournaments_v2"));
+                            populateTeamDropdowns();
+                            _refreshTeamPickerIfOpen();
+                        })
+                        .catch(err => {
+                            // A single broken tournament must not kill the whole load.
+                            console.warn("loadSavedTeams: tournament teams fetch failed for", tDoc.id, err);
+                        });
+                    subFetches.push(sub);
+                });
+                return Promise.all(subFetches);
+            }).catch(err => {
+                console.warn("loadSavedTeams: tournaments_v2 fetch failed", err);
             });
+
+            // Resolve everything together for any code that needs to await full readiness.
+            const readyPromise = Promise.all([rootP, tourneyP]).then(() => {
+                window._teamsLoading.tourneysDone = true;
+                window._teamsLoading.active = false;
+                // Final pass — alphabetical sort for stable picker order.
+                savedTeamsData.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+                populateTeamDropdowns();
+                _refreshTeamPickerIfOpen();
+                console.log(`loadSavedTeams: complete. ${savedTeamsData.length} teams loaded.`);
+                return savedTeamsData;
+            }).catch(err => {
+                console.error("loadSavedTeams: unexpected failure", err);
+                window._teamsLoading.active = false;
+                _refreshTeamPickerIfOpen();
+                return savedTeamsData;
+            });
+
+            window.savedTeamsReady = readyPromise;
+            return readyPromise;
         }
         window.countryFlags = {};
         function populateTeamDropdowns() {
@@ -8112,7 +8216,7 @@ function setBallType(type, card) {
 }
 
 function renderGroundInputs() {
-    const count = parseInt(document.getElementById('tourney-ground-count').value);
+    const count = parseInt(document.getElementById('tourney-ground-count').value) || 1;
     const container = document.getElementById('dynamic-grounds-container');
     container.innerHTML = '';
     
@@ -8123,7 +8227,8 @@ function renderGroundInputs() {
         const nameInput = document.createElement('input');
         nameInput.type = 'text';
         nameInput.id = `ground-${i+1}`;
-        nameInput.placeholder = `Ground ${i+1} Name`;
+        // Automatically adjust placeholder for better UX
+        nameInput.placeholder = count === 1 ? "Venue Name (e.g. Main Stadium)" : `Venue ${i+1} Name`;
         nameInput.className = "ground-input mobile-input bg-white mb-2";
         
         const addrInput = document.createElement('input');
