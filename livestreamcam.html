@@ -2132,11 +2132,12 @@ function goLiveOnDB(matchId, peerId) {
                     }
 
                     // 2. Send START control message (JSON) with FB credentials
+                    // FIX: Added the trailing slash (/) to fbServerUrl to satisfy Facebook's RTMP ingest requirements
                     fbRelayWs.send(JSON.stringify({
                         type:        'start',
                         matchId:     matchId,
                         fbStreamKey: cleanStreamKey, // Cleaned key
-                        fbServerUrl: 'rtmps://live-api-s.facebook.com:443/rtmp'
+                        fbServerUrl: 'rtmps://live-api-s.facebook.com:443/rtmp/' 
                     }));
                 };
 
@@ -2347,11 +2348,12 @@ function goLiveOnDB(matchId, peerId) {
                         cleanStreamKey = parts[parts.length - 1]; // Extracts just the key
                     }
 
+                    // FIX: Added the trailing slash (/) to fbServerUrl for maximum RTMP ingest compatibility
                     ytRelayWs.send(JSON.stringify({
                         type:        'start',
                         matchId:     matchId + "_YT", // Prevents collision on the server side
                         fbStreamKey: cleanStreamKey,  // Cleaned key
-                        fbServerUrl: 'rtmp://a.rtmp.youtube.com/live2' // Standard YouTube Server
+                        fbServerUrl: 'rtmp://a.rtmp.youtube.com/live2/' 
                     }));
                 };
 
