@@ -344,8 +344,8 @@
                 <div class="absolute right-0 top-0 w-32 h-32 bg-blue-50 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-110"></div>
                 <div class="relative z-10">
                     <span class="text-4xl mb-4 block">🏏</span>
-                    <h3 class="text-1xl font-black text-gray-800 mb-2 uppercase italic">Single Match Mode</h3>
-                    <p class="text-xs text-gray-500 font-medium leading-relaxed">Quick play mode. Set up two teams, toss, and score immediately.</p>
+                    <h3 class="text-1xl font-black text-gray-800 mb-2 uppercase italic">Single Match</h3>
+                    <p class="text-xs text-gray-500 font-medium leading-relaxed">Quick play - Set up two teams, toss, and score.</p>
                 </div>
             </button>
 
@@ -353,7 +353,7 @@
                 <div class="absolute right-0 top-0 w-32 h-32 bg-purple-50 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-110"></div>
                 <div class="relative z-10">
                     <span class="text-4xl mb-4 block">🏆</span>
-                    <h3 class="text-1xl font-black text-gray-800 mb-2 uppercase italic">Tournament Mode</h3>
+                    <h3 class="text-1xl font-black text-gray-800 mb-2 uppercase italic">Tournament</h3>
                     <p class="text-xs text-gray-500 font-medium leading-relaxed">Leagues & Knockouts. Auto-fixtures, points tables, NRR & MVP stats.</p>
                 </div>
             </button>
@@ -3338,10 +3338,26 @@ window.generateProfessionalSchedule = function(selectedFlow = null) {
                     </button>
                 </div>
 
-                <div class="p-2 bg-gray-50 flex justify-between items-center border-t px-4">
-                    <button onclick="openEndMatchModal()" class="text-xs font-bold uppercase tracking-wider text-red-600">End Match</button>
-                    <button onclick="openEditMatchMode()" class="text-xs font-bold uppercase tracking-wider text-blue-600 border border-blue-200 px-3 py-1 rounded-lg hover:bg-blue-50">✎ Edit Match</button>
-                    <button onclick="openViewControlModal()" class="text-xs font-bold uppercase tracking-wider text-white bg-indigo-600 px-4 py-2 rounded-full border border-indigo-700 shadow-lg hover:bg-indigo-700">📺 BROADCAST</button>
+                <div class="bg-white flex justify-around items-center border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.04)] pt-2 pb-safe px-1 z-30">
+                    <button onclick="openEndMatchModal()" class="flex flex-col items-center justify-center gap-1 text-red-500 hover:text-red-700 transition-colors w-16 group">
+                        <svg class="w-6 h-6 group-active:scale-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"></path></svg>
+                        <span class="text-[9px] font-black uppercase tracking-wider">END</span>
+                    </button>
+                    
+                    <button onclick="openScoreEditModal()" class="flex flex-col items-center justify-center gap-1 text-gray-500 hover:text-blue-600 transition-colors w-[72px] group">
+                        <svg class="w-6 h-6 group-active:scale-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        <span class="text-[9px] font-black uppercase tracking-wider">Edit Setting</span>
+                    </button>
+
+                    <button onclick="openScorecardModal()" class="flex flex-col items-center justify-center gap-1 text-gray-500 hover:text-blue-600 transition-colors w-16 group">
+                        <svg class="w-6 h-6 group-active:scale-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <span class="text-[9px] font-black uppercase tracking-wider">Scorecard</span>
+                    </button>
+
+                    <button onclick="openViewControlModal()" class="flex flex-col items-center justify-center gap-1 text-indigo-600 hover:text-indigo-800 transition-colors w-20 group">
+                        <svg class="w-6 h-6 group-active:scale-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        <span class="text-[9px] font-black uppercase tracking-wider">Broadcast</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -3524,6 +3540,56 @@ window.generateProfessionalSchedule = function(selectedFlow = null) {
             </div>
             
             <button onclick="closeModal('broadcast-control-modal')" class="mt-6 w-full py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-xl text-sm transition-colors">Close Menu</button>
+        </div>
+    </div>
+
+    <div id="score-edit-modal" class="modal-overlay fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-[200] flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl flex flex-col max-h-[85vh] overflow-hidden">
+            <div class="flex justify-between items-center mb-4 shrink-0 border-b border-gray-100 pb-4">
+                <h3 class="text-lg font-black text-gray-900 uppercase tracking-tight flex items-center gap-2">
+                    <span class="text-2xl">⚙️</span> Edit Score
+                </h3>
+                <button onclick="closeModal('score-edit-modal')" class="text-gray-400 hover:text-red-500 font-bold text-xl transition-colors">✕</button>
+            </div>
+            <p class="text-xs text-gray-500 mb-4 shrink-0 font-medium">Select an over to edit past ball-by-ball records or edit overall match settings.</p>
+            
+            <div id="score-edit-scaffolding" class="flex-grow overflow-y-auto custom-scroll space-y-4">
+                <div class="p-5 bg-blue-50 border border-blue-100 rounded-2xl">
+                    <div class="text-xs font-bold text-blue-800 uppercase tracking-widest mb-3 text-center">Active Over Edit</div>
+                    <button onclick="closeModal('score-edit-modal'); openBowlerEdit();" class="py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-black text-xs shadow-lg shadow-blue-200 w-full transition-transform active:scale-95 uppercase tracking-wider">
+                        Edit Current Over Balls
+                    </button>
+                </div>
+
+                <div class="p-8 border-2 border-dashed border-gray-200 rounded-2xl text-center text-gray-400 bg-gray-50/50">
+                    <span class="text-3xl mb-3 block opacity-50">⏳</span>
+                    <h4 class="text-xs font-black uppercase tracking-wider text-gray-500">Past Overs History</h4>
+                    <p class="text-[10px] mt-2 font-medium">Full match ball-by-ball timeline editing structure goes here.</p>
+                </div>
+            </div>
+            
+            <button onclick="closeModal('score-edit-modal'); openEditMatchMode();" class="mt-4 w-full py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-black text-[11px] rounded-xl transition-all active:scale-95 uppercase tracking-widest flex items-center justify-center gap-2 border border-gray-200">
+                <span>🏟</span> Edit Match Details (Venue/Overs)
+            </button>
+        </div>
+    </div>
+
+    <div id="scorecard-modal" class="modal-overlay fixed inset-0 bg-black/80 backdrop-blur-md hidden z-[200] flex items-end md:items-center justify-center sm:p-4 transition-all">
+        <div class="bg-white w-full h-[92vh] sm:max-w-4xl sm:h-[85vh] rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden">
+            <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center shrink-0">
+                <h3 class="text-lg font-black text-gray-800 uppercase tracking-tight flex items-center gap-2">
+                    <span class="text-indigo-500 text-xl">📋</span> Live Scorecard
+                </h3>
+                <button onclick="closeModal('scorecard-modal')" class="w-8 h-8 rounded-full bg-gray-200 hover:bg-red-100 hover:text-red-600 text-gray-600 font-bold flex items-center justify-center transition-colors">✕</button>
+            </div>
+            
+            <div class="flex-grow overflow-y-auto bg-gray-100 relative custom-scroll w-full">
+                <div class="w-full h-full flex flex-col items-center justify-center p-8 text-center text-gray-400">
+                    <span class="text-4xl mb-4 opacity-30">🔌</span>
+                    <h4 class="font-black uppercase tracking-widest text-sm">Score Viewer Container</h4>
+                    <span class="text-xs text-gray-400 font-medium mt-2 max-w-xs leading-relaxed">Replace this placeholder div with your external Live Scorecard viewer code.</span>
+                </div>
+                </div>
         </div>
     </div>
 
@@ -4489,6 +4555,8 @@ function broadcastMatchResult() {
         
         function openWicketModal() { openModal('wicket-type-modal'); }
         function openViewControlModal() { openModal('broadcast-control-modal'); } // ADDED MISSING FUNCTION
+        function openScoreEditModal() { openModal('score-edit-modal'); }
+        function openScorecardModal() { openModal('scorecard-modal'); }
 
         function generateUniqueId() { return 'p_' + Math.random().toString(36).substr(2, 9); }
 
@@ -6011,8 +6079,8 @@ function generateBroadcastCode() {
             }
 
             if (role === 'bowler') { state.bowler = newPlayer; } 
-            else if (role === 'striker') { state.striker = newPlayer; } 
-            else if (role === 'nonStriker') { state.nonStriker = newPlayer; }
+            else if (role === 'striker') { state.striker = newPlayer; if (newPlayer.dismissal && newPlayer.dismissal.includes('Retired')) newPlayer.dismissal = null; } 
+            else if (role === 'nonStriker') { state.nonStriker = newPlayer; if (newPlayer.dismissal && newPlayer.dismissal.includes('Retired')) newPlayer.dismissal = null; }
 
             closeModal('player-modal');
             if (pendingSelection.callback) pendingSelection.callback();
@@ -6066,7 +6134,8 @@ function generateBroadcastCode() {
 
         // Render Players
         Object.values(squad).forEach(p => {
-            if(p.dismissal) return; // Skip players who are out (if any)
+            const isRetired = p.dismissal && p.dismissal.includes('Retired');
+            if(p.dismissal && !isRetired) return; // Skip players who are out (except retired)
 
             const pImg = fullSquad.find(x => x.id === p.id)?.image;
             
@@ -6129,10 +6198,11 @@ function generateBroadcastCode() {
         div.className = `flex flex-col items-center p-2 rounded-2xl bg-white border border-gray-200 shadow-sm transition-all duration-300 cursor-pointer hover:shadow-md select-none relative`;
         
         const avatar = `<img src="${img || 'playeravatar.png'}" onerror="this.onerror=null;this.src='playeravatar.png';" class="w-14 h-14 rounded-full object-cover border-2 border-white shadow-md bg-gray-100 mb-2">`;
+        const isRetired = p.dismissal && p.dismissal.includes('Retired');
 
         div.innerHTML = `
             ${avatar}
-            <div class="text-[9px] font-black text-gray-700 text-center uppercase leading-tight w-full truncate">${p.name}</div>
+            <div class="text-[9px] font-black text-gray-700 text-center uppercase leading-tight w-full truncate">${p.name} ${isRetired ? '<br><span class="text-red-500">(Retired)</span>' : ''}</div>
             ${isSelected ? '<div class="absolute top-2 right-2 text-green-500 bg-white rounded-full"><svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/></svg></div>' : ''}
         `;
         return div;
@@ -6145,6 +6215,10 @@ function generateBroadcastCode() {
         state.striker = state[team].playerStats[tempStrikerId];
         state.nonStriker = state[team].playerStats[tempNonStrikerId];
 
+        // Clear retired status if they were re-selected
+        if (state.striker.dismissal && state.striker.dismissal.includes('Retired')) state.striker.dismissal = null;
+        if (state.nonStriker.dismissal && state.nonStriker.dismissal.includes('Retired')) state.nonStriker.dismissal = null;
+
         document.getElementById('opening-pair-modal').classList.add('hidden');
         
         // Proceed to Bowler Selection
@@ -6153,100 +6227,101 @@ function generateBroadcastCode() {
 
     // --- FUNCTION RESTORED: Handles Individual Player Selection (Bowlers/Next Batsman) ---
     function selectPlayer(role, callback) {
-        pendingSelection = { role, callback };
-        
-        const teamKey = (role === 'bowler') ? state.bowlingTeam : state.battingTeam;
-        const roster = state[teamKey].playerStats;
-        const fullSquad = state[teamKey].squad; 
-        
-        const grid = document.getElementById('player-selection-grid');
-        grid.innerHTML = '';
+            pendingSelection = { role, callback };
+            
+            const teamKey = (role === 'bowler') ? state.bowlingTeam : state.battingTeam;
+            const roster = state[teamKey].playerStats;
+            const fullSquad = state[teamKey].squad; 
+            
+            const grid = document.getElementById('player-selection-grid');
+            grid.innerHTML = '';
 
-        const title = document.getElementById('modal-title');
-        if(title) {
-            if(role === 'bowler') title.textContent = "Select Bowler";
-            else if(role === 'striker') title.textContent = "Select Striker";
-            else if(role === 'nonStriker') title.textContent = "Select Non-Striker";
-        }
+            const title = document.getElementById('modal-title');
+            if(title) {
+                if(role === 'bowler') title.textContent = "Select Bowler";
+                else if(role === 'striker') title.textContent = "Select Striker";
+                else if(role === 'nonStriker') title.textContent = "Select Non-Striker";
+            }
 
-        const players = Object.values(roster);
-        
-        if(players.length === 0) {
-            grid.innerHTML = '<p class="col-span-3 text-center text-gray-400 text-sm">No players available</p>';
+            const players = Object.values(roster);
+            
+            if(players.length === 0) {
+                grid.innerHTML = '<p class="col-span-3 text-center text-gray-400 text-sm">No players available</p>';
+                openModal('player-modal');
+                return;
+            }
+
+            players.forEach(p => {
+                // 1. Identify if this is the "Resting" bowler (Previous Bowler)
+                const isResting = (role === 'bowler' && state.bowler && state.bowler.id === p.id && !window.correctionMode);
+                
+                // --- NEW: Check Disqualification Status ---
+                const isDisqualified = (p.status === 'DISQUALIFIED');
+                const isInjured = (p.status === 'INJURED');
+
+                // 2. If selecting batter, exclude the other batter on crease
+                if (role === 'striker' && state.nonStriker && state.nonStriker.id === p.id) return;
+                if (role === 'nonStriker' && state.striker && state.striker.id === p.id) return;
+
+                // 3. If selecting batter, exclude those who are already OUT (unless correcting or Retired)
+                const isRetired = p.dismissal && p.dismissal.includes('Retired');
+                if ((role === 'striker' || role === 'nonStriker') && p.dismissal && !isRetired && !window.correctionMode) return;
+
+                // Find Image
+                const squadMember = fullSquad.find(s => s.id === p.id);
+                const imgSrc = squadMember ? squadMember.image : null;
+                
+                // Base Avatar HTML
+                let avatarHTML = `<img src="${imgSrc || 'playeravatar.png'}" onerror="this.onerror=null;this.src='playeravatar.png';" class="w-10 h-10 rounded-full object-cover border border-gray-200">`;
+
+                // If Resting, Add Banner Overlay
+                if (isResting) {
+                    avatarHTML = `
+                    <div class="relative">
+                        ${avatarHTML}
+                        <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[7px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider shadow-sm border border-white">RESTING</div>
+                    </div>`;
+                }
+
+                // --- NEW: Disqualified Banner Overlay ---
+                if (isDisqualified) {
+                    avatarHTML = `
+                    <div class="relative">
+                        ${avatarHTML}
+                        <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[7px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider shadow-sm border border-white">DISQUALIFIED</div>
+                    </div>`;
+                }
+
+                const btn = document.createElement('button');
+                
+                if (isResting || isDisqualified) {
+                    // Disabled / Greyed Out Styling
+                    btn.className = "flex flex-col items-center justify-center p-3 bg-gray-50 border border-gray-200 rounded-xl shadow-none opacity-50 grayscale cursor-not-allowed";
+                    btn.onclick = (e) => { e.preventDefault(); }; 
+                } else {
+                    // Active / Selectable Styling
+                    btn.className = "flex flex-col items-center justify-center p-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-500 hover:bg-blue-50 transition-all";
+                    // FIX: Removed closure reliance, ensuring ID is passed correctly
+                    btn.onclick = function() {
+                        const selector = document.getElementById('player-select');
+                        if(selector) selector.value = p.id;
+                        const saveBtn = document.getElementById('player-save-btn');
+                        if(saveBtn) saveBtn.click();
+                    };
+                }
+
+                btn.innerHTML = `
+                    ${avatarHTML}
+                    <span class="mt-2 text-xs font-bold text-gray-700 text-center leading-tight">${p.name} ${isRetired ? '<br><span class="text-[9px] text-red-500 uppercase">(Retired)</span>' : ''}</span>
+                    ${p.ballsBowled > 0 && role === 'bowler' ? `<span class="text-[9px] text-gray-400 mt-1">${p.wickets}-${p.runsConceded}</span>` : ''}
+                    ${(p.balls > 0 || p.runs > 0) && role !== 'bowler' ? `<span class="text-[9px] text-gray-400 mt-1">${p.runs} (${p.balls})</span>` : ''}
+                `;
+                
+                grid.appendChild(btn);
+            });
+
             openModal('player-modal');
-            return;
         }
-
-        players.forEach(p => {
-            // 1. Identify if this is the "Resting" bowler (Previous Bowler)
-            const isResting = (role === 'bowler' && state.bowler && state.bowler.id === p.id && !window.correctionMode);
-            
-            // --- NEW: Check Disqualification Status ---
-            const isDisqualified = (p.status === 'DISQUALIFIED');
-            const isInjured = (p.status === 'INJURED');
-
-            // 2. If selecting batter, exclude the other batter on crease
-            if (role === 'striker' && state.nonStriker && state.nonStriker.id === p.id) return;
-            if (role === 'nonStriker' && state.striker && state.striker.id === p.id) return;
-
-            // 3. If selecting batter, exclude those who are already OUT (unless correcting)
-            if ((role === 'striker' || role === 'nonStriker') && p.dismissal && !window.correctionMode) return;
-
-            // Find Image
-            const squadMember = fullSquad.find(s => s.id === p.id);
-            const imgSrc = squadMember ? squadMember.image : null;
-            
-            // Base Avatar HTML
-            let avatarHTML = `<img src="${imgSrc || 'playeravatar.png'}" onerror="this.onerror=null;this.src='playeravatar.png';" class="w-10 h-10 rounded-full object-cover border border-gray-200">`;
-
-            // If Resting, Add Banner Overlay
-            if (isResting) {
-                avatarHTML = `
-                <div class="relative">
-                    ${avatarHTML}
-                    <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[7px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider shadow-sm border border-white">RESTING</div>
-                </div>`;
-            }
-
-            // --- NEW: Disqualified Banner Overlay ---
-            if (isDisqualified) {
-                avatarHTML = `
-                <div class="relative">
-                    ${avatarHTML}
-                    <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[7px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider shadow-sm border border-white">DISQUALIFIED</div>
-                </div>`;
-            }
-
-            const btn = document.createElement('button');
-            
-            if (isResting || isDisqualified) {
-                // Disabled / Greyed Out Styling
-                btn.className = "flex flex-col items-center justify-center p-3 bg-gray-50 border border-gray-200 rounded-xl shadow-none opacity-50 grayscale cursor-not-allowed";
-                btn.onclick = (e) => { e.preventDefault(); }; 
-            } else {
-                // Active / Selectable Styling
-                btn.className = "flex flex-col items-center justify-center p-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-blue-500 hover:bg-blue-50 transition-all";
-                // FIX: Removed closure reliance, ensuring ID is passed correctly
-                btn.onclick = function() {
-                    const selector = document.getElementById('player-select');
-                    if(selector) selector.value = p.id;
-                    const saveBtn = document.getElementById('player-save-btn');
-                    if(saveBtn) saveBtn.click();
-                };
-            }
-
-            btn.innerHTML = `
-                ${avatarHTML}
-                <span class="mt-2 text-xs font-bold text-gray-700 text-center leading-tight">${p.name}</span>
-                ${p.ballsBowled > 0 && role === 'bowler' ? `<span class="text-[9px] text-gray-400 mt-1">${p.wickets}-${p.runsConceded}</span>` : ''}
-                ${(p.balls > 0 || p.runs > 0) && role !== 'bowler' ? `<span class="text-[9px] text-gray-400 mt-1">${p.runs} (${p.balls})</span>` : ''}
-            `;
-            
-            grid.appendChild(btn);
-        });
-
-        openModal('player-modal');
-    }
 
         // --- ENHANCED EVENT HANDLERS (NORMAL + EDIT SUPPORT) ---
         let tempWicketType = null;
@@ -6466,7 +6541,8 @@ function generateBroadcastCode() {
 
         function applyWicketPenalty(who, type, fielder = null, physicalRuns = 0) {
             addToHistory();
-            const penalty = state.rules.wicketRuns;
+            const isRetired = (type === 'Retired Out' || type === 'Retired');
+            const penalty = isRetired ? 0 : state.rules.wicketRuns;
             const bt = state[state.battingTeam];
             const bwl = state.bowler; 
             
@@ -6492,19 +6568,21 @@ function generateBroadcastCode() {
             }
 
             bt.score += (physicalRuns - penalty);
-            if (state.striker) { state.striker.balls++; }
+            if (state.striker && !isRetired) { state.striker.balls++; }
             bt.wickets = (bt.wickets || 0) + 1;
             
             if (bwl && type !== 'Run Out' && type !== 'Retired Out' && type !== 'Other') { bwl.wickets++; }
-            if (bwl) { 
+            if (bwl && !isRetired) { 
                 bwl.ballsBowled++; 
                 bwl.runsConceded += physicalRuns;
             }
 
             // FIX: Process Ball FIRST to ensure state is consistent before syncing
             let ballEvent = 'W';
-            if (physicalRuns > 0) ballEvent = `${physicalRuns}W`;
-            processBall(physicalRuns - penalty, ballEvent, true, true);
+            if (isRetired) ballEvent = 'RET';
+            else if (physicalRuns > 0) ballEvent = `${physicalRuns}W`;
+            
+            processBall(physicalRuns - penalty, ballEvent, !isRetired, true);
 
             // Swap strikers if odd runs completed before the wicket
             if (physicalRuns % 2 !== 0) {
