@@ -369,7 +369,7 @@
 </div>
 
 <div id="tournament-entry-screen" class="setup-step hidden w-full max-w-md mx-auto px-4 mt-4">
-    <button onclick="CustomDialog.show({type: 'confirm', title: 'Return Home?', message: 'Are you sure you want to return to Home?<br>Any unsaved data will be lost.', theme: 'red', icon: '🏠', confirmText: 'Confirm', onConfirm: () => location.reload()})" class="mb-4 text-xs font-bold text-gray-400 hover:text-gray-600 uppercase tracking-wider transition-colors flex items-center gap-1">
+    <button onclick="CustomDialog.show({type: 'confirm', title: 'Return Home?', message: 'Are you sure you want to return to Home?<br>Any unsaved data will be lost.', theme: 'red', icon: '🏠', confirmText: 'Confirm', onConfirm: () => window.returnToHome()})" class="mb-4 text-xs font-bold text-gray-400 hover:text-gray-600 uppercase tracking-wider transition-colors flex items-center gap-1">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
         HOME
     </button>
@@ -408,7 +408,7 @@
 
 <div id="running-tournaments-screen" class="setup-step hidden w-full max-w-4xl mx-auto px-2">
     <div class="flex justify-between items-center mb-4">
-        <button onclick="CustomDialog.show({type: 'confirm', title: 'Return Home?', message: 'Are you sure you want to return to Home?<br>Any unsaved data will be lost.', theme: 'red', icon: '🏠', confirmText: 'Confirm', onConfirm: () => location.reload()})" class="text-xs font-bold text-gray-400 hover:text-gray-600 uppercase tracking-wider transition-colors flex items-center gap-1">
+        <button onclick="CustomDialog.show({type: 'confirm', title: 'Return Home?', message: 'Are you sure you want to return to Home?<br>Any unsaved data will be lost.', theme: 'red', icon: '🏠', confirmText: 'Confirm', onConfirm: () => window.returnToHome()})" class="text-xs font-bold text-gray-400 hover:text-gray-600 uppercase tracking-wider transition-colors flex items-center gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
             HOME
         </button>
@@ -438,7 +438,7 @@
 </div>
 
 <div id="setup-step-1" class="setup-step hidden w-full max-w-5xl mx-auto px-2">
-    <button onclick="CustomDialog.show({type: 'confirm', title: 'Return Home?', message: 'Are you sure you want to return to Home?<br>Any unsaved data will be lost.', theme: 'red', icon: '🏠', confirmText: 'Confirm', onConfirm: () => location.reload()})" class="mb-4 text-xs font-bold text-gray-400 hover:text-gray-600 uppercase tracking-wider transition-colors flex items-center gap-1">
+    <button onclick="CustomDialog.show({type: 'confirm', title: 'Return Home?', message: 'Are you sure you want to return to Home?<br>Any unsaved data will be lost.', theme: 'red', icon: '🏠', confirmText: 'Confirm', onConfirm: () => window.returnToHome()})" class="mb-4 text-xs font-bold text-gray-400 hover:text-gray-600 uppercase tracking-wider transition-colors flex items-center gap-1">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
         HOME
     </button>
@@ -1801,7 +1801,7 @@
 
     <div class="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm box-border">
         <div class="max-w-5xl mx-auto px-2 sm:px-4 py-3 sm:py-4 flex items-center justify-between">
-            <button onclick="CustomDialog.show({type: 'confirm', title: 'Return Home?', message: 'Are you sure you want to return to Home?<br>Any unsaved data will be lost.', theme: 'red', icon: '🏠', confirmText: 'Confirm', onConfirm: () => location.reload()})" class="group flex items-center gap-1 sm:gap-2 text-gray-500 hover:text-gray-900 transition-colors px-1 sm:px-2 py-1 rounded hover:bg-gray-100 shrink-0">
+            <button onclick="CustomDialog.show({type: 'confirm', title: 'Return Home?', message: 'Are you sure you want to return to Home?<br>Any unsaved data will be lost.', theme: 'red', icon: '🏠', confirmText: 'Confirm', onConfirm: () => window.returnToHome()})" class="group flex items-center gap-1 sm:gap-2 text-gray-500 hover:text-gray-900 transition-colors px-1 sm:px-2 py-1 rounded hover:bg-gray-100 shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
                 <span class="text-[10px] sm:text-xs font-bold uppercase tracking-wider hidden sm:inline">HOME</span>
             </button>
@@ -3120,7 +3120,7 @@ window.generateProfessionalSchedule = function(selectedFlow = null) {
 </script>
 
 <div id="setup-step-2" class="setup-step hidden w-full">
-    <button onclick="CustomDialog.show({type: 'confirm', title: 'Return Home?', message: 'Are you sure you want to return to Home?<br>Any unsaved data will be lost.', theme: 'red', icon: '🏠', confirmText: 'Confirm', onConfirm: () => location.reload()})" class="mb-4 text-xs font-bold text-gray-400 hover:text-gray-600 uppercase tracking-wider transition-colors flex items-center gap-1">
+    <button onclick="CustomDialog.show({type: 'confirm', title: 'Return Home?', message: 'Are you sure you want to return to Home?<br>Any unsaved data will be lost.', theme: 'red', icon: '🏠', confirmText: 'Confirm', onConfirm: () => window.returnToHome()})" class="mb-4 text-xs font-bold text-gray-400 hover:text-gray-600 uppercase tracking-wider transition-colors flex items-center gap-1">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
         HOME
     </button>
@@ -3145,7 +3145,7 @@ window.generateProfessionalSchedule = function(selectedFlow = null) {
 
                 <div id="setup-step-4" class="setup-step hidden w-full h-full flex flex-col pb-24 pt-2 px-2">
                     <div class="text-left w-full mb-3">
-                        <button onclick="CustomDialog.show({type: 'confirm', title: 'Return Home?', message: 'Are you sure you want to return to Home?<br>Any unsaved data will be lost.', theme: 'red', icon: '🏠', confirmText: 'Confirm', onConfirm: () => location.reload()})" class="text-xs font-bold text-gray-400 hover:text-gray-600 uppercase tracking-wider transition-colors flex items-center gap-1">
+                        <button onclick="CustomDialog.show({type: 'confirm', title: 'Return Home?', message: 'Are you sure you want to return to Home?<br>Any unsaved data will be lost.', theme: 'red', icon: '🏠', confirmText: 'Confirm', onConfirm: () => window.returnToHome()})" class="text-xs font-bold text-gray-400 hover:text-gray-600 uppercase tracking-wider transition-colors flex items-center gap-1">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
                             HOME
                         </button>
@@ -4155,8 +4155,86 @@ function broadcastMatchResult() {
         let savedTeamsData = [];
         let isEditMatchMode = false;
 
+        // --- LOCAL STATE PERSISTENCE (AUTO-SAVE) ---
+        function saveLocalMatchState() {
+            try {
+                // Only save if a match is actively set up / running
+                if (state.team1 && state.team2 && state.battingTeam) {
+                    const saveData = {
+                        state: state,
+                        undoStack: undoStack,
+                        broadcastId: broadcastId,
+                        tossWinner: tossWinner,
+                        tossDecision: tossDecision
+                    };
+                    localStorage.setItem('crickerr_active_match', JSON.stringify(saveData));
+                }
+            } catch (e) {
+                console.error("Failed to save match state locally:", e);
+            }
+        }
+
+        function clearLocalMatchState() {
+            localStorage.removeItem('crickerr_active_match');
+        }
+
+        function restoreLocalMatchState() {
+            try {
+                const saved = localStorage.getItem('crickerr_active_match');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    if (data && data.state) {
+                        state = data.state;
+                        undoStack = data.undoStack || [];
+                        broadcastId = data.broadcastId;
+                        tossWinner = data.tossWinner;
+                        tossDecision = data.tossDecision;
+                        
+                        if (broadcastId) {
+                            const codeBox = document.getElementById('match-code-box');
+                            if (codeBox) codeBox.textContent = broadcastId;
+                        }
+                        return true;
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to restore match state locally:", e);
+            }
+            return false;
+        }
+
+        window.returnToHome = function() {
+            clearLocalMatchState();
+            location.reload();
+        };
+
         // --- INITIALIZATION ---
         window.onload = function() {
+            // Attempt to restore match state first
+            if (restoreLocalMatchState()) {
+                console.log("Resumed active match from local storage.");
+                
+                // Show App Screen
+                document.querySelectorAll('body > div').forEach(d => {
+                    if(d.id !== 'splash-screen' && !d.classList.contains('modal-overlay')) d.classList.add('hidden');
+                });
+                const el = document.getElementById('app');
+                if(el) { el.classList.remove('hidden'); el.classList.add('flex'); }
+
+                updateMatchHeader();
+                updateScoreboard();
+                updateUI();
+                
+                // Check if we need to resume picking players mid-innings
+                if (state.innings === 1 || state.innings === 2 || state.innings === 4) {
+                    if (!state.striker || !state.nonStriker) {
+                        setTimeout(() => initInnings(), 500);
+                    } else if (!state.bowler) {
+                        setTimeout(() => selectPlayer('bowler', updateUI), 500);
+                    }
+                }
+            }
+
             const today = new Date();
             ui.matchDateInput.value = today.toISOString().split('T')[0];
             
@@ -4209,7 +4287,12 @@ function broadcastMatchResult() {
             }
 
             loadSavedTeams();
-            showScreen('setup-screen');
+            
+            // Only show setup if there is NO active match running
+            if (!localStorage.getItem('crickerr_active_match')) {
+                showScreen('setup-screen');
+            }
+            
             setupGlobalEnterNavigation(); // Initialize Global Navigation
 
             // --- CHECK URL PARAMS FOR HISTORY LOAD ---
@@ -7164,7 +7247,7 @@ function endInnings() {
         theme: "red",
         icon: "🚪",
         confirmText: "Yes, Exit",
-        onConfirm: () => location.reload()
+        onConfirm: () => { clearLocalMatchState(); location.reload(); }
     });
 }
 
@@ -7216,6 +7299,7 @@ function processEndMatch(statusType) {
         }
     } else {
         alert(`Match ended: ${finalResultText}`);
+        clearLocalMatchState();
         location.reload();
     }
 }
@@ -7422,6 +7506,7 @@ function processEndMatch(statusType) {
                 state.nonStriker = btStats[state.nonStriker.id];
             }
 
+            saveLocalMatchState(); // STRICT AUTO-SAVE ON EVERY UI UPDATE
             syncToLiveDB(); 
             updateScoreboard(); 
             
@@ -7577,7 +7662,7 @@ function processEndMatch(statusType) {
                     theme: "red",
                     icon: "🗑️",
                     confirmText: "Start Fresh",
-                    onConfirm: () => location.reload()
+                    onConfirm: () => { clearLocalMatchState(); location.reload(); }
                 });
 
             } else if (action === 'END') {
@@ -7588,7 +7673,7 @@ function processEndMatch(statusType) {
                     theme: "blue",
                     icon: "🏁",
                     confirmText: "End Session",
-                    onConfirm: () => location.reload()
+                    onConfirm: () => { clearLocalMatchState(); location.reload(); }
                 });
 
             } else if (action === 'REMATCH') {
@@ -11760,6 +11845,70 @@ window.closeTournamentSponsorContext = function() {
                     }
                 }
             }
+        })();
+    </script>
+
+    <div id="pwa-update-banner" class="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center justify-between gap-4 z-[100000] hidden transition-all duration-500 translate-y-10 opacity-0 w-[95%] max-w-sm border border-gray-700">
+        <div class="flex items-center gap-3">
+            <span class="text-2xl animate-bounce">🚀</span>
+            <div class="flex flex-col">
+                <span class="text-sm font-black uppercase tracking-wider text-green-400">Update Available</span>
+                <span class="text-[10px] text-gray-300 font-medium">A new version of Crickerr is ready!</span>
+            </div>
+        </div>
+        <button id="pwa-update-btn" class="bg-green-500 hover:bg-green-600 text-gray-900 font-black text-xs uppercase px-4 py-2 rounded-xl transition-all active:scale-95 shadow-sm">
+            Refresh
+        </button>
+    </div>
+
+    <script>
+        (function() {
+            let newWorker;
+            const updateBanner = document.getElementById('pwa-update-banner');
+            const updateBtn = document.getElementById('pwa-update-btn');
+
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('sw.js').then(reg => {
+                        reg.addEventListener('updatefound', () => {
+                            newWorker = reg.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                // Has a new service worker installed and a previous one is controlling the page?
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    showUpdateBanner();
+                                }
+                            });
+                        });
+                    }).catch(err => console.error('Service Worker registration failed:', err));
+                });
+
+                // When the service worker actually changes, reload the page to load the new assets
+                let refreshing = false;
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    if (!refreshing) {
+                        window.location.reload();
+                        refreshing = true;
+                    }
+                });
+            }
+
+            function showUpdateBanner() {
+                updateBanner.classList.remove('hidden');
+                // Tiny timeout ensures the browser renders the display:block before applying CSS transitions
+                setTimeout(() => {
+                    updateBanner.classList.remove('translate-y-10', 'opacity-0');
+                }, 50);
+            }
+
+            updateBtn.addEventListener('click', () => {
+                updateBtn.textContent = 'Updating...';
+                updateBanner.classList.add('opacity-50', 'pointer-events-none');
+                
+                if (newWorker) {
+                    // Tell the new service worker to skip the waiting phase
+                    newWorker.postMessage({ type: 'SKIP_WAITING' });
+                }
+            });
         })();
     </script>
 </body>
