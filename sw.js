@@ -1,4 +1,4 @@
-const CACHE_NAME = 'crickerr-v4'; // CHANGE THIS VERSION NUMBER EVERY TIME YOU UPDATE YOUR APP ON GITHUB (e.g., v2, v3)
+const CACHE_NAME = 'crickerr-v5'; // CHANGE THIS VERSION NUMBER EVERY TIME YOU UPDATE YOUR APP ON GITHUB (e.g., v2, v3)
 const ASSETS = [
   './',
   './index.html',
