@@ -4838,24 +4838,33 @@
     </div>
 
     <div id="scorecard-modal"
-        class="modal-overlay fixed inset-0 bg-black/80 backdrop-blur-md hidden z-[200] flex items-end md:items-center justify-center sm:p-4 transition-all">
+        class="modal-overlay fixed inset-0 bg-black/70 backdrop-blur-xl hidden z-[200] flex items-end md:items-center justify-center sm:p-4 transition-all">
         <div
-            class="bg-white w-full h-[92vh] sm:max-w-4xl sm:h-[85vh] rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden">
-            <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center shrink-0">
-                <h3 class="text-lg font-black text-gray-800 uppercase tracking-tight flex items-center gap-2">
-                    <span class="text-indigo-500 text-xl">📋</span> Live Scorecard
-                </h3>
+            class="bg-[#f2f2f7] w-full h-[94vh] sm:max-w-3xl sm:h-[88vh] rounded-t-[28px] sm:rounded-[28px] shadow-2xl flex flex-col overflow-hidden">
+
+            <!-- Apple-style sticky header with frosted glass -->
+            <div class="px-5 py-3.5 border-b border-black/5 bg-white/80 backdrop-blur-2xl flex justify-between items-center shrink-0 z-10">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-500/30">
+                        <span class="text-white text-base">📋</span>
+                    </div>
+                    <div>
+                        <h3 class="text-[15px] font-bold text-gray-900 tracking-tight leading-tight">Live Scorecard</h3>
+                        <p id="sc-live-pill" class="text-[10px] font-semibold text-red-500 leading-tight tracking-wide flex items-center gap-1">
+                            <span class="inline-block w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                            LIVE NOW
+                        </p>
+                    </div>
+                </div>
                 <button onclick="closeModal('scorecard-modal')"
-                    class="w-8 h-8 rounded-full bg-gray-200 hover:bg-red-100 hover:text-red-600 text-gray-600 font-bold flex items-center justify-center transition-colors">✕</button>
+                    class="w-8 h-8 rounded-full bg-gray-200/80 hover:bg-gray-300 active:scale-95 text-gray-700 font-semibold flex items-center justify-center transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
             </div>
 
-            <div class="flex-grow overflow-y-auto bg-gray-100 relative custom-scroll w-full">
-                <div class="w-full h-full flex flex-col items-center justify-center p-8 text-center text-gray-400">
-                    <span class="text-4xl mb-4 opacity-30">🔌</span>
-                    <h4 class="font-black uppercase tracking-widest text-sm">Score Viewer Container</h4>
-                    <span class="text-xs text-gray-400 font-medium mt-2 max-w-xs leading-relaxed">Replace this
-                        placeholder div with your external Live Scorecard viewer code.</span>
-                </div>
+            <!-- Scrollable scorecard body — populated by renderScorecard() -->
+            <div id="scorecard-body" class="flex-grow overflow-y-auto custom-scroll w-full">
+                <!-- Dynamic content injected here -->
             </div>
         </div>
     </div>
@@ -5910,7 +5919,474 @@
         function openWicketModal() { openModal('wicket-type-modal'); }
         function openViewControlModal() { openModal('broadcast-control-modal'); } // ADDED MISSING FUNCTION
         function openScoreEditModal() { openModal('score-edit-modal'); }
-        function openScorecardModal() { openModal('scorecard-modal'); }
+        // ============================================================
+        // ===== APPLE-STYLE LIVE SCORECARD ENGINE ====================
+        // ============================================================
+        let _scorecardRefreshTimer = null;
+        let _scorecardActiveInnings = 'auto'; // 'auto' | 1 | 2
+
+        function openScorecardModal() {
+            _scorecardActiveInnings = 'auto';
+            renderScorecard();
+            openModal('scorecard-modal');
+            // Auto-refresh every 2s while modal is open
+            if (_scorecardRefreshTimer) clearInterval(_scorecardRefreshTimer);
+            _scorecardRefreshTimer = setInterval(() => {
+                const modal = document.getElementById('scorecard-modal');
+                if (modal && !modal.classList.contains('hidden')) {
+                    renderScorecard();
+                } else {
+                    clearInterval(_scorecardRefreshTimer);
+                    _scorecardRefreshTimer = null;
+                }
+            }, 2000);
+        }
+
+        // --- Helpers ---
+        function _scInitials(name) {
+            if (!name) return '??';
+            const parts = name.trim().split(/\s+/);
+            if (parts.length === 1) return name.substring(0, 2).toUpperCase();
+            return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+        }
+
+        function _scAvatar(image, name, sizeClass = 'w-10 h-10', textClass = 'text-[11px]') {
+            if (image) {
+                return `<img src="${image}" alt="${name || ''}" class="${sizeClass} rounded-full object-cover ring-2 ring-white shadow-sm shrink-0" onerror="this.outerHTML='<div class=\\'${sizeClass} rounded-full bg-gradient-to-br from-gray-300 to-gray-400 ring-2 ring-white shadow-sm flex items-center justify-center ${textClass} font-bold text-white shrink-0\\'>${_scInitials(name)}</div>'">`;
+            }
+            return `<div class="${sizeClass} rounded-full bg-gradient-to-br from-gray-400 to-gray-500 ring-2 ring-white shadow-sm flex items-center justify-center ${textClass} font-bold text-white shrink-0">${_scInitials(name)}</div>`;
+        }
+
+        function _scTeamLogo(logo, name, sizeClass = 'w-14 h-14') {
+            if (logo) {
+                return `<img src="${logo}" alt="${name || ''}" class="${sizeClass} rounded-2xl object-cover shadow-lg ring-1 ring-black/5" onerror="this.outerHTML='<div class=\\'${sizeClass} rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg ring-1 ring-black/5 flex items-center justify-center text-white font-black text-base\\'>${_scInitials(name)}</div>'">`;
+            }
+            return `<div class="${sizeClass} rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg ring-1 ring-black/5 flex items-center justify-center text-white font-black text-base">${_scInitials(name)}</div>`;
+        }
+
+        function _scBallPill(ev) {
+            const e = (ev || '').toString().toUpperCase();
+            let bg = 'bg-gray-200 text-gray-800';
+            if (e === 'W' || e.includes('W')) bg = 'bg-red-500 text-white shadow-md shadow-red-500/40';
+            else if (e === '6') bg = 'bg-purple-600 text-white shadow-md shadow-purple-500/40';
+            else if (e === '4') bg = 'bg-emerald-500 text-white shadow-md shadow-emerald-500/40';
+            else if (e === '0' || e === '·' || e === '.') bg = 'bg-gray-100 text-gray-500';
+            else if (e.includes('WD') || e.includes('NB') || e.includes('LB') || e.includes('B')) bg = 'bg-amber-400 text-amber-900';
+            else if (!isNaN(parseInt(e))) bg = 'bg-blue-500 text-white shadow-md shadow-blue-500/30';
+            return `<div class="w-9 h-9 rounded-full ${bg} flex items-center justify-center text-[11px] font-black tracking-tight shrink-0">${ev || '·'}</div>`;
+        }
+
+        function _scCommentaryText(b) {
+            const ev = (b.event || '').toString().toUpperCase();
+            if (ev === 'W' || ev.includes('W')) return `OUT! ${b.batter || ''} dismissed.`;
+            if (ev === '6') return `SIX! ${b.batter || ''} clears the boundary.`;
+            if (ev === '4') return `FOUR! ${b.batter || ''} finds the gap.`;
+            if (ev === '0' || ev === '.') return `Dot ball. No run.`;
+            if (ev.includes('WD')) return `Wide ball. Extra delivery.`;
+            if (ev.includes('NB')) return `No ball called.`;
+            if (ev.includes('LB')) return `Leg byes taken.`;
+            if (ev.includes('B') && !ev.includes('NB') && !ev.includes('LB')) return `Byes taken.`;
+            const r = parseInt(ev);
+            if (!isNaN(r)) return `${r} run${r === 1 ? '' : 's'} taken by ${b.batter || ''}.`;
+            return `${b.event || ''}`;
+        }
+
+        function _scSwitchInnings(n) {
+            _scorecardActiveInnings = n;
+            renderScorecard();
+        }
+
+        // --- Main Render ---
+        function renderScorecard() {
+            const body = document.getElementById('scorecard-body');
+            if (!body) return;
+
+            // Pull live data from state (broadcaster has direct access)
+            const t1 = state.team1;
+            const t2 = state.team2;
+            const battingKey = state.battingTeam;
+            const bowlingKey = state.bowlingTeam;
+            const battingTeam = state[battingKey];
+            const bowlingTeam = state[bowlingKey];
+            const bpo = state.ballsPerOver || 6;
+            const totalOvers = state.totalOvers || 0;
+
+            // Decide which innings to show in detail
+            let activeInnings = _scorecardActiveInnings;
+            if (activeInnings === 'auto') activeInnings = state.innings >= 2 ? 2 : 1;
+
+            // Build innings data using existing helpers (inline to avoid dependency)
+            const buildInnings = (teamKey, oppKey) => {
+                const team = state[teamKey];
+                const opp = state[oppKey];
+                const batting = [];
+                Object.values(team.playerStats || {}).forEach(p => {
+                    const isAtCrease = (state.striker?.id === p.id) || (state.nonStriker?.id === p.id);
+                    if (p.balls > 0 || p.runs > 0 || p.dismissal || isAtCrease) {
+                        const sq = (team.squad || []).find(s => s.id === p.id);
+                        batting.push({
+                            id: p.id,
+                            name: p.name,
+                            image: sq ? sq.image : null,
+                            runs: p.runs || 0,
+                            balls: p.balls || 0,
+                            fours: p.fours || 0,
+                            sixes: p.sixes || 0,
+                            sr: p.balls > 0 ? (p.runs * 100 / p.balls).toFixed(1) : '0.0',
+                            dismissal: p.dismissal || (isAtCrease ? 'not out' : '-'),
+                            isStriker: state.striker?.id === p.id,
+                            isNonStriker: state.nonStriker?.id === p.id
+                        });
+                    }
+                });
+                const bowling = [];
+                Object.values(opp.playerStats || {}).forEach(p => {
+                    if (p.ballsBowled > 0) {
+                        const o = Math.floor(p.ballsBowled / bpo) + '.' + (p.ballsBowled % bpo);
+                        const econ = p.ballsBowled > 0 ? (p.runsConceded / (p.ballsBowled / bpo)).toFixed(2) : '0.00';
+                        const sq = (opp.squad || []).find(s => s.id === p.id);
+                        bowling.push({
+                            id: p.id,
+                            name: p.name,
+                            image: sq ? sq.image : null,
+                            o: o,
+                            r: p.runsConceded || 0,
+                            w: p.wickets || 0,
+                            econ: econ,
+                            isCurrent: state.bowler?.id === p.id
+                        });
+                    }
+                });
+                return {
+                    teamKey,
+                    name: team.name,
+                    logo: team.logo,
+                    score: team.score || 0,
+                    wickets: team.wickets || 0,
+                    overs: `${team.overs || 0}.${team.balls || 0}`,
+                    batting,
+                    bowling
+                };
+            };
+
+            // Determine batting/bowling by innings (innings 1 = original batting team, innings 2 = swapped)
+            const inn1 = state.innings >= 2
+                ? buildInnings(bowlingKey, battingKey)   // Inn1 was the team currently bowling
+                : buildInnings(battingKey, bowlingKey);
+            const inn2 = state.innings >= 2
+                ? buildInnings(battingKey, bowlingKey)
+                : null;
+
+            const showInnings = (activeInnings === 2 && inn2) ? inn2 : inn1;
+
+            // Live metrics for HERO
+            const battingScore = battingTeam.score || 0;
+            const battingWkts = battingTeam.wickets || 0;
+            const battingOversNum = (battingTeam.overs || 0) + ((battingTeam.balls || 0) / bpo);
+            const currentRR = battingOversNum > 0 ? (battingScore / battingOversNum).toFixed(2) : '0.00';
+
+            // Required rate (2nd innings)
+            let requiredRR = null, runsNeeded = 0, ballsRemaining = 0, statusBadge = '';
+            if (state.innings >= 2 && state.target) {
+                runsNeeded = Math.max(0, state.target - battingScore);
+                const totalBalls = totalOvers * bpo;
+                const ballsBowled = ((battingTeam.overs || 0) * bpo) + (battingTeam.balls || 0);
+                ballsRemaining = Math.max(0, totalBalls - ballsBowled);
+                const oversRemaining = ballsRemaining / bpo;
+                requiredRR = oversRemaining > 0 ? (runsNeeded / oversRemaining).toFixed(2) : '—';
+                statusBadge = battingScore >= state.target ? 'WON' : `Need ${runsNeeded} from ${ballsRemaining}`;
+            } else {
+                statusBadge = '1st INNINGS';
+            }
+
+            // Toss banner
+            let tossText = 'Toss pending';
+            if (tossWinner && tossDecision) {
+                const winnerName = state[tossWinner]?.name || tossWinner;
+                tossText = `${winnerName} won the toss and elected to ${tossDecision === 'bat' ? 'bat first' : 'bowl first'}`;
+            }
+
+            // ===== HERO CARD =====
+            const heroHtml = `
+            <div class="px-4 pt-4">
+                <div class="bg-gradient-to-br from-gray-900 via-slate-900 to-black rounded-[24px] p-5 shadow-xl ring-1 ring-white/5 relative overflow-hidden">
+                    <!-- subtle radial glow -->
+                    <div class="absolute -top-20 -right-20 w-48 h-48 bg-indigo-600/20 rounded-full blur-3xl"></div>
+                    <div class="absolute -bottom-20 -left-20 w-48 h-48 bg-purple-600/20 rounded-full blur-3xl"></div>
+
+                    <div class="relative">
+                        <!-- Status pill -->
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="px-2.5 py-1 rounded-full bg-white/10 backdrop-blur text-[9px] font-black tracking-widest text-white/80 uppercase">
+                                ${state.venue || 'Live Match'} · ${totalOvers} Overs
+                            </div>
+                            <div class="px-2.5 py-1 rounded-full ${battingScore >= (state.target || Infinity) ? 'bg-emerald-500' : 'bg-red-500/90'} text-[9px] font-black tracking-widest text-white uppercase">
+                                ${statusBadge}
+                            </div>
+                        </div>
+
+                        <!-- Both teams -->
+                        <div class="grid grid-cols-2 gap-3 items-center">
+                            <!-- Team 1 -->
+                            <div class="flex flex-col items-center text-center ${inn1.teamKey === battingKey ? 'opacity-100' : 'opacity-60'}">
+                                ${_scTeamLogo(inn1.logo, inn1.name, 'w-16 h-16')}
+                                <div class="text-white font-bold text-xs mt-2 tracking-tight truncate w-full">${inn1.name || 'Team 1'}</div>
+                                <div class="text-white font-black text-2xl mt-0.5 tracking-tight">${inn1.score}/${inn1.wickets}</div>
+                                <div class="text-white/50 text-[10px] font-semibold tabular-nums">${inn1.overs} ov</div>
+                            </div>
+
+                            <!-- Team 2 -->
+                            <div class="flex flex-col items-center text-center ${inn2 && inn2.teamKey === battingKey ? 'opacity-100' : (inn2 ? 'opacity-60' : 'opacity-40')}">
+                                ${_scTeamLogo(t2.name === inn1.name ? t1.logo : t2.logo, t2.name === inn1.name ? t1.name : t2.name, 'w-16 h-16')}
+                                <div class="text-white font-bold text-xs mt-2 tracking-tight truncate w-full">${t2.name === inn1.name ? t1.name : t2.name || 'Team 2'}</div>
+                                ${inn2 ? `
+                                    <div class="text-white font-black text-2xl mt-0.5 tracking-tight">${inn2.score}/${inn2.wickets}</div>
+                                    <div class="text-white/50 text-[10px] font-semibold tabular-nums">${inn2.overs} ov</div>
+                                ` : `
+                                    <div class="text-white/40 font-black text-2xl mt-0.5 tracking-tight">—</div>
+                                    <div class="text-white/30 text-[10px] font-semibold">Yet to bat</div>
+                                `}
+                            </div>
+                        </div>
+
+                        ${state.target && state.innings >= 2 ? `
+                        <div class="mt-4 pt-4 border-t border-white/10 text-center">
+                            <div class="text-white/50 text-[9px] font-bold uppercase tracking-widest">Target</div>
+                            <div class="text-white font-black text-lg tracking-tight">${state.target} runs</div>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>`;
+
+            // ===== TOSS BANNER =====
+            const tossHtml = `
+            <div class="px-4 pt-3">
+                <div class="bg-white rounded-2xl px-4 py-3 shadow-sm ring-1 ring-black/5 flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                        <span class="text-base">🪙</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Toss</div>
+                        <div class="text-[13px] font-semibold text-gray-900 leading-snug">${tossText}</div>
+                    </div>
+                </div>
+            </div>`;
+
+            // ===== LIVE METRICS =====
+            const metricsHtml = `
+            <div class="px-4 pt-3">
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div class="bg-white rounded-2xl p-3.5 shadow-sm ring-1 ring-black/5">
+                        <div class="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Current RR</div>
+                        <div class="text-gray-900 font-black text-xl tracking-tight tabular-nums mt-0.5">${currentRR}</div>
+                    </div>
+                    <div class="bg-white rounded-2xl p-3.5 shadow-sm ring-1 ring-black/5">
+                        <div class="text-[9px] font-bold text-gray-500 uppercase tracking-widest">${requiredRR !== null ? 'Required RR' : 'Total Overs'}</div>
+                        <div class="text-gray-900 font-black text-xl tracking-tight tabular-nums mt-0.5">${requiredRR !== null ? requiredRR : totalOvers}</div>
+                    </div>
+                    ${state.innings >= 2 && state.target ? `
+                    <div class="bg-white rounded-2xl p-3.5 shadow-sm ring-1 ring-black/5">
+                        <div class="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Runs Needed</div>
+                        <div class="text-indigo-600 font-black text-xl tracking-tight tabular-nums mt-0.5">${runsNeeded}</div>
+                    </div>
+                    <div class="bg-white rounded-2xl p-3.5 shadow-sm ring-1 ring-black/5">
+                        <div class="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Balls Left</div>
+                        <div class="text-purple-600 font-black text-xl tracking-tight tabular-nums mt-0.5">${ballsRemaining}</div>
+                    </div>
+                    ` : `
+                    <div class="bg-white rounded-2xl p-3.5 shadow-sm ring-1 ring-black/5">
+                        <div class="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Wickets</div>
+                        <div class="text-gray-900 font-black text-xl tracking-tight tabular-nums mt-0.5">${battingWkts}</div>
+                    </div>
+                    <div class="bg-white rounded-2xl p-3.5 shadow-sm ring-1 ring-black/5">
+                        <div class="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Innings</div>
+                        <div class="text-gray-900 font-black text-xl tracking-tight tabular-nums mt-0.5">${state.innings || 1}st</div>
+                    </div>
+                    `}
+                </div>
+            </div>`;
+
+            // ===== CURRENT OVER =====
+            const currentOverBalls = state.currentOver || [];
+            const currentOverHtml = currentOverBalls.length > 0 ? `
+            <div class="px-4 pt-4">
+                <div class="bg-white rounded-2xl p-4 shadow-sm ring-1 ring-black/5">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">This Over</div>
+                        <div class="text-[10px] font-semibold text-gray-400 tabular-nums">${battingTeam.overs || 0} ov</div>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5">
+                        ${currentOverBalls.map(b => _scBallPill(b.event)).join('')}
+                    </div>
+                </div>
+            </div>` : '';
+
+            // ===== INNINGS TABS =====
+            const tabsHtml = `
+            <div class="px-4 pt-4">
+                <div class="bg-gray-200/60 backdrop-blur rounded-xl p-1 flex gap-1">
+                    <button onclick="_scSwitchInnings(1)" class="flex-1 py-2 rounded-lg text-[11px] font-bold tracking-tight transition-all ${activeInnings === 1 ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}">1st Innings</button>
+                    <button onclick="_scSwitchInnings(2)" ${!inn2 ? 'disabled' : ''} class="flex-1 py-2 rounded-lg text-[11px] font-bold tracking-tight transition-all ${activeInnings === 2 ? 'bg-white shadow-sm text-gray-900' : (inn2 ? 'text-gray-500' : 'text-gray-300 cursor-not-allowed')}">2nd Innings</button>
+                </div>
+                <div class="mt-3 flex items-center gap-2.5">
+                    ${_scTeamLogo(showInnings.logo, showInnings.name, 'w-9 h-9')}
+                    <div class="flex-1 min-w-0">
+                        <div class="text-[14px] font-bold text-gray-900 tracking-tight truncate">${showInnings.name}</div>
+                        <div class="text-[11px] font-semibold text-gray-500 tabular-nums">${showInnings.score}/${showInnings.wickets} (${showInnings.overs} ov)</div>
+                    </div>
+                </div>
+            </div>`;
+
+            // ===== BATTING CARD =====
+            const battingHtml = `
+            <div class="px-4 pt-3">
+                <div class="bg-white rounded-2xl shadow-sm ring-1 ring-black/5 overflow-hidden">
+                    <div class="px-4 pt-3.5 pb-2 flex items-center justify-between">
+                        <div class="text-[11px] font-black text-gray-900 uppercase tracking-widest">Batting</div>
+                        <div class="flex gap-3 text-[9px] font-bold text-gray-400 uppercase tracking-wider tabular-nums">
+                            <span class="w-7 text-right">R</span>
+                            <span class="w-7 text-right">B</span>
+                            <span class="w-6 text-right">4s</span>
+                            <span class="w-6 text-right">6s</span>
+                            <span class="w-10 text-right">SR</span>
+                        </div>
+                    </div>
+                    <div class="divide-y divide-gray-100">
+                        ${showInnings.batting.length === 0 ? `
+                            <div class="px-4 py-6 text-center text-[12px] text-gray-400 font-medium">No batting data yet</div>
+                        ` : showInnings.batting.map(p => `
+                            <div class="px-4 py-2.5 flex items-center gap-2.5">
+                                ${_scAvatar(p.image, p.name, 'w-9 h-9')}
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-[13px] font-semibold text-gray-900 truncate">${p.name}</span>
+                                        ${p.isStriker ? '<span class="text-[8px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full tracking-wider">●</span>' : ''}
+                                        ${p.isNonStriker ? '<span class="text-[8px] font-black text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full tracking-wider">○</span>' : ''}
+                                    </div>
+                                    <div class="text-[10px] text-gray-500 font-medium truncate">${p.dismissal}</div>
+                                </div>
+                                <div class="flex gap-3 text-[12px] font-bold text-gray-900 tabular-nums">
+                                    <span class="w-7 text-right">${p.runs}</span>
+                                    <span class="w-7 text-right text-gray-500 font-semibold">${p.balls}</span>
+                                    <span class="w-6 text-right text-gray-500 font-semibold">${p.fours}</span>
+                                    <span class="w-6 text-right text-gray-500 font-semibold">${p.sixes}</span>
+                                    <span class="w-10 text-right text-gray-500 font-semibold">${p.sr}</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>`;
+
+            // ===== BOWLING CARD =====
+            const bowlingHtml = `
+            <div class="px-4 pt-3">
+                <div class="bg-white rounded-2xl shadow-sm ring-1 ring-black/5 overflow-hidden">
+                    <div class="px-4 pt-3.5 pb-2 flex items-center justify-between">
+                        <div class="text-[11px] font-black text-gray-900 uppercase tracking-widest">Bowling</div>
+                        <div class="flex gap-3 text-[9px] font-bold text-gray-400 uppercase tracking-wider tabular-nums">
+                            <span class="w-8 text-right">O</span>
+                            <span class="w-7 text-right">R</span>
+                            <span class="w-6 text-right">W</span>
+                            <span class="w-10 text-right">Econ</span>
+                        </div>
+                    </div>
+                    <div class="divide-y divide-gray-100">
+                        ${showInnings.bowling.length === 0 ? `
+                            <div class="px-4 py-6 text-center text-[12px] text-gray-400 font-medium">No bowling data yet</div>
+                        ` : showInnings.bowling.map(p => `
+                            <div class="px-4 py-2.5 flex items-center gap-2.5">
+                                ${_scAvatar(p.image, p.name, 'w-9 h-9')}
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-[13px] font-semibold text-gray-900 truncate">${p.name}</span>
+                                        ${p.isCurrent ? '<span class="text-[8px] font-black text-red-600 bg-red-50 px-1.5 py-0.5 rounded-full tracking-wider">BOWLING</span>' : ''}
+                                    </div>
+                                </div>
+                                <div class="flex gap-3 text-[12px] font-bold text-gray-900 tabular-nums">
+                                    <span class="w-8 text-right">${p.o}</span>
+                                    <span class="w-7 text-right text-gray-500 font-semibold">${p.r}</span>
+                                    <span class="w-6 text-right text-red-600">${p.w}</span>
+                                    <span class="w-10 text-right text-gray-500 font-semibold">${p.econ}</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>`;
+
+            // ===== BALL-BY-BALL COMMENTARY =====
+            const timeline = (state.timeline || []).slice().reverse();
+            const commentaryHtml = `
+            <div class="px-4 pt-3">
+                <div class="bg-white rounded-2xl shadow-sm ring-1 ring-black/5 overflow-hidden">
+                    <div class="px-4 pt-3.5 pb-2 flex items-center justify-between">
+                        <div class="text-[11px] font-black text-gray-900 uppercase tracking-widest">Ball by Ball</div>
+                        <div class="text-[10px] font-semibold text-gray-400 tabular-nums">${timeline.length} balls</div>
+                    </div>
+                    <div class="max-h-[320px] overflow-y-auto custom-scroll divide-y divide-gray-100">
+                        ${timeline.length === 0 ? `
+                            <div class="px-4 py-6 text-center text-[12px] text-gray-400 font-medium">No commentary yet</div>
+                        ` : timeline.slice(0, 50).map(b => `
+                            <div class="px-4 py-2.5 flex items-start gap-3">
+                                ${_scBallPill(b.event)}
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-1.5 text-[10px] font-semibold text-gray-400 tabular-nums">
+                                        <span>${b.over || 0}.${b.ball || 0}</span>
+                                        <span>·</span>
+                                        <span class="truncate">${b.bowler || ''} → ${b.batter || ''}</span>
+                                    </div>
+                                    <div class="text-[12px] text-gray-800 font-medium leading-snug mt-0.5">${_scCommentaryText(b)}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    ${timeline.length > 50 ? `<div class="px-4 py-2 text-center text-[10px] text-gray-400 font-semibold bg-gray-50">Showing latest 50 of ${timeline.length}</div>` : ''}
+                </div>
+            </div>`;
+
+            // ===== PLAYING XI =====
+            const renderSquad = (team) => {
+                const playing = (team.playing || []).map(id => (team.squad || []).find(s => s.id === id)).filter(Boolean);
+                if (playing.length === 0) return `<div class="text-[11px] text-gray-400 font-medium px-1 py-3">No squad set</div>`;
+                return playing.map(p => `
+                    <div class="flex items-center gap-2 py-1.5">
+                        ${_scAvatar(p.image, p.name, 'w-7 h-7', 'text-[9px]')}
+                        <span class="text-[12px] font-medium text-gray-800 truncate">${p.name}</span>
+                    </div>
+                `).join('');
+            };
+
+            const squadHtml = `
+            <div class="px-4 pt-3 pb-6">
+                <div class="bg-white rounded-2xl shadow-sm ring-1 ring-black/5 overflow-hidden">
+                    <div class="px-4 pt-3.5 pb-1">
+                        <div class="text-[11px] font-black text-gray-900 uppercase tracking-widest">Playing XI</div>
+                    </div>
+                    <div class="grid grid-cols-2 divide-x divide-gray-100">
+                        <div class="px-4 py-2">
+                            <div class="flex items-center gap-2 mb-1.5">
+                                ${_scTeamLogo(t1.logo, t1.name, 'w-6 h-6')}
+                                <span class="text-[11px] font-bold text-gray-900 truncate">${t1.name || 'Team 1'}</span>
+                            </div>
+                            ${renderSquad(t1)}
+                        </div>
+                        <div class="px-4 py-2">
+                            <div class="flex items-center gap-2 mb-1.5">
+                                ${_scTeamLogo(t2.logo, t2.name, 'w-6 h-6')}
+                                <span class="text-[11px] font-bold text-gray-900 truncate">${t2.name || 'Team 2'}</span>
+                            </div>
+                            ${renderSquad(t2)}
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+
+            // ===== ASSEMBLE =====
+            body.innerHTML = heroHtml + tossHtml + metricsHtml + currentOverHtml + tabsHtml + battingHtml + bowlingHtml + commentaryHtml + squadHtml;
+        }
+        // ============================================================
 
         function generateUniqueId() { return 'p_' + Math.random().toString(36).substr(2, 9); }
 
