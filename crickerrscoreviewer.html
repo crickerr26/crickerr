@@ -716,23 +716,8 @@
     <nav class="nav-glass px-4 shadow-sm" style="padding-top: max(12px, env(safe-area-inset-top)); padding-bottom: 12px;">
         <div class="max-w-3xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-3 cursor-pointer" onclick="showHome()">
-                <div class="crickerr-logo-badge">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style="position:relative; z-index:2;">
-                        <defs>
-                            <radialGradient id="ballGrad" cx="0.35" cy="0.35" r="0.65">
-                                <stop offset="0%" stop-color="#fef3c7"/>
-                                <stop offset="60%" stop-color="#fbbf24"/>
-                                <stop offset="100%" stop-color="#d97706"/>
-                            </radialGradient>
-                        </defs>
-                        <circle cx="12" cy="12" r="9.5" stroke="rgba(255,255,255,0.95)" stroke-width="1.6" fill="none"/>
-                        <path d="M5 12 Q12 6 19 12" stroke="rgba(255,255,255,0.55)" stroke-width="0.9" fill="none"/>
-                        <path d="M5 12 Q12 18 19 12" stroke="rgba(255,255,255,0.55)" stroke-width="0.9" fill="none"/>
-                        <line x1="12" y1="2.5" x2="12" y2="21.5" stroke="rgba(255,255,255,0.35)" stroke-width="0.9"/>
-                        <circle class="crickerr-ball-pulse" cx="12" cy="12" r="3.2" fill="url(#ballGrad)" stroke="#92400e" stroke-width="0.4"/>
-                        <path d="M10.2 11.2 Q12 11.8 13.8 11.2" stroke="#92400e" stroke-width="0.5" fill="none" stroke-linecap="round"/>
-                        <path d="M10.2 12.8 Q12 13.4 13.8 12.8" stroke="#92400e" stroke-width="0.5" fill="none" stroke-linecap="round"/>
-                    </svg>
+                <div class="crickerr-logo-badge" style="background: transparent; box-shadow: none;">
+                    <img src="Crickerr Logo 2.png" alt="CriCKERR Logo" style="width: 100%; height: 100%; object-fit: contain; position: relative; z-index: 2;">
                 </div>
                 <div>
                     <h1 class="text-[19px] font-black text-gray-900 tracking-tight leading-none" style="letter-spacing: -0.03em;">CriC<span style="background:linear-gradient(135deg,#4f46e5,#7c3aed);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">KERR</span></h1>
@@ -926,7 +911,7 @@
     <div id="detail-view" class="hidden max-w-2xl mx-auto w-full flex flex-col">
         
         <!-- MATCH HERO HEADER -->
-        <div class="match-hero sticky z-30" style="top: 64px;">
+        <div class="match-hero relative z-30"></div>
             <div class="relative z-10 px-4 pt-4 pb-0">
 
                 <!-- Series + Status Row -->
@@ -2787,10 +2772,34 @@
             }
 
             // Pro vertical feed with player avatars
-            const feed = document.getElementById('comm-feed');
-            if (!feed) return;
-            if (d.commLines && d.commLines.length > 0) {
-                feed.innerHTML = d.commLines.map(c => {
+        const feed = document.getElementById('comm-feed');
+        if (!feed) return;
+        if (d.commLines && d.commLines.length > 0) {
+            // Group commentary by over
+            const groupedComm = {};
+            d.commLines.forEach(c => {
+                const overIndex = c.ball ? String(c.ball).split('.')[0] : '0';
+                const overNum = parseInt(overIndex) + 1;
+                if (!groupedComm[overNum]) groupedComm[overNum] = { balls: [], bowler: c.bowler };
+                if (c.bowler && !groupedComm[overNum].bowler) groupedComm[overNum].bowler = c.bowler;
+                groupedComm[overNum].balls.push(c);
+            });
+            
+            // Sort overs descending
+            const sortedOvers = Object.keys(groupedComm).sort((a,b) => parseInt(b) - parseInt(a));
+            
+            feed.innerHTML = sortedOvers.map(ovNum => {
+                const group = groupedComm[ovNum];
+                
+                let overHtml = `
+                <div class="bbb-over-head" style="background: var(--stat-bg, rgba(0,0,0,0.02)); padding: 12px 16px; border-bottom: 1px solid var(--table-border); margin-bottom: 0;">
+                    <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                        <div class="bbb-over-num text-[14px] font-black" style="color: #6366f1;">OVER ${ovNum}</div>
+                        <div class="text-xs font-bold" style="color: var(--text-secondary);">Bowler: ${group.bowler || 'Unknown'}</div>
+                    </div>
+                </div>`;
+                
+                overHtml += group.balls.map(c => {
                     const eventStr = String(c.event || '-').trim();
                     const lowerEvent = eventStr.toLowerCase();
                     let badgeBg = '#f3f4f6', badgeColor = '#6b7280';
@@ -2812,7 +2821,7 @@
                         <div class="comm-pro-event" style="background:${badgeBg}; color:${badgeColor};">${eventStr}</div>
                         <div class="flex-1 min-w-0">
                             <div class="comm-pro-meta">
-                                <span class="comm-pro-meta-pill">OVER ${c.ball}</span>
+                                <span class="comm-pro-meta-pill">BALL ${c.ball}</span>
                                 <span style="color:${kind === 'WICKET' ? '#ef4444' : kind === 'SIX' ? '#8b5cf6' : kind === 'FOUR' ? '#3b82f6' : 'var(--text-secondary)'}">${kind}</span>
                             </div>
                             <div class="comm-pro-players">
@@ -2826,9 +2835,12 @@
                         </div>
                     </div>`;
                 }).join('');
-            } else {
-                feed.innerHTML = `<div class="p-6 text-center text-gray-400 text-sm italic">Full text commentary not available for this match.</div>`;
-            }
+                
+                return overHtml;
+            }).join('');
+        } else {
+            feed.innerHTML = `<div class="p-6 text-center text-gray-400 text-sm italic">Full text commentary not available for this match.</div>`;
+        }
         }
 
         // --- NEW: SQUADS LOGIC ---
