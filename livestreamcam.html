@@ -2557,8 +2557,10 @@
             if (_finalizeTimeoutB) { clearTimeout(_finalizeTimeoutB); _finalizeTimeoutB = null; }
 
             try {
-                // Capture canvas at 60fps for silky smooth motion that perfectly matches graphics
-                const freshCanvasStream = canvas.captureStream(60);
+                // FIXED: Capture canvas at 30fps. This is the broadcast standard.
+                // 60fps on mobile causes frame drops and GOP structure corruption, which
+                // leads to the video freezing while audio continues during playback seeking.
+                const freshCanvasStream = canvas.captureStream(30);
 
                 // AUDIO: Use live mic track or generate silent fallback track
                 let finalAudioTrack = null;
@@ -2579,14 +2581,16 @@
                 const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
                 const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
+                // FIXED: For WebM (Android/Desktop), prioritize VP9/VP8 over H.264.
+                // H.264 inside a WebM container causes massive seeking/freezing bugs in Chrome.
                 let codecPriority = (isIOS || isSafari) ? [
                     "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
                     "video/mp4;codecs=avc1",
                     "video/mp4"
                 ] : [
-                    "video/webm;codecs=h264",
                     "video/webm;codecs=vp9,opus",
                     "video/webm;codecs=vp8,opus",
+                    "video/webm;codecs=h264",
                     "video/webm"
                 ];
 
@@ -2595,8 +2599,8 @@
 
                 localStorage.setItem("recMimeType", selectedType);
 
-                // Higher bitrate (5 Mbps) to ensure 60fps stays crisp
-                const options = { mimeType: selectedType, videoBitsPerSecond: 5000000, audioBitsPerSecond: 128000 };
+                // FIXED: Increased bitrate to 8 Mbps (8000000) to ensure crystal clear quality is maintained at 30fps.
+                const options = { mimeType: selectedType, videoBitsPerSecond: 8000000, audioBitsPerSecond: 128000 };
                 recorder = new MediaRecorder(combinedStream, options);
 
                 recorder.ondataavailable = (e) => {
@@ -2631,6 +2635,7 @@
         function stopRecording() {
             console.log("[REC] stopRecording() called");
             isRecording = false;
+            recordingDurationSeconds = Math.round((Date.now() - recordingStartTime) / 1000);
             document.getElementById('rec-button').classList.remove('recording');
             document.getElementById('rec-text').innerText = "FINALIZING...";
             releaseScreenAwake();
@@ -2681,11 +2686,20 @@
                 return;
             }
 
-            btnText.innerText = "READY!";
+            btnText.innerText = "FIXING...";
 
-            // Assemble the perfectly formed single blob from the Database
-            const blob = new Blob(dbChunks, { type: blobType });
-            console.log("[REC] Final file size:", (blob.size / 1024 / 1024).toFixed(2), "MB");
+            // Assemble the base blob from IndexedDB chunks
+            const rawBlob = new Blob(dbChunks, { type: blobType });
+            console.log("[REC] Raw file size:", (rawBlob.size / 1024 / 1024).toFixed(2), "MB");
+
+            // Patch duration metadata → makes video seekable on phone (forward/seek no longer stuck)
+            const durationMs = recordingDurationSeconds > 0
+                ? recordingDurationSeconds * 1000
+                : Math.max(1000, Date.now() - recordingStartTime);
+            const blob = await fixVideoDuration(rawBlob, blobType, durationMs);
+            console.log("[REC] Duration patched:", durationMs + "ms — final size:", (blob.size / 1024 / 1024).toFixed(2), "MB");
+
+            btnText.innerText = "READY!";
 
             // File System Access API (Desktop Chrome / Edge)
             const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -2740,6 +2754,44 @@
                 resetRecUI();
                 if (video.paused) video.play().catch(e => { });
             }, 1000);
+        }
+
+        // ─── VIDEO DURATION FIXER ───────────────────────────────────────────────
+        // Patches the Info Duration element in WebM (Android) so saved videos are fully seekable.
+        // FIXED: iOS MP4 patching is removed entirely. Rewriting the 'mvhd' atom manually 
+        // is what corrupts the fragmented MP4 seek index on iOS, causing the video to freeze
+        // when scrubbing. Native fragmented MP4 works perfectly on iOS without byte corruption!
+        async function fixVideoDuration(blob, mimeType, durationMs) {
+            if (!durationMs || durationMs <= 0) return blob;
+            try {
+                const buffer = await blob.arrayBuffer();
+                const view = new DataView(buffer);
+                const size = buffer.byteLength;
+
+                if (mimeType.includes('webm')) {
+                    // ── WebM: patch Duration element (ID 0x4489) in Info block ──
+                    for (let i = 0; i < size - 12; i++) {
+                        if (view.getUint8(i) === 0x44 && view.getUint8(i + 1) === 0x89) {
+                            const sz = view.getUint8(i + 2);
+                            if (sz === 0x88) {        // 8-byte float64
+                                view.setFloat64(i + 3, durationMs);
+                                console.log('[REC] WebM Duration patched (f64):', durationMs, 'ms');
+                            } else if (sz === 0x84) { // 4-byte float32
+                                view.setFloat32(i + 3, durationMs);
+                                console.log('[REC] WebM Duration patched (f32):', durationMs, 'ms');
+                            }
+                            break;
+                        }
+                    }
+                    return new Blob([buffer], { type: mimeType });
+                }
+                
+                // Return untouched for MP4 (Protects the fragmented track structure)
+                return blob; 
+            } catch (e) {
+                console.warn('[REC] fixVideoDuration skipped (non-critical):', e);
+                return blob; 
+            }
         }
 
         // Streams IndexedDB chunks one-by-one directly to a FileSystemWritableFileStream.
