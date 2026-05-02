@@ -4493,9 +4493,13 @@
                 </div>
             </div>
 
-            <div class="flex-shrink-0 lg:w-96 bg-white border-t lg:border-l border-gray-200 flex flex-col z-20">
-
-                <div class="scoring-grid h-64 lg:h-auto lg:flex-grow">
+            <div class="flex-shrink-0 lg:w-96 bg-white border-t lg:border-l border-gray-200 flex flex-col z-20 relative">
+            <div id="bowler-required-overlay" class="absolute inset-0 bg-white/80 backdrop-blur-sm z-[100] hidden items-center justify-center cursor-pointer" onclick="reopenPlayerSelection()">
+                <div class="bg-blue-600 text-white px-6 py-3 rounded-xl font-black uppercase tracking-widest shadow-lg animate-pulse text-center">
+                    Choose Next Bowler<br><span class="text-[10px] font-medium normal-case tracking-normal">Tap to open</span>
+                </div>
+            </div>
+            <div class="scoring-grid h-64 lg:h-auto lg:flex-grow">
                     <button onclick="addRuns(0)" class="watery-btn btn-grey font-bold text-xl">0</button>
                     <button onclick="addRuns(1)" class="watery-btn btn-grey font-bold text-xl">1</button>
                     <button onclick="addRuns(2)" class="watery-btn btn-grey font-bold text-xl">2</button>
@@ -4570,20 +4574,18 @@
         </div>
     </div>
 
-    <div id="player-modal"
-        class="modal-overlay fixed inset-0 bg-slate-900/90 backdrop-blur-md hidden z-50 flex items-center justify-center p-4">
+    
+        <div id="player-modal" class="modal-overlay fixed inset-0 bg-slate-900/90 backdrop-blur-md hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-md shadow-2xl flex flex-col max-h-[80vh]">
             <div class="p-5 border-b border-gray-100 flex justify-between items-center">
                 <div>
-                    <h3 id="modal-title" class="text-xl font-black text-gray-800 uppercase tracking-tight">Select Player
-                    </h3>
+                    <h3 id="modal-title" class="text-xl font-black text-gray-800 uppercase tracking-tight">Select Player </h3>
                     <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Tap player to select</p>
                 </div>
+                <button onclick="closePlayerModal()" class="text-gray-400 hover:text-gray-600 font-bold text-2xl leading-none px-2 py-1">✕</button>
             </div>
-
             <div id="player-selection-grid" class="grid grid-cols-3 gap-3 p-4 overflow-y-auto custom-scroll">
             </div>
-
             <input type="hidden" id="player-select" value="">
             <button id="player-save-btn" class="hidden"></button>
         </div>
@@ -7890,55 +7892,90 @@
         }
 
         document.getElementById('player-save-btn').onclick = function () {
-            if (!pendingSelection) return;
-
-            const selectedId = document.getElementById('player-select').value;
-            if (!selectedId || selectedId === "No players available") {
-                closeModal('player-modal');
-                return;
-            }
-
-            const role = pendingSelection.role;
-            const teamKey = (role === 'bowler') ? state.bowlingTeam : state.battingTeam;
-            const newPlayer = state[teamKey].playerStats[selectedId];
-
-            if (!newPlayer) {
-                console.error("Critical: Player not found in stats registry", selectedId);
-                closeModal('player-modal');
-                return;
-            }
-
-            // --- NEW: Strict Validation ---
-            if (newPlayer.status === 'DISQUALIFIED') {
-                showCustomAlert("Action Denied", "This player has been disqualified and cannot participate.", "red");
-                return;
-            }
-
-            if (window.correctionMode) {
-                const oldPlayer = state[role];
-                if (oldPlayer && newPlayer.id !== oldPlayer.id) {
-                    newPlayer.runs = (newPlayer.runs || 0) + (oldPlayer.runs || 0);
-                    newPlayer.balls = (newPlayer.balls || 0) + (oldPlayer.balls || 0);
-                    newPlayer.wickets = (newPlayer.wickets || 0) + (oldPlayer.wickets || 0);
-                    newPlayer.runsConceded = (newPlayer.runsConceded || 0) + (oldPlayer.runsConceded || 0);
-                    newPlayer.ballsBowled = (newPlayer.ballsBowled || 0) + (oldPlayer.ballsBowled || 0);
-
-                    oldPlayer.runs = 0; oldPlayer.balls = 0;
-                    oldPlayer.wickets = 0; oldPlayer.runsConceded = 0; oldPlayer.ballsBowled = 0;
+                if (!pendingSelection) return;
+                const selectedId = document.getElementById('player-select').value;
+                if (!selectedId || selectedId === "No players available") {
+                    closeModal('player-modal');
+                    return;
                 }
-                window.correctionMode = false;
-            }
+                const role = pendingSelection.role;
+                const teamKey = (role === 'bowler') ? state.bowlingTeam : state.battingTeam;
+                const newPlayer = state[teamKey].playerStats[selectedId];
+                if (!newPlayer) {
+                    console.error("Critical: Player not found in stats registry", selectedId);
+                    closeModal('player-modal');
+                    return;
+                }
 
-            if (role === 'bowler') { state.bowler = newPlayer; }
-            else if (role === 'striker') { state.striker = newPlayer; if (newPlayer.dismissal && newPlayer.dismissal.includes('Retired')) newPlayer.dismissal = null; }
-            else if (role === 'nonStriker') { state.nonStriker = newPlayer; if (newPlayer.dismissal && newPlayer.dismissal.includes('Retired')) newPlayer.dismissal = null; }
+                // --- NEW: Strict Validation ---
+                if (newPlayer.status === 'DISQUALIFIED') {
+                    showCustomAlert("Action Denied", "This player has been disqualified and cannot participate.", "red");
+                    return;
+                }
 
-            closeModal('player-modal');
-            if (pendingSelection.callback) pendingSelection.callback();
+                if (window.correctionMode) {
+                    const oldPlayer = state[role];
+                    if (oldPlayer && newPlayer.id !== oldPlayer.id) {
+                        newPlayer.runs = (newPlayer.runs || 0) + (oldPlayer.runs || 0);
+                        newPlayer.balls = (newPlayer.balls || 0) + (oldPlayer.balls || 0);
+                        newPlayer.wickets = (newPlayer.wickets || 0) + (oldPlayer.wickets || 0);
+                        newPlayer.runsConceded = (newPlayer.runsConceded || 0) + (oldPlayer.runsConceded || 0);
+                        newPlayer.ballsBowled = (newPlayer.ballsBowled || 0) + (oldPlayer.ballsBowled || 0);
+                        oldPlayer.runs = 0;
+                        oldPlayer.balls = 0;
+                        oldPlayer.wickets = 0;
+                        oldPlayer.runsConceded = 0;
+                        oldPlayer.ballsBowled = 0;
+                    }
+                    window.correctionMode = false;
+                }
 
-            pendingSelection = null;
-            updateUI();
-        };
+                if (role === 'bowler') {
+                    state.bowler = newPlayer;
+                } else if (role === 'striker') {
+                    state.striker = newPlayer;
+                    if (newPlayer.dismissal && newPlayer.dismissal.includes('Retired')) newPlayer.dismissal = null;
+                } else if (role === 'nonStriker') {
+                    state.nonStriker = newPlayer;
+                    if (newPlayer.dismissal && newPlayer.dismissal.includes('Retired')) newPlayer.dismissal = null;
+                }
+
+                closeModal('player-modal');
+                
+                const overlay = document.getElementById('bowler-required-overlay');
+                if (overlay) {
+                    overlay.classList.add('hidden');
+                    overlay.classList.remove('flex');
+                }
+
+                if (pendingSelection.callback) pendingSelection.callback();
+                pendingSelection = null;
+                updateUI();
+            };
+
+            window.closePlayerModal = function() {
+                closeModal('player-modal');
+                if (pendingSelection) {
+                    const overlay = document.getElementById('bowler-required-overlay');
+                    const textNode = overlay.querySelector('div');
+                    if (pendingSelection.role === 'bowler') {
+                        textNode.innerHTML = 'Choose Next Bowler<br><span class="text-[10px] font-medium normal-case tracking-normal">Tap to open</span>';
+                    } else {
+                        textNode.innerHTML = 'Choose Next Batter<br><span class="text-[10px] font-medium normal-case tracking-normal">Tap to open</span>';
+                    }
+                    overlay.classList.remove('hidden');
+                    overlay.classList.add('flex');
+                }
+            };
+
+            window.reopenPlayerSelection = function() {
+                if (pendingSelection) {
+                    const overlay = document.getElementById('bowler-required-overlay');
+                    overlay.classList.add('hidden');
+                    overlay.classList.remove('flex');
+                    openModal('player-modal');
+                }
+            };
 
         // --- NEW OPENING PAIR LOGIC ---
         let tempStrikerId = null;
