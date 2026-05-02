@@ -330,7 +330,6 @@
         /* --- MOBILE OPTIMIZATIONS --- */
         @media (max-width: 480px) {
             .match-hero-logo { width: 60px; height: 60px; }
-            .match-hero-logo img { width: 44px; height: 44px; }
             .stat-pill-value { font-size: 14px; }
             .stat-pill-label { font-size: 8px; }
             .detail-tab-item { padding: 9px 12px; font-size: 11px; }
@@ -425,17 +424,17 @@
 
         .team-logo-circle {
             width: 44px; height: 44px; border-radius: 50%;
-            background: rgba(248,250,252,0.9);
-            border: 2px solid rgba(255,255,255,0.8);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            display: flex; align-items: center; justify-content: center;
+            background: #ffffff;
+            border: 2px solid rgba(255,255,255,0.9);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
             overflow: hidden; flex-shrink: 0;
+            position: relative;
         }
         [data-theme="dark"] .team-logo-circle {
-            background: rgba(40,40,50,0.9);
-            border-color: rgba(255,255,255,0.1);
+            background: #ffffff;
+            border-color: rgba(255,255,255,0.25);
         }
-        .team-logo-circle img { width: 32px; height: 32px; object-fit: contain; }
+        .team-logo-circle img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 50%; }
 
         /* --- DETAIL VIEW HERO --- */
         .match-hero {
@@ -449,13 +448,13 @@
         }
         .match-hero-logo {
             width: 72px; height: 72px; border-radius: 50%;
-            background: rgba(255,255,255,0.12);
-            border: 2px solid rgba(255,255,255,0.2);
+            background: #ffffff;
+            border: 2px solid rgba(255,255,255,0.55);
             box-shadow: 0 4px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
-            display: flex; align-items: center; justify-content: center;
             overflow: hidden; backdrop-filter: blur(10px);
+            position: relative;
         }
-        .match-hero-logo img { width: 52px; height: 52px; object-fit: contain; }
+        .match-hero-logo img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 50%; }
 
         /* --- DETAIL STAT PILL --- */
         .stat-pill {
@@ -495,14 +494,50 @@
 
         /* --- INNINGS HEADER --- */
         .innings-header {
-            background: linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(99,102,241,0.05) 100%);
-            border-bottom: 1px solid rgba(59,130,246,0.1);
-            padding: 14px 16px;
+            background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+            border-bottom: 1px solid rgba(59,130,246,0.22);
+            padding: 16px 18px;
             display: flex; justify-content: space-between; align-items: center;
         }
         .innings-header.i2 {
-            background: linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(217,119,6,0.05) 100%);
-            border-bottom-color: rgba(245,158,11,0.1);
+            background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+            border-bottom-color: rgba(245,158,11,0.28);
+        }
+        [data-theme="dark"] .innings-header {
+            background: linear-gradient(135deg, rgba(59,130,246,0.22) 0%, rgba(99,102,241,0.16) 100%);
+            border-bottom-color: rgba(99,102,241,0.32);
+        }
+        [data-theme="dark"] .innings-header.i2 {
+            background: linear-gradient(135deg, rgba(245,158,11,0.22) 0%, rgba(217,119,6,0.16) 100%);
+            border-bottom-color: rgba(245,158,11,0.32);
+        }
+
+        /* --- SCORECARD PANEL (replaces glass-card on scorecard for better contrast) --- */
+        .scorecard-panel {
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px solid rgba(99,102,241,0.18);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 22px rgba(99,102,241,0.10), 0 1px 3px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.7);
+        }
+        [data-theme="dark"] .scorecard-panel {
+            background: linear-gradient(180deg, rgba(28,28,40,0.98) 0%, rgba(20,20,32,0.98) 100%);
+            border-color: rgba(99,102,241,0.28);
+            box-shadow: 0 4px 22px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04);
+        }
+        .scorecard-panel .innings-total-pill {
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-weight: 900;
+            font-size: 17px;
+            letter-spacing: -0.02em;
+            padding: 4px 12px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.85);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        [data-theme="dark"] .scorecard-panel .innings-total-pill {
+            background: rgba(255,255,255,0.08);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.4);
         }
 
         /* --- SECTION LABEL --- */
@@ -701,7 +736,6 @@
         /* --- RESPONSIVE --- */
         @media (min-width: 640px) {
             .match-hero-logo { width: 88px; height: 88px; }
-            .match-hero-logo img { width: 64px; height: 64px; }
             .home-hero { padding: 32px 28px; }
         }
         @media (min-width: 1024px) {
@@ -714,23 +748,27 @@
     <div class="ambient-bg"></div>
 
     <nav class="nav-glass px-4 shadow-sm" style="padding-top: max(12px, env(safe-area-inset-top)); padding-bottom: 12px;">
-        <div class="max-w-3xl mx-auto flex items-center justify-between">
-            <div class="flex items-center gap-3 cursor-pointer" onclick="showHome()">
-                <div class="crickerr-logo-badge" style="background: transparent; box-shadow: none;">
-                    <img src="Crickerr Logo 2.png" alt="CriCKERR Logo" style="width: 100%; height: 100%; object-fit: contain; position: relative; z-index: 2;">
-                </div>
-                <div>
-                    <h1 class="text-[19px] font-black text-gray-900 tracking-tight leading-none" style="letter-spacing: -0.03em;">CriC<span style="background:linear-gradient(135deg,#4f46e5,#7c3aed);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">KERR</span></h1>
-                    <span class="text-[9px] font-black text-indigo-500 uppercase tracking-[0.15em] flex items-center gap-1"><span class="news-fresh-dot"></span>Live Score Viewer</span>
-                </div>
-            </div>
-            
-            <div class="flex items-center gap-2">
-                <button id="theme-toggle-btn" onclick="toggleDarkMode()" title="Toggle Dark Mode" class="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all text-base active:scale-90" style="box-shadow: 0 1px 4px rgba(0,0,0,0.08);">🌙</button>
+        <div class="max-w-3xl mx-auto grid items-center" style="grid-template-columns: 1fr auto 1fr; gap: 8px;">
+            <!-- LEFT: Back Button -->
+            <div class="flex justify-start min-w-0">
                 <button id="back-btn" onclick="showHome()" class="hidden items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 pl-3 pr-4 py-2 rounded-full text-sm font-bold transition-all active:scale-95">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
                     Home
                 </button>
+            </div>
+            <!-- CENTER: Logo + Title -->
+            <div class="flex items-center gap-3 cursor-pointer justify-self-center" onclick="showHome()">
+                <div class="crickerr-logo-badge" style="background: transparent; box-shadow: none;">
+                    <img src="Crickerr Logo 2.png" alt="CriCKERR Logo" style="width: 100%; height: 100%; object-fit: contain; position: relative; z-index: 2;">
+                </div>
+                <div class="text-center">
+                    <h1 class="text-[19px] font-black text-gray-900 tracking-tight leading-none" style="letter-spacing: -0.03em;">CriC<span style="background:linear-gradient(135deg,#4f46e5,#7c3aed);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">KERR</span></h1>
+                    <span class="text-[9px] font-black text-indigo-500 uppercase tracking-[0.15em] flex items-center justify-center gap-1"><span class="news-fresh-dot"></span>Live Score Viewer</span>
+                </div>
+            </div>
+            <!-- RIGHT: Theme Toggle -->
+            <div class="flex justify-end items-center gap-2">
+                <button id="theme-toggle-btn" onclick="toggleDarkMode()" title="Toggle Dark Mode" class="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all text-base active:scale-90" style="box-shadow: 0 1px 4px rgba(0,0,0,0.08);">🌙</button>
             </div>
         </div>
     </nav>
@@ -768,10 +806,6 @@
             <button onclick="switchHomeTab('local')" id="ht-local" class="tab-btn active flex items-center justify-center gap-1.5 text-[12px]">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
                 Local
-            </button>
-            <button onclick="switchHomeTab('intl')" id="ht-intl" class="tab-btn flex items-center justify-center gap-1.5 text-[12px]">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20"/></svg>
-                Intl
             </button>
             <button onclick="switchHomeTab('news')" id="ht-news" class="tab-btn flex items-center justify-center gap-1.5 text-[12px]">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/></svg>
@@ -932,7 +966,7 @@
                     <!-- Team 1 -->
                     <div class="flex flex-col items-center" style="width: 38%;">
                         <div class="match-hero-logo mb-2">
-                            <img id="d-t1-logo" class="object-contain" style="width: 52px; height: 52px;" src="" alt="">
+                            <img id="d-t1-logo" src="" alt="">
                         </div>
                         <div id="d-t1-name" class="text-white/90 font-black text-xs uppercase text-center truncate w-full" style="letter-spacing: 0.03em;">TEAM 1</div>
                         <div id="d-t1-score" class="text-white font-black mt-1 score-badge" style="font-size: 22px; letter-spacing: -0.03em;">0/0</div>
@@ -947,7 +981,7 @@
                     <!-- Team 2 -->
                     <div class="flex flex-col items-center" style="width: 38%;">
                         <div class="match-hero-logo mb-2">
-                            <img id="d-t2-logo" class="object-contain" style="width: 52px; height: 52px;" src="" alt="">
+                            <img id="d-t2-logo" src="" alt="">
                         </div>
                         <div id="d-t2-name" class="text-white/90 font-black text-xs uppercase text-center truncate w-full" style="letter-spacing: 0.03em;">TEAM 2</div>
                         <div id="d-t2-score" class="text-white/70 font-black mt-1 score-badge" style="font-size: 18px; letter-spacing: -0.03em;">Yet to Bat</div>
@@ -999,23 +1033,23 @@
 
             <!-- SCORECARD -->
             <div id="dv-scorecard" class="space-y-4 page-enter">
-                <div class="glass-card p-0">
+                <div class="scorecard-panel">
                     <div class="innings-header">
-                        <div class="flex items-center gap-2">
-                            <div class="w-2 h-2 rounded-full bg-blue-500"></div>
-                            <span id="i1-name" class="font-black text-sm text-gray-900">1st Innings</span>
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-2.5 h-2.5 rounded-full bg-blue-500" style="box-shadow: 0 0 0 3px rgba(59,130,246,0.18);"></div>
+                            <span id="i1-name" class="font-black text-[15px] text-gray-900 tracking-tight">1st Innings</span>
                         </div>
-                        <span id="i1-total" class="font-mono font-black text-blue-600 text-sm score-badge"></span>
+                        <span id="i1-total" class="innings-total-pill text-blue-700"></span>
                     </div>
                     <div id="i1-body" class="p-2"></div>
                 </div>
-                <div class="glass-card p-0">
+                <div class="scorecard-panel">
                     <div class="innings-header i2">
-                        <div class="flex items-center gap-2">
-                            <div class="w-2 h-2 rounded-full bg-amber-500"></div>
-                            <span id="i2-name" class="font-black text-sm text-gray-900">2nd Innings</span>
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-2.5 h-2.5 rounded-full bg-amber-500" style="box-shadow: 0 0 0 3px rgba(245,158,11,0.18);"></div>
+                            <span id="i2-name" class="font-black text-[15px] text-gray-900 tracking-tight">2nd Innings</span>
                         </div>
-                        <span id="i2-total" class="font-mono font-black text-amber-600 text-sm score-badge"></span>
+                        <span id="i2-total" class="innings-total-pill text-amber-700"></span>
                     </div>
                     <div id="i2-body" class="p-2"></div>
                 </div>
@@ -1358,20 +1392,73 @@
             let delay = 0;
             let count = 0;
 
-            localMatchesCache.forEach(match => {
-                const mode = match.data.matchMode || match.data.mode || 'single';
-                const normalizedMode = mode.toLowerCase();
-                
-                if (activeLocalTab === 'single' && normalizedMode !== 'single') return;
-                if (activeLocalTab === 'tournament' && normalizedMode !== 'tournament') return;
+            // Filter cache for the active tab
+            const filtered = localMatchesCache.filter(match => {
+                const mode = (match.data.matchMode || match.data.mode || 'single').toLowerCase();
+                if (activeLocalTab === 'single') return mode === 'single';
+                if (activeLocalTab === 'tournament') return mode === 'tournament';
+                return false;
+            });
 
-                const card = createMatchCard(match.id, match.data, 'local');
+            // ----------------------------------------------------------------
+            // SINGLE TAB — group rematches and label them Match 1, Match 2, ...
+            //
+            // A "rematch group" is detected via (in priority order):
+            //   1. Explicit broadcaster fields: rematchGroupId, seriesId,
+            //      parentMatchId, rematchOf, rematchKey
+            //   2. Fallback: same two teams (sorted, case-insensitive)
+            //
+            // Within each group we sort oldest→newest so labels stay stable
+            // (Match 1 = first played, Match 2 = next, etc.) regardless of
+            // re-render order. The visual list still respects the original
+            // newest-first order from Firestore.
+            // ----------------------------------------------------------------
+            const buildRematchKey = (m) => {
+                const explicit = m.rematchGroupId || m.seriesId || m.parentMatchId || m.rematchOf || m.rematchKey;
+                if (explicit) return 'k:' + String(explicit);
+                const t1 = String(m.t1 || m.team1 || 'Team 1').trim().toLowerCase();
+                const t2 = String(m.t2 || m.team2 || 'Team 2').trim().toLowerCase();
+                return 'p:' + [t1, t2].sort().join('::');
+            };
+            const tsOf = (m) => {
+                const t = m.timestamp;
+                if (!t) return 0;
+                if (typeof t.toMillis === 'function') return t.toMillis();
+                if (typeof t === 'object' && t.seconds) return t.seconds * 1000;
+                return Number(t) || 0;
+            };
+
+            let renderList = filtered;
+            const matchMeta = {}; // matchId -> { matchNumber, totalInGroup, isRematchGroup }
+
+            if (activeLocalTab === 'single') {
+                const groups = new Map();
+                filtered.forEach(item => {
+                    const key = buildRematchKey(item.data);
+                    if (!groups.has(key)) groups.set(key, []);
+                    groups.get(key).push(item);
+                });
+                groups.forEach(arr => arr.sort((a, b) => tsOf(a.data) - tsOf(b.data)));
+                groups.forEach(arr => {
+                    arr.forEach((item, idx) => {
+                        matchMeta[item.id] = {
+                            matchNumber: idx + 1,
+                            totalInGroup: arr.length,
+                            isRematchGroup: arr.length > 1
+                        };
+                    });
+                });
+            }
+
+            renderList.forEach(match => {
+                const extras = matchMeta[match.id] || {};
+                const card = createMatchCard(match.id, match.data, 'local', extras);
                 const wrapper = document.createElement('div');
                 wrapper.style.animationDelay = `${delay}ms`;
                 wrapper.className = "stagger-item";
                 wrapper.innerHTML = card;
                 container.appendChild(wrapper);
-                delay += 100;
+                delay += 80;
                 count++;
             });
 
@@ -1629,7 +1716,8 @@
             if (!intlLivePoller) _startLiveIntlPolling();
         }
 
-        function createMatchCard(id, m, type) {
+        function createMatchCard(id, m, type, extras) {
+            extras = extras || {};
             let s1 = "—", s2 = "Yet to Bat";
             if(m.scorecard) {
                 s1 = m.scorecard.innings1?.score || "—";
@@ -1650,8 +1738,13 @@
                 ? `<span class="tier-badge tier-${m.tier.toLowerCase()}">${m.tier === 'INTL' ? '🌍 INTL' : m.tier}</span>`
                 : '';
 
-            const t1Logo = m.t1Logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.t1||'T1')}&background=dbeafe&color=1e3a8a&bold=true&size=80`;
-            const t2Logo = m.t2Logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.t2||'T2')}&background=fef3c7&color=92400e&bold=true&size=80`;
+            // Rematch "Match N" pill — only rendered when this match belongs to a rematch group
+            const rematchBadge = (extras.isRematchGroup && extras.matchNumber)
+                ? `<span class="text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wide" style="background: linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; box-shadow: 0 1px 4px rgba(99,102,241,0.35);">Match ${extras.matchNumber}${extras.totalInGroup ? '/' + extras.totalInGroup : ''}</span>`
+                : '';
+
+            const t1Logo = m.t1Logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.t1||'T1')}&background=dbeafe&color=1e3a8a&bold=true&size=128`;
+            const t2Logo = m.t2Logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.t2||'T2')}&background=fef3c7&color=92400e&bold=true&size=128`;
 
             const statusRow = isLive
                 ? `<div class="flex items-center gap-1.5 bg-red-50 border border-red-100 rounded-full px-2.5 py-1"><span class="live-dot"></span><span class="text-[9px] font-black text-red-600 uppercase tracking-wide">Live</span></div>`
@@ -1665,11 +1758,12 @@
                 <div class="match-card-accent ${accentClass}"></div>
                 <div style="padding: 14px 14px 0;">
                     <div class="flex justify-between items-center mb-3">
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 min-w-0">
                             ${deleteCheck}
-                            <span class="text-[10px] font-bold uppercase tracking-wide" style="color: #9ca3af; max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${m.series || m.venue || 'Friendly Match'}</span>
+                            ${rematchBadge}
+                            <span class="text-[10px] font-bold uppercase tracking-wide truncate" style="color: #9ca3af;">${m.series || m.venue || 'Friendly Match'}</span>
                         </div>
-                        <div class="flex items-center gap-1.5">
+                        <div class="flex items-center gap-1.5 flex-shrink-0">
                             ${tierBadge}
                             ${matchTypeBadge}
                             ${statusRow}
@@ -1679,7 +1773,7 @@
                     <!-- Teams Row -->
                     <div class="flex items-center gap-3 mb-2">
                         <div class="team-logo-circle">
-                            <img src="${t1Logo}" alt="${m.t1}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(m.t1||'T')}&background=dbeafe&color=1e3a8a&bold=true'">
+                            <img src="${t1Logo}" alt="${m.t1}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(m.t1||'T')}&background=dbeafe&color=1e3a8a&bold=true&size=128'">
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="flex justify-between items-baseline">
@@ -1691,7 +1785,7 @@
 
                     <div class="flex items-center gap-3 mb-3">
                         <div class="team-logo-circle">
-                            <img src="${t2Logo}" alt="${m.t2}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(m.t2||'T')}&background=fef3c7&color=92400e&bold=true'">
+                            <img src="${t2Logo}" alt="${m.t2}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(m.t2||'T')}&background=fef3c7&color=92400e&bold=true&size=128'">
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="flex justify-between items-baseline">
@@ -1770,9 +1864,73 @@
 
         function processRealtimeMatchData(rawDoc) {
             // PRO ENGINE: ball-by-ball with shot context, line/length, full chart data
-            if (!rawDoc.innings || rawDoc.innings.length === 0) return rawDoc;
+            //
+            // FIX (2026): When the broadcaster writes only a flat `timeline` array
+            // (instead of a structured `innings[].balls[]`), we synthesize a minimal
+            // innings object from the timeline so Ball-by-Ball, Commentary, Stats,
+            // Charts and the Scorecard all populate correctly. Without this, the
+            // hero-score shows correctly but every analytics tab stays at zero.
+            let workingDoc = rawDoc;
 
-            let d = JSON.parse(JSON.stringify(rawDoc));
+            if ((!rawDoc.innings || rawDoc.innings.length === 0) && rawDoc.timeline) {
+                const tl = _normalizeTimeline(rawDoc.timeline);
+                if (tl.length > 0) {
+                    const defaultBowler  = rawDoc.currentBowler  || rawDoc.bowler  || 'Bowler';
+                    const defaultBatsman = rawDoc.currentBatsman || rawDoc.batsman || rawDoc.striker || 'Batsman';
+
+                    const synthesizedBalls = tl.map((eventRaw) => {
+                        const ev = String(eventRaw || '').trim();
+                        const lower = ev.toLowerCase();
+
+                        const isWide   = lower.includes('wd') || lower === 'wide' || lower.includes('wide');
+                        const isNoBall = lower.includes('nb') || lower.includes('no-ball') || lower.includes('noball');
+                        // 'W' = wicket (but NOT 'Wd' = wide)
+                        const isWicket = !isWide && (lower === 'w' || lower === 'out' || (lower.startsWith('w') && lower.length <= 2));
+
+                        let runs = 0;
+                        if (!isWicket) {
+                            const numMatch = ev.match(/(\d+)/);
+                            runs = numMatch ? parseInt(numMatch[1], 10) : 0;
+                        }
+
+                        return {
+                            runs,
+                            extras: 0,
+                            type: isWicket ? 'wicket' : (isWide ? 'wide' : (isNoBall ? 'no-ball' : 'normal')),
+                            bowler: defaultBowler,
+                            batsman: defaultBatsman,
+                            dismissal: isWicket ? (rawDoc.lastDismissal || 'caught') : null
+                        };
+                    });
+
+                    workingDoc = JSON.parse(JSON.stringify(rawDoc));
+                    workingDoc.innings = [{
+                        battingTeam: rawDoc.t1 || rawDoc.team1 || rawDoc.battingTeam || 'Team 1',
+                        balls: synthesizedBalls
+                    }];
+                }
+            }
+
+            // Hard fallback — still no innings data? Return doc with empty stubs so
+            // downstream renderers don't crash on undefined bbbInnings/chartData.
+            if (!workingDoc.innings || workingDoc.innings.length === 0) {
+                const out = JSON.parse(JSON.stringify(workingDoc));
+                out.bbbInnings = [[], []];
+                out.chartData = {
+                    worm:        { labels:[0], i1:[0], i2:[0] },
+                    rpo:         { labels:[0], i1:[0], i2:[0] },
+                    manhattan:   { labels:[0], i1:[0], i2:[0], wkts1:[], wkts2:[] },
+                    partnerships:{ labels:[], data:[] },
+                    wagon:       { i1:[], i2:[] },
+                    runType:     { dots:0, ones:0, twos:0, threes:0, fours:0, sixes:0, extras:0 },
+                    boundary:    { fours_i1:0, sixes_i1:0, fours_i2:0, sixes_i2:0 },
+                    topScorers:  [],
+                    bowlers:     []
+                };
+                return out;
+            }
+
+            let d = JSON.parse(JSON.stringify(workingDoc));
             d.scorecard = { innings1: null, innings2: null };
             d.chartData = {
                 worm: { labels:[0], i1:[0], i2:[0] },
@@ -2851,11 +3009,11 @@
             
             const t1Name = currentMatchData?.t1 || 'Home XI';
             const t2Name = currentMatchData?.t2 || 'Away XI';
-            const t1Logo = currentMatchData?.t1Logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(t1Name)}&background=random&color=fff`;
-            const t2Logo = currentMatchData?.t2Logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(t2Name)}&background=random&color=fff`;
+            const t1Logo = currentMatchData?.t1Logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(t1Name)}&background=4f46e5&color=fff&bold=true&size=128`;
+            const t2Logo = currentMatchData?.t2Logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(t2Name)}&background=f59e0b&color=fff&bold=true&size=128`;
 
-            btn1.innerHTML = `<div class="flex items-center justify-center gap-2 px-1"><img src="${t1Logo}" class="w-5 h-5 object-contain rounded-full shadow-sm bg-gray-50 border border-gray-100"> <span class="truncate max-w-[120px]">${t1Name}</span></div>`;
-            btn2.innerHTML = `<div class="flex items-center justify-center gap-2 px-1"><img src="${t2Logo}" class="w-5 h-5 object-contain rounded-full shadow-sm bg-gray-50 border border-gray-100"> <span class="truncate max-w-[120px]">${t2Name}</span></div>`;
+            btn1.innerHTML = `<div class="flex items-center justify-center gap-2 px-1"><img src="${t1Logo}" class="w-5 h-5 rounded-full shadow-sm border border-gray-100" style="object-fit: cover;"> <span class="truncate max-w-[120px]">${t1Name}</span></div>`;
+            btn2.innerHTML = `<div class="flex items-center justify-center gap-2 px-1"><img src="${t2Logo}" class="w-5 h-5 rounded-full shadow-sm border border-gray-100" style="object-fit: cover;"> <span class="truncate max-w-[120px]">${t2Name}</span></div>`;
             
             if(teamIdx === 1) {
                 btn1.className = 'flex-1 py-2.5 bg-white text-sm font-bold text-gray-900 rounded-lg shadow-sm border border-gray-100 transition';
@@ -2866,10 +3024,32 @@
             }
 
             const list = teamIdx === 1 ? (currentMatchData?.t1Squad || []) : (currentMatchData?.t2Squad || []);
+
+            // Build a name→avatar lookup from the scorecard so squad rows can
+            // show real broadcaster-uploaded player photos when the squad data
+            // itself only stores names (strings).
+            const scorecardAvatarMap = {};
+            ['innings1','innings2'].forEach(k => {
+                const inn = currentMatchData?.scorecard?.[k];
+                if (!inn) return;
+                [...(inn.batting || []), ...(inn.bowling || [])].forEach(player => {
+                    if (!player || !player.name) return;
+                    const url = player.avatar || player.photoURL || player.image;
+                    if (!url) return;
+                    const key = String(player.name).toLowerCase().trim();
+                    if (!scorecardAvatarMap[key]) scorecardAvatarMap[key] = url;
+                    // Also map last-token (e.g. "M Pathirana" → "pathirana") for shorthand matching
+                    const lastToken = key.split(/\s+/).pop();
+                    if (lastToken && !scorecardAvatarMap[lastToken]) scorecardAvatarMap[lastToken] = url;
+                });
+            });
+
+            const teamPaletteBg = teamIdx === 1 ? 'dbeafe' : 'fef3c7';
+            const teamPaletteFg = teamIdx === 1 ? '1e3a8a' : '92400e';
             
             content.innerHTML = list.length ? `<div class="divide-y divide-gray-50">
                 ${list.map((p, i) => {
-                    const pName = typeof p === 'object' ? p.name : String(p).trim();
+                    const pName = typeof p === 'object' ? (p.name || '') : String(p).trim();
                     const pRole = typeof p === 'object' && p.role ? `<span class="text-[9px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded uppercase tracking-wider">${p.role}</span>` : '';
                     
                     // Auto-format captain/wicket-keeper badges from string data
@@ -2879,14 +3059,25 @@
                         if (pName.toLowerCase().includes('(c)')) { displayRole = `<span class="text-[9px] font-black text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100 uppercase tracking-wider">C</span>`; displayName = pName.replace(/\(c\)/i, '').trim(); }
                         if (pName.toLowerCase().includes('(wk)')) { displayRole += `<span class="text-[9px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 uppercase tracking-wider ml-1">WK</span>`; displayName = displayName.replace(/\(wk\)/i, '').trim(); }
                     }
-                    
-                    const avatarUrl = typeof p === 'object' && p.avatar ? p.avatar : `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=f3f4f6&color=4b5563&bold=true`;
+
+                    // Resolve avatar with priority:
+                    //   1. Explicit avatar/photoURL/image on the squad object
+                    //   2. Scorecard match (full name, then last-name token)
+                    //   3. Generated initials fallback
+                    let avatarUrl;
+                    if (typeof p === 'object' && (p.avatar || p.photoURL || p.image)) {
+                        avatarUrl = p.avatar || p.photoURL || p.image;
+                    } else {
+                        const lookupKey = displayName.toLowerCase().trim();
+                        const lastToken = lookupKey.split(/\s+/).pop();
+                        avatarUrl = scorecardAvatarMap[lookupKey] || scorecardAvatarMap[lastToken] || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=${teamPaletteBg}&color=${teamPaletteFg}&bold=true&size=96`;
+                    }
                     
                     return `
                     <div class="py-3 px-4 flex items-center gap-4 hover:bg-gray-50/50 transition">
                         <span class="text-[10px] font-black text-gray-300 w-4 text-center">${i+1}</span>
                         <div class="flex items-center gap-3 w-full">
-                            <img src="${avatarUrl}" class="w-10 h-10 rounded-full bg-gray-50 object-cover shadow-sm border border-gray-100">
+                            <img src="${avatarUrl}" class="w-10 h-10 rounded-full bg-gray-50 shadow-sm border border-gray-100" style="object-fit: cover;" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=${teamPaletteBg}&color=${teamPaletteFg}&bold=true&size=96'">
                             <div class="flex flex-col">
                                 <div class="flex items-center gap-2">
                                     <span class="text-sm font-bold text-gray-900 tracking-tight">${displayName}</span>
