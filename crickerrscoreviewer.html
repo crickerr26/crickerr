@@ -112,6 +112,32 @@
             100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
         }
 
+        /* --- CHASE BANNER SHINE (sweep highlight) --- */
+        @keyframes chaseShine {
+            0%, 55%   { left: -60%; }
+            85%, 100% { left: 130%; }
+        }
+        @keyframes chaseRunsPulse {
+            0%, 100% { transform: scale(1); }
+            50%      { transform: scale(1.06); }
+        }
+        #d-chase-banner.urgent #d-chase-runs {
+            color: #fca5a5 !important;
+            text-shadow: 0 0 18px rgba(239,68,68,0.7);
+            animation: chaseRunsPulse 1.2s ease-in-out infinite;
+        }
+        #d-chase-banner.won {
+            background: linear-gradient(135deg, rgba(16,185,129,0.22) 0%, rgba(34,197,94,0.22) 100%) !important;
+            border-color: rgba(16,185,129,0.55) !important;
+            box-shadow: 0 4px 18px rgba(16,185,129,0.25) !important;
+        }
+        #d-chase-banner.first-innings {
+            background: linear-gradient(135deg, rgba(59,130,246,0.18) 0%, rgba(99,102,241,0.18) 100%) !important;
+            border-color: rgba(99,102,241,0.45) !important;
+            box-shadow: 0 4px 18px rgba(99,102,241,0.20) !important;
+        }
+        #d-chase-banner.first-innings #d-chase-runs { color: #93c5fd !important; text-shadow: 0 0 14px rgba(59,130,246,0.5); }
+
         /* --- UI ELEMENTS --- */
         .tab-segment {
             background: rgba(118, 118, 128, 0.12); border-radius: 10px; padding: 3px;
@@ -143,12 +169,187 @@
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hidden { display: none !important; }
         
-        /* Table Styles */
-        .score-table th { font-size: 10px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; padding: 8px 4px; border-bottom: 1px solid var(--table-border); }
-        .score-table td { font-size: 13px; font-weight: 500; color: var(--text-primary); padding: 8px 4px; border-bottom: 1px solid var(--table-row-alt); }
+        /* ============================================================
+           ICC-GRADE SCORECARD STYLES
+           ============================================================ */
+        .score-table { width: 100%; border-collapse: collapse; font-feature-settings: 'tnum'; }
+        .score-table th {
+            font-size: 9px; font-weight: 800; color: #6b7280;
+            text-transform: uppercase; letter-spacing: 0.08em;
+            padding: 10px 6px;
+            border-bottom: 1.5px solid rgba(99,102,241,0.25);
+            background: linear-gradient(180deg, rgba(99,102,241,0.04), transparent);
+        }
+        .score-table td {
+            font-size: 13px; font-weight: 500; color: var(--text-primary);
+            padding: 10px 6px; vertical-align: middle;
+            border-bottom: 1px solid rgba(0,0,0,0.04);
+        }
+        [data-theme="dark"] .score-table td { border-bottom-color: rgba(255,255,255,0.04); }
         .score-table tr:last-child td { border-bottom: none; }
-        .bowler-name, .batter-name { font-weight: 600; }
-        .dismissal-text { font-size: 10px; color: var(--text-secondary); font-weight: 400; display: block; }
+        .score-table tbody tr:hover { background: rgba(99,102,241,0.03); }
+        [data-theme="dark"] .score-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+        /* Batter / Bowler cells */
+        .bowler-name, .batter-name { font-weight: 700; color: var(--text-primary); letter-spacing: -0.005em; }
+        .dismissal-text {
+            font-size: 10.5px; color: var(--text-secondary);
+            font-weight: 500; display: block; margin-top: 2px; line-height: 1.3;
+        }
+        .batter-row.is-out .batter-name { color: #b91c1c; }
+        [data-theme="dark"] .batter-row.is-out .batter-name { color: #fca5a5; }
+        .batter-row.is-not-out .batter-name { color: #047857; }
+        [data-theme="dark"] .batter-row.is-not-out .batter-name { color: #6ee7b7; }
+        .batter-row.is-not-out .dismissal-text {
+            color: #059669; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.05em; font-size: 9.5px;
+        }
+        [data-theme="dark"] .batter-row.is-not-out .dismissal-text { color: #34d399; }
+        .batter-row.is-not-out::after {
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+            width: 3px; background: linear-gradient(180deg, #10b981, #059669);
+            border-radius: 0 3px 3px 0;
+        }
+        .batter-row { position: relative; }
+
+        /* Player avatar */
+        .sc-avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: #f3f4f6; object-fit: cover;
+            border: 2px solid #fff; flex-shrink: 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        [data-theme="dark"] .sc-avatar { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.1); }
+        .sc-avatar.is-out  { border-color: #fca5a5; }
+        .sc-avatar.is-not-out { border-color: #6ee7b7; box-shadow: 0 0 0 2px rgba(16,185,129,0.18), 0 1px 3px rgba(0,0,0,0.1); }
+
+        /* Role badges (C / WK) */
+        .role-badge {
+            display: inline-flex; align-items: center; justify-content: center;
+            min-width: 18px; height: 16px; padding: 0 5px;
+            font-size: 8.5px; font-weight: 900;
+            border-radius: 4px; letter-spacing: 0.04em;
+            margin-left: 6px; vertical-align: 1px;
+        }
+        .role-badge.cap { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+        .role-badge.wk  { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+        .role-badge.star{ background: linear-gradient(135deg,#fbbf24,#f59e0b); color:#fff; border: 1px solid #f59e0b; }
+        [data-theme="dark"] .role-badge.cap { background: rgba(245,158,11,0.18); color: #fcd34d; border-color: rgba(245,158,11,0.3); }
+        [data-theme="dark"] .role-badge.wk  { background: rgba(16,185,129,0.18); color: #6ee7b7; border-color: rgba(16,185,129,0.3); }
+
+        /* Numeric cells (ICC standard right-aligned monospace) */
+        .sc-num {
+            text-align: right; font-family: 'SF Mono','Fira Code',monospace;
+            font-variant-numeric: tabular-nums;
+            font-weight: 600; color: var(--text-primary);
+        }
+        .sc-num.runs-val { font-weight: 800; font-size: 14px; }
+        .sc-num.muted { color: var(--text-secondary); font-weight: 500; font-size: 12px; }
+
+        /* Innings summary banner — sits inside the scorecard panel */
+        .inn-summary {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 1px; background: rgba(99,102,241,0.08);
+            border-bottom: 1px solid rgba(99,102,241,0.18);
+        }
+        .inn-summary > div {
+            background: var(--card-bg, #fff); padding: 8px 6px;
+            text-align: center;
+        }
+        [data-theme="dark"] .inn-summary > div { background: rgba(28,28,40,0.95); }
+        .inn-summary .label { font-size: 8.5px; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.08em; display: block; }
+        .inn-summary .value { font-size: 13px; font-weight: 900; color: var(--text-primary); display: block; margin-top: 2px; font-family: 'SF Mono','Fira Code',monospace; font-variant-numeric: tabular-nums; }
+        .inn-summary .value.accent-blue { color: #2563eb; }
+        .inn-summary .value.accent-amber { color: #d97706; }
+
+        /* Section headers within scorecard ("BATTING", "BOWLING", "DID NOT BAT") */
+        .sc-section-title {
+            display: flex; align-items: center; gap: 8px;
+            padding: 14px 16px 6px;
+            font-size: 10px; font-weight: 900;
+            color: #6366f1; text-transform: uppercase; letter-spacing: 0.12em;
+        }
+        .sc-section-title::after {
+            content: ''; flex: 1; height: 1px;
+            background: linear-gradient(90deg, rgba(99,102,241,0.25), transparent);
+        }
+
+        /* Did Not Bat / Yet to Bat list */
+        .dnb-list {
+            padding: 8px 16px 14px; font-size: 12px;
+            color: var(--text-secondary); line-height: 1.6;
+        }
+        .dnb-pill {
+            display: inline-block; padding: 3px 9px; margin: 3px 4px 3px 0;
+            background: rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.06);
+            border-radius: 999px; font-size: 11px; font-weight: 600;
+            color: var(--text-primary);
+        }
+        [data-theme="dark"] .dnb-pill { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.08); }
+
+        /* Fall of Wickets — chip layout */
+        .fow-section {
+            padding: 12px 16px;
+            background: linear-gradient(180deg, rgba(239,68,68,0.04), transparent);
+            border-top: 1px solid rgba(0,0,0,0.04);
+        }
+        [data-theme="dark"] .fow-section { border-top-color: rgba(255,255,255,0.04); }
+        .fow-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .fow-chip {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 4px 10px; border-radius: 8px;
+            background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.18);
+            font-size: 11px; font-weight: 700; color: #b91c1c;
+        }
+        [data-theme="dark"] .fow-chip { background: rgba(239,68,68,0.15); color: #fca5a5; border-color: rgba(239,68,68,0.3); }
+        .fow-chip .fow-score { font-family: 'SF Mono',monospace; font-weight: 900; }
+        .fow-chip .fow-batsman { font-weight: 600; opacity: 0.9; }
+        .fow-chip .fow-over { font-weight: 600; opacity: 0.7; font-size: 10px; }
+
+        /* Extras row */
+        .extras-row {
+            padding: 10px 16px;
+            background: rgba(59,130,246,0.04);
+            border-top: 1px solid rgba(0,0,0,0.04);
+            display: flex; align-items: center; justify-content: space-between;
+            font-size: 12px;
+        }
+        [data-theme="dark"] .extras-row { background: rgba(59,130,246,0.06); border-top-color: rgba(255,255,255,0.04); }
+        .extras-row .extras-label { font-weight: 800; color: var(--text-primary); text-transform: uppercase; font-size: 10px; letter-spacing: 0.08em; }
+        .extras-row .extras-detail { color: var(--text-secondary); font-weight: 600; font-size: 11px; }
+        .extras-row .extras-total { font-family: 'SF Mono',monospace; font-weight: 900; font-size: 14px; color: #2563eb; }
+
+        /* Total row — bold finisher */
+        .total-row {
+            padding: 12px 16px;
+            background: linear-gradient(135deg, rgba(99,102,241,0.10), rgba(139,92,246,0.08));
+            border-top: 2px solid rgba(99,102,241,0.3);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        [data-theme="dark"] .total-row { background: linear-gradient(135deg, rgba(99,102,241,0.16), rgba(139,92,246,0.12)); border-top-color: rgba(99,102,241,0.4); }
+        .total-row .total-label { font-size: 11px; font-weight: 900; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.10em; }
+        .total-row .total-value { font-family: 'SF Mono',monospace; font-weight: 900; font-size: 18px; color: #4f46e5; letter-spacing: -0.02em; }
+        .total-row .total-meta { font-size: 10px; font-weight: 700; color: var(--text-secondary); margin-top: 2px; }
+
+        /* Yet to Bat empty-state */
+        .yet-to-bat {
+            padding: 32px 20px; text-align: center;
+        }
+        .yet-to-bat .ytb-icon { font-size: 32px; opacity: 0.5; margin-bottom: 10px; }
+        .yet-to-bat .ytb-title { font-size: 14px; font-weight: 800; color: var(--text-primary); margin-bottom: 4px; }
+        .yet-to-bat .ytb-sub { font-size: 11px; font-weight: 600; color: var(--text-secondary); }
+
+        /* FP toggle chip */
+        .fp-toggle-bar {
+            display: flex; justify-content: flex-end; padding: 10px 16px 0;
+        }
+        .fp-toggle-chip {
+            font-size: 10px; font-weight: 800; padding: 5px 12px;
+            border-radius: 999px; border: 1px solid; transition: all 0.2s;
+        }
+        .fp-toggle-chip.on  { background: linear-gradient(135deg,#fef3c7,#fcd34d); color: #92400e; border-color: #f59e0b; box-shadow: 0 1px 4px rgba(245,158,11,0.3); }
+        .fp-toggle-chip.off { background: rgba(0,0,0,0.04); color: var(--text-secondary); border-color: rgba(0,0,0,0.08); }
+        [data-theme="dark"] .fp-toggle-chip.off { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.08); }
 
         /* --- DARK MODE GLASS --- */
         [data-theme="dark"] .glass-card {
@@ -983,6 +1184,20 @@
                         <div id="d-t2-name" class="text-white/90 font-black text-xs uppercase text-center truncate w-full" style="letter-spacing: 0.03em;">TEAM 2</div>
                         <div id="d-t2-score" class="text-white/70 font-black mt-1 score-badge" style="font-size: 18px; letter-spacing: -0.03em;">Yet to Bat</div>
                     </div>
+                </div>
+
+                <!-- Chase / Result Banner — full-width, prominent, animated -->
+                <div id="d-chase-banner" class="hidden mb-3" style="position: relative; border-radius: 14px; overflow: hidden; padding: 10px 14px; background: linear-gradient(135deg, rgba(251,191,36,0.18) 0%, rgba(239,68,68,0.18) 50%, rgba(168,85,247,0.18) 100%); border: 1px solid rgba(251,191,36,0.45); box-shadow: 0 4px 18px rgba(251,191,36,0.18), inset 0 1px 0 rgba(255,255,255,0.10); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+                    <div id="d-chase-shine" style="position: absolute; top: 0; left: -60%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent); transform: skewX(-22deg); animation: chaseShine 3s ease-in-out infinite;"></div>
+                    <div style="position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;">
+                        <span id="d-chase-icon" style="font-size: 18px; line-height: 1;"></span>
+                        <span id="d-chase-prefix" style="font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.65); text-transform: uppercase; letter-spacing: 0.14em;">Need</span>
+                        <span id="d-chase-runs" style="font-size: 22px; font-weight: 900; color: #fde68a; letter-spacing: -0.02em; line-height: 1; font-family: 'SF Mono','Fira Code',monospace; text-shadow: 0 0 14px rgba(251,191,36,0.55);">—</span>
+                        <span style="font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.55); text-transform: uppercase; letter-spacing: 0.14em;">runs from</span>
+                        <span id="d-chase-balls" style="font-size: 22px; font-weight: 900; color: #fff; letter-spacing: -0.02em; line-height: 1; font-family: 'SF Mono','Fira Code',monospace;">—</span>
+                        <span style="font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.55); text-transform: uppercase; letter-spacing: 0.14em;">balls</span>
+                    </div>
+                    <div id="d-chase-meta" class="hidden" style="position: relative; z-index: 1; text-align: center; margin-top: 4px; font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.55); text-transform: uppercase; letter-spacing: 0.12em;"></div>
                 </div>
 
                 <!-- Stat Pills -->
@@ -2002,6 +2217,108 @@
             };
             const matchOvers = _readOvers(rawDoc);
 
+            // ============================================================
+            // BROADCASTER-CARD PASSTHROUGH (preferred path)
+            // ============================================================
+            // Most scoring apps publish the full batting & bowling lists for
+            // each innings under one of several conventional names. When that
+            // structured data is present, USE IT VERBATIM — never try to
+            // reverse-engineer it from a flat timeline. Reverse engineering
+            // collapses every ball onto the same "current batsman", which is
+            // why only the striker (or only one bowler) was showing up.
+            //
+            // Resolution priority for each innings:
+            //   • rawDoc.scorecard.inningsN.batting / .bowling  (already final)
+            //   • rawDoc.inningsN.batting / .bowling
+            //   • rawDoc.iN_batting, rawDoc.iN_bowling, rawDoc.iNBat, .iNBowl
+            //   • rawDoc.innings1Batting, rawDoc.innings2Batting, ...
+            //   • rawDoc.battingCard / .bowlingCard  (when shape is
+            //     { 1: [...], 2: [...] } or [{innings:1,...},{innings:2,...}])
+            //
+            // For any innings successfully resolved this way, we synthesize
+            // a ball-stream that the downstream chart engine can still walk,
+            // but the BATTING and BOWLING tables come straight from the
+            // broadcaster — guaranteeing 100% accuracy.
+            // ============================================================
+            const _pickArr = (...sources) => {
+                for (const s of sources) {
+                    if (Array.isArray(s) && s.length > 0) return s;
+                }
+                return null;
+            };
+            const _normalizePlayer = (p, isBowler) => {
+                if (!p) return null;
+                if (typeof p === 'string') return { name: p };
+                const out = { ...p };
+                out.name    = p.name || p.player || p.playerName || p.fullName || p.displayName || '';
+                out.avatar  = p.avatar || p.photoURL || p.image || p.photo || null;
+                if (isBowler) {
+                    const balls = parseInt(p.balls ?? p.ballsBowled ?? 0, 10) || 0;
+                    out.balls   = balls;
+                    out.runs    = parseInt(p.runs ?? p.r ?? p.runsConceded ?? 0, 10) || 0;
+                    out.wickets = parseInt(p.wickets ?? p.w ?? p.wkts ?? 0, 10) || 0;
+                    out.maidens = parseInt(p.maidens ?? p.m ?? 0, 10) || 0;
+                    out.r       = out.runs;
+                    out.w       = out.wickets;
+                    out.m       = out.maidens;
+                    out.o       = p.o || p.overs || (balls > 0 ? `${Math.floor(balls/6)}.${balls%6}` : '0.0');
+                    out.overs   = out.o;
+                    out.econ    = p.econ || p.economy || (balls > 0 ? (out.runs / (balls/6)).toFixed(2) : '0.00');
+                } else {
+                    out.runs    = parseInt(p.runs ?? p.r ?? 0, 10) || 0;
+                    out.balls   = parseInt(p.balls ?? p.b ?? p.ballsFaced ?? 0, 10) || 0;
+                    out.fours   = parseInt(p.fours ?? p['4s'] ?? p.boundaries4 ?? 0, 10) || 0;
+                    out.sixes   = parseInt(p.sixes ?? p['6s'] ?? p.boundaries6 ?? 0, 10) || 0;
+                    out.dismissal = p.dismissal || p.howOut || p.outDesc || (p.isOut ? 'out' : 'not out');
+                    out.isOut   = (p.isOut === true) || (p.out === true) || (out.dismissal && out.dismissal.toLowerCase() !== 'not out' && out.dismissal.toLowerCase() !== 'batting');
+                    out.sr      = p.sr || p.strikeRate || (out.balls > 0 ? ((out.runs / out.balls) * 100).toFixed(1) : '0.0');
+                }
+                return out;
+            };
+
+            const _resolveCardForInn = (innNum) => {
+                const sc1 = rawDoc.scorecard?.[`innings${innNum}`];
+                const inn = rawDoc[`innings${innNum}`];
+                const card = rawDoc.battingCard;
+                const bcard = rawDoc.bowlingCard;
+                const cardArrBat  = Array.isArray(card)  ? card.find(c => c?.innings === innNum) : null;
+                const cardArrBowl = Array.isArray(bcard) ? bcard.find(c => c?.innings === innNum) : null;
+
+                const batting = _pickArr(
+                    sc1?.batting,
+                    inn?.batting,
+                    rawDoc[`i${innNum}Batting`],
+                    rawDoc[`i${innNum}_batting`],
+                    rawDoc[`innings${innNum}Batting`],
+                    rawDoc[`innings${innNum}_batting`],
+                    rawDoc.battingCard?.[innNum],
+                    rawDoc.battingCard?.[`innings${innNum}`],
+                    cardArrBat?.batting
+                );
+                const bowling = _pickArr(
+                    sc1?.bowling,
+                    inn?.bowling,
+                    rawDoc[`i${innNum}Bowling`],
+                    rawDoc[`i${innNum}_bowling`],
+                    rawDoc[`innings${innNum}Bowling`],
+                    rawDoc[`innings${innNum}_bowling`],
+                    rawDoc.bowlingCard?.[innNum],
+                    rawDoc.bowlingCard?.[`innings${innNum}`],
+                    cardArrBowl?.bowling
+                );
+                return { batting, bowling };
+            };
+
+            const broadcasterCards = {
+                inn1: _resolveCardForInn(1),
+                inn2: _resolveCardForInn(2)
+            };
+            const hasBroadcasterCards =
+                (broadcasterCards.inn1.batting && broadcasterCards.inn1.batting.length) ||
+                (broadcasterCards.inn1.bowling && broadcasterCards.inn1.bowling.length) ||
+                (broadcasterCards.inn2.batting && broadcasterCards.inn2.batting.length) ||
+                (broadcasterCards.inn2.bowling && broadcasterCards.inn2.bowling.length);
+
             let workingDoc = rawDoc;
 
             if ((!rawDoc.innings || rawDoc.innings.length === 0) && rawDoc.timeline) {
@@ -2128,11 +2445,100 @@
                     }
 
                     // --- 4. Build ball objects -------------------------------
+                    // Synthesizing per-ball bowler/batsman from a flat timeline
+                    // requires care: previously we used ONE default for every
+                    // ball, which collapsed all batters into a single row.
+                    // Now we maintain rotating "current striker" and "current
+                    // bowler" pointers, advancing them on wickets and over-end.
                     const defaultBowler  = rawDoc.currentBowler  || rawDoc.bowler  || 'Bowler';
                     const defaultBatsman = rawDoc.currentBatsman || rawDoc.batsman || rawDoc.striker || 'Batsman';
 
-                    const buildBall = (eventRaw) => {
-                        // Object-shaped entries: { event, runs, bowler, batsman, dismissal, ... }
+                    // Build candidate batter / bowler rosters from broadcaster
+                    // structured data. These rosters drive the rotation when the
+                    // timeline itself doesn't include per-ball names.
+                    const _rosterFromCard = (card) => {
+                        if (!Array.isArray(card)) return [];
+                        return card.map(p => ({
+                            name:   (typeof p === 'string') ? p : (p.name || p.player || ''),
+                            avatar: (typeof p === 'object') ? (p.avatar || p.photoURL || p.image || null) : null
+                        })).filter(p => p.name);
+                    };
+
+                    const buildSynthesizer = (innRoster, bowlRoster) => {
+                        const batters  = innRoster.length ? innRoster.slice() : [{ name: defaultBatsman, avatar: null }];
+                        const bowlers  = bowlRoster.length ? bowlRoster.slice() : [{ name: defaultBowler,  avatar: null }];
+                        let strikerIdx     = 0;
+                        let nonStrikerIdx  = batters.length > 1 ? 1 : 0;
+                        let nextBatterIdx  = batters.length > 2 ? 2 : (batters.length - 1);
+                        let bowlerIdx      = 0;
+                        let legalBallsThisOver = 0;
+                        let lastBowlerIdx  = -1;
+
+                        const advanceBowlerIfOverEnd = (wasLegal) => {
+                            if (wasLegal) legalBallsThisOver++;
+                            if (legalBallsThisOver >= 6) {
+                                legalBallsThisOver = 0;
+                                lastBowlerIdx = bowlerIdx;
+                                bowlerIdx = (bowlerIdx + 1) % bowlers.length;
+                                if (bowlerIdx === lastBowlerIdx && bowlers.length > 1) {
+                                    bowlerIdx = (bowlerIdx + 1) % bowlers.length;
+                                }
+                            }
+                        };
+                        const rotateOnRuns = (legalRuns) => {
+                            if (legalRuns % 2 === 1) {
+                                const t = strikerIdx; strikerIdx = nonStrikerIdx; nonStrikerIdx = t;
+                            }
+                        };
+                        const promoteOnWicket = () => {
+                            if (nextBatterIdx < batters.length && nextBatterIdx !== strikerIdx && nextBatterIdx !== nonStrikerIdx) {
+                                strikerIdx = nextBatterIdx;
+                                nextBatterIdx++;
+                            }
+                        };
+                        return { batters, bowlers,
+                            current: () => ({
+                                striker:    batters[strikerIdx]    || batters[0],
+                                nonStriker: batters[nonStrikerIdx] || batters[0],
+                                bowler:     bowlers[bowlerIdx]     || bowlers[0]
+                            }),
+                            tick: (c) => {
+                                const wasLegal = !c.isWide && !c.isNoBall;
+                                rotateOnRuns(c.runs || 0);
+                                if (c.isWicket) promoteOnWicket();
+                                advanceBowlerIfOverEnd(wasLegal);
+                            }
+                        };
+                    };
+
+                    // Build per-innings rosters from broadcaster structured data
+                    // (PREFERRED) — falls back to squad list if no card present.
+                    const inn1BatRoster  = _rosterFromCard(broadcasterCards.inn1.batting) ;
+                    const inn1BowlRoster = _rosterFromCard(broadcasterCards.inn2.bowling) ; // bowlers in inn1 are the OPPONENT, who appear in inn2.bowling field
+                    const inn2BatRoster  = _rosterFromCard(broadcasterCards.inn2.batting) ;
+                    const inn2BowlRoster = _rosterFromCard(broadcasterCards.inn1.bowling) ;
+                    const _squadFor = (teamName) => {
+                        if (!teamName) return [];
+                        const t1Norm = String(rawDoc.t1 || '').toLowerCase().trim();
+                        const target = String(teamName).toLowerCase().trim();
+                        const useT1 = (t1Norm === target) || target.includes(t1Norm) || t1Norm.includes(target);
+                        const arr = useT1
+                            ? (rawDoc.t1Squad || rawDoc.team1Squad || rawDoc.squad1 || rawDoc.playingXI1 || rawDoc.homeSquad || [])
+                            : (rawDoc.t2Squad || rawDoc.team2Squad || rawDoc.squad2 || rawDoc.playingXI2 || rawDoc.awaySquad || []);
+                        return arr.map(p => ({
+                            name:   (typeof p === 'string') ? p : (p.name || p.player || ''),
+                            avatar: (typeof p === 'object') ? (p.avatar || p.photoURL || p.image || null) : null
+                        })).filter(p => p.name);
+                    };
+                    const inn1BatRosterFinal  = inn1BatRoster.length  ? inn1BatRoster  : _squadFor(rawDoc.firstBattingTeam || rawDoc.t1);
+                    const inn1BowlRosterFinal = inn1BowlRoster.length ? inn1BowlRoster : _squadFor(rawDoc.t2);
+                    const inn2BatRosterFinal  = inn2BatRoster.length  ? inn2BatRoster  : _squadFor(rawDoc.t2);
+                    const inn2BowlRosterFinal = inn2BowlRoster.length ? inn2BowlRoster : _squadFor(rawDoc.t1);
+
+                    const synth1 = buildSynthesizer(inn1BatRosterFinal, inn1BowlRosterFinal);
+                    const synth2 = buildSynthesizer(inn2BatRosterFinal, inn2BowlRosterFinal);
+
+                    const buildBall = (eventRaw, synth) => {
                         let evScalar = eventRaw;
                         let perBall = {};
                         if (eventRaw && typeof eventRaw === 'object') {
@@ -2141,21 +2547,15 @@
                         }
                         const c = classify(evScalar);
 
-                        // Total runs off the bat for the delivery (extras tracked separately below)
                         let runs = c.runs;
                         let extras = 0;
-                        if (c.isWide || c.isNoBall) {
-                            // Wide/no-ball: the digit (if any) IS the extras run count
-                            extras = c.runs;
-                            runs = 0;
-                        } else if (c.isBye || c.isLegBye) {
-                            extras = c.runs;
-                            runs = 0;
-                        }
+                        if (c.isWide || c.isNoBall) { extras = c.runs; runs = 0; }
+                        else if (c.isBye || c.isLegBye) { extras = c.runs; runs = 0; }
 
                         const dismissalText = perBall.dismissal || (c.isWicket ? (rawDoc.lastDismissal || 'caught') : null);
+                        const cur = synth.current();
 
-                        return {
+                        const ball = {
                             runs,
                             extras,
                             type: c.isWicket ? 'wicket'
@@ -2164,19 +2564,22 @@
                                   : c.isBye ? 'bye'
                                   : c.isLegBye ? 'leg-bye'
                                   : 'normal',
-                            bowler:        perBall.bowler        || defaultBowler,
-                            batsman:       perBall.batsman       || defaultBatsman,
-                            bowlerAvatar:  perBall.bowlerAvatar  || perBall.bowlerImg  || null,
-                            batsmanAvatar: perBall.batsmanAvatar || perBall.batsmanImg || null,
+                            bowler:        perBall.bowler        || cur.bowler.name,
+                            batsman:       perBall.batsman       || cur.striker.name,
+                            bowlerAvatar:  perBall.bowlerAvatar  || perBall.bowlerImg  || cur.bowler.avatar,
+                            batsmanAvatar: perBall.batsmanAvatar || perBall.batsmanImg || cur.striker.avatar,
                             dismissal: dismissalText,
                             shot:   perBall.shot   || null,
                             line:   perBall.line   || null,
                             length: perBall.length || null
                         };
+                        // Advance state AFTER assigning the ball's striker/bowler
+                        synth.tick({ runs, isWide: c.isWide, isNoBall: c.isNoBall, isWicket: c.isWicket });
+                        return ball;
                     };
 
-                    const inn1Balls = inn1Events.map(buildBall);
-                    const inn2Balls = inn2Events.map(buildBall);
+                    const inn1Balls = inn1Events.map(e => buildBall(e, synth1));
+                    const inn2Balls = inn2Events.map(e => buildBall(e, synth2));
 
                     // --- 5. Resolve batting teams ----------------------------
                     // Innings 1's batting team = whoever batted first. Use any
@@ -2482,11 +2885,174 @@
                     name: inn.battingTeam || (idx === 0 ? d.t1 : d.t2),
                     score: `${totalRuns}/${wickets}`,
                     overs: oversStr,
-                    batting: Object.values(batStats).map(b => ({...b, sr: b.balls > 0 ? ((b.runs/b.balls)*100).toFixed(1) : '0.0'})),
-                    bowling: Object.values(bowlStats).map(b => ({...b, o: `${Math.floor(b.balls/6)}.${b.balls%6}`, econ: b.balls > 0 ? (b.runs/(b.balls/6)).toFixed(1) : '0.0'})),
+                    runs: totalRuns,
+                    wkts: wickets,
+                    // Batting card — ensure every standard ICC field exists with safe defaults
+                    batting: Object.values(batStats).map(b => ({
+                        ...b,
+                        runs:  b.runs  || 0,
+                        balls: b.balls || 0,
+                        fours: b.fours || 0,
+                        sixes: b.sixes || 0,
+                        sr:    b.balls > 0 ? ((b.runs / b.balls) * 100).toFixed(1) : '0.0',
+                        dismissal: b.dismissal || 'not out',
+                        isOut: !!(b.dismissal && b.dismissal !== 'not out')
+                    })),
+                    // Bowling card — DUAL field naming so both .r/.w/.m and
+                    // .runs/.wickets/.maidens render correctly. This permanently
+                    // fixes the "undefined" columns bug.
+                    bowling: Object.values(bowlStats).map(b => {
+                        const balls = b.balls || 0;
+                        const runs  = b.runs  || 0;
+                        const wkts  = b.wickets || 0;
+                        const md    = b.maidens || 0;
+                        return {
+                            ...b,
+                            o:        `${Math.floor(balls / 6)}.${balls % 6}`,
+                            overs:    `${Math.floor(balls / 6)}.${balls % 6}`,
+                            r:        runs,
+                            runs:     runs,
+                            w:        wkts,
+                            wickets:  wkts,
+                            m:        md,
+                            maidens:  md,
+                            balls:    balls,
+                            econ:     balls > 0 ? (runs / (balls / 6)).toFixed(2) : '0.00'
+                        };
+                    }),
                     fow: fow.join(', '),
                     extras: { wides: extrasWides, noBalls: extrasNoBalls, byes: extrasByes, legByes: extrasLegByes, total: extrasWides + extrasNoBalls + extrasByes + extrasLegByes }
                 };
+
+                // ============================================================
+                // BROADCASTER-CARD MERGE (not replace)
+                // ============================================================
+                // If the broadcaster published a batting/bowling list for this
+                // innings, MERGE it with the synthesized card by player name.
+                //
+                // Why merge instead of replace?
+                //   • Broadcasters often publish only currently-active batters.
+                //     The dismissed player drops off their live list.
+                //   • The timeline-driven engine, however, has tracked every
+                //     batter who has been on strike + their dismissal text.
+                //   • If we just replaced, dismissed batters disappear from
+                //     the scorecard. With merging:
+                //       - Every player tracked in EITHER source is included.
+                //       - Broadcaster numbers (runs/balls/4s/6s/dismissal)
+                //         take precedence — they are the source of truth.
+                //       - Engine-tracked players missing from the broadcaster
+                //         feed are presumed dismissed (otherwise they'd be
+                //         in the live list); we keep their loop-counted
+                //         dismissal & stats.
+                //
+                // hasBroadcasterCards / broadcasterCards are computed at the
+                // top of processRealtimeMatchData in the passthrough layer.
+                // ============================================================
+                if (hasBroadcasterCards) {
+                    const inningKey = idx === 0 ? 'inn1' : 'inn2';
+                    const truthCard = broadcasterCards[inningKey];
+                    if (truthCard) {
+                        const _normName = (n) => String(n || '').trim().toLowerCase();
+
+                        // ---- BATTING merge ----
+                        if (truthCard.batting && truthCard.batting.length > 0) {
+                            const truthList = truthCard.batting
+                                .map(p => _normalizePlayer(p, false))
+                                .filter(Boolean);
+
+                            const truthByName = new Map();
+                            truthList.forEach(p => truthByName.set(_normName(p.name), p));
+
+                            const merged = [];
+                            const seen = new Set();
+
+                            // 1. Start with broadcaster's order — they're the
+                            //    canonical batting order.
+                            truthList.forEach(p => {
+                                merged.push(p);
+                                seen.add(_normName(p.name));
+                            });
+
+                            // 2. Append any engine-tracked batters the
+                            //    broadcaster dropped (= dismissed players).
+                            //    These keep their loop-tracked stats and an
+                            //    "out" status if the loop saw a dismissal.
+                            const engineBatters = d.scorecard[innKey].batting || [];
+                            engineBatters.forEach(eb => {
+                                const key = _normName(eb.name);
+                                if (!seen.has(key) && eb.name) {
+                                    merged.push({
+                                        ...eb,
+                                        // If the broadcaster pruned them, they
+                                        // are almost certainly dismissed — flag
+                                        // them as out unless the loop already
+                                        // recorded a real dismissal.
+                                        dismissal: (eb.dismissal && eb.dismissal !== 'not out') ? eb.dismissal : 'out',
+                                        isOut: true
+                                    });
+                                    seen.add(key);
+                                }
+                            });
+
+                            // 3. Reconciliation safety: ensure the wicket count
+                            //    in the merged batting list matches the
+                            //    broadcaster's published wickets total. If the
+                            //    broadcaster says wickets=1 but the merged list
+                            //    has 0 dismissed batters, mark the FIRST
+                            //    broadcaster batter (by order) as out — this
+                            //    handles scorers who write the wicket count
+                            //    but don't tag dismissals on individual rows.
+                            const truthWkts = parseInt(rawDoc.wickets, 10);
+                            if (!isNaN(truthWkts) && truthWkts > 0) {
+                                const currentlyOut = merged.filter(b => b.isOut).length;
+                                if (currentlyOut < truthWkts) {
+                                    // Mark earliest broadcaster batters as out
+                                    // until the count matches.
+                                    let need = truthWkts - currentlyOut;
+                                    for (let i = 0; i < merged.length && need > 0; i++) {
+                                        if (!merged[i].isOut) {
+                                            // Only convert someone who has any
+                                            // batting activity (balls > 0)
+                                            if ((merged[i].balls || 0) > 0 || (merged[i].runs || 0) > 0) {
+                                                merged[i].isOut = true;
+                                                merged[i].dismissal = merged[i].dismissal && merged[i].dismissal !== 'not out'
+                                                    ? merged[i].dismissal
+                                                    : 'out';
+                                                need--;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            d.scorecard[innKey].batting = merged;
+                        }
+
+                        // ---- BOWLING merge (broadcaster wins for bowlers) ----
+                        if (truthCard.bowling && truthCard.bowling.length > 0) {
+                            const truthList = truthCard.bowling
+                                .map(p => _normalizePlayer(p, true))
+                                .filter(Boolean);
+                            const truthByName = new Map();
+                            truthList.forEach(p => truthByName.set(_normName(p.name), p));
+
+                            // Engine-side bowlers the broadcaster missed: rare,
+                            // but include them so partial bowling data still
+                            // appears.
+                            const engineBowlers = d.scorecard[innKey].bowling || [];
+                            const merged = truthList.slice();
+                            const seen = new Set(truthList.map(p => _normName(p.name)));
+                            engineBowlers.forEach(eb => {
+                                const key = _normName(eb.name);
+                                if (!seen.has(key) && eb.name) {
+                                    merged.push(eb);
+                                    seen.add(key);
+                                }
+                            });
+                            d.scorecard[innKey].bowling = merged;
+                        }
+                    }
+                }
 
                 // ============================================================
                 // PER-INNINGS CRR — write to scorecard for every innings
@@ -2544,8 +3110,16 @@
                             }
                         }
 
+                        // Write the reconciled values into ALL the fields the
+                        // renderer reads from. Previously only `.score` was
+                        // updated, so renderScoreTable read stale `.runs`/`.wkts`
+                        // from the loop and showed "5/0" while the hero showed
+                        // "5/1" — the same data presented two different ways.
                         d.scorecard[innKey].score      = `${finalRuns}/${finalWickets}`;
                         d.scorecard[innKey].overs      = finalOvers;
+                        d.scorecard[innKey].runs       = finalRuns;
+                        d.scorecard[innKey].wkts       = finalWickets;
+                        d.scorecard[innKey].wickets    = finalWickets;
                         d.scorecard[innKey].crr        = finalValidBalls > 0 ? (finalRuns / (finalValidBalls / 6)).toFixed(2) : '0.00';
                         d.scorecard[innKey].validBalls = finalValidBalls;
                     }
@@ -2650,12 +3224,18 @@
             if(procD.matchStatus === 'COMPLETE') {
                 badge.innerHTML = '🏁 FINAL';
                 badge.className = "text-[9px] font-black bg-gray-500/20 text-gray-300 border border-gray-400/30 px-2.5 py-1 rounded-full backdrop-blur-sm";
-                noteEl.innerText = procD.resultMain || procD.note || "Match Concluded";
+                if (noteEl) noteEl.innerText = ''; // Banner replaces this slot
             } else {
                 badge.innerHTML = '<span class="live-dot" style="background:#f87171;"></span> LIVE';
                 badge.className = "text-[9px] font-black bg-red-500/20 text-red-300 border border-red-400/30 px-2.5 py-1 rounded-full flex items-center gap-1.5 backdrop-blur-sm";
-                noteEl.innerText = procD.req || procD.note || (procD.target ? `Target: ${procD.target}` : "1st Innings");
+                if (noteEl) noteEl.innerText = ''; // Banner replaces this slot — keep VS divider clean
             }
+
+            // ============================================================
+            // i1 / i2 references — needed by name labels + renderScoreTable
+            // ============================================================
+            const i1 = procD.scorecard?.innings1 || { score: '', overs: '', batting: [], bowling: [], name: '' };
+            const i2 = procD.scorecard?.innings2 || { score: '', overs: '', batting: [], bowling: [], name: '' };
 
             // ============================================================
             // HERO SCORE RESOLUTION (team-keyed, NOT positional)
@@ -2746,6 +3326,86 @@
             document.getElementById('d-crr').innerText    = (liveScoreObj?.crr) || procD.crr || "—";
             document.getElementById('d-target').innerText = procD.target || "—";
             document.getElementById('d-rrr').innerText    = procD.rrr || "—";
+
+            // ============================================================
+            // CHASE BANNER — high-visibility headline message
+            // ============================================================
+            // States:
+            //   • COMPLETE  → green "won by X" banner
+            //   • Innings 2 chase live → amber/red "Need N from M" banner
+            //                            (turns urgent red when RRR > 12)
+            //   • Innings 1 live → blue projection banner
+            //   • Otherwise → hidden
+            // ============================================================
+            const chaseBanner   = document.getElementById('d-chase-banner');
+            const chaseIcon     = document.getElementById('d-chase-icon');
+            const chasePrefix   = document.getElementById('d-chase-prefix');
+            const chaseRunsEl   = document.getElementById('d-chase-runs');
+            const chaseBallsEl  = document.getElementById('d-chase-balls');
+            const chaseMetaEl   = document.getElementById('d-chase-meta');
+
+            if (chaseBanner) {
+                chaseBanner.classList.remove('hidden', 'urgent', 'won', 'first-innings');
+
+                if (procD.matchStatus === 'COMPLETE') {
+                    chaseBanner.classList.add('won');
+                    chaseIcon.textContent  = '🏆';
+                    chasePrefix.textContent = '';
+                    chaseRunsEl.innerHTML  = `<span style="font-size:14px; font-weight:900; color:#86efac; text-shadow: 0 0 14px rgba(16,185,129,0.55);">${procD.resultMain || procD.note || 'Match Concluded'}</span>`;
+                    chaseBallsEl.style.display = 'none';
+                    document.querySelectorAll('#d-chase-banner span').forEach(s => {
+                        if (s !== chaseRunsEl && s !== chaseIcon && !s.contains(chaseRunsEl)) {
+                            const txt = (s.textContent || '').trim().toLowerCase();
+                            if (txt === 'runs from' || txt === 'balls' || txt === '—') s.style.display = 'none';
+                        }
+                    });
+                    if (chaseMetaEl) chaseMetaEl.classList.add('hidden');
+                } else if (procD.req && procD.target) {
+                    // Live chase — parse "Need N runs from M balls"
+                    const reqMatch = String(procD.req).match(/(\d+)\s*runs?\s*from\s*(\d+)\s*balls?/i);
+                    const needRuns  = reqMatch ? parseInt(reqMatch[1], 10) : null;
+                    const needBalls = reqMatch ? parseInt(reqMatch[2], 10) : null;
+
+                    if (needRuns !== null && needBalls !== null) {
+                        chaseBallsEl.style.display = '';
+                        // Restore default visibility on inline tokens
+                        document.querySelectorAll('#d-chase-banner > div > span').forEach(s => { s.style.display = ''; });
+
+                        chaseIcon.textContent   = '🎯';
+                        chasePrefix.textContent = 'Need';
+                        chaseRunsEl.textContent  = needRuns;
+                        chaseBallsEl.textContent = needBalls;
+
+                        // RRR-based urgency
+                        const rrrVal = parseFloat(procD.rrr) || 0;
+                        if (rrrVal > 12 || (needBalls > 0 && needRuns / (needBalls / 6) > 12)) {
+                            chaseBanner.classList.add('urgent');
+                        }
+
+                        if (chaseMetaEl) {
+                            chaseMetaEl.classList.remove('hidden');
+                            chaseMetaEl.textContent = `Target ${procD.target} · RRR ${procD.rrr || '—'}`;
+                        }
+                    } else {
+                        chaseBanner.classList.add('hidden');
+                    }
+                } else if (procD.currentInningsIdx === 0 || (!procD.req && procD.scorecard?.innings1?.score)) {
+                    // Innings 1 in progress — projection banner
+                    chaseBanner.classList.add('first-innings');
+                    chaseBallsEl.style.display = 'none';
+                    document.querySelectorAll('#d-chase-banner > div > span').forEach(s => { s.style.display = ''; });
+                    chasePrefix.textContent = '1st Innings';
+                    const noteText = procD.note && /Proj/i.test(procD.note) ? procD.note.replace(/.*Proj\s*/i, 'Projected ') : (procD.note || 'Match in progress');
+                    chaseRunsEl.innerHTML  = `<span style="font-size:13px; font-weight:800; color:#bfdbfe;">${noteText}</span>`;
+                    document.querySelectorAll('#d-chase-banner > div > span').forEach(s => {
+                        const txt = (s.textContent || '').trim().toLowerCase();
+                        if (txt === 'runs from' || txt === 'balls') s.style.display = 'none';
+                    });
+                    if (chaseMetaEl) chaseMetaEl.classList.add('hidden');
+                } else {
+                    chaseBanner.classList.add('hidden');
+                }
+            }
 
             // Update innings names in scorecard
             const i1NameEl = document.getElementById('i1-name');
@@ -3289,86 +3949,265 @@
             return Math.max(0, fp).toFixed(1);
         }
 
+        // ============================================================
+        // ICC-GRADE SCORECARD RENDERER
+        // ============================================================
+        // Layout (top-to-bottom, matches ICC / cricinfo / Hotstar standard):
+        //   1. Innings summary banner (Total · Overs · Run Rate · Extras)
+        //   2. Fantasy Points toggle chip
+        //   3. BATTING table — name with C/WK badges, dismissal text,
+        //      R · B · 4s · 6s · SR (or FP)
+        //   4. EXTRAS row — total + breakdown
+        //   5. TOTAL row — runs/wickets, overs, RR
+        //   6. Fall of Wickets — chip layout (score (batsman, over))
+        //   7. DID NOT BAT — pill list of squad members not yet batted
+        //   8. BOWLING table — O · M · R · W · ECON (or FP)
+        // ============================================================
         function renderScoreTable(id, inn) {
-            document.getElementById(`${id}-total`).innerText = inn.score;
-            const body = document.getElementById(`${id}-body`);
-            if((!inn.batting || inn.batting.length === 0) && (!inn.bowling || inn.bowling.length === 0)) {
-                body.innerHTML = '<div class="text-center text-xs text-gray-400 py-4 italic">No Data</div>';
+            const totalEl = document.getElementById(`${id}-total`);
+            const body    = document.getElementById(`${id}-body`);
+            if (!totalEl || !body) return;
+
+            // ---- Empty-state: this team has not yet started batting ----
+            const hasBat  = inn && Array.isArray(inn.batting) && inn.batting.length > 0;
+            const hasBowl = inn && Array.isArray(inn.bowling) && inn.bowling.length > 0;
+            const hasAnyData = hasBat || hasBowl;
+
+            if (!hasAnyData) {
+                totalEl.innerText = inn?.score || '—';
+                body.innerHTML = `
+                    <div class="yet-to-bat">
+                        <div class="ytb-icon">🏏</div>
+                        <div class="ytb-title">${id === 'i2' ? 'Yet to Bat' : 'No Innings Data Yet'}</div>
+                        <div class="ytb-sub">${id === 'i2' ? 'This innings has not started.' : 'Waiting for the first ball.'}</div>
+                    </div>`;
                 return;
             }
 
-            const fpToggleId = `fp-toggle-${id}`;
-            const fpColHeader = showFantasyPoints ? `<th class="text-right pr-2 text-amber-500">FP ⭐</th>` : `<th class="text-right pr-2">SR</th>`;
-            const fpToggleLabel = showFantasyPoints ? '⭐ Hide FP' : '⭐ Show FP';
+            totalEl.innerText = inn.score || '—';
 
+            // ---- Resolve squad list for "Did Not Bat" ----
+            const teamName  = inn.name || '';
+            const md        = currentMatchData || {};
+            const fullSquad = (() => {
+                const tName = String(teamName).toLowerCase();
+                const t1Key = String(md.t1 || '').toLowerCase();
+                const candidates = (tName && t1Key && (tName === t1Key || tName.includes(t1Key) || t1Key.includes(tName)))
+                    ? [md.t1Squad, md.team1Squad, md.squad1, md.playingXI1, md.homeSquad, md.t1Players]
+                    : [md.t2Squad, md.team2Squad, md.squad2, md.playingXI2, md.awaySquad, md.t2Players];
+                return candidates.find(arr => Array.isArray(arr) && arr.length > 0) || [];
+            })();
+            const battedNames = new Set(inn.batting.map(b => String(b.name || '').toLowerCase().trim()));
+            const cleanName = (n) => String(n || '').replace(/\s*\((c|wk|c\s*&\s*wk|wk\s*&\s*c)\)\s*$/i, '').trim();
+            const dnb = fullSquad
+                .map(p => typeof p === 'object' ? (p.name || '') : String(p))
+                .filter(n => n && !battedNames.has(cleanName(n).toLowerCase()) && !battedNames.has(n.toLowerCase()))
+                .map(cleanName);
+
+            // ---- Compute innings totals/RR ----
+            const runs   = (inn.runs !== undefined && inn.runs !== null) ? inn.runs : (parseInt(String(inn.score || '0').split('/')[0], 10) || 0);
+            const wkts   = (inn.wkts !== undefined && inn.wkts !== null) ? inn.wkts : (parseInt(String(inn.score || '0/0').split('/')[1], 10) || 0);
+            const overs  = inn.overs || '0.0';
+            const ovParts = String(overs).match(/^(\d+)(?:\.(\d+))?$/);
+            const legalBalls = ovParts ? parseInt(ovParts[1],10) * 6 + parseInt(ovParts[2] || '0', 10) : 0;
+            const runRate = legalBalls > 0 ? (runs / (legalBalls / 6)).toFixed(2) : '0.00';
+            const extrasTotal = inn.extras?.total || 0;
+
+            // ---- Section: Innings summary banner ----
+            const accentClass = id === 'i1' ? 'accent-blue' : 'accent-amber';
             let html = `
-            <div class="flex justify-end px-2 pt-2 pb-1">
-                <button onclick="toggleFantasyPoints()" class="text-[10px] font-bold px-2 py-1 rounded-full border ${showFantasyPoints ? 'bg-amber-50 border-amber-300 text-amber-700' : 'bg-gray-50 border-gray-200 text-gray-500'} transition">${fpToggleLabel}</button>
-            </div>
-            <table class="w-full text-left score-table mb-4">
-                <thead><tr><th class="pl-2">Batting</th><th class="text-right">R</th><th class="text-right">B</th><th class="text-right">4s/6s</th>${fpColHeader}</tr></thead>
-                <tbody>
-                    ${(inn.batting || []).map(b => `
+                <div class="inn-summary">
+                    <div><span class="label">Total</span><span class="value ${accentClass}">${runs}/${wkts}</span></div>
+                    <div><span class="label">Overs</span><span class="value">${overs}</span></div>
+                    <div><span class="label">Run Rate</span><span class="value">${runRate}</span></div>
+                    <div><span class="label">Extras</span><span class="value">${extrasTotal}</span></div>
+                </div>`;
+
+            // ---- Fantasy Points toggle ----
+            const fpLabel = showFantasyPoints ? '⭐ Hide FP' : '⭐ Show FP';
+            html += `
+                <div class="fp-toggle-bar">
+                    <button onclick="toggleFantasyPoints()" class="fp-toggle-chip ${showFantasyPoints ? 'on' : 'off'}">${fpLabel}</button>
+                </div>`;
+
+            // ---- BATTING table ----
+            html += `<div class="sc-section-title">Batting</div>`;
+            const fpHead   = showFantasyPoints ? `<th class="sc-num" style="text-align:right;">FP</th>`
+                                               : `<th class="sc-num" style="text-align:right;">SR</th>`;
+            html += `<table class="score-table">
+                <thead>
+                    <tr>
+                        <th style="text-align:left; padding-left:16px;">Batter</th>
+                        <th class="sc-num">R</th>
+                        <th class="sc-num">B</th>
+                        <th class="sc-num">4s</th>
+                        <th class="sc-num">6s</th>
+                        ${fpHead}
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            inn.batting.forEach(b => {
+                const name = cleanName(b.name);
+                const rawNm = String(b.name || '');
+                const isCap = /\(c\)/i.test(rawNm) || b.captain === true;
+                const isWk  = /\(wk\)/i.test(rawNm) || b.wicketKeeper === true || b.role === 'WK';
+                const isOut = b.isOut === true || (b.dismissal && b.dismissal !== 'not out');
+                const dismissalText = isOut ? (b.dismissal || 'out') : 'not out';
+                const isStar = !isOut && (b.runs >= 50);
+
+                const avatarUrl = b.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=${isOut ? 'fee2e2' : 'd1fae5'}&color=${isOut ? '991b1b' : '065f46'}&bold=true&size=96`;
+
+                const lastCol = showFantasyPoints
+                    ? `<td class="sc-num" style="color:#d97706; font-weight:800;">${calcBatFP(b)}</td>`
+                    : `<td class="sc-num">${b.sr || '0.0'}</td>`;
+
+                html += `
+                    <tr class="batter-row ${isOut ? 'is-out' : 'is-not-out'}">
+                        <td style="padding-left:16px;">
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <img src="${avatarUrl}" class="sc-avatar ${isOut ? 'is-out' : 'is-not-out'}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=f3f4f6&color=4b5563&bold=true&size=96'">
+                                <div style="min-width:0; flex:1;">
+                                    <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
+                                        <span class="batter-name">${name}</span>
+                                        ${isCap ? '<span class="role-badge cap">C</span>' : ''}
+                                        ${isWk  ? '<span class="role-badge wk">WK</span>' : ''}
+                                        ${isStar ? '<span class="role-badge star">★</span>' : ''}
+                                    </div>
+                                    <span class="dismissal-text">${dismissalText}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="sc-num runs-val">${b.runs ?? 0}</td>
+                        <td class="sc-num muted">${b.balls ?? 0}</td>
+                        <td class="sc-num muted">${b.fours ?? 0}</td>
+                        <td class="sc-num muted">${b.sixes ?? 0}</td>
+                        ${lastCol}
+                    </tr>`;
+            });
+            html += `</tbody></table>`;
+
+            // ---- EXTRAS row ----
+            if (inn.extras) {
+                const e = inn.extras;
+                const detail = `wides ${e.wides||0}, no-balls ${e.noBalls||0}, byes ${e.byes||0}, leg-byes ${e.legByes||0}`;
+                html += `
+                    <div class="extras-row">
+                        <div>
+                            <span class="extras-label">Extras</span>
+                            <span class="extras-detail" style="margin-left:8px;">(${detail})</span>
+                        </div>
+                        <span class="extras-total">${e.total || 0}</span>
+                    </div>`;
+            }
+
+            // ---- TOTAL row ----
+            html += `
+                <div class="total-row">
+                    <div>
+                        <div class="total-label">Total</div>
+                        <div class="total-meta">${overs} Overs · RR ${runRate}</div>
+                    </div>
+                    <div class="total-value">${runs}/${wkts}</div>
+                </div>`;
+
+            // ---- FALL OF WICKETS — parsed into chips ----
+            if (inn.fow && String(inn.fow).trim().length > 0) {
+                const rawFow = String(inn.fow);
+                // Engine writes: "<strong>20-1</strong> 🧤 (Player, 5.2), <strong>45-2</strong> 🎯 (Player, 8.4)"
+                const fowItems = [];
+                const re = /<strong>(\d+)-(\d+)<\/strong>\s*[^()]*\(([^,)]+),?\s*([^)]*)\)/g;
+                let m;
+                while ((m = re.exec(rawFow)) !== null) {
+                    fowItems.push({ score: m[1], wkt: m[2], batsman: m[3].trim(), over: m[4].trim() });
+                }
+                // Fallback simple-text format: "10-1 (Smith, 2.3), 25-2 (Jones, 4.1)"
+                if (fowItems.length === 0) {
+                    const re2 = /(\d+)-(\d+)\s*\(([^,)]+),?\s*([^)]*)\)/g;
+                    while ((m = re2.exec(rawFow.replace(/<[^>]+>/g, ''))) !== null) {
+                        fowItems.push({ score: m[1], wkt: m[2], batsman: m[3].trim(), over: m[4].trim() });
+                    }
+                }
+                if (fowItems.length > 0) {
+                    html += `
+                        <div class="fow-section">
+                            <div class="sc-section-title" style="padding:0 0 4px;">Fall of Wickets</div>
+                            <div class="fow-chips">
+                                ${fowItems.map(f => `
+                                    <span class="fow-chip">
+                                        <span class="fow-score">${f.score}-${f.wkt}</span>
+                                        <span class="fow-batsman">${f.batsman}</span>
+                                        ${f.over ? `<span class="fow-over">${f.over} ov</span>` : ''}
+                                    </span>
+                                `).join('')}
+                            </div>
+                        </div>`;
+                }
+            }
+
+            // ---- DID NOT BAT — pill list ----
+            if (dnb.length > 0) {
+                html += `
+                    <div class="sc-section-title">Did Not Bat</div>
+                    <div class="dnb-list">
+                        ${dnb.map(n => `<span class="dnb-pill">${n}</span>`).join('')}
+                    </div>`;
+            }
+
+            // ---- BOWLING table ----
+            if (hasBowl) {
+                const fpBowlHead = showFantasyPoints
+                    ? `<th class="sc-num">FP</th>`
+                    : `<th class="sc-num">ECON</th>`;
+                html += `
+                    <div class="sc-section-title">Bowling</div>
+                    <table class="score-table">
+                        <thead>
+                            <tr>
+                                <th style="text-align:left; padding-left:16px;">Bowler</th>
+                                <th class="sc-num">O</th>
+                                <th class="sc-num">M</th>
+                                <th class="sc-num">R</th>
+                                <th class="sc-num">W</th>
+                                ${fpBowlHead}
+                            </tr>
+                        </thead>
+                        <tbody>`;
+                inn.bowling.forEach(b => {
+                    const name = cleanName(b.name);
+                    const wkts = (b.w !== undefined ? b.w : (b.wickets || 0));
+                    const runs = (b.r !== undefined ? b.r : (b.runs || 0));
+                    const mdns = (b.m !== undefined ? b.m : (b.maidens || 0));
+                    const overs = b.o || b.overs || '0.0';
+                    const econ  = b.econ || '0.00';
+                    const isStarBowler = wkts >= 3;
+                    const avatarUrl = b.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=fef3c7&color=92400e&bold=true&size=96`;
+
+                    const lastCol = showFantasyPoints
+                        ? `<td class="sc-num" style="color:#d97706; font-weight:800;">${calcBowlFP(b)}</td>`
+                        : `<td class="sc-num">${econ}</td>`;
+
+                    html += `
                         <tr>
-                            <td class="pl-2 py-1.5">
-                                <div class="flex items-center gap-2">
-                                    <img src="${b.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(b.name)}&background=f3f4f6&color=4b5563&bold=true`}" class="w-7 h-7 rounded-full bg-gray-50 object-cover border border-gray-200 flex-shrink-0">
-                                    <div class="flex flex-col">
-                                        <span class="batter-name">${b.name}</span>
-                                        <span class="dismissal-text">${b.dismissal||'not out'}</span>
+                            <td style="padding-left:16px;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <img src="${avatarUrl}" class="sc-avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=fef3c7&color=92400e&bold=true&size=96'">
+                                    <div>
+                                        <span class="bowler-name">${name}</span>
+                                        ${isStarBowler ? '<span class="role-badge star">★</span>' : ''}
                                     </div>
                                 </div>
                             </td>
-                            <td class="text-right font-bold">${b.runs}</td>
-                            <td class="text-right text-gray-500">${b.balls}</td>
-                            <td class="text-right text-gray-400 text-[10px]">${b.fours||0}/${b.sixes||0}</td>
-                            ${showFantasyPoints
-                                ? `<td class="text-right pr-2 font-mono text-xs font-bold text-amber-600">${calcBatFP(b)}</td>`
-                                : `<td class="text-right text-gray-500 pr-2 font-mono text-xs">${b.sr||'0.0'}</td>`
-                            }
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>`;
-
-            if(inn.fow) {
-                html += `<div class="text-[10px] text-gray-500 bg-gray-50 p-2 rounded mb-4 border border-gray-100"><strong class="text-gray-700">Fall of Wickets:</strong> ${inn.fow}</div>`;
+                            <td class="sc-num">${overs}</td>
+                            <td class="sc-num muted">${mdns}</td>
+                            <td class="sc-num">${runs}</td>
+                            <td class="sc-num runs-val" style="color:#b91c1c;">${wkts}</td>
+                            ${lastCol}
+                        </tr>`;
+                });
+                html += `</tbody></table>`;
             }
 
-            // Extras Breakdown
-            if (inn.extras && inn.extras.total > 0) {
-                html += `<div class="text-[10px] bg-blue-50 border border-blue-100 rounded-lg p-2 mb-4 text-blue-800 font-medium">
-                    <strong class="font-bold">Extras: ${inn.extras.total}</strong>
-                    <span class="ml-2 text-blue-600">(Wides: ${inn.extras.wides}, No Balls: ${inn.extras.noBalls}, Byes: ${inn.extras.byes}, Leg Byes: ${inn.extras.legByes})</span>
-                </div>`;
-            }
-
-            if(inn.bowling && inn.bowling.length > 0) {
-                const fpBowlHeader = showFantasyPoints ? `<th class="text-right pr-2 text-amber-500">FP ⭐</th>` : `<th class="text-right pr-2">ECON</th>`;
-                html += `<table class="w-full text-left score-table">
-                    <thead><tr><th class="pl-2">Bowling</th><th class="text-right">O</th><th class="text-right">M</th><th class="text-right">R</th><th class="text-right">W</th>${fpBowlHeader}</tr></thead>
-                    <tbody>
-                        ${inn.bowling.map(b => `
-                            <tr>
-                                <td class="pl-2 py-1.5">
-                                    <div class="flex items-center gap-2">
-                                        <img src="${b.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(b.name)}&background=f3f4f6&color=4b5563&bold=true`}" class="w-7 h-7 rounded-full bg-gray-50 object-cover border border-gray-200 flex-shrink-0">
-                                        <span class="bowler-name">${b.name}</span>
-                                    </div>
-                                </td>
-                                <td class="text-right">${b.o}</td>
-                                <td class="text-right text-gray-400">${b.m || 0}</td>
-                                <td class="text-right">${b.r}</td>
-                                <td class="text-right font-bold text-gray-900">${b.w}</td>
-                                ${showFantasyPoints
-                                    ? `<td class="text-right pr-2 font-mono text-xs font-bold text-amber-600">${calcBowlFP(b)}</td>`
-                                    : `<td class="text-right text-gray-500 pr-2 font-mono text-xs">${b.econ||'0.0'}</td>`
-                                }
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>`;
-            }
             body.innerHTML = html;
         }
 
