@@ -1718,13 +1718,98 @@
 
         function createMatchCard(id, m, type, extras) {
             extras = extras || {};
-            let s1 = "—", s2 = "Yet to Bat";
-            if(m.scorecard) {
-                s1 = m.scorecard.innings1?.score || "—";
-                s2 = m.scorecard.innings2?.score || "Yet to Bat";
-            } else if (m.score) s1 = m.score;
 
-            const isLive = m.matchStatus !== 'COMPLETE';
+            // ---------------------------------------------------------------
+            // SCORE → TEAM MAPPING (100% accuracy fix)
+            // ---------------------------------------------------------------
+            // Firestore stores innings *chronologically* (innings1 = whoever
+            // batted first, innings2 = whoever batted second). The card UI
+            // shows rows by *team position* (m.t1 row = top, m.t2 row = bottom).
+            //
+            // The previous logic naively assigned innings1.score to t1 and
+            // innings2.score to t2 — but if t2 batted first (or innings array
+            // ordering differs from team ordering), the scores ended up next
+            // to the WRONG team. Fix: match each innings to a team by name,
+            // never by position.
+            //
+            // We also pull from raw innings[] data when scorecard.* is missing
+            // or stale (e.g., during rematch state transitions).
+            // ---------------------------------------------------------------
+            const norm = (s) => String(s || '').trim().toLowerCase();
+            const t1NameRaw = m.t1 || m.team1 || 'Team 1';
+            const t2NameRaw = m.t2 || m.team2 || 'Team 2';
+            const t1Key = norm(t1NameRaw);
+            const t2Key = norm(t2NameRaw);
+
+            // Build the candidate innings list from any available source.
+            // Priority: scorecard (processed) → innings[] (raw) → flat fields.
+            const inningsCandidates = [];
+            if (m.scorecard) {
+                if (m.scorecard.innings1 && m.scorecard.innings1.score) {
+                    inningsCandidates.push({
+                        team: m.scorecard.innings1.name || '',
+                        score: m.scorecard.innings1.score,
+                        overs: m.scorecard.innings1.overs || ''
+                    });
+                }
+                if (m.scorecard.innings2 && m.scorecard.innings2.score && m.scorecard.innings2.score !== 'Yet to Bat') {
+                    inningsCandidates.push({
+                        team: m.scorecard.innings2.name || '',
+                        score: m.scorecard.innings2.score,
+                        overs: m.scorecard.innings2.overs || ''
+                    });
+                }
+            }
+            // Fallback to raw innings array (may exist in rematch transitions
+            // where scorecard hasn't been recomputed yet).
+            if (inningsCandidates.length === 0 && Array.isArray(m.innings)) {
+                m.innings.forEach(inn => {
+                    if (!inn) return;
+                    const balls = inn.balls || [];
+                    if (balls.length === 0 && !inn.score) return;
+                    let runs = 0, wkts = 0;
+                    balls.forEach(b => {
+                        runs += (parseInt(b.runs) || 0) + (parseInt(b.extras) || 0);
+                        if (b.type === 'wicket' || b.dismissal) wkts++;
+                    });
+                    inningsCandidates.push({
+                        team: inn.battingTeam || '',
+                        score: inn.score || `${runs}/${wkts}`,
+                        overs: inn.overs || ''
+                    });
+                });
+            }
+
+            // Resolver — match an innings to a target team by exact name,
+            // then by includes() either way (handles abbreviations).
+            const findScoreFor = (teamKey) => {
+                if (!teamKey) return null;
+                let best = inningsCandidates.find(c => norm(c.team) === teamKey);
+                if (best) return best;
+                best = inningsCandidates.find(c => {
+                    const ck = norm(c.team);
+                    return ck && (ck.includes(teamKey) || teamKey.includes(ck));
+                });
+                return best || null;
+            };
+
+            const t1Inn = findScoreFor(t1Key);
+            const t2Inn = findScoreFor(t2Key);
+
+            let s1 = "—", s2 = "Yet to Bat";
+            if (t1Inn && t1Inn.score) s1 = t1Inn.score;
+            else if (m.score && (!inningsCandidates.length || inningsCandidates[0]?.team === '')) s1 = `${m.score}${m.wickets !== undefined ? '/' + m.wickets : ''}`;
+
+            if (t2Inn && t2Inn.score) s2 = t2Inn.score;
+
+            // ---------------------------------------------------------------
+            // STATUS DECISION — never call something LIVE when both innings
+            // are complete and the match has a result. Honor matchStatus
+            // explicitly. Treat unset matchStatus as live (legacy behavior).
+            // ---------------------------------------------------------------
+            const matchStatus = (m.matchStatus || 'LIVE').toUpperCase();
+            const isComplete = matchStatus === 'COMPLETE' || matchStatus === 'FINAL' || matchStatus === 'FINISHED' || !!m.resultMain;
+            const isLive = !isComplete;
             const accentClass = isLive ? 'live' : 'final';
             const isChecked = selectedMatches.includes(id) ? 'checked' : '';
             const deleteCheck = type === 'local' 
@@ -1743,14 +1828,52 @@
                 ? `<span class="text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wide" style="background: linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; box-shadow: 0 1px 4px rgba(99,102,241,0.35);">Match ${extras.matchNumber}${extras.totalInGroup ? '/' + extras.totalInGroup : ''}</span>`
                 : '';
 
-            const t1Logo = m.t1Logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.t1||'T1')}&background=dbeafe&color=1e3a8a&bold=true&size=128`;
-            const t2Logo = m.t2Logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.t2||'T2')}&background=fef3c7&color=92400e&bold=true&size=128`;
+            const t1Logo = m.t1Logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(t1NameRaw)}&background=dbeafe&color=1e3a8a&bold=true&size=128`;
+            const t2Logo = m.t2Logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(t2NameRaw)}&background=fef3c7&color=92400e&bold=true&size=128`;
 
             const statusRow = isLive
                 ? `<div class="flex items-center gap-1.5 bg-red-50 border border-red-100 rounded-full px-2.5 py-1"><span class="live-dot"></span><span class="text-[9px] font-black text-red-600 uppercase tracking-wide">Live</span></div>`
                 : `<div class="flex items-center gap-1.5 bg-gray-100 rounded-full px-2.5 py-1"><span class="text-[9px] font-black text-gray-400 uppercase tracking-wide">Final</span></div>`;
 
-            const footerText = m.resultMain || m.req || m.note || 'Tap for full scorecard →';
+            // ---------------------------------------------------------------
+            // FOOTER TEXT — derive accurately from current state.
+            // Priority order:
+            //   1. resultMain (broadcaster-set explicit result)
+            //   2. If COMPLETE, compute "<Team> won by N runs/wickets"
+            //   3. If 2nd innings exists, show live "Need X from Y balls"
+            //   4. m.req / m.note (broadcaster live messages — but ignore
+            //      stale "REMATCH STARTING…" if both innings are present)
+            //   5. "Tap for full scorecard →"
+            // ---------------------------------------------------------------
+            let footerText = '';
+            const bothInningsPlayed = inningsCandidates.length >= 2;
+
+            if (m.resultMain) {
+                footerText = m.resultMain;
+            } else if (isComplete && bothInningsPlayed) {
+                // Compute final result client-side as a safety net.
+                const parseScore = (sc) => {
+                    const mt = String(sc || '').match(/(\d+)\s*\/\s*(\d+)/);
+                    return mt ? { r: parseInt(mt[1]), w: parseInt(mt[2]) } : { r: 0, w: 0 };
+                };
+                const a = parseScore(t1Inn?.score);
+                const b = parseScore(t2Inn?.score);
+                if (a.r > b.r) footerText = `${t1NameRaw} won by ${a.r - b.r} runs`;
+                else if (b.r > a.r) footerText = `${t2NameRaw} won by ${10 - b.w} wickets`;
+                else footerText = 'Match Tied';
+            } else if (bothInningsPlayed && isLive) {
+                // 2nd innings is live — show chase context.
+                if (m.req) footerText = m.req;
+                else if (m.note && !/rematch.*start/i.test(m.note)) footerText = m.note;
+                else footerText = 'Tap for full scorecard →';
+            } else if (m.req) {
+                footerText = m.req;
+            } else if (m.note && !/rematch.*start/i.test(m.note)) {
+                footerText = m.note;
+            } else {
+                footerText = 'Tap for full scorecard →';
+            }
+
             const footerColor = isLive ? 'color: #6366f1;' : 'color: #6b7280;';
 
             return `
@@ -1773,11 +1896,11 @@
                     <!-- Teams Row -->
                     <div class="flex items-center gap-3 mb-2">
                         <div class="team-logo-circle">
-                            <img src="${t1Logo}" alt="${m.t1}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(m.t1||'T')}&background=dbeafe&color=1e3a8a&bold=true&size=128'">
+                            <img src="${t1Logo}" alt="${t1NameRaw}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(t1NameRaw)}&background=dbeafe&color=1e3a8a&bold=true&size=128'">
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="flex justify-between items-baseline">
-                                <span class="font-black text-gray-900 text-sm truncate" style="max-width: 55%; letter-spacing: -0.01em;">${m.t1 || 'Team 1'}</span>
+                                <span class="font-black text-gray-900 text-sm truncate" style="max-width: 55%; letter-spacing: -0.01em;">${t1NameRaw}</span>
                                 <span class="font-black text-gray-900 score-badge" style="font-size: 16px; letter-spacing: -0.03em; flex-shrink: 0;">${s1}</span>
                             </div>
                         </div>
@@ -1785,11 +1908,11 @@
 
                     <div class="flex items-center gap-3 mb-3">
                         <div class="team-logo-circle">
-                            <img src="${t2Logo}" alt="${m.t2}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(m.t2||'T')}&background=fef3c7&color=92400e&bold=true&size=128'">
+                            <img src="${t2Logo}" alt="${t2NameRaw}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(t2NameRaw)}&background=fef3c7&color=92400e&bold=true&size=128'">
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="flex justify-between items-baseline">
-                                <span class="font-black text-gray-900 text-sm truncate" style="max-width: 55%; letter-spacing: -0.01em;">${m.t2 || 'Team 2'}</span>
+                                <span class="font-black text-gray-900 text-sm truncate" style="max-width: 55%; letter-spacing: -0.01em;">${t2NameRaw}</span>
                                 <span class="font-bold score-badge" style="font-size: 14px; letter-spacing: -0.03em; flex-shrink: 0; color: ${isLive ? '#6b7280' : '#374151'};">${s2}</span>
                             </div>
                         </div>
